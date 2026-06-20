@@ -16,6 +16,9 @@ export const PropostaItem = z.object({
   descricaoUso: z.string(), // [CATÁLOGO]
   imagemPath: z.string(), // [CATÁLOGO]
   embalagens: z.array(Embalagem), // [CATÁLOGO]
+  // Quantidade ajustável pelo vendedor na tela de revisão. Subtotal = preço da
+  // 1ª embalagem × quantidade (modelo de orçamento). Default 1.
+  quantidade: z.number().int().positive().default(1),
   procedenciaSelecao: z.enum(["IA-SELEÇÃO", "MANUAL"]),
   motivo: z.string(),
 });

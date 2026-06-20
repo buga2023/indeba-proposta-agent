@@ -38,6 +38,7 @@ export async function montarProposta(
       descricaoUso: p.descricaoUso,
       imagemPath: p.imagemPath,
       embalagens: p.embalagens, // [CATÁLOGO] — preço nunca vem da IA
+      quantidade: 1, // ajustável na revisão pelo vendedor
       procedenciaSelecao: sel.procedencia,
       motivo: sel.motivo,
     };
@@ -78,6 +79,7 @@ export async function montarPropostaEstruturada(entrada: EntradaEstruturada): Pr
         descricaoUso: p.descricaoUso,
         imagemPath: p.imagemPath,
         embalagens: p.embalagens,
+        quantidade: it.quantidade ?? 1,
         procedenciaSelecao: "MANUAL",
         motivo: "Selecionado manualmente do catálogo.",
       };
@@ -89,6 +91,7 @@ export async function montarPropostaEstruturada(entrada: EntradaEstruturada): Pr
       descricaoUso: it.descricaoUso ?? "",
       imagemPath: it.imagemPath ?? "/produtos/_generico.svg",
       embalagens: it.embalagens!,
+      quantidade: it.quantidade ?? 1,
       procedenciaSelecao: "MANUAL",
       motivo: "Item informado manualmente pelo vendedor.",
     };

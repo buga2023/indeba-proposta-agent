@@ -12,6 +12,7 @@ export const ItemEntrada = z
     descricaoUso: z.string().optional(),
     imagemPath: z.string().optional(),
     embalagens: z.array(Embalagem).optional(),
+    quantidade: z.number().int().positive().optional(),
   })
   .refine((i) => Boolean(i.codigo) || Boolean(i.nome && i.embalagens?.length), {
     message: "informe 'codigo' (catálogo) ou 'nome' + 'embalagens' (item manual)",

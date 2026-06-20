@@ -3,7 +3,7 @@
 // (só anexa, nunca reescreve). Persistência por ambiente:
 //   - Upstash Redis (Vercel): RPUSH numa lista — durável.
 //   - Local: arquivo JSONL (append) em PDF_OUT_DIR.
-import { appendFileSync, mkdirSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { Redis } from "@upstash/redis";
 import type { PropostaScope } from "./contracts";
@@ -25,28 +25,68 @@ export type EventoProposta = {
   evento: "pdf";
   propostaId: string;
   cliente: string;
+  segmento: string | null;
   tipo: string | null;
-  itens: { codigo: string; nome: string; precos: string[] }[];
+  total: string; // total aplicado = Σ (preço da 1ª embalagem × quantidade)
+  itens: { codigo: string; nome: string; quantidade: number; precos: string[] }[];
 };
 
 export function eventoDe(scope: PropostaScope, usuario: string): EventoProposta {
+  let total = 0;
+  const itens = scope.itens.map((i) => {
+    const qtd = i.quantidade ?? 1;
+    total += (Number(i.embalagens[0]?.preco) || 0) * qtd;
+    return {
+      codigo: i.codigo,
+      nome: i.nome,
+      quantidade: qtd,
+      precos: i.embalagens.map((e) => e.preco), // preço aplicado, do catálogo
+    };
+  });
   return {
     ts: new Date().toISOString(),
     usuario,
     evento: "pdf",
     propostaId: scope.id,
     cliente: scope.cliente.razaoSocial,
+    segmento: scope.cliente.segmento ?? null,
     tipo: (scope as { tipo?: string }).tipo ?? null,
-    itens: scope.itens.map((i) => ({
-      codigo: i.codigo,
-      nome: i.nome,
-      precos: i.embalagens.map((e) => e.preco), // preço aplicado, do catálogo
-    })),
+    total: total.toFixed(2),
+    itens,
   };
 }
 
 export function arquivoLog(): string {
   return join(process.env.PDF_OUT_DIR ?? "generated", "propostas.jsonl");
+}
+
+// Lê o log append-only (Redis ou JSONL local) e devolve os eventos do mais
+// recente para o mais antigo. Best-effort: se não houver log ainda, devolve [].
+export async function lerPropostas(limite = 200): Promise<EventoProposta[]> {
+  const r = getRedis();
+  if (r) {
+    const linhas = await r.lrange<string>(REDIS_KEY, -limite, -1);
+    return parseLinhas(linhas).reverse();
+  }
+  try {
+    const conteudo = readFileSync(arquivoLog(), "utf-8").trim();
+    if (!conteudo) return [];
+    return parseLinhas(conteudo.split("\n")).slice(-limite).reverse();
+  } catch {
+    return []; // arquivo ainda não existe
+  }
+}
+
+function parseLinhas(linhas: (string | EventoProposta)[]): EventoProposta[] {
+  const out: EventoProposta[] = [];
+  for (const l of linhas) {
+    try {
+      out.push(typeof l === "string" ? (JSON.parse(l) as EventoProposta) : l);
+    } catch {
+      // linha corrompida — ignora, log é best-effort de auditoria
+    }
+  }
+  return out;
 }
 
 export async function registrarProposta(evento: EventoProposta): Promise<void> {

@@ -1,0 +1,18 @@
+import { NextResponse } from "next/server";
+import { carregarCatalogo } from "@/lib/catalogo";
+
+export const runtime = "nodejs";
+
+// Catálogo real (data/catalogo.json) — fonte da verdade dos dados críticos.
+// Leitura para a tela de Catálogo; preço/embalagem nunca vêm da IA (constituição §1).
+export async function GET() {
+  try {
+    const catalogo = carregarCatalogo();
+    return NextResponse.json(catalogo);
+  } catch (e) {
+    return NextResponse.json(
+      { erro: e instanceof Error ? e.message : "Falha ao carregar catálogo" },
+      { status: 500 },
+    );
+  }
+}
