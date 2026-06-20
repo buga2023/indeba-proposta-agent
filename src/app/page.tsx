@@ -135,6 +135,7 @@ export default function Home() {
   const [quickLoading, setQuickLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [refining, setRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [scope, setScope] = useState<PropostaScope | null>(null);
@@ -238,6 +239,39 @@ export default function Home() {
       else next.add(codigo);
       return next;
     });
+  }
+
+  // Edição manual do texto pelo funcionário (constituição §6: a IA é sempre revisável).
+  function editarTexto(novo: string) {
+    setScope((s) => (s ? { ...s, textoApresentacao: { conteudo: novo, procedencia: "MANUAL" } } : s));
+  }
+
+  // Refino por prompt: anexa o ajuste ao briefing e reprocessa pelo MESMO /api/montar
+  // (mesmo cliente/tipo). Backbone determinístico intacto — preço continua do catálogo.
+  async function refinarProposta(ajuste: string) {
+    const a = ajuste.trim();
+    if (!a || !scope || refining) return;
+    const novoBriefing = `${briefingText.trim()}\n\nAjuste solicitado: ${a}`.trim();
+    setRefining(true);
+    setError(null);
+    try {
+      const r = await fetch("/api/montar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ briefing: novoBriefing, razaoSocial: scope.cliente.razaoSocial, cnpj: scope.cliente.cnpj, segmento: scope.cliente.segmento, tipo: scope.tipo }),
+      });
+      if (!r.ok) throw new Error(`Falha ao refinar (${r.status}).`);
+      const data = await r.json();
+      if (data?.precisaTipo || !Array.isArray(data?.itens)) throw new Error("Resposta inesperada do servidor.");
+      setBriefingText(novoBriefing); // acumula o contexto para o próximo refino
+      setScope(data as PropostaScope);
+      setExcluded(new Set());
+      if (data.itens.length === 0) setError(data.aviso ?? "Nenhum produto casou após o ajuste.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao refinar.");
+    } finally {
+      setRefining(false);
+    }
   }
 
   const includedItems = scope ? scope.itens.filter((it) => !excluded.has(it.codigo)) : [];
@@ -388,6 +422,9 @@ export default function Home() {
         {screen === "review" && scope && (
           <ReviewScreen
             {...{ reviewVariant, setReviewVariant, scope, excluded, includedItems, total, toggleProduct, changeQty }}
+            onRefinar={refinarProposta}
+            onEditarTexto={editarTexto}
+            refining={refining}
             goToBriefing={novaProposta}
             goToPDF={() => setScreen("pdf")}
           />
@@ -652,6 +689,9 @@ function ReviewScreen({
   total,
   toggleProduct,
   changeQty,
+  onRefinar,
+  onEditarTexto,
+  refining,
   goToBriefing,
   goToPDF,
 }: {
@@ -663,6 +703,9 @@ function ReviewScreen({
   total: number;
   toggleProduct: (codigo: string) => void;
   changeQty: (codigo: string, d: number) => void;
+  onRefinar: (texto: string) => void;
+  onEditarTexto: (texto: string) => void;
+  refining: boolean;
   goToBriefing: () => void;
   goToPDF: () => void;
 }) {
@@ -687,6 +730,8 @@ function ReviewScreen({
 
   const qtyBtn: CSSProperties = { width: "26px", height: "26px", borderRadius: "6px", border: "1px solid var(--gray-200)", background: "white", cursor: "pointer", fontSize: "15px", color: "var(--gray-500)", display: "flex", alignItems: "center", justifyContent: "center" };
   const qtyBtnSm: CSSProperties = { ...qtyBtn, width: "24px", height: "24px", borderRadius: "5px", fontSize: "13px" };
+
+  const [ajuste, setAjuste] = useState("");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--gray-50)" }}>
@@ -731,15 +776,54 @@ function ReviewScreen({
         </div>
       </div>
 
-      {/* Texto de apresentação (IA-TEXTO) */}
-      {scope.textoApresentacao.conteudo && (
-        <div style={{ flex: "none", padding: "14px 28px 0" }}>
-          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderLeft: "3px solid var(--blue-500)", borderRadius: "8px", padding: "12px 16px", display: "flex", gap: "10px", boxShadow: "var(--shadow-sm)" }}>
-            <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--blue-500)", background: "var(--blue-50)", borderRadius: "999px", padding: "2px 8px", height: "fit-content", whiteSpace: "nowrap" }}>{scope.textoApresentacao.procedencia}</span>
-            <p style={{ fontSize: "13px", color: "var(--gray-500)", lineHeight: 1.55, margin: 0 }}>{scope.textoApresentacao.conteudo}</p>
+      {/* Edição e refino pelo funcionário (antes do PDF final): texto editável + refino por IA */}
+      <div style={{ flex: "none", padding: "14px 28px 0", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderLeft: "3px solid var(--blue-500)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+            <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--blue-500)", background: "var(--blue-50)", borderRadius: "999px", padding: "2px 8px", whiteSpace: "nowrap" }}>{scope.textoApresentacao.procedencia}</span>
+            <span style={{ fontSize: "11.5px", color: "var(--gray-400)" }}>Texto de apresentação — edite à vontade</span>
           </div>
+          <textarea
+            value={scope.textoApresentacao.conteudo}
+            onChange={(e) => onEditarTexto(e.target.value)}
+            rows={3}
+            placeholder="Texto de apresentação da proposta…"
+            style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", color: "var(--gray-900)", lineHeight: 1.55, resize: "vertical", fontFamily: "'Inter',sans-serif", outline: "none", background: "var(--gray-50)", boxSizing: "border-box" }}
+          />
         </div>
-      )}
+
+        {/* Refino por IA — anexa o ajuste ao briefing e reprocessa (preço segue do catálogo) */}
+        <form
+          onSubmit={(e) => { e.preventDefault(); if (ajuste.trim() && !refining) { onRefinar(ajuste); setAjuste(""); } }}
+          style={{ display: "flex", gap: "8px", alignItems: "center", background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "7px 8px 7px 14px", boxShadow: "var(--shadow-sm)" }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}>
+            <path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15l-1.9-4.1L5.5 9l4.6-1.4L12 3z" />
+            <path d="M19 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z" />
+          </svg>
+          <input
+            value={ajuste}
+            onChange={(e) => setAjuste(e.target.value)}
+            disabled={refining}
+            placeholder="Refinar com IA — ex.: adicione mais desinfetantes, deixe o texto mais curto e formal"
+            style={{ flex: 1, border: "none", outline: "none", fontSize: "13px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", background: "transparent" }}
+          />
+          <button
+            type="submit"
+            disabled={refining || !ajuste.trim()}
+            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "7px", border: "none", background: refining || !ajuste.trim() ? "var(--gray-200)" : "var(--blue-800)", color: "white", cursor: refining || !ajuste.trim() ? "default" : "pointer", fontSize: "13px", fontWeight: 600, fontFamily: "inherit", flex: "none" }}
+          >
+            {refining ? (
+              <>
+                <span style={{ width: "13px", height: "13px", border: "2px solid rgba(255,255,255,.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+                Refinando…
+              </>
+            ) : (
+              "Refinar"
+            )}
+          </button>
+        </form>
+      </div>
 
       <div className="ies-scroll" style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
         {reviewVariant === "A" ? (
