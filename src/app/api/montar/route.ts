@@ -41,5 +41,15 @@ export async function POST(req: NextRequest) {
   }
 
   const scope = await montarProposta(briefing, { razaoSocial, cnpj, segmento }, tipoFinal);
+
+  // Seleção vazia = o briefing não casou com nada do catálogo. Não emite proposta
+  // muda: sinaliza pro vendedor refinar (melhor avisar do que entregar PDF vazio).
+  if (scope.itens.length === 0) {
+    return NextResponse.json({
+      ...scope,
+      aviso:
+        "Nenhum produto do catálogo casou com o briefing. Refine a descrição (linha, função, método) ou use o caminho estruturado para informar os itens manualmente.",
+    });
+  }
   return NextResponse.json(scope);
 }

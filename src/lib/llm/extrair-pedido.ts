@@ -60,7 +60,10 @@ Briefing: """${seguro}"""`;
 // união de facetas, nunca substituição. O spike do 7B errou `segmento` (laticinio→
 // industria_bebidas) e perdeu `cip` mesmo citado — por isso a IA não é fonte única.
 // (Constituição §1.1: backbone determinístico, IA como tempero.)
-export async function extrairPedido(briefing: string): Promise<PedidoScope> {
+export async function extrairPedido(
+  briefing: string,
+  linhasValidas?: ReadonlySet<string>,
+): Promise<PedidoScope> {
   const base = porPalavraChave(briefing);
   let facetas: FacetasDetectadas = base;
 
@@ -68,7 +71,13 @@ export async function extrairPedido(briefing: string): Promise<PedidoScope> {
     try {
       const cru = await gerarJson(prompt(briefing), JSON_SCHEMA);
       const ia = FacetasDetectadas.parse(JSON.parse(cru));
-      facetas = unirFacetas(base, ia);
+      // A IA tende a alucinar linhas sem base no briefing (ex.: laticínio →
+      // lavanderia). Descarta as que nem existem no catálogo — num catálogo maior,
+      // uma linha alucinada puxaria produtos irrelevantes (constituição §1.1).
+      const iaSegura = linhasValidas
+        ? { ...ia, linha: ia.linha.filter((l) => linhasValidas.has(l)) }
+        : ia;
+      facetas = unirFacetas(base, iaSegura);
     } catch {
       // mantém só o determinístico (degradação graciosa, §1.5)
     }

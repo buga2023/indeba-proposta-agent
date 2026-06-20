@@ -26,7 +26,8 @@ export async function montarProposta(
 ): Promise<PropostaScope> {
   const catalogo = carregarCatalogo();
 
-  const pedido = await extrairPedido(briefing);
+  const linhasCatalogo = new Set(catalogo.produtos.map((p) => p.linha));
+  const pedido = await extrairPedido(briefing, linhasCatalogo);
   const selecao = selecionar(catalogo.produtos, pedido.facetasDetectadas);
 
   // Itens: dados críticos copiados do CATÁLOGO; IA só anexa procedência + motivo.
@@ -47,7 +48,10 @@ export async function montarProposta(
   const texto = await escreverApresentacao(
     cliente.razaoSocial,
     cliente.segmento,
-    itens.map((i) => i.nome),
+    itens.map((i) => ({
+      nome: i.nome,
+      funcoes: catalogo.produtos.find((p) => p.codigo === i.codigo)?.funcoes ?? [],
+    })),
   );
 
   return PropostaScope.parse({
@@ -102,7 +106,10 @@ export async function montarPropostaEstruturada(entrada: EntradaEstruturada): Pr
     : await escreverApresentacao(
         entrada.cliente.razaoSocial,
         entrada.cliente.segmento,
-        itens.map((i) => i.nome),
+        itens.map((i) => ({
+          nome: i.nome,
+          funcoes: catalogo.produtos.find((p) => p.codigo === i.codigo)?.funcoes ?? [],
+        })),
       );
 
   const tipo = entrada.tipo ?? "implantacao";
