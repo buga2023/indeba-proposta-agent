@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────
+   Design tokens — Indeba Express
+   Paleta derivada da identidade (azul corporativo + laranja "ies").
+   Tokens semânticos no padrão shadcn, mapeados p/ utilitários Tailwind v4.
+   ─────────────────────────────────────────────────────────── */
+:root {
+  --background: #f4f6f9;
+  --foreground: #0f1b2d;
+
+  --card: #ffffff;
+  --card-foreground: #0f1b2d;
+
+  --muted: #eef2f7;
+  --muted-foreground: #64748b;
+
+  --border: #e2e8f0;
+  --input: #dce3ec;
+  --ring: #1f6fe5;
+
+  --primary: #1257c4; /* azul Indeba */
+  --primary-hover: #0f49a6;
+  --primary-foreground: #ffffff;
+
+  --accent: #f7821b; /* laranja "ies" */
+  --accent-hover: #e16f0c;
+  --accent-foreground: #ffffff;
+
+  --success: #16a34a;
+  --success-foreground: #ffffff;
+
+  --radius: 0.875rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* indicador "digitando" */
+@keyframes pulseDot {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+.dot { animation: pulseDot 1.2s infinite; }
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* scrollbar discreta */
+.scroll-suave::-webkit-scrollbar { width: 8px; }
+.scroll-suave::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+.scroll-suave::-webkit-scrollbar-track { background: transparent; }

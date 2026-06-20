@@ -1,0 +1,149 @@
+{
+  "marca": "indeba_express",
+  "produtos": [
+    {
+      "codigo": "PRIMMAX-PLUS",
+      "nome": "Primmax Plus",
+      "linha": "alimentos_bebidas",
+      "descricaoCurta": "Detergente concentrado desengordurante para uso geral",
+      "descricaoUso": "Lavar louças, pisos, paredes, bancadas, caixas e lavagens em geral. Utilizar no diluidor automático.",
+      "segmentos": ["cozinha_industrial", "administrativo"],
+      "funcoes": ["desengordurante", "multiuso"],
+      "metodos": ["diluidor_automatico"],
+      "imagemPath": "/produtos/primmax-plus.png",
+      "fichaTecnicaPath": null,
+      "ativo": true,
+      "embalagens": [
+        { "tamanho": 5, "unidade": "L", "preco": "130.00", "diluicaoMax": "1:100", "custoDiluido": "0.26" }
+      ]
+    },
+    {
+      "codigo": "PRIMMAX-DGCLOR",
+      "nome": "Primmax DGCLOR",
+      "linha": "alimentos_bebidas",
+      "descricaoCurta": "Detergente clorado para lavagens em geral",
+      "descricaoUso": "Lavagens em geral, bancadas e utensílios. Utilizar no diluidor automático.",
+      "segmentos": ["cozinha_industrial"],
+      "funcoes": ["desengordurante", "desinfetante"],
+      "metodos": ["diluidor_automatico"],
+      "imagemPath": "/produtos/primmax-dgclor.png",
+      "fichaTecnicaPath": null,
+      "ativo": true,
+      "embalagens": [
+        { "tamanho": 5, "unidade": "L", "preco": "110.00", "diluicaoMax": "1:100", "custoDiluido": "0.22" }
+      ]
+    },
+    {
+      "codigo": "PRIMMAX-LDF",
+      "nome": "Primmax LDF",
+      "linha": "alimentos_bebidas",
+      "descricaoCurta": "Desincrustante alcalino para gorduras carbonizadas",
+      "descricaoUso": "Remove gorduras carbonizadas em superfícies e utensílios.",
+      "segmentos": ["cozinha_industrial"],
+      "funcoes": ["desincrustante"],
+      "metodos": ["imersao", "manual"],
+      "imagemPath": "/produtos/primmax-ldf.png",
+      "fichaTecnicaPath": null,
+      "ativo": true,
+      "embalagens": [
+        { "tamanho": 5, "unidade": "L", "preco": "160.00", "diluicaoMax": "1:20", "custoDiluido": "1.60" }
+      ]
+    },
+    {
+      "codigo": "PRIMMAX-HORT",
+      "nome": "Primmax Hort",
+      "linha": "alimentos_bebidas",
+      "descricaoCurta": "Desinfetante para hortifrutícolas em pó",
+      "descricaoUso": "Desinfecção de hortifrutícolas. Diluir 50g em 10L de água.",
+      "segmentos": ["hortifruti", "cozinha_industrial"],
+      "funcoes": ["desinfetante"],
+      "metodos": ["imersao"],
+      "imagemPath": "/produtos/primmax-hort.png",
+      "fichaTecnicaPath": null,
+      "ativo": true,
+      "embalagens": [
+        { "tamanho": 5, "unidade": "kg", "preco": "150.00", "diluicaoMax": "50g/10L", "custoDiluido": "0.15" }
+      ]
+    },
+    {
+      "codigo": "PRIMMAX-SANQUAT",
+      "nome": "Primmax Sanquat",
+      "linha": "limpeza_conservacao",
+      "descricaoCurta": "Desinfetante concentrado à base de quaternário de 5ª geração",
+      "descricaoUso": "Elimina maus odores em ralos, lixos e calhas; combate o cheiro de alimentos e desinfeta o ambiente por pulverização. Utilizar no diluidor automático.",
+      "segmentos": ["cozinha_industrial", "administrativo"],
+      "funcoes": ["desinfetante"],
+      "metodos": ["diluidor_automatico", "pulverizacao"],
+      "imagemPath": "/produtos/primmax-sanquat.png",
+      "fichaTecnicaPath": null,
+      "ativo": true,
+      "embalagens": [
+        { "tamanho": 5, "unidade": "L", "preco": "220.00", "diluicaoMax": "1:250", "custoDiluido": "0.18" }
+      ]
+    },
+    {
+      "codigo": "PRATT-ALCOOL-GEL",
+      "nome": "Pratt Álcool Gel",
+      "linha": "higiene_pessoal",
+      "descricaoCurta": "Preparação alcoólica antisséptica para as mãos 70 INPM",
+      "descricaoUso": "Antissepsia das mãos. Pronto para uso.",
+      "segmentos": ["administrativo", "cozinha_industrial"],
+      "funcoes": ["antisseptico"],
+      "metodos": ["manual"],
+      "imagemPath": "/produtos/pratt-alcool-gel.png",
+      "fichaTecnicaPath": null,
+      "ativo": true,
+      "embalagens": [
+        { "tamanho": 800, "unidade": "ml", "preco": "20.00", "diluicaoMax": null, "custoDiluido": null }
+      ]
+    },
+    {
+      "codigo": "DERMOL-BACTER-PLUS",
+      "nome": "Sabonete Dermol Bacter Plus",
+      "linha": "higiene_pessoal",
+      "descricaoCurta": "Sabonete perolizado antisséptico para as mãos",
+      "descricaoUso": "Higienização e antissepsia das mãos. Pronto para uso.",
+      "segmentos": ["administrativo", "cozinha_industrial"],
+      "funcoes": ["sabonete", "antisseptico"],
+      "metodos": ["manual"],
+      "imagemPath": "/produtos/dermol-bacter-plus.png",
+      "fichaTecnicaPath": null,
+      "ativo": true,
+      "embalagens": [
+        { "tamanho": 800, "unidade": "ml", "preco": "35.00", "diluicaoMax": null, "custoDiluido": null }
+      ]
+    },
+    {
+      "codigo": "SPAR-HT2",
+      "nome": "Spar HT2",
+      "linha": "limpeza_conservacao",
+      "descricaoCurta": "Desinfetante com essência de uso geral (Floral, Lavanda ou Karícia)",
+      "descricaoUso": "Desinfecção de superfícies das áreas administrativas. Utilizar no diluidor automático.",
+      "segmentos": ["administrativo"],
+      "funcoes": ["desinfetante", "multiuso"],
+      "metodos": ["diluidor_automatico"],
+      "imagemPath": "/produtos/spar-ht2.png",
+      "fichaTecnicaPath": null,
+      "ativo": true,
+      "embalagens": [
+        { "tamanho": 5, "unidade": "L", "preco": "130.00", "diluicaoMax": "1:50", "custoDiluido": "0.52" }
+      ]
+    },
+    {
+      "codigo": "SPAR-HT3",
+      "nome": "Spar HT3",
+      "linha": "limpeza_conservacao",
+      "descricaoCurta": "Limpador multiuso para vidros, espelhos e superfícies",
+      "descricaoUso": "Higienização de vidros, espelhos e superfícies. Utilizar no diluidor automático.",
+      "segmentos": ["administrativo"],
+      "funcoes": ["multiuso"],
+      "metodos": ["diluidor_automatico"],
+      "imagemPath": "/produtos/spar-ht3.png",
+      "fichaTecnicaPath": null,
+      "ativo": true,
+      "embalagens": [
+        { "tamanho": 5, "unidade": "L", "preco": "80.00", "diluicaoMax": "1:5", "custoDiluido": "3.20" }
+      ]
+    }
+  ]
+}

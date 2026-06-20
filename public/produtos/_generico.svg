@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <rect width="300" height="300" fill="#ffffff"/>
+  <rect x="110" y="40" width="80" height="30" rx="6" fill="#90a4ae"/>
+  <rect x="95" y="70" width="110" height="180" rx="14" fill="#b0bec5"/>
+  <rect x="108" y="120" width="84" height="70" rx="6" fill="#ffffff"/>
+  <text x="150" y="160" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="#90a4ae" text-anchor="middle">?</text>
+  <text x="150" y="278" font-family="Arial, sans-serif" font-size="13" fill="#777" text-anchor="middle">Item manual</text>
+</svg>
