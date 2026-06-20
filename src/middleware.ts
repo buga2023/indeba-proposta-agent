@@ -9,8 +9,10 @@ function ipDe(req: NextRequest): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";
 }
 
-// Convenção "proxy" do Next 16 (sucessora de middleware). Faz rate limit + auth.
-export async function proxy(req: NextRequest) {
+// Convenção `middleware` (suportada pela Vercel). Faz rate limit + auth.
+// Obs.: o Next 16 sugere migrar para `proxy`, mas o builder da Vercel ainda
+// não roteia essa convenção corretamente — manter `middleware` aqui.
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const ehApi = ROTAS_API.some((p) => pathname.startsWith(p));
 
