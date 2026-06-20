@@ -13,7 +13,20 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }
-  const pdf = await renderPdf(parsed.data);
+
+  // Render isolado em try/catch: falha de Chromium/bundle (ex.: asset do serverless
+  // ausente) vira erro CLARO e logado, em vez de 500 opaco que só se vê nos logs da
+  // plataforma. O cliente recebe uma mensagem acionável.
+  let pdf: Buffer;
+  try {
+    pdf = await renderPdf(parsed.data);
+  } catch (e) {
+    console.error("falha ao renderizar PDF:", e);
+    return NextResponse.json(
+      { erro: "Falha ao gerar o PDF.", detalhe: e instanceof Error ? e.message : String(e) },
+      { status: 500 },
+    );
+  }
 
   // Log append-only (§1.8): quem gerou, cliente, itens e preços. Best-effort —
   // falha de log nunca derruba a entrega do PDF.

@@ -72,6 +72,15 @@ table.cond td { border: 1px solid #d8e6f3; padding: 7px 10px; }
 table.cond td.l { background: #eef4fb; color: ${navy}; font-weight: 700; width: 40%; }
 .obs { margin-top: 14px; font-size: 10px; color: #5a6878; line-height: 1.6; }
 .obs b { color: ${navy}; }
+/* As 5 Etapas Essenciais de Higienização */
+.etapas-pg { page-break-before: always; padding-top: 6px; }
+.etapa { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; break-inside: avoid; }
+.etapa .num { flex: 0 0 32px; height: 32px; border-radius: 50%; background: ${navy}; color: #fff; font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center; }
+.etapa .et-info { flex: 1; padding-top: 2px; }
+.etapa .et-tit { color: ${navy}; font-weight: 800; font-size: 13px; }
+.etapa .et-desc { color: #5a6878; font-size: 11px; line-height: 1.5; margin-top: 2px; }
+.etapas-nota { background: #eef4fb; border: 1px solid #d8e6f3; border-radius: 8px; padding: 10px 14px; font-size: 10.5px; color: #3a4757; line-height: 1.6; margin-top: 8px; }
+.etapas-nota b { color: ${navy}; }
 </style></head><body>
   <section class="capa">
     <img src="${a.logo}" alt="Indeba"/>
@@ -82,6 +91,16 @@ table.cond td.l { background: #eef4fb; color: ${navy}; font-weight: 700; width: 
 
   ${a.institucional ? `<div class="inst-pg"><img src="${a.institucional}" alt="Institucional"/></div>` : ""}
   ${a.experienciaSegura ? `<div class="inst-pg"><img src="${a.experienciaSegura}" alt="Programa Experiência Segura"/></div>` : ""}
+
+  <div class="pg etapas-pg">
+    <h2 class="secao">As 5 Etapas Essenciais de Higienização</h2>
+    <div class="etapa"><div class="num">1</div><div class="et-info"><div class="et-tit">Pré-lavagem</div><div class="et-desc">Remoção dos resíduos grosseiros com água, preparando a superfície para a limpeza.</div></div></div>
+    <div class="etapa"><div class="num">2</div><div class="et-info"><div class="et-tit">Limpeza</div><div class="et-desc">Aplicação do detergente/desengordurante adequado para remover a sujidade aderida.</div></div></div>
+    <div class="etapa"><div class="num">3</div><div class="et-info"><div class="et-tit">Enxágue</div><div class="et-desc">Remoção do produto e da sujidade suspensa, evitando resíduos químicos nas superfícies.</div></div></div>
+    <div class="etapa"><div class="num">4</div><div class="et-info"><div class="et-tit">Desinfecção</div><div class="et-desc">Aplicação de sanitizante para eliminação dos micro-organismos remanescentes.</div></div></div>
+    <div class="etapa"><div class="num">5</div><div class="et-info"><div class="et-tit">Materiais de Comunicação</div><div class="et-desc">Cartazes, sinalização e procedimentos operacionais que padronizam e chancelam a higienização.</div></div></div>
+    <div class="etapas-nota"><b>Assistência Técnica:</b> visitas periódicas com efeito corretivo e preventivo, em escala de atendimento mensal ou semanal, garantindo a correta execução de todas as etapas.</div>
+  </div>
 
   <div class="pg">
     <h2 class="secao">Soluções Indicadas para o ${esc(scope.cliente.razaoSocial)}</h2>
@@ -94,6 +113,7 @@ table.cond td.l { background: #eef4fb; color: ${navy}; font-weight: 700; width: 
         <tr><td class="l">Prazo de entrega</td><td>${esc(c.prazoEntrega)}</td></tr>
         <tr><td class="l">Condições de pagamento</td><td>${esc(c.pagamento)}</td></tr>
         <tr><td class="l">Frete</td><td>${esc(c.frete)}</td></tr>
+        <tr><td class="l">Pedido mínimo (frete CIF)</td><td>Sob consulta</td></tr>
       </table>
       <p class="obs">
         <b>Observações:</b><br/>

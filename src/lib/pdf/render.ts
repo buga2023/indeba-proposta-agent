@@ -90,7 +90,16 @@ function montarDocumento(
         marginTop: "8mm",
       };
     default:
-      return { html: documentoHtml(scope, imagens, banner), footer: FOOTER, marginTop: "6mm" };
+      // Implantação (Modelo A): fechamento usa imagens opcionais (Seko Pro Max /
+      // painel EPI) se existirem em public/marca; senão o template cai num bloco textual.
+      return {
+        html: documentoHtml(scope, imagens, banner, {
+          seko: asset("/marca/seko-promax.png"),
+          painelEpi: asset("/marca/painel-epi.png"),
+        }),
+        footer: FOOTER,
+        marginTop: "6mm",
+      };
   }
 }
 

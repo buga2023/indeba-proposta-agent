@@ -1,14 +1,18 @@
 import type { PropostaScope, PropostaItem } from "../contracts";
 
-// Paleta da marca (extraída do header real ies / indeba express).
+// Tipo "implantacao" — formato Indeba Express, FIEL ao Modelo A (docs/estrutura-modelos.md,
+// ref: Proposta GVA): cabeçalho banner navy + título centralizado · bloco cliente em barras
+// creme (Cliente/Responsável/Data) · 1 PRODUTO POR PÁGINA (foto grande + barras creme:
+// valor da embalagem, valor por litro diluído, observações de ficha técnica) · fechamento
+// (Diluidores Seko Pro Max + painel de fichas técnicas/EPI) · assinatura. Sem tabela formal
+// de condições (o Express não traz — os termos vêm do orçamento).
+
 const MARCAS = {
   indeba_express: { nome: "INDEBA EXPRESS", navy: "#16335c", azul: "#1f5fae", laranja: "#ef7d1a", titulo: "Proposta de Implantação" },
-  indeba: { nome: "INDEBA", navy: "#0b3d24", azul: "#0b6b3a", laranja: "#7cb342", titulo: "Proposta Comercial" },
+  indeba: { nome: "INDEBA", navy: "#0b3d24", azul: "#0b6b3a", laranja: "#7cb342", titulo: "Proposta de Implantação" },
 } as const;
 
-// Escapa para uso seguro em texto E em atributos (inclui aspas) — evita quebra
-// de atributo e injeção de tag no HTML renderizado pelo Chromium (campos do
-// PropostaScope chegam do cliente em /api/pdf).
+// Escapa para texto E atributos (campos do PropostaScope chegam do cliente em /api/pdf).
 export const esc = (s: string) =>
   s
     .replace(/&/g, "&amp;")
@@ -16,38 +20,43 @@ export const esc = (s: string) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
-const brl = (v: string) =>
-  "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Decimal sem "R$" — as barras do Modelo A já trazem o rótulo "R$:".
+const dec = (v: string) =>
+  Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-function card(item: PropostaItem, idx: number, dataUri: string): string {
-  const linhas = item.embalagens
-    .map(
-      (e) => `<tr>
-        <td>${e.tamanho} ${e.unidade}</td>
-        <td class="valor">${brl(e.preco)}</td>
-        <td>${e.diluicaoMax ? esc(e.diluicaoMax) : "—"}</td>
-        <td class="custo">${e.custoDiluido ? `<span class="eco">${brl(e.custoDiluido)}</span>` : "—"}</td>
-      </tr>`,
-    )
+type Marca = (typeof MARCAS)[keyof typeof MARCAS];
+type ExtraAssets = { seko?: string; painelEpi?: string };
+
+// 1 produto por página (Modelo A). Foto grande centralizada + barras creme.
+function produtoPagina(item: PropostaItem, idx: number, dataUri: string, m: Marca, primeiro: boolean): string {
+  const barras = item.embalagens
+    .map((emb) => {
+      const valor = `<div class="cbar"><span class="o">o</span> Valor embalagem de <b>${emb.tamanho} ${emb.unidade}</b> R$: <b>${dec(emb.preco)}</b></div>`;
+      const dil =
+        emb.custoDiluido && emb.diluicaoMax
+          ? `<div class="cbar"><span class="o">o</span> Valor por litro diluído (Diluição de até <b>${esc(emb.diluicaoMax)}</b>) R$: <b>${dec(emb.custoDiluido)}</b></div>`
+          : "";
+      return valor + dil;
+    })
     .join("");
-  return `<article class="produto">
-    <div class="foto"><img src="${dataUri}" alt="${esc(item.nome)}"/></div>
-    <div class="info">
-      <div class="nome"><span class="num">${idx + 1}</span>${esc(item.nome)}<span class="cod">${esc(item.codigo)}</span></div>
-      ${item.descricaoUso ? `<p class="desc">${esc(item.descricaoUso)}</p>` : ""}
-      <table class="spec">
-        <thead><tr><th>Embalagem</th><th>Valor</th><th>Diluição máx.</th><th>Custo / litro diluído</th></tr></thead>
-        <tbody>${linhas}</tbody>
-      </table>
+
+  return `<section class="prod-pg" style="${primeiro ? "" : "page-break-before: always;"}">
+    <div class="prod-nome">${idx + 1}. Item: ${esc(item.nome)} – ${esc(item.descricaoUso.toUpperCase())}</div>
+    <div class="prod-foto"><img src="${dataUri}" alt="${esc(item.nome)}"/></div>
+    <div class="prod-barras">
+      ${barras}
+      <div class="cbar"><span class="o">o</span> Observações: Para mais informações solicitar ficha técnica. A diluição máxima indicada é teórica; na prática pode variar de 1:10, 1:20, 1:50 a depender da sujidade.</div>
     </div>
-  </article>`;
+  </section>`;
 }
 
-// PropostaScope → HTML premium (view do objeto canônico).
+// PropostaScope → HTML (Modelo A Express). `assets` traz imagens opcionais do
+// fechamento (Seko Pro Max / painel EPI); sem elas, cai num bloco textual.
 export function documentoHtml(
   scope: PropostaScope,
   imagens: Record<string, string>,
   banner: string,
+  assets: ExtraAssets = {},
 ): string {
   const m = MARCAS[scope.template];
   const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR");
@@ -55,92 +64,85 @@ export function documentoHtml(
     ? `<img class="banner" src="${banner}" alt="${m.nome}"/>`
     : `<div class="banner-txt">${m.nome}</div>`;
 
-  const itens = scope.itens.map((it, i) => card(it, i, imagens[it.codigo] ?? "")).join("");
+  const itens = scope.itens.map((it, i) => produtoPagina(it, i, imagens[it.codigo] ?? "", m, i === 0)).join("");
 
-  const cond = scope.condicoesComerciais;
-  const condItem = (l: string, v: string) =>
-    `<div class="cond"><span class="cl">${l}</span><span class="cv">${esc(v)}</span></div>`;
+  const fechamentoSeko = assets.seko
+    ? `<img class="fech-img" src="${assets.seko}" alt="Diluidores Seko Pro Max"/>`
+    : `<div class="fech-box"><div class="fech-ph">Diluidor Seko Pro Max</div></div>`;
+  const fechamentoEpi = assets.painelEpi
+    ? `<img class="fech-img" src="${assets.painelEpi}" alt="Fichas técnicas e EPI"/>`
+    : `<div class="fech-box"><div class="fech-ph">Painel de fichas técnicas &amp; EPI</div></div>`;
 
   return `<html lang="pt-BR"><head><meta charset="utf-8"/><style>${css(m)}</style></head><body>
     ${cabecalho}
     <div class="pg">
-    <div class="titulo">
-      <h1>${m.titulo}</h1>
-      <div class="accent"></div>
-    </div>
+      <h1 class="titulo">${m.titulo}</h1>
 
-    <section class="cliente">
-      <div><span class="lbl">Cliente</span><span class="val">${esc(scope.cliente.razaoSocial)}</span></div>
-      ${scope.cliente.segmento ? `<div><span class="lbl">Segmento</span><span class="val">${esc(scope.cliente.segmento.replace(/_/g, " "))}</span></div>` : ""}
-      <div><span class="lbl">Emitida em</span><span class="val">${data}</span></div>
-    </section>
+      <section class="cli-bars">
+        <div class="bar"><span class="lbl">Cliente</span><span class="val">${esc(scope.cliente.razaoSocial)}</span></div>
+        <div class="bar"><span class="lbl">Responsável</span><span class="val">Matheus Resende</span></div>
+        <div class="bar"><span class="lbl">Data</span><span class="val">${data}</span></div>
+      </section>
 
-    <p class="apresentacao">${esc(scope.textoApresentacao.conteudo)}</p>
+      ${scope.textoApresentacao.conteudo ? `<p class="apresentacao">${esc(scope.textoApresentacao.conteudo)}</p>` : ""}
 
-    <h2 class="secao">Soluções propostas</h2>
-    <section class="itens">${itens}</section>
+      ${itens}
 
-    <h2 class="secao">Condições comerciais</h2>
-    <section class="condicoes">
-      ${condItem("Validade", cond.validade)}
-      ${condItem("Prazo de entrega", cond.prazoEntrega)}
-      ${condItem("Pagamento", cond.pagamento)}
-      ${condItem("Frete", cond.frete)}
-    </section>
-
-    <p class="assinatura">Atenciosamente,<br/><strong>Matheus Resende</strong> · (71) 99196-2650</p>
+      <section class="fechamento">
+        <h2 class="fech-titulo">Diluidores Seko Pro Max</h2>
+        ${fechamentoSeko}
+        <h2 class="fech-titulo">Fichas técnicas e informações de EPI</h2>
+        ${fechamentoEpi}
+        <p class="assinatura">Atenciosamente,<br/><strong>Matheus Resende</strong> · (71) 99196-2650<br/>
+        <span class="end">Rua Cosme de Farias, 05 — Galpão 01, Boca do Rio, Salvador — BA · CEP 41710-010</span></p>
+      </section>
     </div>
   </body></html>`;
 }
 
-function css(m: (typeof MARCAS)[keyof typeof MARCAS]): string {
+function css(m: Marca): string {
+  const creme = "#FBF6E9";
+  const cremeBorda = "#E9DEC2";
   return `
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: #25303f; font-size: 11.5px; -webkit-font-smoothing: antialiased; }
-/* margens L/R da página são 0 → banner ocupa toda a largura, sem recorte vertical */
+body { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: #25303f; font-size: 12px; -webkit-font-smoothing: antialiased; }
 .banner { display: block; width: 100%; }
 .banner-txt { background: ${m.navy}; color: #fff; font-size: 24px; font-weight: 800; letter-spacing: 1px; padding: 18px 12mm; }
-.pg { padding: 16px 12mm 0; }
+.pg { padding: 18px 14mm 0; }
 
-.titulo { margin: 14px 0 14px; }
-.titulo h1 { color: ${m.navy}; font-size: 22px; font-weight: 800; letter-spacing: .2px; }
-.accent { width: 54px; height: 4px; background: ${m.laranja}; border-radius: 2px; margin-top: 6px; }
+/* Título centralizado */
+.titulo { color: ${m.navy}; font-size: 24px; font-weight: 800; text-align: center; letter-spacing: .3px; margin: 10px 0 18px; }
+.titulo::after { content: ""; display: block; width: 70px; height: 4px; background: ${m.laranja}; border-radius: 2px; margin: 8px auto 0; }
 
-.cliente { display: flex; flex-wrap: wrap; gap: 0 28px; background: #f5f8fc; border-left: 4px solid ${m.laranja};
-  border-radius: 0 6px 6px 0; padding: 11px 16px; margin-bottom: 14px; }
-.cliente .lbl { display: block; font-size: 8px; text-transform: uppercase; letter-spacing: .6px; color: #8a98ab; }
-.cliente .val { font-size: 12.5px; font-weight: 700; color: ${m.navy}; }
+/* Bloco cliente em barras creme */
+.cli-bars { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+.cli-bars .bar { background: ${creme}; border: 1px solid ${cremeBorda}; border-left: 4px solid ${m.laranja};
+  border-radius: 0 6px 6px 0; padding: 8px 14px; display: flex; gap: 12px; align-items: baseline; }
+.cli-bars .lbl { font-size: 9px; text-transform: uppercase; letter-spacing: .6px; color: #8a7a4f; font-weight: 700; min-width: 90px; }
+.cli-bars .val { font-size: 13px; font-weight: 700; color: ${m.navy}; }
 
-.apresentacao { line-height: 1.6; text-align: justify; color: #3a4757; margin-bottom: 22px; }
+.apresentacao { line-height: 1.6; text-align: justify; color: #3a4757; margin-bottom: 10px; }
 
-.secao { color: ${m.navy}; font-size: 13px; text-transform: uppercase; letter-spacing: .8px;
-  padding-bottom: 5px; border-bottom: 2px solid #e6ecf4; margin: 6px 0 12px; }
+/* 1 produto por página */
+.prod-pg { padding-top: 8px; break-inside: avoid; }
+.prod-nome { color: ${m.azul}; font-size: 15px; font-weight: 800; line-height: 1.4; margin-bottom: 14px; }
+.prod-foto { text-align: center; margin: 6px 0 18px; }
+.prod-foto img { max-width: 280px; max-height: 300px; object-fit: contain; }
+.prod-barras { display: flex; flex-direction: column; gap: 8px; }
+.cbar { background: ${creme}; border: 1px solid ${cremeBorda}; border-radius: 6px; padding: 9px 14px; font-size: 12px; color: #3a4757; line-height: 1.5; }
+.cbar .o { color: ${m.laranja}; font-weight: 800; margin-right: 6px; }
+.cbar b { color: ${m.navy}; }
 
-.produto { display: flex; gap: 16px; align-items: flex-start; border: 1px solid #e6ecf4;
-  border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; background: #fff; break-inside: avoid; }
-.foto { flex: 0 0 116px; height: 130px; display: flex; align-items: center; justify-content: center;
-  background: #fbfcfe; border: 1px solid #eef2f7; border-radius: 8px; }
-.foto img { max-width: 104px; max-height: 122px; object-fit: contain; }
-.info { flex: 1; }
-.nome { color: ${m.navy}; font-size: 14.5px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-.nome .num { background: ${m.azul}; color: #fff; font-size: 11px; width: 20px; height: 20px; border-radius: 50%;
-  display: inline-flex; align-items: center; justify-content: center; }
-.nome .cod { font-size: 8.5px; font-weight: 600; color: #9aa7b8; background: #f1f5fa; padding: 2px 7px; border-radius: 10px; letter-spacing: .4px; }
-.desc { color: #5a6878; line-height: 1.45; margin: 6px 0 9px; }
-
-table.spec { width: 100%; border-collapse: collapse; font-size: 10.5px; border-radius: 6px; overflow: hidden; }
-table.spec th { background: ${m.navy}; color: #fff; text-align: left; padding: 6px 10px; font-weight: 600; font-size: 9.5px; text-transform: uppercase; letter-spacing: .4px; }
-table.spec td { padding: 6px 10px; border-bottom: 1px solid #eef2f7; }
-table.spec tbody tr:nth-child(even) { background: #f8fafd; }
-table.spec td.valor { font-weight: 800; color: ${m.azul}; font-size: 12px; }
-table.spec td.custo .eco { display: inline-block; background: #e8f6ec; color: #1f8a4c; font-weight: 700; padding: 1px 8px; border-radius: 10px; }
-
-.condicoes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
-.cond { background: #f5f8fc; border: 1px solid #e6ecf4; border-radius: 8px; padding: 9px 13px; }
-.cond .cl { display: block; font-size: 8px; text-transform: uppercase; letter-spacing: .6px; color: #8a98ab; }
-.cond .cv { font-size: 12px; font-weight: 700; color: ${m.navy}; }
-
-.assinatura { color: #4a5868; line-height: 1.5; font-size: 11px; margin-top: 6px; }
+/* Fechamento */
+.fechamento { page-break-before: always; padding-top: 8px; }
+.fech-titulo { color: ${m.navy}; font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px;
+  border-bottom: 2px solid #e6ecf4; padding-bottom: 5px; margin: 14px 0 12px; }
+.fech-img { display: block; max-width: 100%; max-height: 320px; margin: 0 auto 8px; object-fit: contain; }
+.fech-box { background: ${creme}; border: 1.5px dashed ${cremeBorda}; border-radius: 10px; height: 150px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+.fech-ph { color: #b6a880; font-size: 13px; font-weight: 700; }
+.assinatura { color: #4a5868; line-height: 1.6; font-size: 12px; margin-top: 22px; }
 .assinatura strong { color: ${m.navy}; }
+.assinatura .end { font-size: 10px; color: #7a8696; }
 `;
 }
