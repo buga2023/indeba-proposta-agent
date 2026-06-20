@@ -47,9 +47,15 @@ export function AjudaChat() {
     <>
       <button onClick={() => setAberto((v) => !v)} aria-label={aberto ? "Fechar ajuda" : "Abrir ajuda"} style={fab}>
         {aberto ? (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.2} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 1 1 4.5 2.6c-.9.5-1.6 1.2-1.6 2.4" /><circle cx="12" cy="17.5" r="0.6" fill="white" stroke="none" /></svg>
+          // Balão de chat preenchido + 3 pontos (vazados na cor do FAB) — lê na hora como "ajuda".
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 11.4c0 4.3-4 7.6-9 7.6-1.1 0-2.2-.16-3.2-.46L3.2 20.4l1.2-3.7C3.5 15.3 3 13.4 3 11.4 3 7.1 7 3.8 12 3.8s9 3.3 9 7.6z" fill="white" />
+            <circle cx="8.5" cy="11.4" r="1.25" fill="var(--orange-500,#ec7a1c)" />
+            <circle cx="12" cy="11.4" r="1.25" fill="var(--orange-500,#ec7a1c)" />
+            <circle cx="15.5" cy="11.4" r="1.25" fill="var(--orange-500,#ec7a1c)" />
+          </svg>
         )}
       </button>
 

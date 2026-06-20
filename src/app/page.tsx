@@ -827,7 +827,8 @@ function ReviewScreen({
         )}
       </div>
 
-      <div style={{ flex: "none", padding: "14px 28px", background: "white", borderTop: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      {/* paddingRight extra abre espaço para o launcher do chatbot (fixed, canto inf. dir.) */}
+      <div style={{ flex: "none", padding: "14px 96px 14px 28px", background: "white", borderTop: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ fontSize: "14px", color: "var(--gray-500)" }}>
           <strong style={{ color: "var(--gray-900)" }}>{includedItems.length} produtos</strong> incluídos · ajuste a seleção acima
         </div>
@@ -936,7 +937,8 @@ function PdfScreen({
         </div>
       </div>
 
-      {/* Documento A4 — espelha o template-orcamento.ts (modelo ERP, ref. GVA) */}
+      {/* Documento A4 — espelha o template do servidor por tipo (§4: o que vê = o que sai) */}
+      {scope.tipo === "orcamento" && (
       <div style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", padding: "40px 44px", color: "#25303f", fontSize: "12px" }}>
         {/* topo: data / nº */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", color: "var(--gray-500)", paddingBottom: "10px" }}>
@@ -1030,11 +1032,145 @@ function PdfScreen({
           <div style={{ fontSize: "10.5px", color: "var(--gray-500)", marginTop: "2px" }}>{c.pagamento}{c.frete ? ` · Frete: ${c.frete}` : ""}</div>
         </div>
       </div>
+      )}
+
+      {scope.tipo === "implantacao" && <ImplantacaoPreview scope={scope} itens={includedItems} />}
+      {scope.tipo === "comercial" && <ComercialPreview scope={scope} itens={includedItems} />}
 
       <p style={{ textAlign: "center", fontSize: "11.5px", color: "var(--gray-500)", marginTop: "16px" }}>
         {scope.tipo === "orcamento"
           ? "Pré-visualização fiel — o PDF final é gerado pelo servidor a partir desta mesma proposta."
           : `Resumo da proposta — o PDF final usa o modelo ${tipoLabel(scope.tipo)} (estrutura completa, multi-página).`}
+      </p>
+    </div>
+  );
+}
+
+// Preview do modelo Implantação (Express) — espelha template.ts (resumo, não paginado).
+function ImplantacaoPreview({ scope, itens }: { scope: PropostaScope; itens: PropostaItem[] }) {
+  const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR");
+  const creme = "#FBF6E9";
+  const cremeBorda = "#E9DEC2";
+  const bar = (label: string, value: string) => (
+    <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderLeft: "4px solid var(--orange-500)", borderRadius: "0 6px 6px 0", padding: "8px 14px", display: "flex", gap: "12px", alignItems: "baseline" }}>
+      <span style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: ".06em", color: "#8a7a4f", fontWeight: 700, minWidth: "84px" }}>{label}</span>
+      <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--blue-800)" }}>{value}</span>
+    </div>
+  );
+  return (
+    <div style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", overflow: "hidden", color: "#25303f" }}>
+      {/* banner navy */}
+      <div style={{ background: "var(--blue-800)", padding: "16px 44px", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "10px" }}>
+        <div style={{ width: "30px", height: "30px", borderRadius: "7px", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: "11px" }}>ies</div>
+        <span style={{ color: "white", fontWeight: 700, fontSize: "15px" }}>indeba <span style={{ color: "#EC7A1C" }}>express</span></span>
+      </div>
+      <div style={{ padding: "26px 44px 36px" }}>
+        <h1 style={{ fontSize: "23px", fontWeight: 800, color: "var(--blue-800)", textAlign: "center", margin: "4px 0 6px" }}>Proposta de Implantação</h1>
+        <div style={{ width: "70px", height: "4px", background: "var(--orange-500)", borderRadius: "2px", margin: "0 auto 18px" }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: "7px", marginBottom: "16px" }}>
+          {bar("Cliente", scope.cliente.razaoSocial)}
+          {bar("Responsável", "Matheus Resende")}
+          {bar("Data", data)}
+        </div>
+        {scope.textoApresentacao.conteudo && <p style={{ fontSize: "12px", color: "#3a4757", lineHeight: 1.6, textAlign: "justify", marginBottom: "18px" }}>{scope.textoApresentacao.conteudo}</p>}
+        {itens.map((p, i) => {
+          const e = p.embalagens[0];
+          return (
+            <div key={p.codigo} style={{ marginBottom: "22px" }}>
+              <div style={{ color: "var(--blue-500)", fontSize: "14px", fontWeight: 800, lineHeight: 1.4, marginBottom: "10px" }}>{i + 1}. Item: {p.nome} – {p.descricaoUso.toUpperCase()}</div>
+              <div style={{ textAlign: "center", marginBottom: "12px" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "220px", maxHeight: "230px", objectFit: "contain" }} onError={(ev) => (ev.currentTarget.style.display = "none")} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderRadius: "6px", padding: "9px 14px", fontSize: "12px" }}><span style={{ color: "var(--orange-500)", fontWeight: 800, marginRight: "6px" }}>o</span> Valor embalagem de <b>{e?.tamanho} {e?.unidade}</b> R$: <b style={{ color: "var(--blue-800)" }}>{dec(precoUnit(p))}</b></div>
+                {e?.diluicaoMax && e?.custoDiluido && (
+                  <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderRadius: "6px", padding: "9px 14px", fontSize: "12px" }}><span style={{ color: "var(--orange-500)", fontWeight: 800, marginRight: "6px" }}>o</span> Valor por litro diluído (Diluição de até <b>{e.diluicaoMax}</b>) R$: <b style={{ color: "var(--blue-800)" }}>{dec(Number(e.custoDiluido))}</b></div>
+                )}
+                <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderRadius: "6px", padding: "9px 14px", fontSize: "11.5px", color: "#3a4757", lineHeight: 1.5 }}><span style={{ color: "var(--orange-500)", fontWeight: 800, marginRight: "6px" }}>o</span> Observações: Para mais informações solicitar ficha técnica. A diluição máxima é teórica; na prática pode variar conforme a sujidade.</div>
+              </div>
+            </div>
+          );
+        })}
+        <div style={{ marginTop: "8px", padding: "12px 14px", background: "var(--gray-50)", border: "1px dashed var(--gray-300)", borderRadius: "8px", fontSize: "11.5px", color: "var(--gray-500)" }}>
+          Fechamento no PDF: <b>Diluidores Seko Pro Max</b> + <b>painel de fichas técnicas/EPI</b> + assinatura (Matheus Resende). 1 produto por página.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Preview do modelo Comercial (fabricante) — espelha template-comercial.ts (resumo).
+function ComercialPreview({ scope, itens }: { scope: PropostaScope; itens: PropostaItem[] }) {
+  const c = scope.condicoesComerciais;
+  const mesAno = new Date(scope.criadoEm).toLocaleDateString("pt-BR", { month: "long", year: "numeric" }).toUpperCase();
+  const navy = "#0b4f8a";
+  const box = (label: string, value: string, sub?: string) => (
+    <div style={{ flex: 1, background: "#eef4fb", border: "1px solid #d8e6f3", borderRadius: "8px", padding: "8px 10px", textAlign: "center" }}>
+      <div style={{ fontSize: "8.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".03em", color: navy, marginBottom: "4px" }}>{label}</div>
+      <div style={{ fontSize: "13px", fontWeight: 700, color: "#1f3a52" }}>{value}{sub && <span style={{ fontSize: "9px", fontWeight: 400, color: "#7a8696" }}> {sub}</span>}</div>
+    </div>
+  );
+  const etapas = ["Pré-lavagem", "Limpeza", "Enxágue", "Desinfecção", "Materiais de Comunicação"];
+  return (
+    <div style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", padding: "36px 44px", color: "#25303f" }}>
+      {/* capa compacta */}
+      <div style={{ textAlign: "center", paddingBottom: "20px", borderBottom: "2px solid #e6ecf4", marginBottom: "18px" }}>
+        <div style={{ fontSize: "26px", fontWeight: 800, color: navy, letterSpacing: "-.5px" }}>Indeba</div>
+        <div style={{ fontSize: "10px", fontStyle: "italic", color: "#6b7787", marginBottom: "14px" }}>Química e Soluções em Higiene</div>
+        <div style={{ fontSize: "20px", fontWeight: 800, color: navy }}>Proposta Comercial</div>
+        <div style={{ fontSize: "14px", fontWeight: 700, color: "#1f3a52", marginTop: "8px" }}>{scope.cliente.razaoSocial.toUpperCase()}</div>
+        <div style={{ fontSize: "10px", color: "#6b7787" }}>{mesAno}</div>
+      </div>
+      <div style={{ background: "#eef4fb", border: "1px solid #d8e6f3", borderRadius: "8px", padding: "10px 14px", fontSize: "11px", color: "#3a4757", marginBottom: "20px" }}>
+        Páginas institucionais incluídas no PDF: <b>A Indeba é uma Indústria Química</b> (linhas de atuação + mapa de distribuidores) e <b>Programa Experiência Segura</b> (8 pilares).
+      </div>
+      {/* 5 etapas */}
+      <h2 style={{ fontSize: "14px", fontWeight: 800, color: navy, borderBottom: "2px solid #e6ecf4", paddingBottom: "5px", marginBottom: "12px" }}>As 5 Etapas Essenciais de Higienização</h2>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "22px", flexWrap: "wrap" }}>
+        {etapas.map((et, i) => (
+          <div key={et} style={{ flex: 1, minWidth: "120px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: navy, color: "white", fontWeight: 800, fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>{i + 1}</div>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: navy }}>{et}</span>
+          </div>
+        ))}
+      </div>
+      {/* soluções */}
+      <h2 style={{ fontSize: "14px", fontWeight: 800, color: navy, borderBottom: "2px solid #e6ecf4", paddingBottom: "5px", marginBottom: "14px" }}>Soluções Indicadas para o {scope.cliente.razaoSocial}</h2>
+      {itens.map((p) => {
+        const e = p.embalagens[0];
+        return (
+          <div key={p.codigo} style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
+            <div style={{ flex: "0 0 90px", height: "100px", display: "flex", alignItems: "center", justifyContent: "center", background: "#fbfcfe", border: "1px solid #eef2f7", borderRadius: "8px", overflow: "hidden" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "82px", maxHeight: "92px", objectFit: "contain" }} onError={(ev) => (ev.currentTarget.style.display = "none")} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: navy, fontSize: "13.5px", fontWeight: 800 }}>{p.nome}</div>
+              <div style={{ fontSize: "11px", color: "#5a6878", lineHeight: 1.45, margin: "4px 0 10px" }}>{p.descricaoUso}</div>
+              <div style={{ display: "flex", gap: "10px" }}>
+                {box("Embalagem", e ? `${e.tamanho} ${e.unidade}` : "—")}
+                {box("Preço", fmt(precoUnit(p)))}
+                {box("Custo final por litro diluído", e?.custoDiluido ? fmt(Number(e.custoDiluido)) : "—", e?.diluicaoMax ? `até ${e.diluicaoMax}` : undefined)}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+      {/* condições */}
+      <h2 style={{ fontSize: "14px", fontWeight: 800, color: navy, borderBottom: "2px solid #e6ecf4", paddingBottom: "5px", margin: "18px 0 12px" }}>Condições Comerciais</h2>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+        <tbody>
+          {[["Validade desta proposta", c.validade], ["Prazo de entrega", c.prazoEntrega], ["Condições de pagamento", c.pagamento], ["Frete", c.frete], ["Pedido mínimo (frete CIF)", "Sob consulta"]].map(([l, v]) => (
+            <tr key={l}>
+              <td style={{ border: "1px solid #d8e6f3", padding: "7px 10px", background: "#eef4fb", color: navy, fontWeight: 700, width: "42%" }}>{l}</td>
+              <td style={{ border: "1px solid #d8e6f3", padding: "7px 10px" }}>{v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p style={{ fontSize: "10px", color: "#5a6878", lineHeight: 1.6, marginTop: "12px" }}>
+        <b style={{ color: navy }}>Observações:</b><br />— Assistência técnica e manutenção dos equipamentos Indeba são permanentes;<br />— Produtos ofertados são de fabricação da Indeba Indústria e Comércio Ltda, origem nacional e marca Indeba.
       </p>
     </div>
   );
