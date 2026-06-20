@@ -11,10 +11,11 @@ const csp = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "img-src 'self' data:",
-  "style-src 'self' 'unsafe-inline'",
+  // Google Fonts (Inter/Fraunces do design): CSS em fonts.googleapis.com, arquivos em fonts.gstatic.com.
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "script-src 'self' 'unsafe-inline'",
   "connect-src 'self'",
-  "font-src 'self'",
+  "font-src 'self' https://fonts.gstatic.com",
   "form-action 'self'",
 ].join("; ");
 
@@ -39,7 +40,19 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/montar": ["./data/**/*"],
     "/api/montar-estruturado": ["./data/**/*"],
-    "/api/pdf": ["./public/**/*"],
+    // public/** = imagens do PDF. browsers.json é dado interno do playwright-core
+    // exigido em runtime (coreBundle.js) — o tracing não o detecta sozinho e a
+    // função quebra com "Cannot find module .../browsers.json". Incluímos pelo
+    // caminho REAL do pnpm (.pnpm/...), NUNCA pelo symlink node_modules/playwright-core
+    // (a Vercel rejeita arquivos em diretórios symlinkados no pacote serverless).
+    "/api/pdf": [
+      "./public/**/*",
+      "./node_modules/.pnpm/playwright-core@*/node_modules/playwright-core/browsers.json",
+      // Binários do Chromium serverless (chromium.br, fonts/swiftshader/al2023 .tar.br):
+      // são binários, o tracing não os segue. Sem eles: "The input directory .../bin
+      // does not exist". Caminho REAL do pnpm (nunca o symlink @sparticuz/chromium).
+      "./node_modules/.pnpm/@sparticuz+chromium@*/node_modules/@sparticuz/chromium/bin/**",
+    ],
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

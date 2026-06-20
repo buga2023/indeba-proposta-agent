@@ -14,6 +14,7 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { PropostaScope, PropostaItem, Produto } from "@/lib/contracts";
+import { AjudaChat } from "@/components/ajuda-chat";
 
 /* ───────────────────────── helpers ───────────────────────── */
 
@@ -113,6 +114,15 @@ const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "S
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
 type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog";
+type TipoProposta = "orcamento" | "implantacao" | "comercial";
+
+// Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
+const TIPOS: { value: TipoProposta; label: string; hint: string }[] = [
+  { value: "orcamento", label: "Orçamento", hint: "Tabela ERP enxuta" },
+  { value: "implantacao", label: "Implantação", hint: "Express, 1 produto/página" },
+  { value: "comercial", label: "Comercial", hint: "Fabricante, institucional" },
+];
+const tipoLabel = (t: string) => TIPOS.find((x) => x.value === t)?.label ?? "Orçamento";
 
 /* ───────────────────────── componente principal ───────────────────────── */
 
@@ -130,6 +140,7 @@ export default function Home() {
   const [scope, setScope] = useState<PropostaScope | null>(null);
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
 
+  const [tipoProposta, setTipoProposta] = useState<TipoProposta>("orcamento");
   const [catFilter, setCatFilter] = useState("Todos");
   const [catalogo, setCatalogo] = useState<Produto[] | null>(null);
   const [catalogoErro, setCatalogoErro] = useState<string | null>(null);
@@ -192,7 +203,7 @@ export default function Home() {
       const r = await fetch("/api/montar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ briefing: texto, razaoSocial: parseCliente(texto), cnpj: null, segmento: null, tipo: "orcamento" }),
+        body: JSON.stringify({ briefing: texto, razaoSocial: parseCliente(texto), cnpj: null, segmento: null, tipo: tipoProposta }),
       });
       if (!r.ok) throw new Error(`Falha ao montar a proposta (${r.status}).`);
       const data = await r.json();
@@ -371,7 +382,7 @@ export default function Home() {
       {/* ============ MAIN ============ */}
       <main className="ies-scroll" style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden", position: "relative" }}>
         {screen === "briefing" && (
-          <BriefingScreen {...{ quickLoading, briefingText, setBriefingText, startGeneration, textareaRef, error }} />
+          <BriefingScreen {...{ quickLoading, briefingText, setBriefingText, startGeneration, textareaRef, error, tipoProposta, setTipoProposta }} />
         )}
         {screen === "loading" && <LoadingScreen loadingStep={loadingStep} />}
         {screen === "review" && scope && (
@@ -390,12 +401,18 @@ export default function Home() {
             baixarPdf={baixarPdf}
             goToReview={() => setScreen("review")}
             error={error}
+            onTipoChange={(t) =>
+              setScope((s) => (s ? { ...s, tipo: t, template: t === "comercial" ? "indeba" : "indeba_express" } : s))
+            }
           />
         )}
         {(screen === "review" || screen === "pdf") && !scope && <SemProposta onNova={novaProposta} />}
         {screen === "history" && <HistoryScreen propostas={propostas} erro={propostasErro} goToBriefing={novaProposta} />}
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
       </main>
+
+      {/* Assistente de ajuda — overlay global (canto inferior direito) */}
+      <AjudaChat />
     </div>
   );
 }
@@ -421,6 +438,8 @@ function BriefingScreen({
   startGeneration,
   textareaRef,
   error,
+  tipoProposta,
+  setTipoProposta,
 }: {
   quickLoading: boolean;
   briefingText: string;
@@ -428,6 +447,8 @@ function BriefingScreen({
   startGeneration: () => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   error: string | null;
+  tipoProposta: TipoProposta;
+  setTipoProposta: (t: TipoProposta) => void;
 }) {
   const chipBase: CSSProperties = { padding: "10px 16px", background: "white", borderWidth: "1px", borderStyle: "solid", borderColor: "var(--gray-200)", borderRadius: "12px", fontSize: "13px", color: "var(--gray-500)", cursor: "pointer", textAlign: "left", flex: 1, lineHeight: 1.45, boxShadow: "var(--shadow-sm)", transition: "border-color .18s ease,transform .15s ease,box-shadow .18s ease,color .18s ease" };
   const chipHover: CSSProperties = { borderColor: "var(--blue-200)", color: "var(--gray-900)", transform: "translateY(-2px)", boxShadow: "0 6px 16px rgba(15,26,36,.09)" };
@@ -478,6 +499,26 @@ function BriefingScreen({
 
       <div style={{ position: "sticky", bottom: 0, padding: "16px 28px 28px", background: "linear-gradient(to top,var(--gray-50) 65%,transparent)", flex: "none" }}>
         <div style={{ maxWidth: "680px", margin: "0 auto" }}>
+          {/* Tipo de proposta → define a estrutura do PDF */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "12px", color: "var(--gray-400)", fontWeight: 500 }}>Tipo de proposta:</span>
+            <div style={{ display: "flex", background: "white", border: "1px solid var(--gray-200)", borderRadius: "999px", padding: "3px", gap: "2px", boxShadow: "var(--shadow-sm)" }}>
+              {TIPOS.map((t) => {
+                const ativo = tipoProposta === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    onClick={() => setTipoProposta(t.value)}
+                    title={t.hint}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "5px 14px", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontFamily: "'Inter',sans-serif", lineHeight: 1.1 }}
+                  >
+                    <span style={{ fontSize: "13px", fontWeight: ativo ? 700 : 500 }}>{t.label}</span>
+                    <span style={{ fontSize: "10px", color: ativo ? "var(--blue-500)" : "var(--gray-400)", marginTop: "1px" }}>{t.hint}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div style={{ background: "white", border: "1.5px solid var(--gray-200)", borderRadius: "16px", boxShadow: "var(--shadow-md)", display: "flex", alignItems: "flex-end", padding: "10px 10px 10px 16px", gap: "8px" }}>
             <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", padding: "6px", flex: "none", display: "flex" }} title="Anexar (em breve)">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -823,6 +864,7 @@ function PdfScreen({
   baixarPdf,
   goToReview,
   error,
+  onTipoChange,
 }: {
   scope: PropostaScope;
   includedItems: PropostaItem[];
@@ -831,6 +873,7 @@ function PdfScreen({
   baixarPdf: () => void;
   goToReview: () => void;
   error: string | null;
+  onTipoChange: (t: TipoProposta) => void;
 }) {
   const c = scope.condicoesComerciais;
   const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR");
@@ -838,12 +881,30 @@ function PdfScreen({
   return (
     <div style={{ background: "#DDE1E7", minHeight: "100vh", padding: "28px 48px" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
-        <button onClick={goToReview} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "8px", border: "1px solid #B0BAC5", background: "white", cursor: "pointer", fontSize: "13px", color: "var(--gray-500)" }}>
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M8 2L3 6.5 8 11" />
-          </svg>
-          Voltar e editar
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <button onClick={goToReview} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "8px", border: "1px solid #B0BAC5", background: "white", cursor: "pointer", fontSize: "13px", color: "var(--gray-500)" }}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 2L3 6.5 8 11" />
+            </svg>
+            Voltar e editar
+          </button>
+          {/* Toggle de tipo de proposta — troca o modelo do PDF (render roteia por tipo). */}
+          <div style={{ display: "flex", gap: "2px", background: "#EEF3F8", padding: "3px", borderRadius: "9px", border: "1px solid var(--gray-200)" }} title="Tipo de proposta">
+            {TIPOS.map((t) => {
+              const ativo = scope.tipo === t.value;
+              return (
+                <button
+                  key={t.value}
+                  onClick={() => onTipoChange(t.value)}
+                  title={t.hint}
+                  style={{ padding: "6px 13px", borderRadius: "7px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: ativo ? 600 : 500, background: ativo ? "var(--blue-800)" : "transparent", color: ativo ? "white" : "var(--gray-500)", fontFamily: "inherit", transition: "background .15s ease, color .15s ease" }}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           {error && <span style={{ fontSize: "12px", color: "#DC2626" }}>{error}</span>}
           <Hoverable
@@ -880,7 +941,7 @@ function PdfScreen({
         {/* topo: data / nº */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", color: "var(--gray-500)", paddingBottom: "10px" }}>
           <span>{data}</span>
-          <span style={{ color: "#25303f", fontSize: "15px" }}>Orçamento <strong style={{ color: "var(--blue-800)", fontWeight: 800 }}>{numeroDoc(scope.id)}</strong></span>
+          <span style={{ color: "#25303f", fontSize: "15px" }}>{tipoLabel(scope.tipo)} <strong style={{ color: "var(--blue-800)", fontWeight: 800 }}>{numeroDoc(scope.id)}</strong></span>
         </div>
 
         {/* cabeçalho empresa */}
@@ -970,7 +1031,11 @@ function PdfScreen({
         </div>
       </div>
 
-      <p style={{ textAlign: "center", fontSize: "11.5px", color: "var(--gray-500)", marginTop: "16px" }}>Pré-visualização fiel — o PDF final é gerado pelo servidor a partir desta mesma proposta.</p>
+      <p style={{ textAlign: "center", fontSize: "11.5px", color: "var(--gray-500)", marginTop: "16px" }}>
+        {scope.tipo === "orcamento"
+          ? "Pré-visualização fiel — o PDF final é gerado pelo servidor a partir desta mesma proposta."
+          : `Resumo da proposta — o PDF final usa o modelo ${tipoLabel(scope.tipo)} (estrutura completa, multi-página).`}
+      </p>
     </div>
   );
 }
