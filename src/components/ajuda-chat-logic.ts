@@ -41,8 +41,13 @@ const KW: { kw: string[]; filtro: Filtro }[] = [
 ];
 
 type QA = { kw: string[]; q: string; a: string };
+// IMPORTANTE: prospecção vem ANTES das FAQs de proposta. responder() devolve o
+// primeiro FAQ que casa, e termos genéricos ("como", "o que e") pertencem às FAQs
+// de proposta — por isso as de prospecção usam palavras distintivas (prospec/lead).
 export const FAQ: QA[] = [
-  { kw: ["o que faz", "o que e", "serve", "para que"], q: "O que esse agente faz?", a: "Gera propostas comerciais em PDF no padrão Indeba. Você descreve o cliente e a necessidade (o briefing), a IA escolhe os produtos no catálogo e escreve o texto, e o PDF sai pronto para enviar." },
+  { kw: ["prospec", "lead", "captar client", "novos client", "achar client", "encontrar client", "buscar client", "captar cliente"], q: "Como funciona a prospecção de leads?", a: "Na aba Prospecção você descreve o que vende, o tipo de cliente que quer e a localização; a IA monta uma lista de prospects (setor, contatos e como você pode ajudar cada um) e 3 estratégias de abordagem (presencial, digital e relacionamento). É separado da proposta: serve para ENCONTRAR clientes, não para orçá-los." },
+  { kw: ["confiav", "confiabilidade", "estimado", "confirmado", "contato real", "email real", "telefone real", "inventad", "alucin"], q: "Os contatos da prospecção são confiáveis?", a: "Cada prospect vem marcado: \"Confirmado\" (o dado veio de busca web) ou \"Estimado\" (a IA inferiu). Trate e-mail/telefone \"estimado\" como pista a confirmar antes de usar. Diferente do preço da proposta, que vem SEMPRE do catálogo, a prospecção é por natureza gerada pela IA." },
+  { kw: ["o que faz", "o que e", "serve", "para que"], q: "O que esse agente faz?", a: "Gera propostas comerciais em PDF no padrão Indeba. Você descreve o cliente e a necessidade (o briefing), a IA escolhe os produtos no catálogo e escreve o texto, e o PDF sai pronto para enviar. Também faz prospecção de leads (aba Prospecção)." },
   { kw: ["como", "gerar", "gero", "passo", "usar", "criar"], q: "Como eu gero uma proposta?", a: "1) Escreva o briefing com o cliente e o que ele precisa. 2) Escolha o tipo. 3) Gere. 4) Revise os produtos e o texto (ajusta quantidade, inclui/exclui). 5) Baixe o PDF." },
   { kw: ["tipo", "orcament", "implanta", "comercial"], q: "Quais tipos de proposta existem?", a: "Três: Orçamento (tabela enxuta de itens e valores), Implantação (formato Express, mais visual) e Comercial (formato fabricante, com páginas institucionais). Você escolhe antes de gerar." },
   { kw: ["edita", "editar", "mudar", "muda", "revis", "ajust", "altera"], q: "Posso mudar o que a IA escolheu?", a: "Sim. Tudo que a IA seleciona e escreve é revisável antes de exportar: inclua/remova produtos e ajuste quantidades na tela de revisão. O PDF reflete exatamente o que você deixou." },
@@ -50,9 +55,9 @@ export const FAQ: QA[] = [
   { kw: ["nao faz", "limitac", "mvp", "falta"], q: "O que esse MVP ainda não faz?", a: "É um primeiro MVP: catálogo reduzido, a IA local pode levar alguns segundos, e envio por e-mail ainda não está ativo. Preços e fotos virão da base oficial quando disponível." },
 ];
 
-export const WELCOME = "Oi! Sou o assistente do Agente de Proposta. Conheço os produtos do catálogo (ficha e preço) e sei como usar o agente. Pergunta o que quiser ou toque numa sugestão 👇";
-export const SUGESTOES = ["Ver todos os produtos", "Como gero uma proposta?", "Quais tipos de proposta?", "Produtos para cozinha", "O que esse MVP ainda não faz?"];
-export const NAO_SEI = "Sobre isso eu não sei te responder — e prefiro não inventar. 🤷 O que eu sei: os produtos do catálogo (ficha técnica e preço) e como usar o agente de proposta. Tenta perguntar sobre um produto, uma necessidade (ex.: \"algo para desengordurar louça\") ou toque numa sugestão.";
+export const WELCOME = "Oi! Sou o assistente do Agente de Proposta. Conheço os produtos do catálogo (ficha e preço), sei como gerar propostas e como prospectar leads. Pergunta o que quiser ou toque numa sugestão 👇";
+export const SUGESTOES = ["Ver todos os produtos", "Como gero uma proposta?", "Como funciona a prospecção?", "Quais tipos de proposta?", "Produtos para cozinha"];
+export const NAO_SEI = "Sobre isso eu não sei te responder — e prefiro não inventar. 🤷 O que eu sei: os produtos do catálogo (ficha técnica e preço), como usar o agente de proposta e a prospecção de leads. Tenta perguntar sobre um produto, uma necessidade (ex.: \"algo para desengordurar louça\") ou toque numa sugestão.";
 
 export function norm(s: string): string {
   return s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");

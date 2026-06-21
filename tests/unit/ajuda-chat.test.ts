@@ -36,6 +36,23 @@ describe("assistente de ajuda — aterrado no catálogo", () => {
     expect(responder("como gero uma proposta?", produtos)).toMatch(/briefing/i);
   });
 
+  it("FAQ: explica a prospecção de leads (funcionalidade nova)", () => {
+    const r = responder("como funciona a prospecção?", produtos)!;
+    expect(r).toMatch(/prospect/i);
+    expect(r).toMatch(/abordagem|abordagens/i);
+  });
+
+  it("FAQ: contatos da prospecção — distingue confirmado de estimado", () => {
+    const r = responder("os contatos são confiáveis?", produtos)!;
+    expect(r).toMatch(/estimado/i);
+    expect(r).toMatch(/confirmado/i);
+  });
+
+  it("REGRESSÃO: prospecção não rouba a pergunta de proposta", () => {
+    // "como gero uma proposta" não tem termo de prospecção → tem que cair na FAQ certa
+    expect(responder("como gero uma proposta?", produtos)).toMatch(/briefing/i);
+  });
+
   it("HONESTIDADE: pergunta fora do escopo → null (não inventa)", () => {
     expect(responder("qual a capital da França?", produtos)).toBeNull();
     expect(responder("me conta uma piada", produtos)).toBeNull();
