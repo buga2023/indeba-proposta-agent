@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto } from "@/lib/contracts";
+import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse } from "@/lib/contracts";
 import { AjudaChat } from "@/components/ajuda-chat";
 
 /* ───────────────────────── helpers ───────────────────────── */
@@ -113,7 +113,7 @@ type PropostaLog = {
 const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
-type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog";
+type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao";
 type TipoProposta = "orcamento" | "implantacao" | "comercial";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -381,6 +381,13 @@ export default function Home() {
             </svg>
             Catálogo
           </Hoverable>
+          <Hoverable base={navItemStyle(["prospeccao"])} hover={navHover} onClick={() => setScreen("prospeccao")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="7" cy="7" r="4.25" />
+              <path d="M10.2 10.2l4 4" />
+            </svg>
+            Prospecção
+          </Hoverable>
 
           <div style={{ height: "1px", background: "rgba(255,255,255,.07)", margin: "8px 4px" }} />
 
@@ -446,6 +453,7 @@ export default function Home() {
         {(screen === "review" || screen === "pdf") && !scope && <SemProposta onNova={novaProposta} />}
         {screen === "history" && <HistoryScreen propostas={propostas} erro={propostasErro} goToBriefing={novaProposta} />}
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
+        {screen === "prospeccao" && <ProspeccaoScreen />}
       </main>
 
       {/* Assistente de ajuda — overlay global (canto inferior direito) */}
@@ -1471,6 +1479,189 @@ function CatalogScreen({
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ═══════════════════════ TELA: PROSPECÇÃO ═══════════════════════ */
+
+function ProspeccaoScreen() {
+  const [nicho, setNicho] = useState("");
+  const [tipoCliente, setTipoCliente] = useState("");
+  const [servicoOferecido, setServicoOferecido] = useState("");
+  const [localizacao, setLocalizacao] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [res, setRes] = useState<ProspeccaoResponse | null>(null);
+
+  const podeBuscar = nicho.trim() && tipoCliente.trim() && servicoOferecido.trim() && !loading;
+
+  async function prospectar() {
+    if (!podeBuscar) return;
+    setLoading(true);
+    setErro(null);
+    try {
+      const r = await fetch("/api/prospectar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nicho,
+          tipoCliente,
+          servicoOferecido,
+          localizacao: localizacao.trim() || null,
+        }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d?.erro ?? `Falha na prospecção (${r.status}).`);
+      setRes(d as ProspeccaoResponse);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao prospectar.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const campo: CSSProperties = { width: "100%", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "10px 13px", fontSize: "14px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", background: "white", outline: "none" };
+  const rotulo: CSSProperties = { display: "block", fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "6px" };
+
+  return (
+    <div style={{ padding: "28px", maxWidth: "1100px" }}>
+      <div style={{ marginBottom: "22px" }}>
+        <h2 style={{ fontSize: "24px", fontWeight: 700, color: "var(--gray-900)", letterSpacing: "-.4px" }}>Prospecção de leads</h2>
+        <div style={{ fontSize: "14px", color: "var(--gray-500)", marginTop: "3px" }}>
+          Descreva o que você vende e que tipo de cliente quer; a IA monta uma lista de prospects e abordagens.
+        </div>
+      </div>
+
+      {/* ── Formulário ── */}
+      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", padding: "20px", boxShadow: "var(--shadow-sm)", marginBottom: "24px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          <div>
+            <label style={rotulo}>Nicho / o que você vende</label>
+            <input style={campo} value={nicho} onChange={(e) => setNicho(e.target.value)} placeholder="Ex: Produtos de limpeza industrial" />
+          </div>
+          <div>
+            <label style={rotulo}>Tipo de cliente desejado</label>
+            <input style={campo} value={tipoCliente} onChange={(e) => setTipoCliente(e.target.value)} placeholder="Ex: Hospitais, hotéis e indústrias" />
+          </div>
+          <div style={{ gridColumn: "1 / -1" }}>
+            <label style={rotulo}>O que você oferece (diferencial)</label>
+            <input style={campo} value={servicoOferecido} onChange={(e) => setServicoOferecido(e.target.value)} placeholder="Ex: Fornecimento com entrega rápida e suporte técnico" />
+          </div>
+          <div>
+            <label style={rotulo}>Localização <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>(opcional)</span></label>
+            <input style={campo} value={localizacao} onChange={(e) => setLocalizacao(e.target.value)} placeholder="Ex: Salvador, BA" onKeyDown={(e) => { if (e.key === "Enter") prospectar(); }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end" }}>
+            <Hoverable
+              onClick={podeBuscar ? prospectar : undefined}
+              base={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: "10px 22px", background: "var(--orange-500)", border: "none", borderRadius: "8px", cursor: podeBuscar ? "pointer" : "not-allowed", fontSize: "14px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(236,122,28,.35)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease", opacity: podeBuscar ? 1 : 0.55, width: "100%" }}
+              hover={podeBuscar ? { transform: "translateY(-1px)" } : {}}
+            >
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="6.5" cy="6.5" r="4" />
+                <path d="M10 10l3 3" />
+              </svg>
+              {loading ? "Buscando…" : "Buscar prospects"}
+            </Hoverable>
+          </div>
+        </div>
+      </div>
+
+      {erro && (
+        <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "8px", padding: "12px 16px", fontSize: "14px", color: "#DC2626", marginBottom: "24px" }}>{erro}</div>
+      )}
+
+      {loading && !res && (
+        <div style={{ textAlign: "center", padding: "60px 40px", color: "var(--gray-500)", fontSize: "14px" }}>
+          A IA está montando sua lista de prospects… isso pode levar alguns segundos.
+        </div>
+      )}
+
+      {res && (
+        <>
+          {/* ── Prospects ── */}
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "14px" }}>
+            <h3 style={{ fontSize: "17px", fontWeight: 700, color: "var(--gray-900)" }}>Prospects</h3>
+            <span style={{ fontSize: "13px", color: "var(--gray-500)" }}>{res.total} encontrados</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "14px", marginBottom: "32px" }}>
+            {res.prospects.map((p, i) => (
+              <ProspectCard key={`${p.nome}-${i}`} p={p} />
+            ))}
+          </div>
+
+          {/* ── Abordagens ── */}
+          {res.abordagens.length > 0 && (
+            <>
+              <h3 style={{ fontSize: "17px", fontWeight: 700, color: "var(--gray-900)", marginBottom: "14px" }}>Estratégias de abordagem</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "14px" }}>
+                {res.abordagens.map((a, i) => (
+                  <AbordagemCard key={`${a.titulo}-${i}`} a={a} />
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function ProspectCard({ p }: { p: Prospect }) {
+  const confirmado = p.confiabilidade === "confirmado";
+  const contatos: Array<{ rotulo: string; valor: string | null }> = [
+    { rotulo: "Decisor", valor: p.decisor },
+    { rotulo: "E-mail", valor: p.email },
+    { rotulo: "Telefone", valor: p.telefone },
+    { rotulo: "Site", valor: p.site },
+    { rotulo: "LinkedIn", valor: p.linkedin },
+    { rotulo: "Instagram", valor: p.instagram },
+  ].filter((c) => c.valor);
+
+  return (
+    <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", padding: "16px 18px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
+        <div>
+          <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", lineHeight: 1.25 }}>{p.nome}</div>
+          <div style={{ fontSize: "12px", color: "var(--gray-500)", marginTop: "2px" }}>{p.setor}</div>
+        </div>
+        <span
+          title={confirmado ? "Confirmado via busca web" : "Estimado pela IA — confirme antes de usar"}
+          style={{ flex: "none", fontSize: "11px", fontWeight: 600, padding: "2px 9px", borderRadius: "999px", whiteSpace: "nowrap", color: confirmado ? "#16A34A" : "#D97706", background: confirmado ? "#ECFDF5" : "#FFF7ED", border: `1px solid ${confirmado ? "#A7F3D0" : "#FED7AA"}` }}
+        >
+          {confirmado ? "Confirmado" : "Estimado"}
+        </span>
+      </div>
+
+      <p style={{ fontSize: "13px", color: "#3a4757", lineHeight: 1.5, margin: 0 }}>{p.comoAjudar}</p>
+
+      {contatos.length > 0 && (
+        <div style={{ borderTop: "1px solid var(--gray-100)", paddingTop: "10px", display: "flex", flexDirection: "column", gap: "4px" }}>
+          {contatos.map((c) => (
+            <div key={c.rotulo} style={{ display: "flex", gap: "8px", fontSize: "12.5px" }}>
+              <span style={{ color: "var(--gray-400)", minWidth: "62px", flex: "none" }}>{c.rotulo}</span>
+              <span style={{ color: "var(--gray-900)", wordBreak: "break-word" }}>{c.valor}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AbordagemCard({ a }: { a: Abordagem }) {
+  return (
+    <div style={{ background: "white", border: "1px solid var(--gray-200)", borderLeft: "3px solid var(--blue-500)", borderRadius: "8px", padding: "16px 18px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)" }}>{a.titulo}</div>
+      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+        <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--blue-500)", background: "var(--blue-50)", borderRadius: "999px", padding: "2px 9px" }}>{a.canal}</span>
+        <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", background: "var(--gray-100)", borderRadius: "999px", padding: "2px 9px" }}>{a.tom}</span>
+      </div>
+      <p style={{ fontSize: "12.5px", color: "#3a4757", lineHeight: 1.5, margin: 0, whiteSpace: "pre-line" }}>{a.roteiro}</p>
+      <div style={{ fontSize: "12px", color: "var(--gray-500)", borderTop: "1px solid var(--gray-100)", paddingTop: "8px" }}>
+        <span style={{ color: "var(--orange-500)", fontWeight: 700, marginRight: "5px" }}>Dica</span>{a.dica}
+      </div>
     </div>
   );
 }
