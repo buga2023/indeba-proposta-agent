@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { authAtiva, validarSessao } from "@/lib/auth";
 import { rateLimitOk } from "@/lib/ratelimit";
 
-const ROTAS_API = ["/api/montar", "/api/pdf", "/api/montar-estruturado", "/api/catalogo", "/api/propostas"];
+const ROTAS_API = ["/api/montar", "/api/pdf", "/api/montar-estruturado", "/api/catalogo", "/api/propostas", "/api/prospectar"];
 
 function ipDe(req: NextRequest): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";
@@ -37,5 +37,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/api/montar", "/api/pdf", "/api/montar-estruturado", "/api/catalogo", "/api/propostas"],
+  matcher: ["/", "/api/montar", "/api/pdf", "/api/montar-estruturado", "/api/catalogo", "/api/propostas", "/api/prospectar"],
 };
