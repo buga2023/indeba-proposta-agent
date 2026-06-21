@@ -1,0 +1,86 @@
+// Minerador de contatos — 100% determinístico. Extrai e-mail, telefone e links de
+// redes sociais do TEXTO real de páginas web (snippets/raw_content da Tavily).
+// É o núcleo que sustenta a §2: todo contato que sai daqui tem origem numa página,
+// nunca no modelo. A IA não produz contato; só escreve a abordagem.
+
+export type Contatos = {
+  emails: string[];
+  telefones: string[];
+  redes: {
+    linkedin: string[];
+    instagram: string[];
+    facebook: string[];
+    whatsapp: string[];
+  };
+};
+
+const RE_EMAIL = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+// Telefone BR: +55 opcional, DDD (com ou sem parênteses), 8-9 dígitos com separador.
+const RE_TELEFONE = /(?:\+?55[\s.-]?)?\(?\d{2}\)?[\s.-]?9?\d{4}[\s.-]?\d{4}/g;
+const RE_LINKEDIN = /(?:https?:\/\/)?(?:[a-z]{2,3}\.)?linkedin\.com\/(?:company|in)\/[A-Za-z0-9_%-]+/gi;
+const RE_INSTAGRAM = /(?:https?:\/\/)?(?:www\.)?instagram\.com\/[A-Za-z0-9_.]+/gi;
+const RE_FACEBOOK = /(?:https?:\/\/)?(?:www\.)?facebook\.com\/[A-Za-z0-9_.-]+/gi;
+const RE_WHATSAPP = /(?:https?:\/\/)?(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)\d{8,}/gi;
+
+// E-mails que parecem contato mas são lixo de página/asset/placeholder.
+const EMAIL_LIXO = [".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", "@2x", "@sentry", "wixpress", "example.com", "domain.com", "email.com", "seuemail", "your@", "@example"];
+// Caminhos genéricos das redes que NÃO são perfis de empresa.
+const REDE_LIXO = ["/p/", "/reel", "/explore", "/accounts", "/sharer", "/tr?", "/plugins", "/dialog", "/feed", "/sharearticle", "/sharing", "/login", "/help", "/policies", "/about/"];
+
+function unico(xs: string[]): string[] {
+  return [...new Set(xs)];
+}
+
+function soDigitos(s: string): string {
+  return s.replace(/\D/g, "");
+}
+
+function ehTelefoneValido(bruto: string): boolean {
+  const d = soDigitos(bruto);
+  const semDdi = d.startsWith("55") && d.length >= 12 ? d.slice(2) : d;
+  // DDD (2) + 8 ou 9 dígitos.
+  if (semDdi.length !== 10 && semDdi.length !== 11) return false;
+  // Descarta sequências triviais (00000000000, 11111111111).
+  if (/^(\d)\1+$/.test(semDdi)) return false;
+  return true;
+}
+
+function normalizarUrl(u: string): string {
+  return u.startsWith("http") ? u : `https://${u}`;
+}
+
+function redeLimpa(u: string): boolean {
+  const baixa = u.toLowerCase();
+  return !REDE_LIXO.some((lixo) => baixa.includes(lixo));
+}
+
+export function minerarContatos(texto: string): Contatos {
+  const t = texto ?? "";
+  const baixa = t.toLowerCase();
+
+  const emails = unico(
+    (t.match(RE_EMAIL) ?? [])
+      .map((e) => e.toLowerCase().replace(/[.,;]+$/, ""))
+      .filter((e) => !EMAIL_LIXO.some((lixo) => e.includes(lixo))),
+  );
+
+  const telefones = unico(
+    (t.match(RE_TELEFONE) ?? []).map((s) => s.trim()).filter(ehTelefoneValido),
+  )
+    // dedup por dígitos (formatações diferentes do mesmo número)
+    .filter((tel, i, arr) => arr.findIndex((o) => soDigitos(o) === soDigitos(tel)) === i);
+
+  const captura = (re: RegExp) =>
+    unico((baixa.match(re) ?? []).map(normalizarUrl).filter(redeLimpa));
+
+  return {
+    emails,
+    telefones,
+    redes: {
+      linkedin: captura(RE_LINKEDIN),
+      instagram: captura(RE_INSTAGRAM),
+      facebook: captura(RE_FACEBOOK),
+      whatsapp: captura(RE_WHATSAPP),
+    },
+  };
+}
