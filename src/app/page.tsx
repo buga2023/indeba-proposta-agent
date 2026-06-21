@@ -453,7 +453,7 @@ export default function Home() {
         {(screen === "review" || screen === "pdf") && !scope && <SemProposta onNova={novaProposta} />}
         {screen === "history" && <HistoryScreen propostas={propostas} erro={propostasErro} goToBriefing={novaProposta} />}
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
-        {screen === "prospeccao" && <ProspeccaoScreen />}
+        {screen === "prospeccao" && <ProspeccaoScreen onGerarProposta={(seed) => { setBriefingText(seed); setScreen("briefing"); }} />}
       </main>
 
       {/* Assistente de ajuda — overlay global (canto inferior direito) */}
@@ -1485,7 +1485,7 @@ function CatalogScreen({
 
 /* ═══════════════════════ TELA: PROSPECÇÃO ═══════════════════════ */
 
-function ProspeccaoScreen() {
+function ProspeccaoScreen({ onGerarProposta }: { onGerarProposta: (seed: string) => void }) {
   const [nicho, setNicho] = useState("");
   const [tipoCliente, setTipoCliente] = useState("");
   const [servicoOferecido, setServicoOferecido] = useState("");
@@ -1594,7 +1594,7 @@ function ProspeccaoScreen() {
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "16px", marginBottom: "34px" }}>
               {res.prospects.map((p, i) => (
-                <ProspectCard key={`${p.nome}-${i}`} p={p} index={i} />
+                <ProspectCard key={`${p.nome}-${i}`} p={p} index={i} onGerarProposta={onGerarProposta} />
               ))}
             </div>
           )}
@@ -1713,7 +1713,7 @@ function IconeContato({ tipo }: { tipo: "email" | "tel" | "site" | "linkedin" | 
   }
 }
 
-function ProspectCard({ p, index }: { p: Prospect; index: number }) {
+function ProspectCard({ p, index, onGerarProposta }: { p: Prospect; index: number; onGerarProposta: (seed: string) => void }) {
   const [copiado, setCopiado] = useState(false);
   const confirmado = p.confiabilidade === "confirmado";
   const acento = confirmado ? "#16A34A" : "#D97706";
@@ -1806,9 +1806,22 @@ function ProspectCard({ p, index }: { p: Prospect; index: number }) {
         </details>
       )}
 
-      {p.fonte && (
-        <a href={p.fonte} target="_blank" rel="noreferrer" title={p.fonte} style={{ fontSize: "11px", color: "var(--gray-400)", textDecoration: "none", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "auto" }}>fonte: {p.fonte} ↗</a>
-      )}
+      <div style={{ borderTop: "1px solid var(--gray-100)", paddingTop: "11px", marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+        {p.fonte ? (
+          <a href={p.fonte} target="_blank" rel="noreferrer" title={p.fonte} style={{ fontSize: "11px", color: "var(--gray-400)", textDecoration: "none", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>fonte: {p.fonte} ↗</a>
+        ) : (
+          <span />
+        )}
+        <Hoverable
+          onClick={() => onGerarProposta(`${p.nome}: ${p.setor}. ${p.comoAjudar}`)}
+          title="Leva os dados deste prospect para o briefing da proposta"
+          base={{ flex: "none", display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 600, color: "white", background: "var(--orange-500)", border: "none", borderRadius: "8px", padding: "6px 12px", cursor: "pointer", boxShadow: "0 2px 8px rgba(236,122,28,.32)", transition: "transform .12s ease,box-shadow .18s ease" }}
+          hover={{ transform: "translateY(-1px)", boxShadow: "0 4px 12px rgba(236,122,28,.4)" }}
+        >
+          <svg width="13" height="13" viewBox="0 0 17 17" fill="none" stroke="white" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2H4.5A1 1 0 003.5 3v11a1 1 0 001 1h8a1 1 0 001-1V6.5L9.5 2z" /><path d="M9.5 2v4.5h4.5" /></svg>
+          Gerar proposta
+        </Hoverable>
+      </div>
     </Hoverable>
   );
 }
