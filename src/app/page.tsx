@@ -1947,7 +1947,7 @@ function InstagramScreen() {
   const [produto, setProduto] = useState("");
   const [publico, setPublico] = useState("");
   const [tom, setTom] = useState<TomPost>("profissional");
-  const [numPosts, setNumPosts] = useState(5);
+  const [numPosts, setNumPosts] = useState(2);
   const [foco, setFoco] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -2030,7 +2030,7 @@ function InstagramScreen() {
           <div>
             <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Posts para Instagram</h2>
             <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "640px" }}>
-              Descreva em linguagem natural o que quer divulgar — a IA escreve legenda, gancho, hashtags e horário, e gera a imagem 1:1 de cada post.
+              Descreva em linguagem natural o que quer divulgar — a IA escreve legenda, gancho, hashtags e horário, e gera a imagem 4:5 de cada post.
             </div>
           </div>
         </div>
@@ -2070,7 +2070,7 @@ function InstagramScreen() {
           <div>
             <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "6px" }}>Nº de posts</label>
             <div style={{ display: "flex", background: "white", border: "1px solid var(--gray-200)", borderRadius: "999px", padding: "3px", gap: "2px", width: "fit-content", boxShadow: "var(--shadow-sm)" }}>
-              {[1, 3, 5].map((n) => {
+              {[1, 2, 3].map((n) => {
                 const ativo = numPosts === n;
                 return (
                   <button key={n} onClick={() => setNumPosts(n)} style={{ width: "40px", padding: "6px 0", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontSize: "13px", fontWeight: ativo ? 700 : 500, fontFamily: "'Inter',sans-serif" }}>
@@ -2137,7 +2137,7 @@ function InstagramSkeleton() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "16px" }}>
         {[0, 1].map((i) => (
           <div key={i} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", gap: "12px", animation: "popIn .4s ease both", animationDelay: `${i * 80}ms` }}>
-            <div className="ies-skeleton" style={{ width: "100%", aspectRatio: "1 / 1", borderRadius: "10px" }} />
+            <div className="ies-skeleton" style={{ width: "100%", aspectRatio: "4 / 5", borderRadius: "10px" }} />
             {linha("40%", "14px")}
             {linha("90%")}
             {linha("100%")}
@@ -2154,7 +2154,7 @@ function ImagemPost({ estado }: { estado: ImgState | undefined }) {
   const st = estado?.status;
   if (st === "ok" && estado?.src) {
     return (
-      <a href={estado.src} download={`post-instagram.png`} title="Baixar imagem" style={{ display: "block", width: "100%", aspectRatio: "1 / 1", borderRadius: "10px", overflow: "hidden", border: "1px solid var(--gray-200)" }}>
+      <a href={estado.src} download={`post-instagram.png`} title="Baixar imagem" style={{ display: "block", width: "100%", aspectRatio: "4 / 5", borderRadius: "10px", overflow: "hidden", border: "1px solid var(--gray-200)" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={estado.src} alt="Imagem do post gerada por IA" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", animation: "popIn .4s ease both" }} />
       </a>
@@ -2162,7 +2162,7 @@ function ImagemPost({ estado }: { estado: ImgState | undefined }) {
   }
   if (st === "loading") {
     return (
-      <div className="ies-skeleton" style={{ width: "100%", aspectRatio: "1 / 1", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="ies-skeleton" style={{ width: "100%", aspectRatio: "4 / 5", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#DB2777", fontSize: "12px", fontWeight: 600, background: "rgba(255,255,255,.75)", borderRadius: "999px", padding: "5px 12px" }}>
           <span style={{ width: "12px", height: "12px", border: "2px solid rgba(219,39,119,.35)", borderTopColor: "#DB2777", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
           Gerando imagem…
@@ -2173,7 +2173,7 @@ function ImagemPost({ estado }: { estado: ImgState | undefined }) {
   // erro / sem estado → status em PORTUGUÊS (a descrição do criativo fica no card).
   const msg = st === "erro" ? "Não foi possível gerar a imagem." : "Imagem ainda não gerada.";
   return (
-    <div style={{ width: "100%", aspectRatio: "1 / 1", borderRadius: "10px", border: "1px dashed var(--gray-300)", background: "var(--gray-50)", padding: "14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
+    <div style={{ width: "100%", aspectRatio: "4 / 5", borderRadius: "10px", border: "1px dashed var(--gray-300)", background: "var(--gray-50)", padding: "14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
       <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", lineHeight: 1.4 }}>{msg}</span>
     </div>

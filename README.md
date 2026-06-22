@@ -82,7 +82,7 @@ append-only** (cliente, itens, preços aplicados, autor, timestamp).
   posts num **framework editorial** (autoridade, educativo, prova social, oferta, conexão):
   **abertura** (gancho), legenda com CTA, 5–15 **hashtags**, **melhor horário** (com
   justificativa) e um **prompt de imagem em inglês** por post — mais uma nota editorial.
-- **Imagem por IA (1:1):** gerada **no navegador** via **Puter.js / Nano Banana** (Gemini
+- **Imagem por IA (4:5):** gerada **no navegador** via **Puter.js / Nano Banana** (Gemini
   Image) — sem servidor, sem chave de API. Modelo *user-pays* (o usuário cobre o próprio
   uso, podendo pedir login no Puter). O front gera **uma imagem por vez** a partir do
   `imagemPrompt` (inglês) e cada card recebe a sua com fade; se falhar, mostra a descrição
