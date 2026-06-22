@@ -176,8 +176,11 @@ export default function Home() {
     }
   }, [screen, catalogo, propostas]);
 
-  async function startGeneration() {
-    const texto = briefingText.trim();
+  async function startGeneration(textoOverride?: string) {
+    // textoOverride: gerar a partir de um texto explícito (ex.: vindo da prospecção),
+    // sem depender do setState assíncrono de briefingText. Guard porque a UI também
+    // chama startGeneration direto no onClick (passando o evento como argumento).
+    const texto = (typeof textoOverride === "string" ? textoOverride : briefingText).trim();
     if (!texto || generating) return;
     setError(null);
     setGenerating(true);
@@ -453,7 +456,7 @@ export default function Home() {
         {(screen === "review" || screen === "pdf") && !scope && <SemProposta onNova={novaProposta} />}
         {screen === "history" && <HistoryScreen propostas={propostas} erro={propostasErro} goToBriefing={novaProposta} />}
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
-        {screen === "prospeccao" && <ProspeccaoScreen onGerarProposta={(seed) => { setBriefingText(seed); setScreen("briefing"); }} />}
+        {screen === "prospeccao" && <ProspeccaoScreen onGerarProposta={(seed) => { setBriefingText(seed); setScreen("briefing"); startGeneration(seed); }} />}
       </main>
 
       {/* Assistente de ajuda — overlay global (canto inferior direito) */}
