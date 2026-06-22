@@ -33,6 +33,7 @@ export async function gerarJson(
       stream: false,
       format: schema,
       options: { temperature },
+      keep_alive: "30m", // mantém o modelo na VRAM — evita cold start (que estoura 60s)
     }),
     signal: AbortSignal.timeout(timeoutMs),
   });

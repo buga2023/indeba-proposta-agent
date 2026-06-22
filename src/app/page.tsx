@@ -1947,7 +1947,7 @@ function InstagramScreen() {
   const [produto, setProduto] = useState("");
   const [publico, setPublico] = useState("");
   const [tom, setTom] = useState<TomPost>("profissional");
-  const [numPosts, setNumPosts] = useState(2);
+  const [numPosts, setNumPosts] = useState(1);
   const [foco, setFoco] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -2001,8 +2001,24 @@ function InstagramScreen() {
           numPosts,
         }),
       });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d?.erro ?? `Falha ao gerar os posts (${r.status}).`);
+      // A resposta pode não ser JSON (ex.: página de timeout/erro da Vercel) — não quebre.
+      const txt = await r.text();
+      let d: unknown = null;
+      try {
+        d = txt ? JSON.parse(txt) : null;
+      } catch {
+        /* corpo não-JSON */
+      }
+      if (!r.ok || !d) {
+        const erroApi = (d as { erro?: unknown } | null)?.erro;
+        const msg =
+          typeof erroApi === "string"
+            ? erroApi
+            : r.status === 504 || r.status === 502
+              ? "O servidor demorou demais (timeout). Tente com menos posts, espere o modelo aquecer e gere de novo, ou rode local."
+              : `Falha ao gerar os posts (HTTP ${r.status}).`;
+        throw new Error(msg);
+      }
       const out = d as InstagramResponse;
       setRes(out);
       void gerarImagens(out.posts); // sequencial, em background — os cards já aparecem
