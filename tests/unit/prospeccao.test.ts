@@ -103,6 +103,45 @@ describe("prospectar — contato e procedência vêm do backend (§2: dado crít
     expect(res.total).toBe(2);
     expect(res.prospects).toHaveLength(2);
   });
+
+  it("individualidade: social casa por slug e contato compartilhado some dos dois", async () => {
+    process.env.TAVILY_API_KEY = "k";
+    const ia = {
+      prospects: [
+        { nome: "Hotel Bahia Palace", setor: "Hotelaria", site: "https://bahiapalace.com.br", comoAjudar: "x", mensagemPronta: "m" },
+        { nome: "Hotel Salvador Plaza", setor: "Hotelaria", site: null, comoAjudar: "y", mensagemPronta: "m" },
+      ],
+      abordagens: [],
+    };
+    // Página-diretório que cita os DOIS hotéis, com 1 LinkedIn e 1 telefone "geral".
+    mockFetch({
+      resposta: JSON.stringify(ia),
+      tavily: [
+        {
+          url: "https://guiahoteis.com/salvador",
+          raw_content:
+            "Hotel Bahia Palace e Hotel Salvador Plaza em Salvador. " +
+            "LinkedIn https://linkedin.com/company/bahiapalace Central (71) 3333-4444",
+        },
+      ],
+    });
+
+    const res = await prospectar(REQ);
+    const bahia = res.prospects.find((p) => p.nome.includes("Bahia"))!;
+    const plaza = res.prospects.find((p) => p.nome.includes("Plaza"))!;
+
+    // LinkedIn casa só com Bahia (slug "bahiapalace"); Plaza NÃO herda.
+    expect(bahia.redes.linkedin).toBe("https://linkedin.com/company/bahiapalace");
+    expect(plaza.redes.linkedin).toBeNull();
+    // Telefone "geral" aparecia nos dois → removido de ambos.
+    expect(bahia.telefones).toEqual([]);
+    expect(plaza.telefones).toEqual([]);
+    // Nenhum valor de contato se repete entre prospects.
+    const todos = res.prospects
+      .flatMap((p) => [...p.emails, ...p.telefones, p.redes.linkedin, p.redes.instagram, p.redes.whatsapp])
+      .filter(Boolean);
+    expect(new Set(todos).size).toBe(todos.length);
+  });
 });
 
 describe("prospectar — degradação", () => {

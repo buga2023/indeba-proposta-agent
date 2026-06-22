@@ -100,6 +100,33 @@ function primeiro(xs: string[]): string | null {
   return xs.length ? xs[0] : null;
 }
 
+// Palavras genéricas demais pra confirmar que um perfil social é DAQUELA empresa.
+const NOME_GENERICO = new Set([
+  "hotel", "hoteis", "hospital", "clinica", "grupo", "centro", "casa", "loja",
+  "empresa", "servicos", "saude", "industria", "comercio", "distribuidora", "rede", "suites",
+]);
+
+function tokensDistintivos(nome: string): string[] {
+  return normalizar(nome)
+    .split(" ")
+    .filter((t) => t.length >= 4 && !NOME_GENERICO.has(t));
+}
+
+function slugDaUrl(url: string): string {
+  const semQuery = url.split(/[?#]/)[0].replace(/\/+$/, "");
+  return (semQuery.split("/").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+// Um perfil social (linkedin/instagram/facebook) só é DAQUELE prospect se o slug da
+// URL casar com um token distintivo do nome — senão é vazamento de diretório/terceiro
+// (ex.: vários hotéis herdando o mesmo LinkedIn). §2: contato precisa de origem real.
+function redeDoProspect(url: string, nome: string): boolean {
+  const slug = slugDaUrl(url);
+  if (slug.length < 3) return false;
+  const toks = tokensDistintivos(nome);
+  return toks.length > 0 && toks.some((t) => slug.includes(t));
+}
+
 // Casa um prospect às fontes (por domínio do site OU nome no texto) e ANEXA só os
 // contatos minerados dessas fontes. Confiabilidade e fonte são DERIVADAS aqui —
 // se nada casar, o prospect sai "estimado" e sem contato (§2).
@@ -123,13 +150,22 @@ function enriquecer(p: ProspectIA, fontes: FonteComContatos[]): Prospect {
       })
     : emailsBrutos.slice(0, 3);
 
-  const telefones = [...new Set(casadas.flatMap((f) => f.contatos.telefones))].slice(0, 3);
+  // Fontes que são o SITE do próprio prospect (sinal forte de individualidade).
+  const fontesDominio = domP ? casadas.filter((f) => f.dominio === domP) : [];
 
+  // Telefones: prefere o site do prospect quando conhecido (evita pegar telefone de
+  // outra empresa numa página-diretório).
+  const fontesTel = fontesDominio.length ? fontesDominio : casadas;
+  const telefones = [...new Set(fontesTel.flatMap((f) => f.contatos.telefones))].slice(0, 3);
+
+  // Redes: o perfil só é DAQUELE prospect se o slug da URL casar com o nome (senão é
+  // vazamento). WhatsApp (wa.me/número) não tem nome no slug → só do site do prospect.
+  const escolherRede = (urls: string[]) => urls.find((u) => redeDoProspect(u, p.nome)) ?? null;
   const redes = {
-    linkedin: primeiro(casadas.flatMap((f) => f.contatos.redes.linkedin)),
-    instagram: primeiro(casadas.flatMap((f) => f.contatos.redes.instagram)),
-    facebook: primeiro(casadas.flatMap((f) => f.contatos.redes.facebook)),
-    whatsapp: primeiro(casadas.flatMap((f) => f.contatos.redes.whatsapp)),
+    linkedin: escolherRede(casadas.flatMap((f) => f.contatos.redes.linkedin)),
+    instagram: escolherRede(casadas.flatMap((f) => f.contatos.redes.instagram)),
+    facebook: escolherRede(casadas.flatMap((f) => f.contatos.redes.facebook)),
+    whatsapp: primeiro(fontesDominio.flatMap((f) => f.contatos.redes.whatsapp)),
   };
 
   const temContato =
@@ -143,7 +179,45 @@ function enriquecer(p: ProspectIA, fontes: FonteComContatos[]): Prospect {
     telefones,
     redes,
     confiabilidade: temContato ? "confirmado" : "estimado",
-    fonte: casadas[0]?.url ?? null,
+    fonte: temContato ? (fontesDominio[0]?.url ?? casadas[0]?.url ?? null) : null,
+  });
+}
+
+// Garante INDIVIDUALIDADE: um mesmo contato (telefone/e-mail/rede) em 2+ prospects é
+// vazamento de diretório — remove de TODOS. Cada empresa fica só com o que é dela.
+// Recalcula confiabilidade/fonte: quem perde todo contato volta a "estimado".
+function removerCompartilhados(prospects: Prospect[]): Prospect[] {
+  const conta = new Map<string, number>();
+  const add = (v: string | null) => {
+    if (v) conta.set(v, (conta.get(v) ?? 0) + 1);
+  };
+  for (const p of prospects) {
+    p.emails.forEach(add);
+    p.telefones.forEach(add);
+    add(p.redes.linkedin);
+    add(p.redes.instagram);
+    add(p.redes.facebook);
+    add(p.redes.whatsapp);
+  }
+  const soDele = (v: string | null) => (v && conta.get(v) === 1 ? v : null);
+  return prospects.map((p) => {
+    const emails = p.emails.filter((v) => conta.get(v) === 1);
+    const telefones = p.telefones.filter((v) => conta.get(v) === 1);
+    const redes = {
+      linkedin: soDele(p.redes.linkedin),
+      instagram: soDele(p.redes.instagram),
+      facebook: soDele(p.redes.facebook),
+      whatsapp: soDele(p.redes.whatsapp),
+    };
+    const temContato = emails.length > 0 || telefones.length > 0 || Object.values(redes).some(Boolean);
+    return Prospect.parse({
+      ...p,
+      emails,
+      telefones,
+      redes,
+      confiabilidade: temContato ? "confirmado" : "estimado",
+      fonte: temContato ? p.fonte : null,
+    });
   });
 }
 
@@ -174,7 +248,7 @@ export async function prospectar(req: ProspeccaoRequest): Promise<ProspeccaoResp
   const cru = await gerarJson(prompt(req, contexto), JSON_SCHEMA);
   const ia = ProspeccaoIA.parse(JSON.parse(cru));
 
-  const prospects = ia.prospects.map((p) => enriquecer(p, fontesComContatos));
+  const prospects = removerCompartilhados(ia.prospects.map((p) => enriquecer(p, fontesComContatos)));
   return ProspeccaoResponse.parse({
     prospects,
     abordagens: ia.abordagens,
