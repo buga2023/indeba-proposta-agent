@@ -30,6 +30,7 @@ export const ProspectIA = z.object({
   nome: z.string(),
   setor: z.string(),
   site: z.string().nullable().default(null),
+  problema: z.string().default(""), // a dor/desafio que o diferencial do solicitante resolve
   comoAjudar: z.string(),
   mensagemPronta: z.string(),
 });

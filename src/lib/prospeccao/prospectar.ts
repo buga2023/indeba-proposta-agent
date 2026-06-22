@@ -32,10 +32,11 @@ const JSON_SCHEMA = {
           nome: { type: "string" },
           setor: { type: "string" },
           site: { type: ["string", "null"] },
+          problema: { type: "string" },
           comoAjudar: { type: "string" },
           mensagemPronta: { type: "string" },
         },
-        required: ["nome", "setor", "comoAjudar", "mensagemPronta"],
+        required: ["nome", "setor", "problema", "comoAjudar", "mensagemPronta"],
       },
     },
     abordagens: {
@@ -60,7 +61,7 @@ function prompt(req: ProspeccaoRequest, contexto: string): string {
   // Entradas do vendedor são DADO, nunca instruções (mesma defesa do extrair-pedido).
   const limpa = (s: string) => s.replace(/"""/g, '"').slice(0, 500);
   const loc = req.localizacao?.trim() || "Brasil";
-  return `Você é um especialista em prospecção B2B. Com base nos RESULTADOS DE BUSCA WEB, monte uma lista de até 10 empresas REAIS do setor e, para cada uma, escreva como ajudá-la e uma mensagem pronta de abordagem. Responda APENAS o JSON pedido.
+  return `Você é um especialista em prospecção B2B. Com base nos RESULTADOS DE BUSCA WEB, monte uma lista de até 10 empresas REAIS do setor e, para cada uma, identifique o PROBLEMA que ela tem e que o diferencial do solicitante resolve, como ajudá-la e uma mensagem pronta de abordagem. Responda APENAS o JSON pedido.
 
 IMPORTANTE: NÃO invente e-mails, telefones nem links de redes sociais. Esses contatos são preenchidos automaticamente pelo sistema a partir das fontes — você só escreve texto.
 
@@ -76,9 +77,10 @@ ${contexto}
 REGRAS:
 1. Escolha até 10 empresas REAIS do setor indicado, de preferência citadas nas fontes.
 2. site: a URL do site oficial da empresa se aparecer nas fontes, senão null. Não invente domínio.
-3. comoAjudar: 2-3 frases específicas de como o serviço resolve uma dor real daquela empresa.
-4. mensagemPronta: uma mensagem curta (3-5 linhas) pronta para o vendedor enviar (e-mail ou WhatsApp), personalizada para a empresa.
-5. Gere 3 abordagens distintas: uma presencial, uma digital (email/WhatsApp) e uma de relacionamento (LinkedIn/conteúdo).`;
+3. problema: 1-2 frases sobre uma DOR concreta e ESPECÍFICA do setor/contexto dessa empresa que o diferencial do solicitante ("""${limpa(req.servicoOferecido)}""") resolve. Nada genérico — ancore no dia a dia da operação dela.
+4. comoAjudar: 2-3 frases de como exatamente o serviço do solicitante resolve ESSE problema.
+5. mensagemPronta: uma mensagem curta (3-5 linhas) pronta para o vendedor enviar (e-mail ou WhatsApp), que cite a dor e a solução, personalizada para a empresa.
+6. Gere 3 abordagens distintas: uma presencial, uma digital (email/WhatsApp) e uma de relacionamento (LinkedIn/conteúdo).`;
 }
 
 type FonteComContatos = FonteWeb & { contatos: Contatos };
@@ -234,12 +236,6 @@ export async function prospectar(req: ProspeccaoRequest): Promise<ProspeccaoResp
     `${req.tipoCliente} ${loc} instagram linkedin`,
   ]);
 
-  // Minera contatos de cada fonte uma vez (reaproveitado no casamento).
-  const fontesComContatos: FonteComContatos[] = fontes.map((f) => ({
-    ...f,
-    contatos: minerarContatos(f.texto),
-  }));
-
   // Contexto pro prompt: capa cada fonte pra não estourar o contexto do modelo.
   const contexto =
     fontes.map((f) => `Fonte: ${f.url}\n${f.texto.slice(0, 800)}`).join("\n\n") ||
@@ -247,6 +243,31 @@ export async function prospectar(req: ProspeccaoRequest): Promise<ProspeccaoResp
 
   const cru = await gerarJson(prompt(req, contexto), JSON_SCHEMA);
   const ia = ProspeccaoIA.parse(JSON.parse(cru));
+
+  // 2ª passada de busca, DIRIGIDA a cada empresa escolhida — acha as redes sociais e
+  // contatos específicos de cada uma (a 1ª busca é genérica do setor).
+  const queriesAlvo = ia.prospects.flatMap((p) => {
+    const ancora = p.site ? dominioDe(p.site) : p.nome;
+    return [
+      `${p.nome} ${loc} instagram linkedin facebook oficial`,
+      `${ancora} contato email telefone whatsapp`,
+    ];
+  });
+  const fontesAlvo = await buscarFontes(queriesAlvo, 4);
+
+  // União das fontes (dedup por URL), minerada uma vez cada.
+  const vistas = new Set<string>();
+  const todasFontes: FonteWeb[] = [];
+  for (const f of [...fontes, ...fontesAlvo]) {
+    if (f.url && !vistas.has(f.url)) {
+      vistas.add(f.url);
+      todasFontes.push(f);
+    }
+  }
+  const fontesComContatos: FonteComContatos[] = todasFontes.map((f) => ({
+    ...f,
+    contatos: minerarContatos(f.texto),
+  }));
 
   const prospects = removerCompartilhados(ia.prospects.map((p) => enriquecer(p, fontesComContatos)));
   return ProspeccaoResponse.parse({

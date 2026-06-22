@@ -1784,7 +1784,17 @@ function ProspectCard({ p, index, onGerarProposta }: { p: Prospect; index: numbe
         </span>
       </div>
 
-      <p style={{ fontSize: "13px", color: "#3a4757", lineHeight: 1.5, margin: 0 }}>{p.comoAjudar}</p>
+      {p.problema && (
+        <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: "9px", padding: "9px 11px" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", marginTop: "1px" }}>
+            <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+            <path d="M12 9v4M12 17h.01" />
+          </svg>
+          <span style={{ fontSize: "12.5px", color: "#9A3412", lineHeight: 1.45 }}><strong style={{ fontWeight: 700 }}>Dor:</strong> {p.problema}</span>
+        </div>
+      )}
+
+      <p style={{ fontSize: "13px", color: "#3a4757", lineHeight: 1.5, margin: 0 }}><strong style={{ color: "var(--blue-700)", fontWeight: 700 }}>Como você resolve: </strong>{p.comoAjudar}</p>
 
       {contatos.length > 0 && (
         <div style={{ borderTop: "1px solid var(--gray-100)", paddingTop: "11px", display: "flex", flexWrap: "wrap", gap: "7px" }}>
