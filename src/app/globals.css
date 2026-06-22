@@ -153,3 +153,27 @@ body {
 .scroll-suave::-webkit-scrollbar { width: 8px; }
 .scroll-suave::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
 .scroll-suave::-webkit-scrollbar-track { background: transparent; }
+
+/* ───────────────────────────────────────────────────────────
+   Responsivo — tela estreita / mobile
+   A sidebar (estilos inline) colapsa numa trilha de ícones: font-size:0 some
+   com os rótulos do nav e mantém os SVGs; textos de marca/usuário escondidos.
+   ─────────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .ies-sidebar { width: 60px !important; }
+  .ies-side-text { display: none !important; }
+  .ies-sidebar > div:first-child { padding-left: 4px !important; padding-right: 4px !important; }
+  .ies-sidebar nav > button {
+    font-size: 0 !important;
+    gap: 0 !important;
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .ies-side-foot {
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+}

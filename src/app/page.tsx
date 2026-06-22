@@ -85,8 +85,27 @@ function Hoverable({
     onMouseUp: () => setA(false),
   };
   if (as === "div") {
+    // Div clicável vira botão acessível: foco por teclado + Enter/Espaço aciona.
+    const clicavel = typeof onClick === "function";
     return (
-      <div style={style} onClick={onClick} title={title} {...handlers}>
+      <div
+        style={style}
+        onClick={onClick}
+        title={title}
+        role={clicavel ? "button" : undefined}
+        tabIndex={clicavel ? 0 : undefined}
+        onKeyDown={
+          clicavel
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onClick?.();
+                }
+              }
+            : undefined
+        }
+        {...handlers}
+      >
         {children}
       </div>
     );
@@ -345,13 +364,13 @@ export default function Home() {
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--gray-50)", fontFamily: "'Inter',sans-serif", color: "var(--gray-900)" }}>
       {/* ============ SIDEBAR ============ */}
-      <aside style={{ width: "240px", flex: "none", height: "100vh", background: "var(--blue-800)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <aside className="ies-sidebar" style={{ width: "240px", flex: "none", height: "100vh", background: "var(--blue-800)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", boxShadow: "0 2px 8px rgba(30,107,184,.5)" }}>
               <span style={{ color: "white", fontWeight: 700, fontSize: "13px", letterSpacing: "-.5px" }}>ies</span>
             </div>
-            <div>
+            <div className="ies-side-text">
               <div style={{ fontSize: "14px", fontWeight: 700, color: "white", lineHeight: 1.1 }}>
                 indeba <span style={{ color: "#EC7A1C" }}>express</span>
               </div>
@@ -403,9 +422,9 @@ export default function Home() {
           </Hoverable>
         </nav>
 
-        <div style={{ padding: "14px 14px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: "10px" }}>
+        <div className="ies-side-foot" style={{ padding: "14px 14px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontWeight: 700, fontSize: "12px", color: "white" }}>N</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="ies-side-text" style={{ flex: 1, minWidth: 0 }}>
             <div style={{ color: "white", fontSize: "13px", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Nicolás Ferreira</div>
             <div style={{ color: "rgba(255,255,255,.4)", fontSize: "11px" }}>Vendedor</div>
           </div>
@@ -887,8 +906,8 @@ function ReviewScreen({
             })}
           </div>
         ) : (
-          <div style={{ background: "white", borderRadius: "12px", border: "1px solid var(--gray-200)", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 80px 110px 110px 100px", padding: "11px 20px", background: "var(--gray-100)", borderBottom: "1px solid var(--gray-200)" }}>
+          <div style={{ background: "white", borderRadius: "12px", border: "1px solid var(--gray-200)", overflowX: "auto", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 80px 110px 110px 100px", minWidth: "640px", padding: "11px 20px", background: "var(--gray-100)", borderBottom: "1px solid var(--gray-200)" }}>
               {["Produto", "Origem", "Qtd", "Preço unit.", "Total", "Status"].map((h, i) => (
                 <div key={h} style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".05em", textAlign: i === 2 || i === 5 ? "center" : i === 3 || i === 4 ? "right" : "left" }}>{h}</div>
               ))}
@@ -896,7 +915,7 @@ function ReviewScreen({
             {scope.itens.map((p) => {
               const included = !excluded.has(p.codigo);
               return (
-                <div key={p.codigo} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 80px 110px 110px 100px", padding: "13px 20px", borderBottom: "1px solid #EEF3F8", alignItems: "center", background: included ? "#FFFFFF" : "#F7F9FC", opacity: included ? 1 : 0.45 }}>
+                <div key={p.codigo} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 80px 110px 110px 100px", minWidth: "640px", padding: "13px 20px", borderBottom: "1px solid #EEF3F8", alignItems: "center", background: included ? "#FFFFFF" : "#F7F9FC", opacity: included ? 1 : 0.45 }}>
                   <div>
                     <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-900)" }}>{p.nome}</div>
                     <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginTop: "2px" }}>{p.codigo} · {unidadeDe(p)}</div>
@@ -1328,8 +1347,8 @@ function HistoryScreen({ propostas, erro, goToBriefing }: { propostas: PropostaL
           <p style={{ fontSize: "14px", color: "var(--gray-500)" }}>Gere a primeira proposta para ela aparecer aqui.</p>
         </div>
       ) : (
-        <div style={{ background: "white", borderRadius: "12px", border: "1px solid var(--gray-200)", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: cols, padding: "11px 20px", background: "var(--gray-100)", borderBottom: "1px solid var(--gray-200)" }}>
+        <div style={{ background: "white", borderRadius: "12px", border: "1px solid var(--gray-200)", overflowX: "auto", boxShadow: "var(--shadow-sm)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: cols, minWidth: "720px", padding: "11px 20px", background: "var(--gray-100)", borderBottom: "1px solid var(--gray-200)" }}>
             {[
               { t: "Cliente", a: "left" },
               { t: "Segmento", a: "left" },
@@ -1348,7 +1367,7 @@ function HistoryScreen({ propostas, erro, goToBriefing }: { propostas: PropostaL
               <Hoverable
                 key={p.propostaId + idx}
                 as="div"
-                base={{ display: "grid", gridTemplateColumns: cols, padding: "13px 20px", borderBottom: "1px solid var(--gray-100)", alignItems: "center", transition: "background .15s ease" }}
+                base={{ display: "grid", gridTemplateColumns: cols, minWidth: "720px", padding: "13px 20px", borderBottom: "1px solid var(--gray-100)", alignItems: "center", transition: "background .15s ease" }}
                 hover={{ background: "var(--gray-50)" }}
               >
                 <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-900)" }}>{p.cliente}</div>
@@ -1597,7 +1616,7 @@ function ProspeccaoScreen({ onGerarProposta }: { onGerarProposta: (seed: string)
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(330px, 1fr))", gap: "16px", marginBottom: "34px" }}>
               {res.prospects.map((p, i) => (
-                <ProspectCard key={`${p.nome}-${i}`} p={p} index={i} onGerarProposta={onGerarProposta} />
+                <ProspectCard key={`${p.nome}-${i}`} p={p} index={i} onGerarProposta={(pr) => onGerarProposta(`${pr.nome}: ${pr.setor}. Empresa-alvo para ${servicoOferecido.trim() || nicho.trim()}. ${pr.comoAjudar}`)} />
               ))}
             </div>
           )}
@@ -1716,7 +1735,7 @@ function IconeContato({ tipo }: { tipo: "email" | "tel" | "site" | "linkedin" | 
   }
 }
 
-function ProspectCard({ p, index, onGerarProposta }: { p: Prospect; index: number; onGerarProposta: (seed: string) => void }) {
+function ProspectCard({ p, index, onGerarProposta }: { p: Prospect; index: number; onGerarProposta: (p: Prospect) => void }) {
   const [copiado, setCopiado] = useState(false);
   const confirmado = p.confiabilidade === "confirmado";
   const acento = confirmado ? "#16A34A" : "#D97706";
@@ -1816,7 +1835,7 @@ function ProspectCard({ p, index, onGerarProposta }: { p: Prospect; index: numbe
           <span />
         )}
         <Hoverable
-          onClick={() => onGerarProposta(`${p.nome}: ${p.setor}. ${p.comoAjudar}`)}
+          onClick={() => onGerarProposta(p)}
           title="Leva os dados deste prospect para o briefing da proposta"
           base={{ flex: "none", display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 600, color: "white", background: "var(--orange-500)", border: "none", borderRadius: "8px", padding: "6px 12px", cursor: "pointer", boxShadow: "0 2px 8px rgba(236,122,28,.32)", transition: "transform .12s ease,box-shadow .18s ease" }}
           hover={{ transform: "translateY(-1px)", boxShadow: "0 4px 12px rgba(236,122,28,.4)" }}
