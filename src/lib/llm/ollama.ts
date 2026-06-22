@@ -1,6 +1,6 @@
 // Cliente mínimo do Ollama (spec: Qwen2.5 7B Instruct, saída JSON restrita por schema).
 const BASE = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
-const MODEL = process.env.OLLAMA_MODEL ?? "qwen3:30b";
+const MODEL = process.env.OLLAMA_MODEL ?? "qwen2.5:7b-instruct";
 
 export async function ollamaDisponivel(): Promise<boolean> {
   // Produção sem Ollama configurado → roda 100% determinístico, sem tentar
