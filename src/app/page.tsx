@@ -838,7 +838,7 @@ function ReviewScreen({
 
       <div className="ies-scroll" style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
         {reviewVariant === "A" ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
             {scope.itens.map((p) => {
               const included = !excluded.has(p.codigo);
               return (
@@ -1306,7 +1306,7 @@ function HistoryScreen({ propostas, erro, goToBriefing }: { propostas: PropostaL
         </Hoverable>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "14px", marginBottom: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "14px", marginBottom: "24px" }}>
         {stats.map((s) => (
           <div key={s.label} style={{ background: "white", borderRadius: "12px", border: "1px solid var(--gray-200)", padding: "16px 20px", boxShadow: "var(--shadow-sm)" }}>
             <div style={{ fontSize: "12px", color: "var(--gray-500)", fontWeight: 500, marginBottom: "4px" }}>{s.label}</div>
@@ -1447,7 +1447,7 @@ function CatalogScreen({
           <p style={{ fontSize: "14px", color: "var(--gray-500)" }}>Tente outro filtro ou adicione um produto ao catálogo.</p>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "14px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "14px" }}>
           {filtered.map((item) => {
             const e = item.embalagens[0];
             return (
@@ -1549,11 +1549,11 @@ function ProspeccaoScreen({ onGerarProposta }: { onGerarProposta: (seed: string)
 
       {/* ── Formulário ── */}
       <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "22px", boxShadow: "var(--shadow-md)", marginBottom: "24px", animation: "fadeUp .5s ease both", animationDelay: "60ms" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-          <CampoTexto label="Nicho / o que você vende" value={nicho} onChange={setNicho} placeholder="Ex: Produtos de limpeza industrial" />
-          <CampoTexto label="Tipo de cliente desejado" value={tipoCliente} onChange={setTipoCliente} placeholder="Ex: Hospitais, hotéis e indústrias" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+          <CampoTexto label="Nicho / o que você vende" value={nicho} onChange={setNicho} placeholder="Ex: Produtos de limpeza industrial" onEnter={prospectar} />
+          <CampoTexto label="Tipo de cliente desejado" value={tipoCliente} onChange={setTipoCliente} placeholder="Ex: Hospitais, hotéis e indústrias" onEnter={prospectar} />
           <div style={{ gridColumn: "1 / -1" }}>
-            <CampoTexto label="O que você oferece (diferencial)" value={servicoOferecido} onChange={setServicoOferecido} placeholder="Ex: Entrega rápida, suporte técnico e preço de fábrica" />
+            <CampoTexto label="O que você oferece (diferencial)" value={servicoOferecido} onChange={setServicoOferecido} placeholder="Ex: Entrega rápida, suporte técnico e preço de fábrica" onEnter={prospectar} />
           </div>
           <CampoTexto label="Localização" opcional value={localizacao} onChange={setLocalizacao} placeholder="Ex: Salvador, BA" onEnter={prospectar} />
           <div style={{ display: "flex", alignItems: "flex-end" }}>
@@ -1595,7 +1595,7 @@ function ProspeccaoScreen({ onGerarProposta }: { onGerarProposta: (seed: string)
               Nenhum prospect encontrado. Tente um nicho ou localização diferente.
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: "16px", marginBottom: "34px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(330px, 1fr))", gap: "16px", marginBottom: "34px" }}>
               {res.prospects.map((p, i) => (
                 <ProspectCard key={`${p.nome}-${i}`} p={p} index={i} onGerarProposta={onGerarProposta} />
               ))}
@@ -1606,7 +1606,7 @@ function ProspeccaoScreen({ onGerarProposta }: { onGerarProposta: (seed: string)
           {res.abordagens.length > 0 && (
             <>
               <h3 style={{ fontSize: "18px", fontWeight: 800, color: "var(--gray-900)", marginBottom: "16px", letterSpacing: "-.3px", animation: "fadeUp .4s ease both" }}>Estratégias de abordagem</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "16px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
                 {res.abordagens.map((a, i) => (
                   <AbordagemCard key={`${a.titulo}-${i}`} a={a} index={i} />
                 ))}
