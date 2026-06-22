@@ -56,3 +56,7 @@ docs/evidencia/
 *.ogg
 
 .vercel
+
+# logs locais de deploy/tunel
+cf.log
+deploy.log
