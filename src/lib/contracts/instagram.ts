@@ -1,11 +1,13 @@
 import { z } from "zod";
 
 /**
- * Gerador de posts para Instagram.
+ * Gerador de posts para Instagram (com imagem por IA).
  *
- * Diferente do fluxo de proposta, aqui NÃO há dado crítico do catálogo: o conteúdo
- * é 100% texto criativo (procedência IA-TEXTO). A IA escreve; quando o Ollama está
- * fora, cai num template determinístico (degradação graciosa — constituição §5).
+ * Texto: 100% criativo via IA (procedência IA-TEXTO) — sem dado crítico do catálogo.
+ * Imagem: gerada localmente por Stable Diffusion (A1111/Forge) a partir do
+ * `imagemPrompt` (em inglês) que a IA escreve por post. Sem Ollama, cai num template
+ * determinístico (degradação graciosa — constituição §5); sem SD, o card mostra o
+ * prompt da imagem no lugar do render.
  */
 
 export const TomPost = z.enum([
@@ -17,27 +19,30 @@ export const TomPost = z.enum([
 ]);
 export type TomPost = z.infer<typeof TomPost>;
 
-// Entrada: o cliente descreve o post em linguagem natural; o resto é ajuste fino.
+// Entrada: o cliente descreve em linguagem natural; os campos de negócio dão contexto.
 export const InstagramRequest = z.object({
   briefing: z.string().min(1).max(2000),
   nicho: z.string().max(120).nullable().default(null),
+  produtoServico: z.string().max(200).nullable().default(null),
+  publicoAlvo: z.string().max(200).nullable().default(null),
   tom: TomPost.default("profissional"),
-  numVersoes: z.number().int().min(1).max(3).default(1),
+  numPosts: z.number().int().min(1).max(5).default(5),
 });
 export type InstagramRequest = z.infer<typeof InstagramRequest>;
 
 export const PostInstagram = z.object({
   versao: z.number().int(),
-  legenda: z.string(), // legenda completa, pronta para copiar
+  tema: z.string(), // ex.: "Autoridade", "Educativo", "Prova social", "Oferta", "Conexão"
   abertura: z.string(), // primeira linha (gancho antes do "ver mais")
+  legenda: z.string(), // body copy + CTA, pronto para copiar
   hashtags: z.array(z.string()), // sem o "#"
-  sugestaoCriativo: z.string(),
-  melhorHorario: z.string(),
+  melhorHorario: z.string(), // dia + horário + justificativa rápida
+  imagemPrompt: z.string(), // prompt em INGLÊS para o Stable Diffusion (1:1)
 });
 export type PostInstagram = z.infer<typeof PostInstagram>;
 
 export const InstagramResponse = z.object({
   posts: z.array(PostInstagram),
-  notaEditorial: z.string(), // explicação das escolhas do agente
+  notaEditorial: z.string(), // escolhas de linha visual e tom
 });
 export type InstagramResponse = z.infer<typeof InstagramResponse>;

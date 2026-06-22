@@ -15,7 +15,8 @@ export async function ollamaDisponivel(): Promise<boolean> {
 }
 
 // Gera resposta com `format` = JSON Schema (saída restrita). Retorna o texto cru.
-export async function gerarJson(prompt: string, schema: object): Promise<string> {
+// `timeoutMs` é configurável: fluxos com saída maior (ex.: vários posts) pedem mais.
+export async function gerarJson(prompt: string, schema: object, timeoutMs = 60_000): Promise<string> {
   const r = await fetch(`${BASE}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -26,7 +27,7 @@ export async function gerarJson(prompt: string, schema: object): Promise<string>
       format: schema,
       options: { temperature: 0 },
     }),
-    signal: AbortSignal.timeout(60_000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!r.ok) throw new Error(`Ollama ${r.status}`);
   const data = (await r.json()) as { response: string };

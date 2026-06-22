@@ -76,14 +76,20 @@ append-only** (cliente, itens, preços aplicados, autor, timestamp).
 - Botão **"Gerar proposta"** leva o prospect direto pro briefing e já gera a proposta.
 
 ### Posts para Instagram
-- O vendedor descreve o post em **linguagem natural** (o input principal); tom de voz,
-  nicho e nº de versões (1–3) são ajustes opcionais.
-- A IA (`src/lib/llm/gerar-instagram.ts`, saída JSON restrita por schema) escreve cada
-  versão: **abertura** (gancho antes do "ver mais"), legenda com CTA, 5–15 **hashtags**,
-  sugestão de **criativo** e **melhor horário** — mais uma nota editorial.
-- Conteúdo é 100% texto criativo (procedência IA-TEXTO) — aqui **não** há dado crítico do
-  catálogo. Sem Ollama, cai num **template determinístico** (degradação graciosa, §5).
-- Cada card permite **copiar** legenda + hashtags com um clique.
+- O vendedor descreve o post em **linguagem natural** (input principal); nicho,
+  produto/serviço, público-alvo, tom de voz e nº de posts (1/3/5) são ajustes opcionais.
+- A IA (`src/lib/llm/gerar-instagram.ts`, saída JSON restrita por schema) escreve até 5
+  posts num **framework editorial** (autoridade, educativo, prova social, oferta, conexão):
+  **abertura** (gancho), legenda com CTA, 5–15 **hashtags**, **melhor horário** (com
+  justificativa) e um **prompt de imagem em inglês** por post — mais uma nota editorial.
+- **Imagem por IA (1:1):** cada post gera uma imagem via **Stable Diffusion local**
+  (`src/lib/imagem/stable-diffusion.ts` → API A1111/Forge `/sdapi/v1/txt2img`), no endpoint
+  separado `/api/instagram/imagem`. O front gera **uma imagem por vez** (GPU única) e cada
+  card recebe a sua com fade. Sem SD, o card mostra o prompt da imagem (fallback).
+- Texto é 100% criativo (IA-TEXTO) — **não** há dado crítico do catálogo. Sem Ollama, cai
+  num **template determinístico** (degradação graciosa, §5).
+- Envs: `SD_BASE_URL` (padrão `http://127.0.0.1:7860`), `SD_STEPS` (25), `SD_SIZE` (1024).
+- Cada card permite **copiar** legenda + hashtags e **baixar** a imagem.
 
 ---
 
@@ -97,7 +103,8 @@ append-only** (cliente, itens, preços aplicados, autor, timestamp).
 | `/api/catalogo` | GET | catálogo de produtos (protegido) |
 | `/api/propostas` | GET | log append-only das propostas geradas |
 | `/api/prospectar` | POST | prospecção de leads (IA + Tavily + mineração) |
-| `/api/instagram` | POST | briefing → posts de Instagram (legenda, hashtags, criativo) |
+| `/api/instagram` | POST | briefing → posts de Instagram (legenda, hashtags, horário) |
+| `/api/instagram/imagem` | POST | prompt (inglês) → imagem 1:1 (Stable Diffusion local) |
 | `/api/login` · `/api/logout` | POST | autenticação por cookie de sessão |
 
 Auth (cookie assinado) e rate limit são aplicados no `src/middleware.ts`.
@@ -119,7 +126,8 @@ src/
     montar.ts               orquestra briefing → PropostaScope
     tipo-proposta.ts        detecção do tipo de proposta
     selecao/                matcher por facetas (linha, segmento, função, método)
-    llm/                    cliente Ollama (gerarJson/gerarTexto, disponibilidade)
+    llm/                    cliente Ollama (gerarJson/gerarTexto) + gerar-instagram.ts
+    imagem/                 stable-diffusion.ts (txt2img A1111/Forge → imagem 1:1)
     pdf/                    render Playwright + templates por tipo
     prospeccao/             tavily.ts (busca) · contatos.ts (mineração) · prospectar.ts
     auth.ts · ratelimit.ts · log.ts · imagens · utils.ts

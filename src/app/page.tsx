@@ -1913,31 +1913,77 @@ const TONS_POST: { value: TomPost; label: string }[] = [
   { value: "educativo", label: "Educativo" },
 ];
 
+type ImgState = { status: "loading" | "ok" | "erro" | "off"; src?: string };
+
 function InstagramScreen() {
   const [briefing, setBriefing] = useState("");
   const [nicho, setNicho] = useState("");
+  const [produto, setProduto] = useState("");
+  const [publico, setPublico] = useState("");
   const [tom, setTom] = useState<TomPost>("profissional");
-  const [numVersoes, setNumVersoes] = useState(2);
+  const [numPosts, setNumPosts] = useState(5);
   const [foco, setFoco] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [res, setRes] = useState<InstagramResponse | null>(null);
+  const [imagens, setImagens] = useState<Record<number, ImgState>>({});
 
   const podeGerar = briefing.trim().length > 0 && !loading;
+
+  // GPU única: gera uma imagem por vez, na ordem dos posts, atualizando cada card.
+  async function gerarImagens(posts: PostInstagram[]) {
+    for (const p of posts) {
+      setImagens((m) => ({ ...m, [p.versao]: { status: "loading" } }));
+      try {
+        const r = await fetch("/api/instagram/imagem", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: p.imagemPrompt }),
+        });
+        if (r.status === 503) {
+          // Stable Diffusion fora: marca todos os pendentes como "off" e para.
+          setImagens((m) => {
+            const next = { ...m };
+            for (const q of posts) {
+              if (!next[q.versao] || next[q.versao].status === "loading") next[q.versao] = { status: "off" };
+            }
+            return next;
+          });
+          return;
+        }
+        const d = await r.json();
+        if (!r.ok || !d.imagem) throw new Error(d?.erro ?? "falha");
+        setImagens((m) => ({ ...m, [p.versao]: { status: "ok", src: d.imagem as string } }));
+      } catch {
+        setImagens((m) => ({ ...m, [p.versao]: { status: "erro" } }));
+      }
+    }
+  }
 
   async function gerar() {
     if (!podeGerar) return;
     setLoading(true);
     setErro(null);
+    setRes(null);
+    setImagens({});
     try {
       const r = await fetch("/api/instagram", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ briefing, nicho: nicho.trim() || null, tom, numVersoes }),
+        body: JSON.stringify({
+          briefing,
+          nicho: nicho.trim() || null,
+          produtoServico: produto.trim() || null,
+          publicoAlvo: publico.trim() || null,
+          tom,
+          numPosts,
+        }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.erro ?? `Falha ao gerar os posts (${r.status}).`);
-      setRes(d as InstagramResponse);
+      const out = d as InstagramResponse;
+      setRes(out);
+      void gerarImagens(out.posts); // sequencial, em background — os cards já aparecem
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao gerar os posts.");
     } finally {
@@ -1962,7 +2008,7 @@ function InstagramScreen() {
           <div>
             <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Posts para Instagram</h2>
             <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "640px" }}>
-              Descreva em linguagem natural o que você quer divulgar — a IA escreve a legenda, o gancho, as hashtags e o roteiro do criativo, pronto pra publicar.
+              Descreva em linguagem natural o que quer divulgar — a IA escreve legenda, gancho, hashtags e horário, e gera a imagem 1:1 de cada post.
             </div>
           </div>
         </div>
@@ -1984,6 +2030,8 @@ function InstagramScreen() {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginTop: "16px" }}>
           <CampoTexto label="Nicho / segmento" opcional value={nicho} onChange={setNicho} placeholder="Ex: limpeza profissional" onEnter={gerar} />
+          <CampoTexto label="Produto / serviço" opcional value={produto} onChange={setProduto} placeholder="Ex: desengordurante industrial" onEnter={gerar} />
+          <CampoTexto label="Público-alvo" opcional value={publico} onChange={setPublico} placeholder="Ex: donos de restaurante em Salvador" onEnter={gerar} />
           <div>
             <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "6px" }}>Tom de voz</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
@@ -1998,12 +2046,12 @@ function InstagramScreen() {
             </div>
           </div>
           <div>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "6px" }}>Versões</label>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "6px" }}>Nº de posts</label>
             <div style={{ display: "flex", background: "white", border: "1px solid var(--gray-200)", borderRadius: "999px", padding: "3px", gap: "2px", width: "fit-content", boxShadow: "var(--shadow-sm)" }}>
-              {[1, 2, 3].map((n) => {
-                const ativo = numVersoes === n;
+              {[1, 3, 5].map((n) => {
+                const ativo = numPosts === n;
                 return (
-                  <button key={n} onClick={() => setNumVersoes(n)} style={{ width: "40px", padding: "6px 0", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontSize: "13px", fontWeight: ativo ? 700 : 500, fontFamily: "'Inter',sans-serif" }}>
+                  <button key={n} onClick={() => setNumPosts(n)} style={{ width: "40px", padding: "6px 0", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontSize: "13px", fontWeight: ativo ? 700 : 500, fontFamily: "'Inter',sans-serif" }}>
                     {n}
                   </button>
                 );
@@ -2044,7 +2092,7 @@ function InstagramScreen() {
           )}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "16px" }}>
             {res.posts.map((p, i) => (
-              <PostInstagramCard key={p.versao} p={p} index={i} />
+              <PostInstagramCard key={p.versao} p={p} index={i} imagem={imagens[p.versao]} />
             ))}
           </div>
         </>
@@ -2067,10 +2115,10 @@ function InstagramSkeleton() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "16px" }}>
         {[0, 1].map((i) => (
           <div key={i} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", gap: "12px", animation: "popIn .4s ease both", animationDelay: `${i * 80}ms` }}>
+            <div className="ies-skeleton" style={{ width: "100%", aspectRatio: "1 / 1", borderRadius: "10px" }} />
             {linha("40%", "14px")}
             {linha("90%")}
             {linha("100%")}
-            {linha("75%")}
             <div style={{ display: "flex", gap: "8px", marginTop: "2px" }}>{linha("70px", "22px")}{linha("70px", "22px")}{linha("70px", "22px")}</div>
           </div>
         ))}
@@ -2079,8 +2127,41 @@ function InstagramSkeleton() {
   );
 }
 
-/* Card de um post gerado — copia a legenda completa pronta pra publicar. */
-function PostInstagramCard({ p, index }: { p: PostInstagram; index: number }) {
+/* Área de imagem 1:1 do card — skeleton enquanto gera, imagem ou fallback do prompt. */
+function ImagemPost({ estado, prompt }: { estado: ImgState | undefined; prompt: string }) {
+  const st = estado?.status;
+  if (st === "ok" && estado?.src) {
+    return (
+      <a href={estado.src} download={`post-instagram.png`} title="Baixar imagem" style={{ display: "block", width: "100%", aspectRatio: "1 / 1", borderRadius: "10px", overflow: "hidden", border: "1px solid var(--gray-200)" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={estado.src} alt="Imagem do post gerada por IA" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", animation: "popIn .4s ease both" }} />
+      </a>
+    );
+  }
+  if (st === "loading") {
+    return (
+      <div className="ies-skeleton" style={{ width: "100%", aspectRatio: "1 / 1", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#DB2777", fontSize: "12px", fontWeight: 600, background: "rgba(255,255,255,.75)", borderRadius: "999px", padding: "5px 12px" }}>
+          <span style={{ width: "12px", height: "12px", border: "2px solid rgba(219,39,119,.35)", borderTopColor: "#DB2777", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+          Gerando imagem…
+        </div>
+      </div>
+    );
+  }
+  // erro / off / sem estado → mostra o prompt (inglês) pronto pra usar em outro gerador.
+  return (
+    <div style={{ width: "100%", aspectRatio: "1 / 1", borderRadius: "10px", border: "1px dashed var(--gray-300)", background: "var(--gray-50)", padding: "14px", display: "flex", flexDirection: "column", gap: "8px", overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11.5px", fontWeight: 700, color: "var(--gray-500)" }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+        {st === "off" ? "Stable Diffusion offline — prompt da imagem:" : "Imagem indisponível — prompt:"}
+      </div>
+      <p style={{ fontSize: "11.5px", color: "#3a4757", lineHeight: 1.5, margin: 0, overflow: "auto" }}>{prompt}</p>
+    </div>
+  );
+}
+
+/* Card de um post gerado — imagem 1:1 no topo + copy pronto pra publicar. */
+function PostInstagramCard({ p, index, imagem }: { p: PostInstagram; index: number; imagem: ImgState | undefined }) {
   const [copiado, setCopiado] = useState(false);
   const textoCompleto = `${p.legenda}\n\n${p.hashtags.map((h) => `#${h}`).join(" ")}`;
   function copiar() {
@@ -2091,8 +2172,13 @@ function PostInstagramCard({ p, index }: { p: PostInstagram; index: number }) {
   }
   return (
     <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", gap: "12px", animation: "popIn .4s ease both", animationDelay: `${index * 90}ms` }}>
+      <ImagemPost estado={imagem} prompt={p.imagemPrompt} />
+
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-        <span style={{ fontSize: "11px", fontWeight: 700, color: "#DB2777", background: "#FCE7F3", borderRadius: "999px", padding: "3px 11px" }}>Versão {p.versao}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "#DB2777", background: "#FCE7F3", borderRadius: "999px", padding: "3px 11px" }}>Post {p.versao}</span>
+          <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", background: "var(--gray-100)", borderRadius: "999px", padding: "3px 10px" }}>{p.tema}</span>
+        </div>
         <Hoverable
           onClick={copiar}
           title="Copiar legenda + hashtags"
@@ -2120,15 +2206,9 @@ function PostInstagramCard({ p, index }: { p: PostInstagram; index: number }) {
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "7px", borderTop: "1px solid var(--gray-100)", paddingTop: "11px", marginTop: "auto" }}>
-        <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "12px", color: "var(--gray-500)", lineHeight: 1.45 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", marginTop: "1px" }}><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
-          <span><strong style={{ color: "var(--gray-900)", fontWeight: 600 }}>Criativo:</strong> {p.sugestaoCriativo}</span>
-        </div>
-        <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "12px", color: "var(--gray-500)", lineHeight: 1.45 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", marginTop: "1px" }}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
-          <span><strong style={{ color: "var(--gray-900)", fontWeight: 600 }}>Melhor horário:</strong> {p.melhorHorario}</span>
-        </div>
+      <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "12px", color: "var(--gray-500)", lineHeight: 1.45, borderTop: "1px solid var(--gray-100)", paddingTop: "11px", marginTop: "auto" }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", marginTop: "1px" }}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+        <span><strong style={{ color: "var(--gray-900)", fontWeight: 600 }}>Melhor horário:</strong> {p.melhorHorario}</span>
       </div>
     </div>
   );
