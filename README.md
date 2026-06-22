@@ -82,11 +82,10 @@ append-only** (cliente, itens, preços aplicados, autor, timestamp).
   posts num **framework editorial** (autoridade, educativo, prova social, oferta, conexão):
   **abertura** (gancho), legenda com CTA, 5–15 **hashtags**, **melhor horário** (com
   justificativa) e um **prompt de imagem em inglês** por post — mais uma nota editorial.
-- **Imagem por IA (4:5):** gerada **no navegador** via **Puter.js / Nano Banana** (Gemini
-  Image) — sem servidor, sem chave de API. Modelo *user-pays* (o usuário cobre o próprio
-  uso, podendo pedir login no Puter). O front gera **uma imagem por vez** a partir do
-  `imagemPrompt` (inglês) e cada card recebe a sua com fade; se falhar, mostra a descrição
-  do criativo (em PT). Domínios `*.puter.com` liberados na CSP (`next.config.ts`).
+- **Imagem por IA (4:5):** gerada via **Pollinations.ai** (modelo **Flux**) — grátis, **sem
+  chave e sem login**. Cada card carrega a imagem direto de `image.pollinations.ai` (URL com
+  o `imagemPrompt` em inglês + seed estável) no `<img>`, com loading, fade e botão "tentar
+  de novo" em caso de falha. Só `*.pollinations.ai` é liberado na CSP (`img-src`).
 - Idioma: todo o conteúdo sai em **português**; só o `imagemPrompt` (técnico, para a
   imagem) é em inglês — os modelos de imagem entendem melhor.
 - Texto é 100% criativo (IA-TEXTO) — **não** há dado crítico do catálogo. Sem Ollama, cai

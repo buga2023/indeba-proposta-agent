@@ -1913,33 +1913,16 @@ const TONS_POST: { value: TomPost; label: string }[] = [
   { value: "educativo", label: "Educativo" },
 ];
 
-/* Puter.js (Nano Banana / Gemini) — geração de imagem NO NAVEGADOR, sem servidor.
-   Modelo "user-pays": o usuário do app cobre o próprio uso (pode pedir login no Puter). */
-const NANO_MODEL = "gemini-2.5-flash-image-preview";
-
-type PuterGlobal = { ai: { txt2img: (prompt: string, opts: { model: string }) => Promise<HTMLImageElement> } };
-let puterPromise: Promise<PuterGlobal> | null = null;
-
-function carregarPuter(): Promise<PuterGlobal> {
-  const atual = (window as unknown as { puter?: PuterGlobal }).puter;
-  if (atual) return Promise.resolve(atual);
-  if (puterPromise) return puterPromise;
-  puterPromise = new Promise<PuterGlobal>((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://js.puter.com/v2/";
-    s.async = true;
-    s.onload = () => {
-      const p = (window as unknown as { puter?: PuterGlobal }).puter;
-      if (p) resolve(p);
-      else reject(new Error("Puter não inicializou"));
-    };
-    s.onerror = () => reject(new Error("Falha ao carregar o Puter.js"));
-    document.head.appendChild(s);
-  });
-  return puterPromise;
+/* Pollinations.ai — geração de imagem grátis, SEM chave e SEM login (modelo Flux).
+   O endpoint devolve a imagem direto, então a URL é usada como src do <img>.
+   Seed derivada do prompt = URL estável (não regenera a cada render); nonce força nova. */
+function pollinationsUrl(prompt: string, nonce: number): string {
+  const p = prompt.slice(0, 800);
+  let h = 0;
+  for (let i = 0; i < p.length; i++) h = (h * 31 + p.charCodeAt(i)) >>> 0;
+  const seed = (h + nonce * 7919) % 1_000_000;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=1024&height=1280&model=flux&nologo=true&seed=${seed}`;
 }
-
-type ImgState = { status: "loading" | "ok" | "erro"; src?: string };
 
 function InstagramScreen() {
   const [briefing, setBriefing] = useState("");
@@ -1952,42 +1935,13 @@ function InstagramScreen() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [res, setRes] = useState<InstagramResponse | null>(null);
-  const [imagens, setImagens] = useState<Record<number, ImgState>>({});
-
   const podeGerar = briefing.trim().length > 0 && !loading;
-
-  // Gera as imagens no navegador (Puter/Nano Banana), uma por vez, atualizando cada card.
-  async function gerarImagens(posts: PostInstagram[]) {
-    let puter: PuterGlobal;
-    try {
-      puter = await carregarPuter();
-    } catch {
-      setImagens((m) => {
-        const next = { ...m };
-        for (const q of posts) next[q.versao] = { status: "erro" };
-        return next;
-      });
-      return;
-    }
-    for (const p of posts) {
-      setImagens((m) => ({ ...m, [p.versao]: { status: "loading" } }));
-      try {
-        const el = await puter.ai.txt2img(p.imagemPrompt, { model: NANO_MODEL });
-        const src = el?.src;
-        if (!src) throw new Error("sem imagem");
-        setImagens((m) => ({ ...m, [p.versao]: { status: "ok", src } }));
-      } catch {
-        setImagens((m) => ({ ...m, [p.versao]: { status: "erro" } }));
-      }
-    }
-  }
 
   async function gerar() {
     if (!podeGerar) return;
     setLoading(true);
     setErro(null);
     setRes(null);
-    setImagens({});
     try {
       const r = await fetch("/api/instagram", {
         method: "POST",
@@ -2019,9 +1973,7 @@ function InstagramScreen() {
               : `Falha ao gerar os posts (HTTP ${r.status}).`;
         throw new Error(msg);
       }
-      const out = d as InstagramResponse;
-      setRes(out);
-      void gerarImagens(out.posts); // sequencial, em background — os cards já aparecem
+      setRes(d as InstagramResponse);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao gerar os posts.");
     } finally {
@@ -2130,7 +2082,7 @@ function InstagramScreen() {
           )}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "16px" }}>
             {res.posts.map((p, i) => (
-              <PostInstagramCard key={p.versao} p={p} index={i} imagem={imagens[p.versao]} />
+              <PostInstagramCard key={p.versao} p={p} index={i} />
             ))}
           </div>
         </>
@@ -2165,39 +2117,47 @@ function InstagramSkeleton() {
   );
 }
 
-/* Área de imagem 1:1 do card — skeleton enquanto gera, imagem ou status (PT). */
-function ImagemPost({ estado }: { estado: ImgState | undefined }) {
-  const st = estado?.status;
-  if (st === "ok" && estado?.src) {
-    return (
-      <a href={estado.src} download={`post-instagram.png`} title="Baixar imagem" style={{ display: "block", width: "100%", aspectRatio: "4 / 5", borderRadius: "10px", overflow: "hidden", border: "1px solid var(--gray-200)" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={estado.src} alt="Imagem do post gerada por IA" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", animation: "popIn .4s ease both" }} />
-      </a>
-    );
-  }
-  if (st === "loading") {
-    return (
-      <div className="ies-skeleton" style={{ width: "100%", aspectRatio: "4 / 5", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#DB2777", fontSize: "12px", fontWeight: 600, background: "rgba(255,255,255,.75)", borderRadius: "999px", padding: "5px 12px" }}>
-          <span style={{ width: "12px", height: "12px", border: "2px solid rgba(219,39,119,.35)", borderTopColor: "#DB2777", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
-          Gerando imagem…
-        </div>
-      </div>
-    );
-  }
-  // erro / sem estado → status em PORTUGUÊS (a descrição do criativo fica no card).
-  const msg = st === "erro" ? "Não foi possível gerar a imagem." : "Imagem ainda não gerada.";
+/* Área de imagem 4:5 — carrega direto do Pollinations (Flux) via <img>, com retry. */
+function ImagemPost({ prompt }: { prompt: string }) {
+  const [estado, setEstado] = useState<"loading" | "ok" | "erro">("loading");
+  const [nonce, setNonce] = useState(0);
+  const url = pollinationsUrl(prompt, nonce);
   return (
-    <div style={{ width: "100%", aspectRatio: "4 / 5", borderRadius: "10px", border: "1px dashed var(--gray-300)", background: "var(--gray-50)", padding: "14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
-      <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", lineHeight: 1.4 }}>{msg}</span>
+    <div style={{ position: "relative", width: "100%", aspectRatio: "4 / 5", borderRadius: "10px", overflow: "hidden", border: "1px solid var(--gray-200)", background: "var(--gray-50)" }}>
+      {estado !== "erro" && (
+        <a href={url} target="_blank" rel="noreferrer" title="Abrir imagem em tamanho cheio" style={{ display: "block", width: "100%", height: "100%" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url}
+            alt="Imagem do post gerada por IA"
+            onLoad={() => setEstado("ok")}
+            onError={() => setEstado("erro")}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: estado === "ok" ? "block" : "none", animation: "popIn .4s ease both" }}
+          />
+        </a>
+      )}
+      {estado === "loading" && (
+        <div className="ies-skeleton" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#DB2777", fontSize: "12px", fontWeight: 600, background: "rgba(255,255,255,.78)", borderRadius: "999px", padding: "5px 12px" }}>
+            <span style={{ width: "12px", height: "12px", border: "2px solid rgba(219,39,119,.35)", borderTopColor: "#DB2777", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+            Gerando imagem…
+          </div>
+        </div>
+      )}
+      {estado === "erro" && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px", padding: "14px", textAlign: "center" }}>
+          <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-500)" }}>Não foi possível gerar a imagem.</span>
+          <button onClick={() => { setEstado("loading"); setNonce((n) => n + 1); }} style={{ fontSize: "12px", fontWeight: 600, color: "white", background: "var(--orange-500)", border: "none", borderRadius: "8px", padding: "6px 13px", cursor: "pointer" }}>
+            Tentar de novo
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
 /* Card de um post gerado — imagem 1:1 no topo + copy pronto pra publicar. */
-function PostInstagramCard({ p, index, imagem }: { p: PostInstagram; index: number; imagem: ImgState | undefined }) {
+function PostInstagramCard({ p, index }: { p: PostInstagram; index: number }) {
   const [copiado, setCopiado] = useState(false);
   const textoCompleto = `${p.legenda}\n\n${p.hashtags.map((h) => `#${h}`).join(" ")}`;
   function copiar() {
@@ -2208,7 +2168,7 @@ function PostInstagramCard({ p, index, imagem }: { p: PostInstagram; index: numb
   }
   return (
     <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", gap: "12px", animation: "popIn .4s ease both", animationDelay: `${index * 90}ms` }}>
-      <ImagemPost estado={imagem} />
+      <ImagemPost prompt={p.imagemPrompt} />
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
