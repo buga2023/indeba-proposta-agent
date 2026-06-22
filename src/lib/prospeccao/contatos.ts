@@ -36,12 +36,23 @@ function soDigitos(s: string): string {
 }
 
 function ehTelefoneValido(bruto: string): boolean {
+  // Telefone real numa página vem FORMATADO: parênteses, espaço, traço ou +55.
+  // Um bloco de dígitos cru (timestamp 1768422505, INT_MAX 2147483647, IDs de
+  // tracking) NÃO é telefone — é o lixo que vaza do raw_content do LinkedIn.
+  if (!/[\s().\-]/.test(bruto.replace(/^\+?55/, ""))) return false;
+
   const d = soDigitos(bruto);
   const semDdi = d.startsWith("55") && d.length >= 12 ? d.slice(2) : d;
   // DDD (2) + 8 ou 9 dígitos.
   if (semDdi.length !== 10 && semDdi.length !== 11) return false;
   // Descarta sequências triviais (00000000000, 11111111111).
   if (/^(\d)\1+$/.test(semDdi)) return false;
+  // DDD válido (não existe < 11) e prefixo do número: celular (9 díg) começa com 9,
+  // fixo (8 díg) começa 2-5. Barra timestamps que passariam pelo tamanho.
+  if (parseInt(semDdi.slice(0, 2), 10) < 11) return false;
+  const numero = semDdi.slice(2);
+  if (numero.length === 9 && numero[0] !== "9") return false;
+  if (numero.length === 8 && !"2345".includes(numero[0])) return false;
   return true;
 }
 

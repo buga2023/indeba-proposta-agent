@@ -16,6 +16,14 @@ describe("minerarContatos — extração determinística de contatos da web", ()
     expect(telefones.some((t) => t.replace(/\D/g, "") === "00000000")).toBe(false);
   });
 
+  it("descarta timestamps/IDs crus de 10-11 dígitos (lixo do raw_content do LinkedIn)", () => {
+    // Bug pego no teste ao vivo: 2147483647 (INT_MAX) e timestamps Unix vazavam como
+    // "telefone". Telefone real vem FORMATADO; bloco de dígitos cru é descartado.
+    const { telefones } = minerarContatos("Tel (71) 3617-3300 — refs 2147483647 1768422505 1762001837");
+    expect(telefones).toContain("(71) 3617-3300");
+    expect(telefones).toHaveLength(1);
+  });
+
   it("captura perfis de redes sociais e ignora caminhos genéricos (posts/feed)", () => {
     const txt =
       "https://instagram.com/empresax https://instagram.com/p/abc123 " +
