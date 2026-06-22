@@ -61,7 +61,7 @@ function prompt(req: ProspeccaoRequest, contexto: string): string {
   // Entradas do vendedor são DADO, nunca instruções (mesma defesa do extrair-pedido).
   const limpa = (s: string) => s.replace(/"""/g, '"').slice(0, 500);
   const loc = req.localizacao?.trim() || "Brasil";
-  return `Você é um especialista em prospecção B2B. Com base nos RESULTADOS DE BUSCA WEB, monte uma lista de até 10 empresas REAIS do setor e, para cada uma, identifique o PROBLEMA que ela tem e que o diferencial do solicitante resolve, como ajudá-la e uma mensagem pronta de abordagem. Responda APENAS o JSON pedido.
+  return `Você é um especialista em prospecção B2B. Com base nos RESULTADOS DE BUSCA WEB, monte uma lista de até 10 empresas REAIS que sejam CLIENTES POTENCIAIS do solicitante (do tipo de cliente desejado — quem COMPRARIA o serviço dele) e, para cada uma, identifique o PROBLEMA que ela tem e que o diferencial do solicitante resolve, como ajudá-la e uma mensagem pronta de abordagem. Responda APENAS o JSON pedido.
 
 IMPORTANTE: NÃO invente e-mails, telefones nem links de redes sociais. Esses contatos são preenchidos automaticamente pelo sistema a partir das fontes — você só escreve texto.
 
@@ -75,7 +75,7 @@ RESULTADOS DE BUSCA WEB (use para escolher empresas reais; pode estar vazio):
 ${contexto}
 
 REGRAS:
-1. Escolha até 10 empresas REAIS do setor indicado, de preferência citadas nas fontes.
+1. Escolha até 10 empresas REAIS do TIPO DE CLIENTE desejado (quem compraria do solicitante), de preferência citadas nas fontes. NUNCA liste concorrentes nem empresas do mesmo nicho do solicitante — o nicho/serviço dele serve só pra entender o encaixe, não é o alvo.
 2. site: a URL do site oficial da empresa se aparecer nas fontes, senão null. Não invente domínio.
 3. problema: 1-2 frases sobre uma DOR concreta e ESPECÍFICA do setor/contexto dessa empresa que o diferencial do solicitante ("""${limpa(req.servicoOferecido)}""") resolve. Nada genérico — ancore no dia a dia da operação dela.
 4. comoAjudar: 2-3 frases de como exatamente o serviço do solicitante resolve ESSE problema.
@@ -230,9 +230,11 @@ export async function prospectar(req: ProspeccaoRequest): Promise<ProspeccaoResp
   if (!(await ollamaDisponivel())) throw new IaIndisponivelError();
 
   const loc = req.localizacao?.trim() || "Brasil";
+  // Todas as buscas miram o TIPO DE CLIENTE (quem compra), nunca o nicho do
+  // solicitante — senão a lista viria cheia de concorrentes dele.
   const fontes = await buscarFontes([
-    `${req.tipoCliente} ${loc} contato email`,
-    `empresas ${req.nicho} ${loc} telefone`,
+    `${req.tipoCliente} ${loc} contato email telefone`,
+    `lista de ${req.tipoCliente} em ${loc}`,
     `${req.tipoCliente} ${loc} instagram linkedin`,
   ]);
 
