@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse } from "@/lib/contracts";
+import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost } from "@/lib/contracts";
 import { AjudaChat } from "@/components/ajuda-chat";
 
 /* ───────────────────────── helpers ───────────────────────── */
@@ -132,7 +132,7 @@ type PropostaLog = {
 const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
-type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao";
+type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram";
 type TipoProposta = "orcamento" | "implantacao" | "comercial";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -410,6 +410,14 @@ export default function Home() {
             </svg>
             Prospecção
           </Hoverable>
+          <Hoverable base={navItemStyle(["instagram"])} hover={navHover} onClick={() => setScreen("instagram")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2.5" y="2.5" width="12" height="12" rx="3.5" />
+              <circle cx="8.5" cy="8.5" r="3" />
+              <circle cx="12" cy="5" r="0.6" fill="currentColor" stroke="none" />
+            </svg>
+            Posts Instagram
+          </Hoverable>
 
           <div style={{ height: "1px", background: "rgba(255,255,255,.07)", margin: "8px 4px" }} />
 
@@ -476,6 +484,7 @@ export default function Home() {
         {screen === "history" && <HistoryScreen propostas={propostas} erro={propostasErro} goToBriefing={novaProposta} />}
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
         {screen === "prospeccao" && <ProspeccaoScreen onGerarProposta={(seed) => { setBriefingText(seed); setScreen("briefing"); startGeneration(seed); }} />}
+        {screen === "instagram" && <InstagramScreen />}
       </main>
 
       {/* Assistente de ajuda — overlay global (canto inferior direito) */}
@@ -1891,5 +1900,236 @@ function AbordagemCard({ a, index }: { a: Abordagem; index: number }) {
         <span style={{ color: "var(--orange-500)", fontWeight: 700, marginRight: "5px" }}>Dica</span>{a.dica}
       </div>
     </Hoverable>
+  );
+}
+
+/* ═══════════════════════ TELA: POSTS INSTAGRAM ═══════════════════════ */
+
+const TONS_POST: { value: TomPost; label: string }[] = [
+  { value: "profissional", label: "Profissional" },
+  { value: "descontraido", label: "Descontraído" },
+  { value: "inspirador", label: "Inspirador" },
+  { value: "humoristico", label: "Humorístico" },
+  { value: "educativo", label: "Educativo" },
+];
+
+function InstagramScreen() {
+  const [briefing, setBriefing] = useState("");
+  const [nicho, setNicho] = useState("");
+  const [tom, setTom] = useState<TomPost>("profissional");
+  const [numVersoes, setNumVersoes] = useState(2);
+  const [foco, setFoco] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [res, setRes] = useState<InstagramResponse | null>(null);
+
+  const podeGerar = briefing.trim().length > 0 && !loading;
+
+  async function gerar() {
+    if (!podeGerar) return;
+    setLoading(true);
+    setErro(null);
+    try {
+      const r = await fetch("/api/instagram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ briefing, nicho: nicho.trim() || null, tom, numVersoes }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d?.erro ?? `Falha ao gerar os posts (${r.status}).`);
+      setRes(d as InstagramResponse);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao gerar os posts.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ padding: "28px", maxWidth: "1120px" }}>
+      {/* ── Hero ── */}
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "24px", background: "linear-gradient(120deg,#7C3AED 0%,#DB2777 55%,var(--orange-500) 135%)", boxShadow: "0 14px 34px rgba(219,39,119,.28)", animation: "fadeUp .5s ease both" }}>
+        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
+        <div style={{ position: "absolute", bottom: "-80px", right: "130px", width: "150px", height: "150px", borderRadius: "50%", background: "rgba(255,255,255,.07)" }} />
+        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: "rgba(255,255,255,.16)", border: "1px solid rgba(255,255,255,.25)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", animation: "floatY 3.4s ease-in-out infinite" }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="5" />
+              <circle cx="12" cy="12" r="4" />
+              <circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none" />
+            </svg>
+          </div>
+          <div>
+            <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Posts para Instagram</h2>
+            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "640px" }}>
+              Descreva em linguagem natural o que você quer divulgar — a IA escreve a legenda, o gancho, as hashtags e o roteiro do criativo, pronto pra publicar.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Formulário ── */}
+      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "22px", boxShadow: "var(--shadow-md)", marginBottom: "24px", animation: "fadeUp .5s ease both", animationDelay: "60ms" }}>
+        <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "6px" }}>O que você quer postar?</label>
+        <textarea
+          value={briefing}
+          onChange={(e) => setBriefing(e.target.value)}
+          onFocus={() => setFoco(true)}
+          onBlur={() => setFoco(false)}
+          onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) gerar(); }}
+          placeholder="Ex.: Lançamento do nosso desengordurante profissional com 20% de desconto na primeira compra. Foco em donos de restaurante e cozinha industrial."
+          rows={3}
+          style={{ width: "100%", border: `1px solid ${foco ? "var(--blue-500)" : "var(--gray-200)"}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", background: "white", outline: "none", resize: "vertical", minHeight: "84px", lineHeight: 1.55, boxShadow: foco ? "0 0 0 3px rgba(30,107,184,.14)" : "none", transition: "border-color .16s ease,box-shadow .16s ease" }}
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginTop: "16px" }}>
+          <CampoTexto label="Nicho / segmento" opcional value={nicho} onChange={setNicho} placeholder="Ex: limpeza profissional" onEnter={gerar} />
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "6px" }}>Tom de voz</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {TONS_POST.map((t) => {
+                const ativo = tom === t.value;
+                return (
+                  <button key={t.value} onClick={() => setTom(t.value)} style={{ padding: "7px 12px", borderRadius: "999px", border: `1px solid ${ativo ? "var(--blue-500)" : "var(--gray-200)"}`, background: ativo ? "var(--blue-50)" : "white", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontSize: "12.5px", fontWeight: ativo ? 700 : 500, cursor: "pointer", fontFamily: "'Inter',sans-serif", transition: "all .15s ease" }}>
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "6px" }}>Versões</label>
+            <div style={{ display: "flex", background: "white", border: "1px solid var(--gray-200)", borderRadius: "999px", padding: "3px", gap: "2px", width: "fit-content", boxShadow: "var(--shadow-sm)" }}>
+              {[1, 2, 3].map((n) => {
+                const ativo = numVersoes === n;
+                return (
+                  <button key={n} onClick={() => setNumVersoes(n)} style={{ width: "40px", padding: "6px 0", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontSize: "13px", fontWeight: ativo ? 700 : 500, fontFamily: "'Inter',sans-serif" }}>
+                    {n}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end" }}>
+            <Hoverable
+              onClick={podeGerar ? gerar : undefined}
+              base={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "9px", padding: "11px 22px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: podeGerar ? "pointer" : "not-allowed", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", transition: "transform .14s ease,box-shadow .2s ease,opacity .2s ease", opacity: podeGerar ? 1 : 0.5, width: "100%" }}
+              hover={podeGerar ? { transform: "translateY(-2px)", boxShadow: "0 10px 24px rgba(236,122,28,.48)" } : {}}
+              active={podeGerar ? { transform: "translateY(0)" } : {}}
+            >
+              {loading ? (
+                <span style={{ width: "15px", height: "15px", border: "2px solid rgba(255,255,255,.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite", flex: "none" }} />
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 3l14 9-14 9V3z" /></svg>
+              )}
+              {loading ? "Gerando…" : "Gerar posts"}
+            </Hoverable>
+          </div>
+        </div>
+      </div>
+
+      {erro && (
+        <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", padding: "12px 16px", fontSize: "14px", color: "#DC2626", marginBottom: "24px", animation: "popIn .3s ease both" }}>{erro}</div>
+      )}
+
+      {loading && !res && <InstagramSkeleton />}
+
+      {res && (
+        <>
+          {res.notaEditorial && (
+            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", background: "var(--blue-50)", border: "1px solid var(--blue-200)", borderRadius: "12px", padding: "13px 16px", marginBottom: "20px", animation: "fadeUp .4s ease both" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-600)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", marginTop: "1px" }}><circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" /></svg>
+              <p style={{ fontSize: "13px", color: "var(--blue-700)", lineHeight: 1.5, margin: 0 }}>{res.notaEditorial}</p>
+            </div>
+          )}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "16px" }}>
+            {res.posts.map((p, i) => (
+              <PostInstagramCard key={p.versao} p={p} index={i} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* Esqueleto animado (shimmer) enquanto a IA escreve os posts. */
+function InstagramSkeleton() {
+  const linha = (w: string, h = "12px") => <div className="ies-skeleton" style={{ width: w, height: h, borderRadius: "6px" }} />;
+  return (
+    <div style={{ animation: "fadeUp .4s ease both" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "16px", color: "#DB2777", fontSize: "13.5px", fontWeight: 600 }}>
+        {[0, 0.16, 0.32].map((d) => (
+          <span key={d} style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#DB2777", animation: `wave 1.3s ease-in-out infinite ${d}s` }} />
+        ))}
+        <span style={{ marginLeft: "4px" }}>Escrevendo legendas, ganchos e hashtags…</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "16px" }}>
+        {[0, 1].map((i) => (
+          <div key={i} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", gap: "12px", animation: "popIn .4s ease both", animationDelay: `${i * 80}ms` }}>
+            {linha("40%", "14px")}
+            {linha("90%")}
+            {linha("100%")}
+            {linha("75%")}
+            <div style={{ display: "flex", gap: "8px", marginTop: "2px" }}>{linha("70px", "22px")}{linha("70px", "22px")}{linha("70px", "22px")}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* Card de um post gerado — copia a legenda completa pronta pra publicar. */
+function PostInstagramCard({ p, index }: { p: PostInstagram; index: number }) {
+  const [copiado, setCopiado] = useState(false);
+  const textoCompleto = `${p.legenda}\n\n${p.hashtags.map((h) => `#${h}`).join(" ")}`;
+  function copiar() {
+    navigator.clipboard?.writeText(textoCompleto).then(() => {
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1800);
+    });
+  }
+  return (
+    <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", gap: "12px", animation: "popIn .4s ease both", animationDelay: `${index * 90}ms` }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+        <span style={{ fontSize: "11px", fontWeight: 700, color: "#DB2777", background: "#FCE7F3", borderRadius: "999px", padding: "3px 11px" }}>Versão {p.versao}</span>
+        <Hoverable
+          onClick={copiar}
+          title="Copiar legenda + hashtags"
+          base={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "11.5px", fontWeight: 600, color: copiado ? "#16A34A" : "var(--gray-900)", background: copiado ? "#ECFDF5" : "white", border: `1px solid ${copiado ? "#A7F3D0" : "var(--gray-200)"}`, borderRadius: "8px", padding: "5px 11px", cursor: "pointer", transition: "all .16s ease" }}
+          hover={{ borderColor: "var(--orange-500)", color: copiado ? "#16A34A" : "var(--orange-600)" }}
+        >
+          {copiado ? (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="m20 6-11 11-5-5" /></svg>
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+          )}
+          {copiado ? "Copiado!" : "Copiar"}
+        </Hoverable>
+      </div>
+
+      <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)", lineHeight: 1.4, borderLeft: "3px solid #DB2777", paddingLeft: "10px" }}>{p.abertura}</div>
+
+      <p style={{ fontSize: "13px", color: "#3a4757", lineHeight: 1.6, margin: 0, whiteSpace: "pre-line" }}>{p.legenda}</p>
+
+      {p.hashtags.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+          {p.hashtags.map((h, i) => (
+            <span key={`${h}-${i}`} style={{ fontSize: "11.5px", fontWeight: 500, color: "var(--blue-700)", background: "var(--blue-50)", border: "1px solid var(--blue-200)", borderRadius: "999px", padding: "3px 10px" }}>#{h}</span>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "7px", borderTop: "1px solid var(--gray-100)", paddingTop: "11px", marginTop: "auto" }}>
+        <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "12px", color: "var(--gray-500)", lineHeight: 1.45 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", marginTop: "1px" }}><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+          <span><strong style={{ color: "var(--gray-900)", fontWeight: 600 }}>Criativo:</strong> {p.sugestaoCriativo}</span>
+        </div>
+        <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "12px", color: "var(--gray-500)", lineHeight: 1.45 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", marginTop: "1px" }}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+          <span><strong style={{ color: "var(--gray-900)", fontWeight: 600 }}>Melhor horário:</strong> {p.melhorHorario}</span>
+        </div>
+      </div>
+    </div>
   );
 }

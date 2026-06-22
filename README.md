@@ -1,6 +1,6 @@
 # Indeba Proposta Agent
 
-Plataforma local da Indeba que faz duas coisas a partir de linguagem natural:
+Plataforma local da Indeba que faz três coisas a partir de linguagem natural:
 
 1. **Gera propostas comerciais em PDF** — o vendedor descreve o cliente e a
    necessidade; a IA seleciona produtos do catálogo e escreve o texto; o PDF sai no
@@ -8,6 +8,8 @@ Plataforma local da Indeba que faz duas coisas a partir de linguagem natural:
 2. **Prospecta leads** — o vendedor descreve o que vende e que cliente quer; o agente
    busca empresas reais na web, **minera contatos** (e-mail, telefone, redes) das
    páginas e a IA escreve a abordagem.
+3. **Gera posts para Instagram** — o vendedor descreve em linguagem natural o que quer
+   divulgar; a IA escreve legenda, gancho, hashtags e o roteiro do criativo.
 
 > **Regra de ouro (constituição §2):** preço, imagem, embalagem, ficha — e, na
 > prospecção, os contatos — **nunca são fabricados pelo modelo**. Preço/ficha vêm do
@@ -73,6 +75,16 @@ append-only** (cliente, itens, preços aplicados, autor, timestamp).
   nunca pelo modelo. Cada prospect carrega a **fonte** (URL) que embasou os contatos.
 - Botão **"Gerar proposta"** leva o prospect direto pro briefing e já gera a proposta.
 
+### Posts para Instagram
+- O vendedor descreve o post em **linguagem natural** (o input principal); tom de voz,
+  nicho e nº de versões (1–3) são ajustes opcionais.
+- A IA (`src/lib/llm/gerar-instagram.ts`, saída JSON restrita por schema) escreve cada
+  versão: **abertura** (gancho antes do "ver mais"), legenda com CTA, 5–15 **hashtags**,
+  sugestão de **criativo** e **melhor horário** — mais uma nota editorial.
+- Conteúdo é 100% texto criativo (procedência IA-TEXTO) — aqui **não** há dado crítico do
+  catálogo. Sem Ollama, cai num **template determinístico** (degradação graciosa, §5).
+- Cada card permite **copiar** legenda + hashtags com um clique.
+
 ---
 
 ## Rotas de API (`src/app/api`)
@@ -85,6 +97,7 @@ append-only** (cliente, itens, preços aplicados, autor, timestamp).
 | `/api/catalogo` | GET | catálogo de produtos (protegido) |
 | `/api/propostas` | GET | log append-only das propostas geradas |
 | `/api/prospectar` | POST | prospecção de leads (IA + Tavily + mineração) |
+| `/api/instagram` | POST | briefing → posts de Instagram (legenda, hashtags, criativo) |
 | `/api/login` · `/api/logout` | POST | autenticação por cookie de sessão |
 
 Auth (cookie assinado) e rate limit são aplicados no `src/middleware.ts`.
@@ -97,11 +110,11 @@ Auth (cookie assinado) e rate limit são aplicados no `src/middleware.ts`.
 src/
   app/                      UI (App Router) + rotas de API
     api/...                 ver tabela acima
-    page.tsx                telas: briefing, review, PDF, histórico, catálogo, prospecção
+    page.tsx                telas: briefing, review, PDF, histórico, catálogo, prospecção, instagram
   middleware.ts             auth + rate limit
   lib/
     contracts/              schemas Zod — fonte única (produto, pedido, selecao,
-                            proposta, entrada, prospeccao)
+                            proposta, entrada, prospeccao, instagram)
     catalogo.ts             leitura/validação do catálogo
     montar.ts               orquestra briefing → PropostaScope
     tipo-proposta.ts        detecção do tipo de proposta
