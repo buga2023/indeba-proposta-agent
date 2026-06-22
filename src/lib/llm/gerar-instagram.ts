@@ -16,9 +16,10 @@ const JSON_SCHEMA = {
           legenda: { type: "string" },
           hashtags: { type: "array", items: { type: "string" } },
           melhorHorario: { type: "string" },
+          sugestaoCriativo: { type: "string" },
           imagemPrompt: { type: "string" },
         },
-        required: ["versao", "tema", "abertura", "legenda", "hashtags", "melhorHorario", "imagemPrompt"],
+        required: ["versao", "tema", "abertura", "legenda", "hashtags", "melhorHorario", "sugestaoCriativo", "imagemPrompt"],
       },
     },
     notaEditorial: { type: "string" },
@@ -55,6 +56,8 @@ function prompt(req: InstagramRequest): string {
 
   return `Você é um especialista em copywriting e marketing visual para Instagram. Gere ${req.numPosts} posts COMPLETOS, prontos para publicar, a partir do briefing do cliente. Responda APENAS o JSON pedido.
 
+IDIOMA: escreva TODO o conteúdo em PORTUGUÊS do Brasil (abertura, legenda, hashtags, melhorHorario, sugestaoCriativo, tema, notaEditorial). A ÚNICA exceção é o campo "imagemPrompt", que deve ser em INGLÊS.
+
 CONTEXTO DO NEGÓCIO:
 ${nicho ? `- Nicho/segmento: ${nicho}` : ""}
 ${produto ? `- Produto/serviço: ${produto}` : ""}
@@ -69,7 +72,8 @@ REGRAS POR POST:
 - "legenda": body copy desenvolvido + CTA claro e direto (a abertura NÃO precisa se repetir aqui).
 - "hashtags": 5 a 15, sem o "#", misturando nicho (médio alcance), conteúdo (tema do post) e comunidade (engajamento). Nada genérico nem clichê.
 - "melhorHorario": dia da semana + horário ideal + justificativa rápida.
-- "imagemPrompt": prompt EM INGLÊS para gerar a imagem (formato quadrado 1:1). Descreva estilo (fotográfico ou ilustrativo), paleta de cores, iluminação, composição e mood — refletindo o tom, o nicho e o tema do post. Não inclua texto/letras na imagem.
+- "sugestaoCriativo": EM PORTUGUÊS, descreva o visual ideal do post (estilo, cores, elementos, mood) numa frase — é o que o usuário vê.
+- "imagemPrompt": prompt EM INGLÊS para gerar a imagem no Stable Diffusion (formato quadrado 1:1). Descreva estilo (fotográfico ou ilustrativo), paleta de cores, iluminação, composição e mood — refletindo o tom, o nicho e o tema do post. Não inclua texto/letras na imagem.
 - "versao": numere de 1 a ${req.numPosts}.
 
 "notaEditorial": explique as escolhas de linha visual e tom usadas no conjunto.
@@ -104,6 +108,7 @@ function fallback(req: InstagramRequest): InstagramResponse {
     legenda: `${base}\n\nFale com a gente e saiba mais. 👇`,
     hashtags: ["indeba", "indebaexpress", req.nicho ?? "novidade"].filter(Boolean),
     melhorHorario: "Terça a quinta, 12h ou 18h — maior alcance no feed.",
+    sugestaoCriativo: "Foto do produto/serviço em destaque, fundo limpo, luz natural e a marca visível.",
     imagemPrompt: `Professional square 1:1 photo about ${req.nicho ?? "the business"}, clean composition, soft natural lighting, modern brand mood, no text`,
   }));
   return {

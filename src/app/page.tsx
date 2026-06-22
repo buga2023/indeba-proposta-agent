@@ -2127,8 +2127,8 @@ function InstagramSkeleton() {
   );
 }
 
-/* Área de imagem 1:1 do card — skeleton enquanto gera, imagem ou fallback do prompt. */
-function ImagemPost({ estado, prompt }: { estado: ImgState | undefined; prompt: string }) {
+/* Área de imagem 1:1 do card — skeleton enquanto gera, imagem ou status (PT). */
+function ImagemPost({ estado }: { estado: ImgState | undefined }) {
   const st = estado?.status;
   if (st === "ok" && estado?.src) {
     return (
@@ -2148,14 +2148,17 @@ function ImagemPost({ estado, prompt }: { estado: ImgState | undefined; prompt: 
       </div>
     );
   }
-  // erro / off / sem estado → mostra o prompt (inglês) pronto pra usar em outro gerador.
+  // erro / off / sem estado → status em PORTUGUÊS (a descrição do criativo fica no card).
+  const msg =
+    st === "off"
+      ? "Imagem não gerada — Stable Diffusion offline."
+      : st === "erro"
+        ? "Imagem não gerada — falha no servidor de imagem."
+        : "Imagem ainda não gerada.";
   return (
-    <div style={{ width: "100%", aspectRatio: "1 / 1", borderRadius: "10px", border: "1px dashed var(--gray-300)", background: "var(--gray-50)", padding: "14px", display: "flex", flexDirection: "column", gap: "8px", overflow: "hidden" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11.5px", fontWeight: 700, color: "var(--gray-500)" }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
-        {st === "off" ? "Stable Diffusion offline — prompt da imagem:" : "Imagem indisponível — prompt:"}
-      </div>
-      <p style={{ fontSize: "11.5px", color: "#3a4757", lineHeight: 1.5, margin: 0, overflow: "auto" }}>{prompt}</p>
+    <div style={{ width: "100%", aspectRatio: "1 / 1", borderRadius: "10px", border: "1px dashed var(--gray-300)", background: "var(--gray-50)", padding: "14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+      <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", lineHeight: 1.4 }}>{msg}</span>
     </div>
   );
 }
@@ -2172,7 +2175,7 @@ function PostInstagramCard({ p, index, imagem }: { p: PostInstagram; index: numb
   }
   return (
     <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", gap: "12px", animation: "popIn .4s ease both", animationDelay: `${index * 90}ms` }}>
-      <ImagemPost estado={imagem} prompt={p.imagemPrompt} />
+      <ImagemPost estado={imagem} />
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
@@ -2206,9 +2209,19 @@ function PostInstagramCard({ p, index, imagem }: { p: PostInstagram; index: numb
         </div>
       )}
 
-      <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "12px", color: "var(--gray-500)", lineHeight: 1.45, borderTop: "1px solid var(--gray-100)", paddingTop: "11px", marginTop: "auto" }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", marginTop: "1px" }}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
-        <span><strong style={{ color: "var(--gray-900)", fontWeight: 600 }}>Melhor horário:</strong> {p.melhorHorario}</span>
+      <div style={{ display: "flex", flexDirection: "column", gap: "7px", borderTop: "1px solid var(--gray-100)", paddingTop: "11px", marginTop: "auto" }}>
+        <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "12px", color: "var(--gray-500)", lineHeight: 1.45 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", marginTop: "1px" }}><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+          <span><strong style={{ color: "var(--gray-900)", fontWeight: 600 }}>Criativo:</strong> {p.sugestaoCriativo}</span>
+        </div>
+        <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", fontSize: "12px", color: "var(--gray-500)", lineHeight: 1.45 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", marginTop: "1px" }}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+          <span><strong style={{ color: "var(--gray-900)", fontWeight: 600 }}>Melhor horário:</strong> {p.melhorHorario}</span>
+        </div>
+        <details style={{ fontSize: "11.5px", color: "var(--gray-400)" }}>
+          <summary style={{ cursor: "pointer", listStyle: "none", userSelect: "none" }}>Prompt da imagem (técnico, inglês)</summary>
+          <p style={{ margin: "6px 0 0", color: "#3a4757", lineHeight: 1.5 }}>{p.imagemPrompt}</p>
+        </details>
       </div>
     </div>
   );

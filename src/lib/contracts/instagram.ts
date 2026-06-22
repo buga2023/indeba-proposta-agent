@@ -37,7 +37,8 @@ export const PostInstagram = z.object({
   legenda: z.string(), // body copy + CTA, pronto para copiar
   hashtags: z.array(z.string()), // sem o "#"
   melhorHorario: z.string(), // dia + horário + justificativa rápida
-  imagemPrompt: z.string(), // prompt em INGLÊS para o Stable Diffusion (1:1)
+  sugestaoCriativo: z.string(), // descrição do visual em PORTUGUÊS (mostrada ao usuário)
+  imagemPrompt: z.string(), // prompt em INGLÊS para o Stable Diffusion (1:1) — uso técnico
 });
 export type PostInstagram = z.infer<typeof PostInstagram>;
 
