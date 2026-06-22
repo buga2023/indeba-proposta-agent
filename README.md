@@ -29,7 +29,7 @@ Plataforma local da Indeba que faz duas coisas a partir de linguagem natural:
 | Contratos/validação | **Zod** (fonte única de tipos/validação) | ^4.4.3 |
 | PDF | Playwright / playwright-core | ^1.61.0 |
 | PDF serverless | `@sparticuz/chromium` (Chromium na Vercel) | ^149.0.0 |
-| IA | **Ollama** (modelo padrão `qwen3:30b`) | via HTTP, sem SDK |
+| IA | **Ollama** (modelo padrão `qwen2.5:7b-instruct`) | via HTTP, sem SDK |
 | Busca web | **Tavily** (prospecção) | via `fetch`, sem SDK |
 | Rate limit | `@upstash/ratelimit` + `@upstash/redis` | ^2.0.8 / ^1.38.0 |
 | Log/persistência | Upstash Redis (prod) · JSONL local (dev) | — |
@@ -58,12 +58,20 @@ A proposta é editável/refinável antes do export. Todo PDF gerado entra num **
 append-only** (cliente, itens, preços aplicados, autor, timestamp).
 
 ### Prospecção de leads
-- Busca web (Tavily, `search` avançado + `raw_content`) descobre empresas reais.
-- **Minerador determinístico** (`src/lib/prospeccao/contatos.ts`) raspa por regex:
-  e-mail, telefone BR e links de LinkedIn/Instagram/Facebook/WhatsApp do texto das páginas.
-- A IA só seleciona empresas e escreve `comoAjudar` + uma **mensagem pronta** por canal.
-- `confiabilidade` (`confirmado`/`estimado`) e `total` são **derivados no backend**,
+- Traz **clientes potenciais** (o `tipoCliente` — quem compra), **nunca concorrentes
+  do mesmo nicho** do solicitante. O nicho/diferencial é só contexto pra entender o encaixe.
+- Busca web (Tavily) em **2 passadas**: genérica do tipo de cliente (escolha das empresas)
+  e **dirigida por empresa** depois que a IA escolhe (acha as redes/contatos de cada uma).
+- **Minerador determinístico** (`src/lib/prospeccao/contatos.ts`) raspa por regex e-mail,
+  telefone BR (só formatado — descarta timestamps/IDs) e LinkedIn/Instagram/Facebook/WhatsApp.
+- **Individualidade garantida** (`prospectar.ts`): e-mail casa por domínio do site, perfil
+  social casa por **slug ↔ nome**, e a passada `removerCompartilhados` elimina qualquer
+  contato repetido em 2+ empresas (vazamento de diretório). Cada empresa fica só com o que é dela.
+- A IA só seleciona empresas e escreve: o **`problema`** (dor que o diferencial resolve),
+  `comoAjudar` (o encaixe) e uma **mensagem pronta** por canal.
+- `confiabilidade` (`confirmado`/`estimado`), `total` e contatos são **derivados no backend**,
   nunca pelo modelo. Cada prospect carrega a **fonte** (URL) que embasou os contatos.
+- Botão **"Gerar proposta"** leva o prospect direto pro briefing e já gera a proposta.
 
 ---
 
@@ -117,7 +125,7 @@ Copie `.env.example` para `.env.local` (local) ou configure no dashboard da Verc
 | Variável | Obrigatória | Para quê |
 |---|---|---|
 | `OLLAMA_BASE_URL` | recomendada | URL do Ollama (local `http://127.0.0.1:11434`; prod via túnel) |
-| `OLLAMA_MODEL` | não | modelo (default `qwen3:30b`) |
+| `OLLAMA_MODEL` | não | modelo (default `qwen2.5:7b-instruct`) |
 | `MARCA_PADRAO` | não | marca/template padrão do PDF |
 | `TAVILY_API_KEY` | só p/ prospecção | busca web p/ minerar contatos (free em app.tavily.com) |
 | `AUTH_USERS` | recomendada | `login:senha:papel,...` — vazio = auth desligada (uso local) |
@@ -135,7 +143,7 @@ proposta degrada para o caminho determinístico.
 ```bash
 pnpm install
 pnpm exec playwright install chromium     # navegador para o render de PDF
-ollama serve                              # IA (host) — modelo: ollama pull qwen3:30b
+ollama serve                              # IA (host) — modelo: ollama pull qwen2.5:7b-instruct
 # .env.local: preencha TAVILY_API_KEY para a prospecção achar contatos reais
 pnpm dev                                  # http://localhost:3000
 ```
