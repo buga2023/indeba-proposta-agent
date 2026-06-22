@@ -3,19 +3,22 @@ import type { NextConfig } from "next";
 const isProd = process.env.NODE_ENV === "production";
 
 // Content-Security-Policy — só em produção (em dev quebraria o HMR via websocket).
-// Tudo é same-origin: sem recurso externo, sem exfiltração. 'unsafe-inline' é
-// concessão ao Next (hidratação) — endurecer com nonce é melhoria futura.
+// Quase tudo é same-origin. Exceções: Google Fonts (design) e Puter.js
+// (geração de imagem dos posts de Instagram via Nano Banana, client-side).
+// 'unsafe-inline' é concessão ao Next (hidratação) — endurecer com nonce é melhoria futura.
+const PUTER = "https://puter.com https://*.puter.com";
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
-  "img-src 'self' data:",
+  `img-src 'self' data: blob: ${PUTER}`,
   // Google Fonts (Inter/Fraunces do design): CSS em fonts.googleapis.com, arquivos em fonts.gstatic.com.
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "script-src 'self' 'unsafe-inline'",
-  "connect-src 'self'",
+  `script-src 'self' 'unsafe-inline' ${PUTER}`,
+  `connect-src 'self' ${PUTER}`,
   "font-src 'self' https://fonts.gstatic.com",
+  `frame-src 'self' ${PUTER}`,
   "form-action 'self'",
 ].join("; ");
 

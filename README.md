@@ -82,13 +82,15 @@ append-only** (cliente, itens, preços aplicados, autor, timestamp).
   posts num **framework editorial** (autoridade, educativo, prova social, oferta, conexão):
   **abertura** (gancho), legenda com CTA, 5–15 **hashtags**, **melhor horário** (com
   justificativa) e um **prompt de imagem em inglês** por post — mais uma nota editorial.
-- **Imagem por IA (1:1):** cada post gera uma imagem via **Stable Diffusion local**
-  (`src/lib/imagem/stable-diffusion.ts` → API A1111/Forge `/sdapi/v1/txt2img`), no endpoint
-  separado `/api/instagram/imagem`. O front gera **uma imagem por vez** (GPU única) e cada
-  card recebe a sua com fade. Sem SD, o card mostra o prompt da imagem (fallback).
+- **Imagem por IA (1:1):** gerada **no navegador** via **Puter.js / Nano Banana** (Gemini
+  Image) — sem servidor, sem chave de API. Modelo *user-pays* (o usuário cobre o próprio
+  uso, podendo pedir login no Puter). O front gera **uma imagem por vez** a partir do
+  `imagemPrompt` (inglês) e cada card recebe a sua com fade; se falhar, mostra a descrição
+  do criativo (em PT). Domínios `*.puter.com` liberados na CSP (`next.config.ts`).
+- Idioma: todo o conteúdo sai em **português**; só o `imagemPrompt` (técnico, para a
+  imagem) é em inglês — os modelos de imagem entendem melhor.
 - Texto é 100% criativo (IA-TEXTO) — **não** há dado crítico do catálogo. Sem Ollama, cai
   num **template determinístico** (degradação graciosa, §5).
-- Envs: `SD_BASE_URL` (padrão `http://127.0.0.1:7860`), `SD_STEPS` (25), `SD_SIZE` (1024).
 - Cada card permite **copiar** legenda + hashtags e **baixar** a imagem.
 
 ---
@@ -104,7 +106,6 @@ append-only** (cliente, itens, preços aplicados, autor, timestamp).
 | `/api/propostas` | GET | log append-only das propostas geradas |
 | `/api/prospectar` | POST | prospecção de leads (IA + Tavily + mineração) |
 | `/api/instagram` | POST | briefing → posts de Instagram (legenda, hashtags, horário) |
-| `/api/instagram/imagem` | POST | prompt (inglês) → imagem 1:1 (Stable Diffusion local) |
 | `/api/login` · `/api/logout` | POST | autenticação por cookie de sessão |
 
 Auth (cookie assinado) e rate limit são aplicados no `src/middleware.ts`.
@@ -127,7 +128,6 @@ src/
     tipo-proposta.ts        detecção do tipo de proposta
     selecao/                matcher por facetas (linha, segmento, função, método)
     llm/                    cliente Ollama (gerarJson/gerarTexto) + gerar-instagram.ts
-    imagem/                 stable-diffusion.ts (txt2img A1111/Forge → imagem 1:1)
     pdf/                    render Playwright + templates por tipo
     prospeccao/             tavily.ts (busca) · contatos.ts (mineração) · prospectar.ts
     auth.ts · ratelimit.ts · log.ts · imagens · utils.ts

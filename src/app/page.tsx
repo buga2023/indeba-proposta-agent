@@ -1913,7 +1913,33 @@ const TONS_POST: { value: TomPost; label: string }[] = [
   { value: "educativo", label: "Educativo" },
 ];
 
-type ImgState = { status: "loading" | "ok" | "erro" | "off"; src?: string };
+/* Puter.js (Nano Banana / Gemini) — geração de imagem NO NAVEGADOR, sem servidor.
+   Modelo "user-pays": o usuário do app cobre o próprio uso (pode pedir login no Puter). */
+const NANO_MODEL = "gemini-2.5-flash-image-preview";
+
+type PuterGlobal = { ai: { txt2img: (prompt: string, opts: { model: string }) => Promise<HTMLImageElement> } };
+let puterPromise: Promise<PuterGlobal> | null = null;
+
+function carregarPuter(): Promise<PuterGlobal> {
+  const atual = (window as unknown as { puter?: PuterGlobal }).puter;
+  if (atual) return Promise.resolve(atual);
+  if (puterPromise) return puterPromise;
+  puterPromise = new Promise<PuterGlobal>((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://js.puter.com/v2/";
+    s.async = true;
+    s.onload = () => {
+      const p = (window as unknown as { puter?: PuterGlobal }).puter;
+      if (p) resolve(p);
+      else reject(new Error("Puter não inicializou"));
+    };
+    s.onerror = () => reject(new Error("Falha ao carregar o Puter.js"));
+    document.head.appendChild(s);
+  });
+  return puterPromise;
+}
+
+type ImgState = { status: "loading" | "ok" | "erro"; src?: string };
 
 function InstagramScreen() {
   const [briefing, setBriefing] = useState("");
@@ -1930,30 +1956,26 @@ function InstagramScreen() {
 
   const podeGerar = briefing.trim().length > 0 && !loading;
 
-  // GPU única: gera uma imagem por vez, na ordem dos posts, atualizando cada card.
+  // Gera as imagens no navegador (Puter/Nano Banana), uma por vez, atualizando cada card.
   async function gerarImagens(posts: PostInstagram[]) {
+    let puter: PuterGlobal;
+    try {
+      puter = await carregarPuter();
+    } catch {
+      setImagens((m) => {
+        const next = { ...m };
+        for (const q of posts) next[q.versao] = { status: "erro" };
+        return next;
+      });
+      return;
+    }
     for (const p of posts) {
       setImagens((m) => ({ ...m, [p.versao]: { status: "loading" } }));
       try {
-        const r = await fetch("/api/instagram/imagem", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: p.imagemPrompt }),
-        });
-        if (r.status === 503) {
-          // Stable Diffusion fora: marca todos os pendentes como "off" e para.
-          setImagens((m) => {
-            const next = { ...m };
-            for (const q of posts) {
-              if (!next[q.versao] || next[q.versao].status === "loading") next[q.versao] = { status: "off" };
-            }
-            return next;
-          });
-          return;
-        }
-        const d = await r.json();
-        if (!r.ok || !d.imagem) throw new Error(d?.erro ?? "falha");
-        setImagens((m) => ({ ...m, [p.versao]: { status: "ok", src: d.imagem as string } }));
+        const el = await puter.ai.txt2img(p.imagemPrompt, { model: NANO_MODEL });
+        const src = el?.src;
+        if (!src) throw new Error("sem imagem");
+        setImagens((m) => ({ ...m, [p.versao]: { status: "ok", src } }));
       } catch {
         setImagens((m) => ({ ...m, [p.versao]: { status: "erro" } }));
       }
@@ -2148,13 +2170,8 @@ function ImagemPost({ estado }: { estado: ImgState | undefined }) {
       </div>
     );
   }
-  // erro / off / sem estado → status em PORTUGUÊS (a descrição do criativo fica no card).
-  const msg =
-    st === "off"
-      ? "Imagem não gerada — Stable Diffusion offline."
-      : st === "erro"
-        ? "Imagem não gerada — falha no servidor de imagem."
-        : "Imagem ainda não gerada.";
+  // erro / sem estado → status em PORTUGUÊS (a descrição do criativo fica no card).
+  const msg = st === "erro" ? "Não foi possível gerar a imagem." : "Imagem ainda não gerada.";
   return (
     <div style={{ width: "100%", aspectRatio: "1 / 1", borderRadius: "10px", border: "1px dashed var(--gray-300)", background: "var(--gray-50)", padding: "14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px", textAlign: "center" }}>
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
