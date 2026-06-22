@@ -44,6 +44,23 @@ const TEMAS = [
   "Conexão/humanização da marca",
 ];
 
+// Assinatura visual da Indeba ("mundo mais azul") — anexada a TODA imagem para o
+// feed ter identidade de marca, sem depender de o modelo lembrar dos modificadores.
+const ESTILO_INDEBA =
+  "bright and clean, fresh hygienic mood, dominant blue tones with subtle orange accents, " +
+  "high-key lighting, glossy reflections, professional photography, photorealistic, " +
+  "vertical 4:5, no text, no letters, no watermark";
+
+// O modelo escreve só a CENA; aqui garantimos a identidade visual (sem duplicar termos).
+function montarImagemPrompt(cena: string): string {
+  const limpa = cena
+    .replace(/vertical\s*\d+:\d+/gi, "")
+    .replace(/\bno (text|letters|watermark)\b/gi, "")
+    .replace(/[\s,]+$/g, "")
+    .trim();
+  return `${limpa}, ${ESTILO_INDEBA}`;
+}
+
 function prompt(req: InstagramRequest): string {
   // Entrada do usuário é dado não-confiável: tira delimitador, normaliza e limita.
   const sane = (s: string, max: number) =>
@@ -76,9 +93,7 @@ COMO ESCREVER (siga à risca — é isso que separa post bom de post ruim):
 - "hashtags": 5 a 12 sem "#", específicas do nicho/produto/região; evite genéricas (amor, instagood, fyp).
 - "melhorHorario": dia + horário + justificativa curta ligada ao público.
 - "sugestaoCriativo" (PT): 1 frase com o visual ideal (estilo, cores, elementos, mood).
-- "imagemPrompt" (INGLÊS): UMA frase descritiva e fluida em inglês, cobrindo nesta ordem — sujeito, cenário, iluminação, estilo, paleta de cores, enquadramento e técnico (lente/qualidade). NUNCA use colchetes, listas ou sinais de "+"; escreva em prosa. Termine SEMPRE com "vertical 4:5, no text, no letters, no watermark". Exemplo: "A spotless stainless steel commercial kitchen gleaming after deep cleaning, soft diffused natural window light, modern editorial photography, cool blue and white palette, wide composition, 85mm lens, photorealistic, vertical 4:5, no text, no letters, no watermark".
-- ESTILO DA MARCA (Indeba Express, conceito "mundo mais azul"): TODA imagem inclui "bright and clean, fresh hygienic mood, dominant blue tones with orange accents, high-key lighting, professional". Mostre AMBIENTES limpos, conceito de higiene/frescor (gotas, brilho, superfície reluzente) ou fundo institucional azul — NUNCA tente desenhar embalagens, rótulos ou produtos específicos (a IA não reproduz o rótulo real; produto real entra com foto de verdade).
-- CONSISTÊNCIA VISUAL: use a MESMA linha de estilo + paleta nos ${req.numPosts} "imagemPrompt" pra o feed ter identidade de marca.
+- "imagemPrompt" (INGLÊS): descreva APENAS a CENA da foto em inglês — uma frase concreta e visual. NÃO escreva estilo, paleta, luz nem termos técnicos: o sistema adiciona a identidade visual da Indeba ("mundo mais azul") automaticamente. Escolha uma cena que case com o tema, entre: ambiente limpo (ex.: "a spotless modern commercial kitchen with gleaming stainless steel surfaces"), conceito de higiene/brilho (ex.: "a gloved hand wiping a glossy surface to a brilliant shine with fresh water droplets"), profissional de limpeza em ação num escritório claro, frescor/textura (close-up de bolhas e gotas de água numa superfície), ou interior institucional claro e arejado banhado de luz azul. NUNCA embalagens, rótulos ou produtos específicos (a IA não reproduz o rótulo real).
 - "versao": numere de 1 a ${req.numPosts}.
 
 EXEMPLO do nível esperado (padaria — adapte ao negócio real, NÃO copie):
@@ -104,7 +119,12 @@ export async function gerarPostsInstagram(req: InstagramRequest): Promise<Instag
         process.env.OLLAMA_MODEL_POSTS || undefined,
       );
       const out = InstagramResponse.parse(JSON.parse(cru));
-      return { ...out, posts: out.posts.slice(0, req.numPosts) };
+      // Garante a identidade visual da marca em toda imagem (não depende do modelo).
+      const posts = out.posts.slice(0, req.numPosts).map((p) => ({
+        ...p,
+        imagemPrompt: montarImagemPrompt(p.imagemPrompt),
+      }));
+      return { ...out, posts };
     } catch {
       // Ollama indisponível ou saída inválida → template determinístico (§5).
     }
@@ -123,7 +143,7 @@ function fallback(req: InstagramRequest): InstagramResponse {
     hashtags: ["indeba", "indebaexpress", req.nicho ?? "novidade"].filter(Boolean),
     melhorHorario: "Terça a quinta, 12h ou 18h — maior alcance no feed.",
     sugestaoCriativo: "Foto do produto/serviço em destaque, fundo limpo, luz natural e a marca visível.",
-    imagemPrompt: `Professional square 1:1 photo about ${req.nicho ?? "the business"}, clean composition, soft natural lighting, modern brand mood, no text`,
+    imagemPrompt: montarImagemPrompt(`A clean and bright professional ${req.nicho ?? "cleaning"} environment with spotless surfaces`),
   }));
   return {
     posts,
