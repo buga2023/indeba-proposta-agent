@@ -4,10 +4,13 @@ const MODEL = process.env.OLLAMA_MODEL ?? "qwen2.5:7b-instruct";
 
 export async function ollamaDisponivel(): Promise<boolean> {
   // Produção sem Ollama configurado → roda 100% determinístico, sem tentar
-  // (evita o timeout de 1,5s a cada requisição na Vercel).
+  // (evita o timeout a cada requisição na Vercel).
   if (process.env.VERCEL && !process.env.OLLAMA_BASE_URL) return false;
+  // Com URL explícita (com-ia via túnel cloudflared), o caminho Vercel→túnel→PC tem
+  // latência bem maior que o localhost: 1,5s não basta e dá 503 falso. Dá folga.
+  const timeout = process.env.OLLAMA_BASE_URL ? 6000 : 1500;
   try {
-    const r = await fetch(`${BASE}/api/tags`, { signal: AbortSignal.timeout(1500) });
+    const r = await fetch(`${BASE}/api/tags`, { signal: AbortSignal.timeout(timeout) });
     return r.ok;
   } catch {
     return false;
