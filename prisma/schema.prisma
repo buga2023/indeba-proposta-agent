@@ -4,8 +4,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // runtime: pooled (Supabase pgbouncer 6543) ou local
+  directUrl = env("DIRECT_URL") // migrations: conexão direta (5432); cai em DATABASE_URL se ausente
 }
 
 /// Estabelecimento da base aberta da Receita Federal (CNPJ).
