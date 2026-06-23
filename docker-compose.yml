@@ -1,0 +1,22 @@
+# Postgres local (stack decidido no CLAUDE.md). Ollama roda no host, não aqui.
+services:
+  db:
+    image: postgres:16
+    container_name: indeba-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: indeba
+      POSTGRES_PASSWORD: indeba
+      POSTGRES_DB: indeba
+    ports:
+      - "5432:5432"
+    volumes:
+      - indeba_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U indeba -d indeba"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  indeba_pgdata:

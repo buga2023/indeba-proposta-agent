@@ -25,7 +25,28 @@ const RE_WHATSAPP = /(?:https?:\/\/)?(?:wa\.me\/|api\.whatsapp\.com\/send\?phone
 // E-mails que parecem contato mas são lixo de página/asset/placeholder.
 const EMAIL_LIXO = [".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", "@2x", "@sentry", "wixpress", "example.com", "domain.com", "email.com", "seuemail", "your@", "@example"];
 // Caminhos genéricos das redes que NÃO são perfis de empresa.
-const REDE_LIXO = ["/p/", "/reel", "/explore", "/accounts", "/sharer", "/tr?", "/plugins", "/dialog", "/feed", "/sharearticle", "/sharing", "/login", "/help", "/policies", "/about/"];
+const REDE_LIXO = ["/p/", "/reel", "/explore", "/accounts", "/sharer", "/tr?", "/plugins", "/dialog", "/feed", "/sharearticle", "/sharing", "/login", "/help", "/policy", "/policies", "/about/"];
+
+// Handles reservados do Instagram/Facebook — são páginas de sistema, não perfis de
+// empresa. O raw_content da Tavily (muito login-wall do IG) vaza estes como se fossem
+// contato; filtra na origem além da checagem de individualidade no enriquecimento.
+const HANDLE_RESERVADO = new Set([
+  "p", "reel", "reels", "explore", "accounts", "about", "policy", "policies", "legal",
+  "privacy", "terms", "help", "developer", "developers", "directory", "web", "watch",
+  "events", "groups", "marketplace", "pages", "stories", "tv", "igtv", "v", "login",
+  "signup", "sharer", "dialog", "tr", "plugins", "profile.php",
+]);
+
+// Instagram/Facebook: o "handle" é o 1º segmento do path. Vale como perfil só se não
+// for reservado, não for puramente numérico (ID interno da rede) nem curto demais.
+function handleValido(url: string): boolean {
+  const m = url.match(/(?:instagram|facebook)\.com\/([a-z0-9_.-]+)/i);
+  const h = m?.[1]?.toLowerCase().replace(/[._-]+$/, "") ?? "";
+  if (h.length < 3) return false;
+  if (HANDLE_RESERVADO.has(h)) return false;
+  if (/^\d+$/.test(h)) return false; // ID numérico, não @perfil
+  return true;
+}
 
 function unico(xs: string[]): string[] {
   return [...new Set(xs)];
@@ -81,16 +102,21 @@ export function minerarContatos(texto: string): Contatos {
     // dedup por dígitos (formatações diferentes do mesmo número)
     .filter((tel, i, arr) => arr.findIndex((o) => soDigitos(o) === soDigitos(tel)) === i);
 
-  const captura = (re: RegExp) =>
-    unico((baixa.match(re) ?? []).map(normalizarUrl).filter(redeLimpa));
+  const captura = (re: RegExp, validar?: (u: string) => boolean) =>
+    unico(
+      (baixa.match(re) ?? [])
+        .map(normalizarUrl)
+        .filter(redeLimpa)
+        .filter((u) => !validar || validar(u)),
+    );
 
   return {
     emails,
     telefones,
     redes: {
       linkedin: captura(RE_LINKEDIN),
-      instagram: captura(RE_INSTAGRAM),
-      facebook: captura(RE_FACEBOOK),
+      instagram: captura(RE_INSTAGRAM, handleValido),
+      facebook: captura(RE_FACEBOOK, handleValido),
       whatsapp: captura(RE_WHATSAPP),
     },
   };

@@ -15,6 +15,15 @@ const Body = z.object({
   cnpj: z.string().max(40).nullable().default(null),
   segmento: z.string().max(100).nullable().default(null),
   tipo: Tipo.optional(), // se o usuário já escolheu o tipo (após perguntar)
+  // Contexto opcional vindo da prospecção: a "dor" do prospect personaliza o
+  // texto de apresentação. Tempero do texto — não influencia preço nem item.
+  contextoProspeccao: z
+    .object({
+      problema: z.string().max(800).default(""),
+      comoAjudar: z.string().max(800).default(""),
+    })
+    .nullable()
+    .default(null),
 });
 
 const TIPOS_OPCOES = (["orcamento", "implantacao", "comercial"] as const).map((t) => ({
@@ -30,7 +39,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }
-  const { briefing, razaoSocial, cnpj, segmento, tipo } = parsed.data;
+  const { briefing, razaoSocial, cnpj, segmento, tipo, contextoProspeccao } = parsed.data;
 
   const tipoFinal = tipo ?? detectarTipo(briefing).tipo;
   if (!tipoFinal) {
@@ -40,7 +49,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const scope = await montarProposta(briefing, { razaoSocial, cnpj, segmento }, tipoFinal);
+  const scope = await montarProposta(briefing, { razaoSocial, cnpj, segmento }, tipoFinal, contextoProspeccao);
 
   // Seleção vazia = o briefing não casou com nada do catálogo. Não emite proposta
   // muda: sinaliza pro vendedor refinar (melhor avisar do que entregar PDF vazio).

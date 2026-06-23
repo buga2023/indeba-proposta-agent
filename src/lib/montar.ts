@@ -7,6 +7,10 @@ import { PropostaScope, type PropostaItem, type EntradaEstruturada, type Tipo } 
 
 export type DadosCliente = { razaoSocial: string; cnpj: string | null; segmento: string | null };
 
+// Contexto vindo da prospecção: a "dor" do prospect personaliza o texto de
+// apresentação. É só tempero do texto (IA-TEXTO, revisável) — não toca preço/item.
+export type ContextoProspeccao = { problema: string; comoAjudar: string };
+
 // Comercial = identidade fabricante (Indeba); Orçamento/Implantação = Express.
 const marcaPorTipo = (tipo: Tipo, padrao: "indeba" | "indeba_express") =>
   tipo === "comercial" ? "indeba" : padrao;
@@ -23,6 +27,7 @@ export async function montarProposta(
   briefing: string,
   cliente: DadosCliente,
   tipo: Tipo = "implantacao",
+  contexto?: ContextoProspeccao | null,
 ): Promise<PropostaScope> {
   const catalogo = carregarCatalogo();
 
@@ -52,6 +57,7 @@ export async function montarProposta(
       nome: i.nome,
       funcoes: catalogo.produtos.find((p) => p.codigo === i.codigo)?.funcoes ?? [],
     })),
+    contexto?.problema || null,
   );
 
   return PropostaScope.parse({

@@ -1,0 +1,35 @@
+// Prisma — stack decidido (CLAUDE.md). Fonte determinística da prospecção.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Estabelecimento da base aberta da Receita Federal (CNPJ).
+/// Fonte determinística de empresas REAIS para a prospecção: razão social, atividade
+/// (CNAE), endereço e contato vêm daqui — nunca do modelo (constituição §1/§2).
+model EmpresaReceita {
+  cnpj          String   @id @db.VarChar(14) // 14 dígitos, sem máscara
+  razaoSocial   String
+  nomeFantasia  String?
+  cnaePrincipal String   @db.VarChar(7)
+  situacao      String // ATIVA, BAIXADA, ...
+  uf            String   @db.VarChar(2)
+  municipioNome String?
+  municipioCod  String?  @db.VarChar(7)
+  bairro        String?
+  logradouro    String?
+  numero        String?
+  cep           String?  @db.VarChar(8)
+  telefone1     String? // dígitos: DDD + número
+  telefone2     String?
+  email         String?
+  atualizadoEm  DateTime @updatedAt
+
+  @@index([cnaePrincipal, uf])
+  @@index([uf, municipioNome])
+  @@index([situacao])
+}

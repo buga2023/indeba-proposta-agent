@@ -4,13 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 127.0.0.1",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start -H 127.0.0.1",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:up": "docker compose up -d db",
+    "db:migrate": "prisma migrate dev",
+    "db:seed-amostra": "node --env-file=.env.local prisma/seed-amostra.mjs"
   },
   "dependencies": {
+    "@prisma/client": "^6.16.0",
     "@sparticuz/chromium": "^149.0.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
@@ -29,6 +33,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "prisma": "^6.16.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.9"

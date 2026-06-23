@@ -23,6 +23,7 @@ export async function gerarJson(
   timeoutMs = 60_000,
   temperature = 0,
   model = MODEL,
+  think?: boolean, // modelos de raciocínio (qwen3): false desliga o <think> e corta MUITO o tempo
 ): Promise<string> {
   const r = await fetch(`${BASE}/api/generate`, {
     method: "POST",
@@ -33,6 +34,7 @@ export async function gerarJson(
       stream: false,
       format: schema,
       options: { temperature },
+      ...(think === undefined ? {} : { think }), // só envia p/ modelos que suportam thinking
       keep_alive: "30m", // mantém o modelo na VRAM — evita cold start (que estoura 60s)
     }),
     signal: AbortSignal.timeout(timeoutMs),

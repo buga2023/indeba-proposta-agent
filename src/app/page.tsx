@@ -195,10 +195,12 @@ export default function Home() {
     }
   }, [screen, catalogo, propostas]);
 
-  async function startGeneration(textoOverride?: string) {
+  async function startGeneration(textoOverride?: string, prospect?: ProspectParaProposta) {
     // textoOverride: gerar a partir de um texto explícito (ex.: vindo da prospecção),
     // sem depender do setState assíncrono de briefingText. Guard porque a UI também
     // chama startGeneration direto no onClick (passando o evento como argumento).
+    // prospect: quando vem da prospecção, os dados do cliente já estão estruturados
+    // (não re-extrai por heurística) e a "dor" personaliza o texto da proposta.
     const texto = (typeof textoOverride === "string" ? textoOverride : briefingText).trim();
     if (!texto || generating) return;
     setError(null);
@@ -223,10 +225,20 @@ export default function Home() {
     }
 
     try {
+      const body = prospect
+        ? {
+            briefing: texto,
+            razaoSocial: prospect.razaoSocial,
+            cnpj: null,
+            segmento: prospect.segmento,
+            tipo: "comercial" as const, // prospecção = abordagem fria → apresentação institucional
+            contextoProspeccao: prospect.contexto,
+          }
+        : { briefing: texto, razaoSocial: parseCliente(texto), cnpj: null, segmento: null, tipo: tipoProposta };
       const r = await fetch("/api/montar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ briefing: texto, razaoSocial: parseCliente(texto), cnpj: null, segmento: null, tipo: tipoProposta }),
+        body: JSON.stringify(body),
       });
       if (!r.ok) throw new Error(`Falha ao montar a proposta (${r.status}).`);
       const data = await r.json();
@@ -483,7 +495,7 @@ export default function Home() {
         {(screen === "review" || screen === "pdf") && !scope && <SemProposta onNova={novaProposta} />}
         {screen === "history" && <HistoryScreen propostas={propostas} erro={propostasErro} goToBriefing={novaProposta} />}
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
-        {screen === "prospeccao" && <ProspeccaoScreen onGerarProposta={(seed) => { setBriefingText(seed); setScreen("briefing"); startGeneration(seed); }} />}
+        {screen === "prospeccao" && <ProspeccaoScreen onGerarProposta={(d) => { setBriefingText(d.briefing); setScreen("briefing"); startGeneration(d.briefing, d); }} />}
         {screen === "instagram" && <InstagramScreen />}
       </main>
 
@@ -1516,7 +1528,16 @@ function CatalogScreen({
 
 /* ═══════════════════════ TELA: PROSPECÇÃO ═══════════════════════ */
 
-function ProspeccaoScreen({ onGerarProposta }: { onGerarProposta: (seed: string) => void }) {
+// Payload do handoff prospecção → proposta: dados do cliente já estruturados
+// (sem re-extrair por heurística) + a "dor" que personaliza o texto da proposta.
+type ProspectParaProposta = {
+  briefing: string;
+  razaoSocial: string;
+  segmento: string | null;
+  contexto: { problema: string; comoAjudar: string };
+};
+
+function ProspeccaoScreen({ onGerarProposta }: { onGerarProposta: (d: ProspectParaProposta) => void }) {
   const [nicho, setNicho] = useState("");
   const [tipoCliente, setTipoCliente] = useState("");
   const [servicoOferecido, setServicoOferecido] = useState("");
@@ -1625,7 +1646,20 @@ function ProspeccaoScreen({ onGerarProposta }: { onGerarProposta: (seed: string)
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(330px, 1fr))", gap: "16px", marginBottom: "34px" }}>
               {res.prospects.map((p, i) => (
-                <ProspectCard key={`${p.nome}-${i}`} p={p} index={i} onGerarProposta={(pr) => onGerarProposta(`${pr.nome}: ${pr.setor}. Empresa-alvo para ${servicoOferecido.trim() || nicho.trim()}. ${pr.comoAjudar}`)} />
+                <ProspectCard
+                  key={`${p.nome}-${i}`}
+                  p={p}
+                  index={i}
+                  onGerarProposta={(pr) =>
+                    onGerarProposta({
+                      // briefing rico guia a seleção de produtos: dor real + como ajudamos
+                      briefing: `${pr.nome} — ${pr.setor}. Necessidade: ${pr.problema || servicoOferecido.trim() || nicho.trim()}. Solução proposta: ${pr.comoAjudar}`,
+                      razaoSocial: pr.nome,
+                      segmento: pr.setor || null,
+                      contexto: { problema: pr.problema || "", comoAjudar: pr.comoAjudar || "" },
+                    })
+                  }
+                />
               ))}
             </div>
           )}
