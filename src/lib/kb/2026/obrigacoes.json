@@ -1,0 +1,16 @@
+{
+  "_aviso": "ESQUELETO versionado. Prazos e leiautes estão como PREENCHER e DEVEM ser preenchidos/validados pelo contador a cada ano. O agente nunca usa valor não-validado (§2). A cadeia de dependência (dependeDe) é estrutural.",
+  "vigencia": "2026",
+  "obrigacoes": [
+    { "id": "folha", "nome": "Folha de pagamento", "esfera": "federal", "periodicidade": "mensal", "prazo": "PREENCHER", "leiaute": null, "dependeDe": [], "regimes": ["real", "presumido", "simples"], "_status": "placeholder" },
+    { "id": "esocial", "nome": "eSocial", "esfera": "federal", "periodicidade": "mensal", "prazo": "PREENCHER", "leiaute": "PREENCHER", "dependeDe": ["folha"], "regimes": ["real", "presumido", "simples"], "_status": "placeholder" },
+    { "id": "efd_reinf", "nome": "EFD-Reinf", "esfera": "federal", "periodicidade": "mensal", "prazo": "PREENCHER", "leiaute": "PREENCHER", "dependeDe": ["folha"], "regimes": ["real", "presumido"], "_status": "placeholder" },
+    { "id": "dctfweb", "nome": "DCTFWeb", "esfera": "federal", "periodicidade": "mensal", "prazo": "PREENCHER", "leiaute": "PREENCHER", "dependeDe": ["esocial", "efd_reinf"], "regimes": ["real", "presumido"], "_status": "placeholder" },
+    { "id": "efd_contribuicoes", "nome": "EFD-Contribuições (PIS/COFINS)", "esfera": "federal", "periodicidade": "mensal", "prazo": "PREENCHER", "leiaute": "PREENCHER", "dependeDe": [], "regimes": ["real", "presumido"], "_status": "placeholder" },
+    { "id": "efd_icms_ipi", "nome": "EFD-ICMS/IPI (SPED Fiscal)", "esfera": "estadual", "periodicidade": "mensal", "prazo": "PREENCHER", "leiaute": "PREENCHER", "dependeDe": [], "regimes": ["real", "presumido"], "_status": "placeholder" },
+    { "id": "ecd", "nome": "ECD (SPED Contábil)", "esfera": "federal", "periodicidade": "anual", "prazo": "PREENCHER", "leiaute": "PREENCHER", "dependeDe": [], "regimes": ["real"], "_status": "placeholder" },
+    { "id": "ecf", "nome": "ECF", "esfera": "federal", "periodicidade": "anual", "prazo": "PREENCHER", "leiaute": "PREENCHER", "dependeDe": ["ecd"], "regimes": ["real", "presumido"], "_status": "placeholder" },
+    { "id": "pgdas_d", "nome": "PGDAS-D (Simples)", "esfera": "federal", "periodicidade": "mensal", "prazo": "PREENCHER", "leiaute": null, "dependeDe": [], "regimes": ["simples"], "_status": "placeholder" },
+    { "id": "defis", "nome": "DEFIS (Simples)", "esfera": "federal", "periodicidade": "anual", "prazo": "PREENCHER", "leiaute": null, "dependeDe": [], "regimes": ["simples"], "_status": "placeholder" }
+  ]
+}

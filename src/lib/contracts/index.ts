@@ -14,3 +14,5 @@ export * from "./feedback";
 export * from "./cobranca";
 export * from "./compras";
 export * from "./fiscal";
+export * from "./contabil";
+export * from "./chamado";

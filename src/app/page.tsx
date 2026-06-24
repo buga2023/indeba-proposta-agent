@@ -13,8 +13,10 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse } from "@/lib/contracts";
+import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse } from "@/lib/contracts";
 import { AjudaChat } from "@/components/ajuda-chat";
+import { ChamadosScreen } from "@/components/chamados-screen";
+import { AdminScreen } from "@/components/admin-screen";
 
 /* ───────────────────────── helpers ───────────────────────── */
 
@@ -118,21 +120,34 @@ function Hoverable({
 }
 
 /* tipo do registro do histórico (espelha EventoProposta da API, sem importar node) */
+type StatusProposta = "rascunho" | "em_edicao" | "enviada" | "aprovada" | "recusada";
+// Espelha PropostaResumo (src/lib/contracts/proposta.ts): proposta persistida + status.
 type PropostaLog = {
-  ts: string;
-  usuario: string;
-  propostaId: string;
+  id: string;
+  status: StatusProposta;
+  autor: string;
   cliente: string;
   segmento: string | null;
-  tipo: string | null;
+  tipo: string;
   total: string;
-  itens: { codigo: string; nome: string; quantidade: number; precos: string[] }[];
+  qtdItens: number;
+  criadoEm: string;
+  atualizadoEm: string;
+};
+
+// Status comercial → rótulo + cores do badge. Eixo separado do scope.status (documento).
+const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string }> = {
+  rascunho: { label: "Rascunho", bg: "#F1F5F9", fg: "#64748B" },
+  em_edicao: { label: "Em edição", bg: "#FEF3C7", fg: "#B45309" },
+  enviada: { label: "Enviada", bg: "#DBEAFE", fg: "#2563EB" },
+  aprovada: { label: "Aprovada", bg: "#DCFCE7", fg: "#16A34A" },
+  recusada: { label: "Recusada", bg: "#FEE2E2", fg: "#DC2626" },
 };
 
 const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
-type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal";
+type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config";
 type TipoProposta = "orcamento" | "implantacao" | "comercial";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -251,6 +266,7 @@ export default function Home() {
       setExcluded(new Set());
       setHasLoadedOnce(true);
       setScreen("review");
+      persistirProposta(novo); // auto-save: proposta gerada já vira registro (rascunho)
     } catch (e) {
       stopStepTimer();
       setError(e instanceof Error ? e.message : "Erro ao montar a proposta.");
@@ -297,14 +313,73 @@ export default function Home() {
       if (!r.ok) throw new Error(`Falha ao refinar (${r.status}).`);
       const data = await r.json();
       if (data?.precisaTipo || !Array.isArray(data?.itens)) throw new Error("Resposta inesperada do servidor.");
+      // Reusa o id do registro atual: refino ATUALIZA a mesma proposta, não cria outra.
+      const atualizado = { ...(data as PropostaScope), id: scope.id };
       setBriefingText(novoBriefing); // acumula o contexto para o próximo refino
-      setScope(data as PropostaScope);
+      setScope(atualizado);
       setExcluded(new Set());
-      if (data.itens.length === 0) setError(data.aviso ?? "Nenhum produto casou após o ajuste.");
+      if (atualizado.itens.length === 0) setError(data.aviso ?? "Nenhum produto casou após o ajuste.");
+      else persistirProposta(atualizado);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao refinar.");
     } finally {
       setRefining(false);
+    }
+  }
+
+  // Auto-save (best-effort): grava/atualiza o registro pelo id do scope. Falha não trava a UI.
+  function persistirProposta(s: PropostaScope) {
+    if (!s.itens.length) return;
+    fetch("/api/propostas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(s),
+    })
+      .then(() => setPropostas(null)) // histórico mudou → recarrega na próxima visita
+      .catch(() => {});
+  }
+
+  // Reabrir uma proposta já salva: carrega o scope canônico de volta na tela de revisão.
+  async function reabrirProposta(id: string) {
+    try {
+      const r = await fetch(`/api/propostas/${id}`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const reg = await r.json();
+      setScope(reg.scope as PropostaScope);
+      setExcluded(new Set());
+      setHasLoadedOnce(true);
+      setScreen("review");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao abrir a proposta.");
+    }
+  }
+
+  // Gerar contrato a partir de uma proposta que já existe: carrega o scope e abre o agente
+  // de contrato (que gera a partir desse scope — preço/itens vêm do registro, não do modelo).
+  async function contratoDeProposta(id: string) {
+    try {
+      const r = await fetch(`/api/propostas/${id}`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const reg = await r.json();
+      setScope(reg.scope as PropostaScope);
+      setScreen("contrato");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao abrir o contrato.");
+    }
+  }
+
+  // Muda o status comercial. Otimista: atualiza a lista local; se falhar, recarrega do servidor.
+  async function mudarStatus(id: string, status: StatusProposta) {
+    setPropostas((ps) => (ps ? ps.map((p) => (p.id === id ? { ...p, status } : p)) : ps));
+    try {
+      const r = await fetch(`/api/propostas/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!r.ok) throw new Error();
+    } catch {
+      setPropostas(null);
     }
   }
 
@@ -334,8 +409,8 @@ export default function Home() {
       a.download = `proposta-${scope.cliente.razaoSocial.replace(/\s+/g, "-")}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
-      // histórico mudou — força recarga na próxima visita
-      setPropostas(null);
+      // persiste as edições (quantidade/texto) e força recarga do histórico
+      persistirProposta(scope);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao gerar PDF.");
     } finally {
@@ -461,6 +536,13 @@ export default function Home() {
             </svg>
             Fiscal
           </Hoverable>
+          <Hoverable base={navItemStyle(["contabil"])} hover={navHover} onClick={() => setScreen("contabil")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 3.5h11v10H3z" />
+              <path d="M8.5 3.5v10M3 8.5h11" />
+            </svg>
+            Contábil
+          </Hoverable>
           <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => setScreen("contrato")}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 2.5h6l3 3v9H4z" />
@@ -476,10 +558,17 @@ export default function Home() {
             </svg>
             Atendimento
           </Hoverable>
+          <Hoverable base={navItemStyle(["chamados"])} hover={navHover} onClick={() => setScreen("chamados")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8.5 2.5a3.5 3.5 0 0 0-3.5 3.5c0 3-1.5 4-1.5 4h10s-1.5-1-1.5-4a3.5 3.5 0 0 0-3.5-3.5z" />
+              <path d="M7.3 14a1.3 1.3 0 0 0 2.4 0" />
+            </svg>
+            Chamados
+          </Hoverable>
 
           <div style={{ height: "1px", background: "rgba(255,255,255,.07)", margin: "8px 4px" }} />
 
-          <Hoverable base={navItemStyle([])} hover={navHover} title="Em breve">
+          <Hoverable base={navItemStyle(["config"])} hover={navHover} onClick={() => setScreen("config")}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <circle cx="8.5" cy="8.5" r="2.25" />
               <path d="M8.5 2.5v1M8.5 13v1.5M2.5 8.5h1M13 8.5h1.5M4.5 4.5l.7.7M11.8 11.8l.7.7M4.5 12.5l.7-.7M11.8 5.2l.7-.7" />
@@ -539,7 +628,16 @@ export default function Home() {
           />
         )}
         {(screen === "review" || screen === "pdf") && !scope && <SemProposta onNova={novaProposta} />}
-        {screen === "history" && <HistoryScreen propostas={propostas} erro={propostasErro} goToBriefing={novaProposta} />}
+        {screen === "history" && (
+          <HistoryScreen
+            propostas={propostas}
+            erro={propostasErro}
+            goToBriefing={novaProposta}
+            onReabrir={reabrirProposta}
+            onContrato={contratoDeProposta}
+            onStatus={mudarStatus}
+          />
+        )}
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
         {screen === "prospeccao" && <ProspeccaoScreen onGerarProposta={(d) => { setBriefingText(d.briefing); setScreen("briefing"); startGeneration(d.briefing, d); }} />}
         {screen === "instagram" && <InstagramScreen />}
@@ -547,8 +645,11 @@ export default function Home() {
         {screen === "cobranca" && <CobrancaScreen />}
         {screen === "compras" && <ComprasScreen />}
         {screen === "fiscal" && <FiscalScreen />}
+        {screen === "contabil" && <ContabilScreen />}
         {screen === "contrato" && <ContratoScreen scope={scope} onVerProposta={() => setScreen(scope ? "review" : "briefing")} />}
         {screen === "atendimento" && <AtendimentoScreen />}
+        {screen === "chamados" && <ChamadosScreen />}
+        {screen === "config" && <AdminScreen />}
       </main>
 
       {/* Assistente de ajuda — overlay global (canto inferior direito) */}
@@ -1365,17 +1466,32 @@ function ComercialPreview({ scope, itens }: { scope: PropostaScope; itens: Propo
 
 /* ═══════════════════════ TELA: HISTORY ═══════════════════════ */
 
-function HistoryScreen({ propostas, erro, goToBriefing }: { propostas: PropostaLog[] | null; erro: string | null; goToBriefing: () => void }) {
-  const cols = "2fr 1fr 90px 110px 110px 120px 80px";
+function HistoryScreen({
+  propostas,
+  erro,
+  goToBriefing,
+  onReabrir,
+  onContrato,
+  onStatus,
+}: {
+  propostas: PropostaLog[] | null;
+  erro: string | null;
+  goToBriefing: () => void;
+  onReabrir: (id: string) => void;
+  onContrato: (id: string) => void;
+  onStatus: (id: string, status: StatusProposta) => void;
+}) {
+  const cols = "1.7fr 1fr 80px 130px 80px 110px 150px";
   const lista = propostas ?? [];
-  const totalFaturado = lista.reduce((s, p) => s + (Number(p.total) || 0), 0);
-  const totalItens = lista.reduce((s, p) => s + p.itens.length, 0);
+  // Faturamento = só o que o cliente APROVOU (status comercial real, não o que foi gerado).
+  const aprovado = lista.filter((p) => p.status === "aprovada").reduce((s, p) => s + (Number(p.total) || 0), 0);
+  const totalItens = lista.reduce((s, p) => s + p.qtdItens, 0);
   const clientes = new Set(lista.map((p) => p.cliente)).size;
   const stats = [
     { label: "Propostas", value: String(lista.length), color: "var(--gray-900)" },
     { label: "Clientes", value: String(clientes), color: "var(--blue-500)" },
     { label: "Itens", value: String(totalItens), color: "#16A34A" },
-    { label: "Faturamento", value: fmt(totalFaturado), color: "var(--gray-900)" },
+    { label: "Aprovado", value: fmt(aprovado), color: "var(--gray-900)" },
   ];
 
   return (
@@ -1427,18 +1543,19 @@ function HistoryScreen({ propostas, erro, goToBriefing }: { propostas: PropostaL
               { t: "Segmento", a: "left" },
               { t: "Data", a: "left" },
               { t: "Status", a: "center" },
-              { t: "Produtos", a: "center" },
+              { t: "Itens", a: "center" },
               { t: "Valor", a: "right" },
-              { t: "", a: "left" },
+              { t: "Ações", a: "right" },
             ].map((h, i) => (
               <div key={i} style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".05em", textAlign: h.a as CSSProperties["textAlign"] }}>{h.t}</div>
             ))}
           </div>
           {lista.map((p, idx) => {
-            const data = new Date(p.ts).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+            const data = new Date(p.atualizadoEm).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+            const su = STATUS_UI[p.status];
             return (
               <Hoverable
-                key={p.propostaId + idx}
+                key={p.id + idx}
                 as="div"
                 base={{ display: "grid", gridTemplateColumns: cols, minWidth: "720px", padding: "13px 20px", borderBottom: "1px solid var(--gray-100)", alignItems: "center", transition: "background .15s ease" }}
                 hover={{ background: "var(--gray-50)" }}
@@ -1447,11 +1564,33 @@ function HistoryScreen({ propostas, erro, goToBriefing }: { propostas: PropostaL
                 <div style={{ fontSize: "13px", color: "var(--gray-500)", textTransform: "capitalize" }}>{p.segmento ? p.segmento.replace(/_/g, " ") : "—"}</div>
                 <div style={{ fontSize: "13px", color: "var(--gray-400)" }}>{data}</div>
                 <div style={{ display: "flex", justifyContent: "center" }}>
-                  <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 600, background: "#DCFCE7", color: "#16A34A" }}>Gerada</span>
+                  {/* Status comercial editável: muda direto na lista (PATCH otimista). */}
+                  <select
+                    value={p.status}
+                    onChange={(e) => onStatus(p.id, e.target.value as StatusProposta)}
+                    style={{ appearance: "none", padding: "3px 10px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 600, background: su.bg, color: su.fg, border: "none", cursor: "pointer", textAlign: "center" }}
+                  >
+                    {(Object.keys(STATUS_UI) as StatusProposta[]).map((s) => (
+                      <option key={s} value={s}>{STATUS_UI[s].label}</option>
+                    ))}
+                  </select>
                 </div>
-                <div style={{ textAlign: "center", fontSize: "13px", color: "var(--gray-500)" }}>{p.itens.length} itens</div>
+                <div style={{ textAlign: "center", fontSize: "13px", color: "var(--gray-500)" }}>{p.qtdItens} itens</div>
                 <div style={{ textAlign: "right", fontSize: "14px", fontWeight: 700, color: "var(--gray-900)" }}>{fmt(Number(p.total) || 0)}</div>
-                <div />
+                <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
+                  <button
+                    onClick={() => onReabrir(p.id)}
+                    style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", background: "white", border: "1px solid var(--gray-200)", borderRadius: "7px", cursor: "pointer" }}
+                  >
+                    Abrir
+                  </button>
+                  <button
+                    onClick={() => onContrato(p.id)}
+                    style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "var(--orange-500)", background: "white", border: "1px solid var(--orange-500)", borderRadius: "7px", cursor: "pointer" }}
+                  >
+                    Contrato
+                  </button>
+                </div>
               </Hoverable>
             );
           })}
@@ -2477,6 +2616,187 @@ async function planilhaParaCsv(f: File): Promise<string> {
   return f.text();
 }
 
+// ── Relatório unificado (print → PDF) ──────────────────────────────────────────
+// Qualquer agente de análise monta "blocos" e chama abrirRelatorio(); abre uma janela
+// limpa só com o relatório e dispara a impressão (salvar como PDF). Reutilizável.
+type BlocoRelatorio = { titulo?: string } & (
+  | { tipo: "texto"; conteudo: string }
+  | { tipo: "kv"; itens: [string, string][] }
+  | { tipo: "tabela"; colunas: string[]; linhas: string[][]; alinharDireita?: number[] }
+);
+
+function escHtml(s: string): string {
+  return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
+}
+
+function relatorioHtml(titulo: string, subtitulo: string, blocos: BlocoRelatorio[], dataGeracao: string): string {
+  const corpo = blocos
+    .map((b) => {
+      const h = b.titulo ? `<h2>${escHtml(b.titulo)}</h2>` : "";
+      if (b.tipo === "texto") return `${h}<p>${escHtml(b.conteudo)}</p>`;
+      if (b.tipo === "kv") return `${h}<div class="kv">${b.itens.map(([k, v]) => `<div><b>${escHtml(k)}:</b> ${escHtml(v)}</div>`).join("")}</div>`;
+      const ad = new Set(b.alinharDireita ?? []);
+      const thead = `<tr>${b.colunas.map((c, i) => `<th class="${ad.has(i) ? "num" : ""}">${escHtml(c)}</th>`).join("")}</tr>`;
+      const tbody = b.linhas.map((l) => `<tr>${l.map((c, i) => `<td class="${ad.has(i) ? "num" : ""}">${escHtml(c)}</td>`).join("")}</tr>`).join("");
+      return `${h}<table><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+    })
+    .join("");
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${escHtml(titulo)}</title>
+<style>
+body{font-family:'Segoe UI',Arial,sans-serif;max-width:820px;margin:32px auto;color:#1a1a1a;padding:0 28px}
+.hd{border-bottom:3px solid #1E6BB8;padding-bottom:12px;margin-bottom:18px}
+.hd h1{margin:0;font-size:22px;color:#1E3A8A}.hd .sub{color:#555;font-size:13px;margin-top:4px}.hd .meta{color:#999;font-size:11px;margin-top:6px}
+h2{font-size:14px;color:#1E6BB8;margin:22px 0 8px;border-bottom:1px solid #e5e7eb;padding-bottom:4px}
+table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}th{background:#f3f4f6}.num{text-align:right}
+.kv{font-size:13px;line-height:1.7}.kv b{display:inline-block;min-width:140px;color:#555}
+p{font-size:13px;line-height:1.6;white-space:pre-wrap}.ft{margin-top:32px;border-top:1px solid #eee;padding-top:8px;color:#999;font-size:10px}
+@media print{body{margin:0}}
+</style></head><body>
+<div class="hd"><h1>${escHtml(titulo)}</h1><div class="sub">${escHtml(subtitulo)}</div><div class="meta">Gerado em ${escHtml(dataGeracao)} · Agente de Proposta Indeba</div></div>
+${corpo}
+<div class="ft">Documento gerado automaticamente — confira os dados antes de usar.</div>
+</body></html>`;
+}
+
+function abrirRelatorio(titulo: string, subtitulo: string, blocos: BlocoRelatorio[]) {
+  const w = window.open("", "_blank");
+  if (!w) return;
+  w.document.write(relatorioHtml(titulo, subtitulo, blocos, new Date().toLocaleString("pt-BR")));
+  w.document.close();
+  w.focus();
+  w.print();
+}
+
+function ContabilScreen() {
+  const [res, setRes] = useState<ContabilResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [nome, setNome] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const brl = (s: string) => Number(s).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+
+  async function apurar(files: FileList | null) {
+    const f = files?.[0];
+    if (!f) return;
+    setLoading(true);
+    setErro(null);
+    setRes(null);
+    setNome(f.name);
+    try {
+      const csv = await planilhaParaCsv(f);
+      const r = await fetch("/api/contabil", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ planilha: { nome: f.name.replace(/\.[^.]+$/, ""), csv } }) });
+      const raw = await r.text();
+      let d: unknown = null;
+      try {
+        d = raw ? JSON.parse(raw) : null;
+      } catch {
+        /* corpo não-JSON */
+      }
+      if (!r.ok || !d) {
+        const e = (d as { erro?: unknown } | null)?.erro;
+        throw new Error(typeof e === "string" ? e : `Falha (HTTP ${r.status}).`);
+      }
+      setRes(d as ContabilResponse);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro na apuração contábil.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function relatorio() {
+    if (!res) return;
+    const blocos: BlocoRelatorio[] = [
+      { tipo: "kv", titulo: "Invariantes", itens: [["Partida dobrada", res.partidaDobradaOk ? "OK (D=C)" : "NÃO BATE"], ["Σ Débitos", `R$ ${brl(res.totalDebitos)}`], ["Σ Créditos", `R$ ${brl(res.totalCreditos)}`]] },
+    ];
+    if (res.bp) blocos.push({ tipo: "kv", titulo: `Balanço Patrimonial (${res.bp.fecha ? "fecha" : "NÃO fecha"})`, itens: [["Ativo", `R$ ${brl(res.bp.totalAtivo)}`], ["Passivo", `R$ ${brl(res.bp.totalPassivo)}`], ["PL", `R$ ${brl(res.bp.totalPL)}`], ["Resultado", `R$ ${brl(res.bp.resultado)}`]] });
+    if (res.dre) blocos.push({ tipo: "kv", titulo: "DRE", itens: [["Receitas", `R$ ${brl(res.dre.totalReceitas)}`], ["Custos", `R$ ${brl(res.dre.totalCustos)}`], ["Despesas", `R$ ${brl(res.dre.totalDespesas)}`], ["Resultado", `R$ ${brl(res.dre.resultado)}`]] });
+    blocos.push({ tipo: "tabela", titulo: "Balancete", colunas: ["Conta", "Natureza", "Débito", "Crédito", "Saldo"], linhas: res.balancete.map((b) => [b.conta, b.natureza ?? "—", `R$ ${brl(b.debito)}`, `R$ ${brl(b.credito)}`, `R$ ${brl(b.saldo)}`]), alinharDireita: [2, 3, 4] });
+    if (res.resumo) blocos.push({ tipo: "texto", titulo: "Análise", conteudo: res.resumo });
+    abrirRelatorio("Relatório Contábil", res.partidaDobradaOk ? "Escrituração balanceada" : "ATENÇÃO: partida dobrada não bate", blocos);
+  }
+
+  return (
+    <div style={{ padding: "28px", maxWidth: "960px" }}>
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#312E81 0%,#1E3A8A 60%,#0F766E 130%)", boxShadow: "0 14px 34px rgba(49,46,129,.26)", animation: "fadeUp .5s ease both" }}>
+        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
+        <div style={{ position: "relative" }}>
+          <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Contábil</h2>
+          <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "680px" }}>
+            Suba o diário/razão (CSV/XLSX: conta, débito, crédito, natureza). O motor força partida dobrada (D=C) e a equação patrimonial (A = P + PL) — se D=C, o balanço fecha. A IA só comenta.
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", boxShadow: "var(--shadow-md)", marginBottom: "16px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+        <Hoverable onClick={() => fileRef.current?.click()} base={{ padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)" }} hover={{ transform: "translateY(-2px)" }}>
+          {loading ? "Apurando…" : "Subir diário/razão"}
+        </Hoverable>
+        <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" style={{ display: "none" }} onChange={(e) => apurar(e.target.files)} />
+        <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "1 linha por partida."}</div>
+        {res && <Hoverable onClick={relatorio} base={{ marginLeft: "auto", padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }} hover={{ transform: "translateY(-1px)" }}>Relatório (PDF)</Hoverable>}
+      </div>
+
+      {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+
+      {res && (
+        <div style={{ animation: "fadeUp .4s ease both" }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "14px" }}>
+            <span style={{ fontSize: "13px", fontWeight: 800, color: res.partidaDobradaOk ? "#15803D" : "#B91C1C", background: res.partidaDobradaOk ? "#F0FDF4" : "#FEF2F2", border: `1px solid ${res.partidaDobradaOk ? "#A7F3D0" : "#FECACA"}`, padding: "6px 12px", borderRadius: "999px" }}>
+              {res.partidaDobradaOk ? "✓ Partida dobrada (D=C)" : "✗ D ≠ C"} · R$ {brl(res.totalDebitos)}
+            </span>
+            {res.bp && <span style={{ fontSize: "13px", fontWeight: 800, color: res.bp.fecha ? "#15803D" : "#B91C1C", background: res.bp.fecha ? "#F0FDF4" : "#FEF2F2", border: `1px solid ${res.bp.fecha ? "#A7F3D0" : "#FECACA"}`, padding: "6px 12px", borderRadius: "999px" }}>{res.bp.fecha ? "✓ Balanço fecha" : "✗ Balanço não fecha"}</span>}
+          </div>
+
+          {res.aviso && <div style={{ marginBottom: "14px", padding: "11px 14px", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: "10px", color: "#B45309", fontSize: "13px" }}>{res.aviso}</div>}
+          {res.divergencias.length > 0 && (
+            <div style={{ marginBottom: "14px", display: "flex", flexDirection: "column", gap: "6px" }}>
+              {res.divergencias.map((d, i) => <div key={i} style={{ padding: "9px 12px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "9px", color: "#B91C1C", fontSize: "12.5px" }}>{d.descricao}</div>)}
+            </div>
+          )}
+          {res.resumo && <div style={{ marginBottom: "16px", padding: "14px 16px", background: "#EEF2FF", border: "1px solid #C7D2FE", borderRadius: "12px", color: "#3730A3", fontSize: "13.5px", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{res.resumo}</div>}
+
+          {res.bp && res.dre && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "16px" }}>
+              <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", padding: "16px", fontSize: "13px" }}>
+                <h4 style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--gray-500)", textTransform: "uppercase" }}>Balanço Patrimonial</h4>
+                <div style={{ display: "flex", justifyContent: "space-between" }}><span>Ativo</span><b>R$ {brl(res.bp.totalAtivo)}</b></div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}><span>Passivo</span><b>R$ {brl(res.bp.totalPassivo)}</b></div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}><span>PL</span><b>R$ {brl(res.bp.totalPL)}</b></div>
+                <div style={{ display: "flex", justifyContent: "space-between", color: res.bp.resultado.startsWith("-") ? "#B91C1C" : "#15803D" }}><span>Resultado</span><b>R$ {brl(res.bp.resultado)}</b></div>
+              </div>
+              <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", padding: "16px", fontSize: "13px" }}>
+                <h4 style={{ margin: "0 0 8px", fontSize: "13px", color: "var(--gray-500)", textTransform: "uppercase" }}>DRE</h4>
+                <div style={{ display: "flex", justifyContent: "space-between" }}><span>Receitas</span><b>R$ {brl(res.dre.totalReceitas)}</b></div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}><span>Custos</span><b>− R$ {brl(res.dre.totalCustos)}</b></div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}><span>Despesas</span><b>− R$ {brl(res.dre.totalDespesas)}</b></div>
+                <div style={{ display: "flex", justifyContent: "space-between", color: res.dre.resultado.startsWith("-") ? "#B91C1C" : "#15803D" }}><span>Resultado</span><b>R$ {brl(res.dre.resultado)}</b></div>
+              </div>
+            </div>
+          )}
+
+          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
+              <thead><tr style={{ background: "var(--gray-50)", color: "var(--gray-500)", textAlign: "left" }}><th style={{ padding: "8px" }}>Conta</th><th style={{ padding: "8px" }}>Natureza</th><th style={{ padding: "8px", textAlign: "right" }}>Débito</th><th style={{ padding: "8px", textAlign: "right" }}>Crédito</th><th style={{ padding: "8px", textAlign: "right" }}>Saldo</th></tr></thead>
+              <tbody>
+                {res.balancete.map((b, i) => (
+                  <tr key={i} style={{ borderTop: "1px solid var(--gray-100)" }}>
+                    <td style={{ padding: "8px" }}>{b.conta}</td>
+                    <td style={{ padding: "8px", color: "var(--gray-400)" }}>{b.natureza ?? "—"}</td>
+                    <td style={{ padding: "8px", textAlign: "right" }}>R$ {brl(b.debito)}</td>
+                    <td style={{ padding: "8px", textAlign: "right" }}>R$ {brl(b.credito)}</td>
+                    <td style={{ padding: "8px", textAlign: "right", fontWeight: 600 }}>R$ {brl(b.saldo)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FiscalScreen() {
   const [res, setRes] = useState<FiscalResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -2519,6 +2839,18 @@ function FiscalScreen() {
 
   const corSev = (s: string) => (s === "alta" ? { bg: "#FEF2F2", fg: "#B91C1C" } : s === "media" ? { bg: "#FFFBEB", fg: "#B45309" } : { bg: "#F3F4F6", fg: "#4B5563" });
 
+  function relatorio() {
+    if (!res) return;
+    const n = res.nota;
+    abrirRelatorio(`Relatório NF-e ${n.numero}`, `${n.emitente.nome} → ${n.destinatario.nome}`, [
+      { tipo: "kv" as const, titulo: "Dados da nota", itens: [["Número", n.numero], ["Série", n.serie], ["Emissão", n.dataEmissao], ["Natureza", n.naturezaOperacao], ["Chave", n.chaveAcesso], ["Emitente", `${n.emitente.nome} (${n.emitente.documento})`], ["Destinatário", `${n.destinatario.nome} (${n.destinatario.documento})`]] },
+      { tipo: "tabela" as const, titulo: "Itens", colunas: ["Código", "Descrição", "Qtd", "Vlr un.", "Total"], linhas: n.itens.map((i) => [i.codigo, i.descricao, i.quantidade, `R$ ${i.valorUnitario}`, `R$ ${i.valorTotal}`]), alinharDireita: [2, 3, 4] },
+      { tipo: "kv" as const, titulo: "Totais", itens: [["Produtos", `R$ ${n.valorProdutos}`], ["Frete", `R$ ${n.valorFrete}`], ["ICMS", `R$ ${n.valorICMS}`], ["Total", `R$ ${n.valorTotal}`]] },
+      ...(res.achados.length ? [{ tipo: "texto" as const, titulo: "Achados", conteudo: res.achados.map((a) => `[${a.severidade}] ${a.descricao}`).join("\n") }] : []),
+      { tipo: "texto" as const, titulo: "Resumo", conteudo: res.resumo },
+    ]);
+  }
+
   return (
     <div style={{ padding: "28px", maxWidth: "960px" }}>
       <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#1E3A8A 0%,#1E6BB8 60%,#0EA5E9 130%)", boxShadow: "0 14px 34px rgba(30,107,184,.26)", animation: "fadeUp .5s ease both" }}>
@@ -2537,6 +2869,9 @@ function FiscalScreen() {
         </Hoverable>
         <input ref={fileRef} type="file" accept=".xml,text/xml,application/xml" style={{ display: "none" }} onChange={(e) => ler(e.target.files)} />
         <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "XML de NF-e (modelo 55)."}</div>
+        {res && (
+          <Hoverable onClick={relatorio} base={{ marginLeft: "auto", padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }} hover={{ transform: "translateY(-1px)" }}>Relatório (PDF)</Hoverable>
+        )}
       </div>
 
       {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
@@ -2656,6 +2991,20 @@ function ComprasScreen() {
 
   const brl = (s: string) => Number(s).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 
+  function relatorio() {
+    if (!res) return;
+    abrirRelatorio("Relatório de Cotações", `Melhor: ${res.melhorFornecedor} · economia R$ ${brl(res.economia)}`, [
+      ...(res.recomendacao ? [{ tipo: "texto" as const, titulo: "Recomendação", conteudo: res.recomendacao }] : []),
+      {
+        tipo: "tabela" as const,
+        titulo: "Ranking por custo efetivo",
+        colunas: ["#", "Fornecedor", "Custo total", "Custo efetivo", "Prazo"],
+        linhas: res.cotacoes.map((c, i) => [i === 0 ? "★" : String(i + 1), c.fornecedor + (c.item ? ` · ${c.item}` : ""), `R$ ${brl(c.custoTotal)}`, `R$ ${brl(c.custoEfetivo)}`, `${c.prazoDias}d`]),
+        alinharDireita: [2, 3, 4],
+      },
+    ]);
+  }
+
   return (
     <div style={{ padding: "28px", maxWidth: "960px" }}>
       <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#0F766E 0%,#0D9488 60%,#155E75 130%)", boxShadow: "0 14px 34px rgba(13,148,136,.24)", animation: "fadeUp .5s ease both" }}>
@@ -2675,7 +3024,10 @@ function ComprasScreen() {
         <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" style={{ display: "none" }} onChange={(e) => comparar(e.target.files)} />
         <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "Espera: fornecedor, preço, quantidade, frete, prazo."}</div>
         {res && res.cotacoes.length > 0 && (
-          <Hoverable onClick={baixarCsv} base={{ marginLeft: "auto", padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Baixar planilha (CSV)</Hoverable>
+          <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+            <Hoverable onClick={relatorio} base={{ padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }} hover={{ transform: "translateY(-1px)" }}>Relatório (PDF)</Hoverable>
+            <Hoverable onClick={baixarCsv} base={{ padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Baixar planilha (CSV)</Hoverable>
+          </div>
         )}
       </div>
 
@@ -2773,6 +3125,21 @@ function CobrancaScreen() {
 
   const corSev = (s: string) => (s === "grave" ? { bg: "#FEF2F2", fg: "#B91C1C" } : s === "media" ? { bg: "#FFFBEB", fg: "#B45309" } : { bg: "#F0FDF4", fg: "#15803D" });
 
+  function relatorio() {
+    if (!res) return;
+    const brl = (s: string) => Number(s).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+    abrirRelatorio("Relatório de Cobrança", `Total devido: R$ ${brl(res.totalDevido)} · ${res.inadimplentes.length} cliente(s)`, [
+      ...(res.aviso ? [{ tipo: "texto" as const, conteudo: res.aviso }] : []),
+      {
+        tipo: "tabela" as const,
+        titulo: "Inadimplentes",
+        colunas: ["Cliente", "Valor devido", "Títulos", "Venc. mais antigo", "Dias", "Severidade"],
+        linhas: res.inadimplentes.map((i) => [i.cliente, `R$ ${brl(i.valorDevido)}`, String(i.titulos), i.vencimentoMaisAntigo, String(i.diasAtraso), i.severidade]),
+        alinharDireita: [1, 2, 4],
+      },
+    ]);
+  }
+
   return (
     <div style={{ padding: "28px", maxWidth: "920px" }}>
       <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#B45309 0%,#DC2626 70%,#9333EA 130%)", boxShadow: "0 14px 34px rgba(220,38,38,.24)", animation: "fadeUp .5s ease both" }}>
@@ -2790,9 +3157,32 @@ function CobrancaScreen() {
           {loading ? "Analisando…" : "Subir contas a receber"}
         </Hoverable>
         <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" style={{ display: "none" }} onChange={(e) => analisar(e.target.files)} />
-        <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "Espera colunas: cliente, valor, vencimento, status."}</div>
+        <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "Espera colunas: cliente, valor, vencimento, status, email."}</div>
         {res && res.inadimplentes.length > 0 && (
-          <Hoverable onClick={baixarCsv} base={{ marginLeft: "auto", padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Baixar planilha (CSV)</Hoverable>
+          <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+            <Hoverable onClick={relatorio} base={{ padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }} hover={{ transform: "translateY(-1px)" }}>Relatório (PDF)</Hoverable>
+            <Hoverable onClick={baixarCsv} base={{ padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Baixar planilha (CSV)</Hoverable>
+            <Hoverable
+              onClick={async () => {
+                if (!res) return;
+                const comEmail = res.inadimplentes.filter((i) => i.email).length;
+                if (!window.confirm(`Disparar cobrança por e-mail para ${comEmail} cliente(s) com e-mail e enviar o resumo ao gestor?`)) return;
+                try {
+                  const r = await fetch("/api/cobranca/disparar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inadimplentes: res.inadimplentes, totalDevido: res.totalDevido }) });
+                  const d = await r.json();
+                  if (!r.ok) throw new Error(typeof d.erro === "string" ? d.erro : "Falha ao disparar a cobrança.");
+                  setErro(null);
+                  window.alert(`Cobrança disparada: ${d.enviados ?? 0} e-mail(s) ao cliente + resumo ao gestor.`);
+                } catch (e) {
+                  setErro(e instanceof Error ? e.message : "Falha ao disparar a cobrança.");
+                }
+              }}
+              base={{ padding: "9px 16px", background: "var(--orange-500)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }}
+              hover={{ transform: "translateY(-1px)" }}
+            >
+              Disparar cobranças
+            </Hoverable>
+          </div>
         )}
       </div>
 

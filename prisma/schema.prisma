@@ -34,3 +34,58 @@ model EmpresaReceita {
   @@index([uf, municipioNome])
   @@index([situacao])
 }
+
+/// Proposta comercial persistida: o `PropostaScope` canônico (Json) + status comercial
+/// MUTÁVEL (rascunho→enviada→aprovada/recusada). Espelha o contrato Zod
+/// (src/lib/contracts/proposta.ts). É o store de trabalho — permite reabrir e gerar
+/// contrato de uma proposta que já existe; o log append-only (lib/log.ts) segue como a
+/// auditoria imutável de cada PDF emitido (constituição §8). Preço sempre Decimal (§stack).
+model Proposta {
+  id           String   @id // = PropostaScope.id (gerado na montagem)
+  status       String   @default("rascunho") // rascunho|em_edicao|enviada|aprovada|recusada
+  autor        String // login da sessão (dado crítico não vem do cliente)
+  cliente      String // razão social (denormalizado p/ listagem)
+  segmento     String?
+  tipo         String // orcamento|implantacao|comercial
+  total        Decimal  @db.Decimal(12, 2) // Σ subtotais
+  scope        Json // PropostaScope completo (objeto canônico que vira PDF/contrato)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([status])
+  @@index([autor])
+}
+
+/// Chamado de suporte interno: o colaborador abre, o gestor (papel admin) resolve.
+/// Enums (categoria/prioridade/status) são validados no contrato Zod (src/lib/contracts/chamado.ts).
+model Chamado {
+  id             String   @id @default(cuid())
+  titulo         String
+  descricao      String
+  categoria      String // bug | duvida | sugestao | infra | outro
+  prioridade     String // baixa | media | alta
+  status         String   @default("aberto") // aberto | em_andamento | resolvido
+  autor          String // login do colaborador (vem da sessão)
+  respostaGestor String?
+  criadoEm       DateTime @default(now())
+  atualizadoEm   DateTime @updatedAt
+
+  @@index([status])
+  @@index([autor])
+}
+
+/// Cadastro de e-mail por cliente que APRENDE com o tempo: cada planilha de cobrança que
+/// traz o e-mail de um cliente faz upsert aqui; cliente sem e-mail na planilha é preenchido
+/// pelo que já foi aprendido. Editável pelo gestor no painel de admin.
+model ContatoCliente {
+  cliente      String   @id // razão social / nome (chave de casamento com a planilha)
+  email        String
+  atualizadoEm DateTime @updatedAt
+}
+
+/// Configurações simples chave→valor (ex.: gestorEmail = quem recebe o resumo de cobrança).
+/// Editável pelo gestor no painel de admin.
+model Config {
+  chave String @id
+  valor String
+}

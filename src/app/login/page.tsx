@@ -42,8 +42,8 @@ export default function Login() {
       <Card className="w-full max-w-sm p-6">
         <div className="flex flex-col items-center text-center">
           <Logo size={48} />
-          <h1 className="mt-3 text-lg font-bold text-foreground">Agente de Proposta</h1>
-          <p className="text-xs text-muted-foreground">Indeba Express · acesso restrito</p>
+          <h1 className="mt-3 text-lg font-bold text-foreground">Plataforma de IA</h1>
+          <p className="text-xs text-muted-foreground">Indeba · acesso restrito</p>
         </div>
         <form onSubmit={entrar} className="mt-6 space-y-3">
           <label className="block text-sm">

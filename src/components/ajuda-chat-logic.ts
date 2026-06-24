@@ -55,7 +55,7 @@ export const FAQ: QA[] = [
   { kw: ["nao faz", "limitac", "mvp", "falta"], q: "O que esse MVP ainda não faz?", a: "É um primeiro MVP: catálogo reduzido, a IA local pode levar alguns segundos, e envio por e-mail ainda não está ativo. Preços e fotos virão da base oficial quando disponível." },
 ];
 
-export const WELCOME = "Oi! Sou o assistente do Agente de Proposta. Conheço os produtos do catálogo (ficha e preço), sei como gerar propostas e como prospectar leads. Pergunta o que quiser ou toque numa sugestão 👇";
+export const WELCOME = "Oi! Sou o assistente da Plataforma de IA da Indeba. Conheço os produtos do catálogo (ficha e preço), sei como gerar propostas e como prospectar leads. Pergunta o que quiser ou toque numa sugestão 👇";
 export const SUGESTOES = ["Ver todos os produtos", "Como gero uma proposta?", "Como funciona a prospecção?", "Quais tipos de proposta?", "Produtos para cozinha"];
 export const NAO_SEI = "Sobre isso eu não sei te responder — e prefiro não inventar. 🤷 O que eu sei: os produtos do catálogo (ficha técnica e preço), como usar o agente de proposta e a prospecção de leads. Tenta perguntar sobre um produto, uma necessidade (ex.: \"algo para desengordurar louça\") ou toque numa sugestão.";
 

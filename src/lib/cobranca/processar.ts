@@ -7,6 +7,7 @@ import type { CobrancaRequest, CobrancaResponse } from "../contracts";
 import { carregarCsv } from "../financeiro/ingest";
 import { analisarInadimplencia, preencherMensagem } from "./analisar";
 import { gerarRegua } from "./redigir";
+import { aprenderEPreencherEmails } from "../contatos";
 
 export async function processarCobranca(req: CobrancaRequest, hojeServidor: string): Promise<CobrancaResponse> {
   const hoje = req.hoje ?? hojeServidor;
@@ -24,5 +25,8 @@ export async function processarCobranca(req: CobrancaRequest, hojeServidor: stri
     mensagem: preencherMensagem(regua[i.severidade], i),
   }));
 
-  return { inadimplentes: lista, totalDevido, aviso };
+  // Aprende os e-mails da planilha e preenche os que faltam pelo cadastro (sistema aprende).
+  const comEmails = await aprenderEPreencherEmails(lista);
+
+  return { inadimplentes: comEmails, totalDevido, aviso };
 }

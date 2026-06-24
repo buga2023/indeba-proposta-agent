@@ -5,8 +5,8 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Agente de Proposta — Indeba Express",
-  description: "Gere propostas comerciais em PDF a partir de um briefing. Preço sempre do catálogo.",
+  title: "Plataforma de IA — Indeba",
+  description: "Plataforma de IA da Indeba: propostas, prospecção, posts e atendimento. Preço sempre do catálogo.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

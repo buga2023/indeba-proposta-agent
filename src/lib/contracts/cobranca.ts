@@ -21,6 +21,7 @@ export const Inadimplente = z.object({
   diasAtraso: z.number().int(), // do título mais antigo até "hoje"
   severidade: SeveridadeCobranca,
   mensagem: z.string(), // régua (IA-TEXTO) com os valores do motor já preenchidos
+  email: z.string().nullable().default(null), // da planilha OU do cadastro que aprende (ContatoCliente)
 });
 export type Inadimplente = z.infer<typeof Inadimplente>;
 

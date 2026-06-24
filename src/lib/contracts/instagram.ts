@@ -26,7 +26,7 @@ export const InstagramRequest = z.object({
   produtoServico: z.string().max(200).nullable().default(null),
   publicoAlvo: z.string().max(200).nullable().default(null),
   tom: TomPost.default("profissional"),
-  numPosts: z.number().int().min(1).max(5).default(5),
+  numPosts: z.number().int().min(1).max(1).default(1), // travado em 1 post — foco em qualidade máxima
 });
 export type InstagramRequest = z.infer<typeof InstagramRequest>;
 

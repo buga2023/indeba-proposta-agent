@@ -16,6 +16,7 @@ export type InadimplenteBase = {
   vencimentoMaisAntigo: string;
   diasAtraso: number;
   severidade: SeveridadeCobranca;
+  email: string | null; // capturado da planilha (coluna e-mail), se houver
 };
 
 export type ResultadoCobranca = {
@@ -81,12 +82,13 @@ export function analisarInadimplencia(t: Tabela, hoje: string): ResultadoCobranc
     t.colunas.find((c) => t.numericas.has(c) && /valor|total|montante|debito|saldo|divida|titulo/.test(c)) ??
     [...t.numericas][0];
   const colStatus = t.colunas.find((c) => /status|situa|pagamento|pago/.test(c));
+  const colEmail = colObj(t, /e-?mail/);
 
   if (!colVenc) return vazio("Não encontrei a coluna de VENCIMENTO — sem ela não dá pra saber o que está vencido. Inclua uma coluna de vencimento (ex.: 2026-01-15).");
   if (!colCliente) return vazio("Não encontrei a coluna de CLIENTE para agrupar as dívidas.");
   if (!colValor) return vazio("Não encontrei a coluna de VALOR dos títulos.");
 
-  type Acc = { soma: number; titulos: number; venc: string };
+  type Acc = { soma: number; titulos: number; venc: string; email: string | null };
   const porCliente = new Map<string, Acc>();
   for (const r of t.linhas) {
     const venc = parseData(String(r[colVenc] ?? ""));
@@ -95,10 +97,14 @@ export function analisarInadimplencia(t: Tabela, hoje: string): ResultadoCobranc
     if (diasEntre(venc, hoje) <= 0) continue; // ainda não venceu
 
     const cliente = String(r[colCliente] ?? "—").trim() || "—";
-    const a = porCliente.get(cliente) ?? { soma: 0, titulos: 0, venc };
+    const a = porCliente.get(cliente) ?? { soma: 0, titulos: 0, venc, email: null };
     a.soma += num(r, colValor);
     a.titulos += 1;
     if (venc < a.venc) a.venc = venc; // mais antigo
+    if (!a.email && colEmail) {
+      const e = String(r[colEmail] ?? "").trim();
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) a.email = e;
+    }
     porCliente.set(cliente, a);
   }
 
@@ -112,6 +118,7 @@ export function analisarInadimplencia(t: Tabela, hoje: string): ResultadoCobranc
         vencimentoMaisAntigo: a.venc,
         diasAtraso: dias,
         severidade: severidade(dias),
+        email: a.email,
       };
     })
     .sort((x, y) => Number(y.valorDevido) - Number(x.valorDevido));

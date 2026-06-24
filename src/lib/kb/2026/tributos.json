@@ -1,0 +1,9 @@
+{
+  "_aviso": "ESQUELETO versionado. Alíquotas DEVEM ser preenchidas e validadas pelo contador (mesma convenção do financeiro/tax-rules.json). O agente NUNCA chuta alíquota — usa só o que está aqui (§2).",
+  "vigencia": "2026",
+  "regimes": {
+    "simples": { "descricao": "Simples Nacional", "impostos": {} },
+    "presumido": { "descricao": "Lucro Presumido", "impostos": {} },
+    "real": { "descricao": "Lucro Real", "impostos": {} }
+  }
+}

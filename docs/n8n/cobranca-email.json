@@ -1,0 +1,92 @@
+{
+  "name": "Cobrança por e-mail — clientes + resumo ao gestor (Indeba)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cobranca-indeba",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Receber disparo de cobrança",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "cobranca-indeba"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Um e-mail por inadimplente QUE TEM e-mail. A 'mensagem' (régua) já vem pronta do app.\nconst body = $json.body || $json;\nconst lista = body.inadimplentes || [];\nconst out = [];\nfor (const i of lista) {\n  if (!i.email) continue; // sem e-mail → não envia (entra no resumo do gestor)\n  out.push({\n    json: {\n      to: i.email,\n      assunto: `Indeba — aviso de pagamento em aberto (${i.cliente})`,\n      corpo: i.mensagem,\n    },\n  });\n}\nreturn out;"
+      },
+      "id": "separar-clientes",
+      "name": "Separar clientes com e-mail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, -120]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.assunto }}",
+        "message": "={{ $json.corpo }}",
+        "options": { "appendAttribution": false }
+      },
+      "id": "gmail-cliente",
+      "name": "Enviar cobrança ao cliente",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [480, -120],
+      "credentials": {
+        "gmailOAuth2": { "id": "TROQUE", "name": "Gmail (sua conta)" }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Resumo do disparo para o gestor: quem recebeu, quem ficou sem e-mail, total.\nconst body = $json.body || $json;\nconst lista = body.inadimplentes || [];\nconst comEmail = lista.filter((i) => i.email);\nconst semEmail = lista.filter((i) => !i.email);\nconst linha = (i) => `• ${i.cliente} — R$ ${i.valorDevido} (${i.diasAtraso} dias, ${i.severidade})`;\nconst corpo = [\n  `Disparo de cobrança concluído.`,\n  ``,\n  `Clientes cobrados por e-mail: ${comEmail.length} de ${lista.length}`,\n  `Total em aberto: R$ ${body.totalDevido}`,\n  ``,\n  `— Enviados —`,\n  ...comEmail.map(linha),\n  ...(semEmail.length ? [``, `— SEM E-MAIL (não enviados, cadastre o e-mail) —`, ...semEmail.map(linha)] : []),\n].join('\\n');\nreturn [{ json: { to: body.gestorEmail, assunto: `Resumo de cobrança Indeba — ${comEmail.length}/${lista.length} enviados`, corpo } }];"
+      },
+      "id": "resumo-gestor",
+      "name": "Montar resumo do gestor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 120]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.assunto }}",
+        "message": "={{ $json.corpo }}",
+        "options": { "appendAttribution": false }
+      },
+      "id": "gmail-gestor",
+      "name": "Enviar resumo ao gestor",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [480, 120],
+      "credentials": {
+        "gmailOAuth2": { "id": "TROQUE", "name": "Gmail (sua conta)" }
+      }
+    }
+  ],
+  "connections": {
+    "Receber disparo de cobrança": {
+      "main": [
+        [
+          { "node": "Separar clientes com e-mail", "type": "main", "index": 0 },
+          { "node": "Montar resumo do gestor", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Separar clientes com e-mail": { "main": [[{ "node": "Enviar cobrança ao cliente", "type": "main", "index": 0 }]] },
+    "Montar resumo do gestor": { "main": [[{ "node": "Enviar resumo ao gestor", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

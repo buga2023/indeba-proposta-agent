@@ -29,7 +29,7 @@ export function Wordmark() {
         <div className="text-sm font-extrabold tracking-tight text-foreground">
           indeba<span className="text-accent"> express</span>
         </div>
-        <div className="text-[11px] text-muted-foreground">Agente de Proposta</div>
+        <div className="text-[11px] text-muted-foreground">Plataforma de IA</div>
       </div>
     </div>
   );

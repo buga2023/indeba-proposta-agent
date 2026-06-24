@@ -49,3 +49,33 @@ export const PropostaScope = z.object({
   }),
 });
 export type PropostaScope = z.infer<typeof PropostaScope>;
+
+// ── Persistência (registro comercial da proposta) ──
+// Status COMERCIAL, MUTÁVEL — eixo separado do `status` do documento (rascunho/finalizada).
+// A proposta gerada é persistida (store de trabalho); o log append-only (lib/log.ts)
+// continua sendo a auditoria imutável de cada PDF emitido (constituição §8).
+export const StatusProposta = z.enum(["rascunho", "em_edicao", "enviada", "aprovada", "recusada"]);
+export type StatusProposta = z.infer<typeof StatusProposta>;
+
+// Linha do histórico — leve (sem o scope inteiro) para listar.
+export const PropostaResumo = z.object({
+  id: z.string(),
+  status: StatusProposta,
+  autor: z.string(),
+  cliente: z.string(), // razão social (denormalizado do scope)
+  segmento: z.string().nullable(),
+  tipo: Tipo,
+  total: z.string(), // decimal string — Σ subtotais (mesma convenção do log.ts)
+  qtdItens: z.number().int().nonnegative(),
+  criadoEm: z.string(),
+  atualizadoEm: z.string(),
+});
+export type PropostaResumo = z.infer<typeof PropostaResumo>;
+
+// Registro completo — resumo + o PropostaScope canônico (para reabrir e gerar contrato).
+export const PropostaRegistro = PropostaResumo.extend({ scope: PropostaScope });
+export type PropostaRegistro = z.infer<typeof PropostaRegistro>;
+
+// Mudança de status (PATCH).
+export const StatusUpdate = z.object({ status: StatusProposta });
+export type StatusUpdate = z.infer<typeof StatusUpdate>;

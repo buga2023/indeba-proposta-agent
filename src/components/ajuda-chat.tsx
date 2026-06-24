@@ -60,7 +60,7 @@ export function AjudaChat() {
       </button>
 
       {aberto && (
-        <div style={painel} role="dialog" aria-label="Assistente do Agente de Proposta">
+        <div style={painel} role="dialog" aria-label="Assistente da Plataforma de IA">
           <header style={cabecalho}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <div style={avatar}>ie</div>
