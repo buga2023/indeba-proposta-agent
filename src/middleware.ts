@@ -3,7 +3,8 @@ import type { NextRequest } from "next/server";
 import { authAtiva, validarSessao } from "@/lib/auth";
 import { rateLimitOk } from "@/lib/ratelimit";
 
-const ROTAS_API = ["/api/montar", "/api/pdf", "/api/montar-estruturado", "/api/catalogo", "/api/propostas", "/api/prospectar", "/api/financeiro", "/api/contrato", "/api/rag", "/api/feedback", "/api/cobranca", "/api/compras", "/api/fiscal", "/api/contabil"];
+// Rotas de API públicas: a própria autenticação. Tudo o mais exige sessão.
+const API_PUBLICAS = ["/api/login", "/api/logout"];
 
 function ipDe(req: NextRequest): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";
@@ -14,15 +15,18 @@ function ipDe(req: NextRequest): string {
 // não roteia essa convenção corretamente — manter `middleware` aqui.
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const ehApi = ROTAS_API.some((p) => pathname.startsWith(p));
+  const ehApi = pathname.startsWith("/api/");
 
-  // 1) Rate limit nas rotas custosas (IA/PDF) — antes de qualquer trabalho.
+  // 1) Rate limit em TODA rota de API (inclui /api/login → trava brute force).
   if (ehApi && !(await rateLimitOk(ipDe(req)))) {
     return NextResponse.json({ erro: "Muitas requisições. Aguarde alguns segundos." }, { status: 429 });
   }
 
   // 2) Auth — só quando há usuários configurados (em local fica aberto).
   if (!authAtiva()) return NextResponse.next();
+
+  // Login/logout não exigem sessão (senão não há como autenticar).
+  if (API_PUBLICAS.includes(pathname)) return NextResponse.next();
 
   const usuario = await validarSessao(req.cookies.get("sessao")?.value);
   if (usuario) return NextResponse.next();
@@ -36,6 +40,9 @@ export async function middleware(req: NextRequest) {
   return NextResponse.redirect(url);
 }
 
+// Matcher abrangente: TODA rota de API + a home passam pelo middleware. Evita o
+// gap de listar paths um a um (subrotas como /api/cobranca/disparar ou
+// /api/propostas/[id] ficavam de fora). Públicas são liberadas no corpo, não aqui.
 export const config = {
-  matcher: ["/", "/api/montar", "/api/pdf", "/api/montar-estruturado", "/api/catalogo", "/api/propostas", "/api/prospectar", "/api/financeiro", "/api/contrato", "/api/contrato/:path*", "/api/rag", "/api/feedback", "/api/cobranca", "/api/cobranca/:path*", "/api/compras", "/api/fiscal", "/api/contabil"],
+  matcher: ["/", "/api/:path*"],
 };
