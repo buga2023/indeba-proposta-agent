@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost } from "@/lib/contracts";
+import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta } from "@/lib/contracts";
 import { AjudaChat } from "@/components/ajuda-chat";
 
 /* ───────────────────────── helpers ───────────────────────── */
@@ -132,7 +132,7 @@ type PropostaLog = {
 const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
-type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram";
+type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento";
 type TipoProposta = "orcamento" | "implantacao" | "comercial";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -430,6 +430,30 @@ export default function Home() {
             </svg>
             Posts Instagram
           </Hoverable>
+          <Hoverable base={navItemStyle(["financeiro"])} hover={navHover} onClick={() => setScreen("financeiro")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2.5 14.5h12" />
+              <rect x="3.5" y="8" width="2.5" height="5" rx="0.5" />
+              <rect x="7.5" y="5" width="2.5" height="8" rx="0.5" />
+              <rect x="11.5" y="2.5" width="2.5" height="10.5" rx="0.5" />
+            </svg>
+            Financeiro
+          </Hoverable>
+          <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => setScreen("contrato")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 2.5h6l3 3v9H4z" />
+              <path d="M10 2.5v3h3" />
+              <path d="M6 9h5M6 11.5h5" />
+            </svg>
+            Contrato
+          </Hoverable>
+          <Hoverable base={navItemStyle(["atendimento"])} hover={navHover} onClick={() => setScreen("atendimento")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 4.5h11v7H8l-3 2.5V11.5H3z" />
+              <path d="M5.5 7h6M5.5 9h4" />
+            </svg>
+            Atendimento
+          </Hoverable>
 
           <div style={{ height: "1px", background: "rgba(255,255,255,.07)", margin: "8px 4px" }} />
 
@@ -497,6 +521,9 @@ export default function Home() {
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
         {screen === "prospeccao" && <ProspeccaoScreen onGerarProposta={(d) => { setBriefingText(d.briefing); setScreen("briefing"); startGeneration(d.briefing, d); }} />}
         {screen === "instagram" && <InstagramScreen />}
+        {screen === "financeiro" && <FinanceiroScreen />}
+        {screen === "contrato" && <ContratoScreen scope={scope} onVerProposta={() => setScreen(scope ? "review" : "briefing")} />}
+        {screen === "atendimento" && <AtendimentoScreen />}
       </main>
 
       {/* Assistente de ajuda — overlay global (canto inferior direito) */}
@@ -1956,6 +1983,604 @@ function pollinationsUrl(prompt: string, nonce: number): string {
   for (let i = 0; i < p.length; i++) h = (h * 31 + p.charCodeAt(i)) >>> 0;
   const seed = (h + nonce * 7919) % 1_000_000;
   return `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=1024&height=1280&model=flux&nologo=true&seed=${seed}`;
+}
+
+// Feedback reutilizável por qualquer agente: 👍/👎 + correção humana. 👎 com correção é o que
+// faz o sistema aprender (no Atendimento, a correção vira conhecimento indexado no Qdrant).
+function FeedbackResposta({ agente, pergunta, resposta }: { agente: string; pergunta: string | null; resposta: string }) {
+  const [estado, setEstado] = useState<"idle" | "corrigir" | "enviado">("idle");
+  const [correcao, setCorrecao] = useState("");
+  const [detalhe, setDetalhe] = useState("");
+
+  async function enviar(util: boolean, corr: string | null) {
+    try {
+      const r = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agente, pergunta, resposta, util, correcao: corr }),
+      });
+      const d = (await r.json()) as { detalhe?: string };
+      setDetalhe(d.detalhe ?? "Obrigado pelo feedback!");
+    } catch {
+      setDetalhe("Feedback registrado.");
+    }
+    setEstado("enviado");
+  }
+
+  if (estado === "enviado") return <div style={{ fontSize: "11px", color: "var(--gray-400)", marginTop: "5px" }}>✓ {detalhe}</div>;
+
+  return (
+    <div style={{ marginTop: "5px" }}>
+      {estado === "idle" && (
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <span style={{ fontSize: "11px", color: "var(--gray-400)" }}>Útil?</span>
+          <button onClick={() => enviar(true, null)} title="Útil" style={{ border: "none", background: "none", cursor: "pointer", fontSize: "13px" }}>👍</button>
+          <button onClick={() => setEstado("corrigir")} title="Corrigir" style={{ border: "none", background: "none", cursor: "pointer", fontSize: "13px" }}>👎</button>
+        </div>
+      )}
+      {estado === "corrigir" && (
+        <div style={{ marginTop: "4px" }}>
+          <textarea value={correcao} onChange={(e) => setCorrecao(e.target.value)} rows={2} placeholder="Qual era a resposta certa? (vira conhecimento da base)" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "7px 9px", fontSize: "12px", outline: "none", resize: "vertical" }} />
+          <div style={{ display: "flex", gap: "6px", marginTop: "5px" }}>
+            <button onClick={() => enviar(false, correcao.trim() || null)} style={{ padding: "5px 12px", border: "none", borderRadius: "7px", background: "var(--blue-600)", color: "white", fontSize: "11.5px", fontWeight: 700, cursor: "pointer" }}>Enviar correção</button>
+            <button onClick={() => setEstado("idle")} style={{ padding: "5px 10px", border: "1px solid var(--gray-200)", borderRadius: "7px", background: "white", color: "var(--gray-500)", fontSize: "11.5px", cursor: "pointer" }}>Cancelar</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type MsgRag = { role: "user" | "assistant"; texto: string; fontes?: RagResposta["fontes"] };
+
+function AtendimentoScreen() {
+  const [msgs, setMsgs] = useState<MsgRag[]>([]);
+  const [pergunta, setPergunta] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [admin, setAdmin] = useState(false);
+  const [docTitulo, setDocTitulo] = useState("");
+  const [docTexto, setDocTexto] = useState("");
+  const [info, setInfo] = useState<string | null>(null);
+  const podePerguntar = pergunta.trim().length > 0 && !loading;
+
+  async function chamar(body: object) {
+    const r = await fetch("/api/rag", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const raw = await r.text();
+    let d: unknown = null;
+    try {
+      d = raw ? JSON.parse(raw) : null;
+    } catch {
+      /* corpo não-JSON */
+    }
+    if (!r.ok || !d) {
+      const e = (d as { erro?: unknown } | null)?.erro;
+      throw new Error(typeof e === "string" ? e : `Falha (HTTP ${r.status}).`);
+    }
+    return d;
+  }
+
+  async function perguntar() {
+    if (!podePerguntar) return;
+    const texto = pergunta.trim();
+    setMsgs((m) => [...m, { role: "user", texto }]);
+    setPergunta("");
+    setLoading(true);
+    setErro(null);
+    try {
+      const res = (await chamar({ acao: "perguntar", pergunta: texto })) as RagResposta;
+      setMsgs((m) => [...m, { role: "assistant", texto: res.resposta, fontes: res.fontes }]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro no atendimento.";
+      setErro(msg);
+      setMsgs((m) => [...m, { role: "assistant", texto: msg }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function reindexar() {
+    setLoading(true);
+    setErro(null);
+    setInfo(null);
+    try {
+      const r = (await chamar({ acao: "indexar-catalogo" })) as { pontos: number; colecao: string };
+      setInfo(`Catálogo reindexado: ${r.pontos} produto(s) na coleção "${r.colecao}".`);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao reindexar.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function indexarDoc() {
+    if (!docTitulo.trim() || !docTexto.trim()) return;
+    setLoading(true);
+    setErro(null);
+    setInfo(null);
+    try {
+      const r = (await chamar({ acao: "indexar-doc", titulo: docTitulo, texto: docTexto })) as { pontos: number };
+      setInfo(`Documento "${docTitulo}" indexado em ${r.pontos} trecho(s).`);
+      setDocTitulo("");
+      setDocTexto("");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao indexar documento.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ padding: "28px", maxWidth: "920px" }}>
+      {/* ── Hero ── */}
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#0F766E 0%,#14B8A6 60%,#0EA5E9 130%)", boxShadow: "0 14px 34px rgba(20,184,166,.26)", animation: "fadeUp .5s ease both" }}>
+        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
+        <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <div>
+            <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Atendimento (RAG)</h2>
+            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "620px" }}>
+              Tira dúvidas sobre os produtos a partir da base (Qdrant). Responde só com o que está indexado — e cita a fonte. Se não souber, diz que não sabe.
+            </div>
+          </div>
+          <button onClick={() => setAdmin((a) => !a)} style={{ padding: "8px 14px", borderRadius: "9px", border: "1px solid rgba(255,255,255,.35)", background: "rgba(255,255,255,.16)", color: "white", fontSize: "12.5px", fontWeight: 700, cursor: "pointer", flex: "none" }}>
+            {admin ? "Fechar base" : "Gerenciar base"}
+          </button>
+        </div>
+      </div>
+
+      {info && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: "10px", color: "#047857", fontSize: "13px" }}>{info}</div>}
+      {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+
+      {/* ── Admin: indexação ── */}
+      {admin && (
+        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", boxShadow: "var(--shadow-md)", marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "14px" }}>
+            <div style={{ fontSize: "13px", color: "var(--gray-600)" }}>Indexe o catálogo (base de produtos) e anexe documentos (FAQ, políticas).</div>
+            <Hoverable onClick={loading ? undefined : reindexar} base={{ padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: loading ? "wait" : "pointer", fontSize: "13px", fontWeight: 700, color: "white", opacity: loading ? 0.6 : 1 }} hover={loading ? {} : { transform: "translateY(-2px)" }}>Reindexar catálogo</Hoverable>
+          </div>
+          <input value={docTitulo} onChange={(e) => setDocTitulo(e.target.value)} placeholder="Título do documento (ex.: Política de troca)" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "10px 12px", fontSize: "13.5px", marginBottom: "8px", outline: "none" }} />
+          <textarea value={docTexto} onChange={(e) => setDocTexto(e.target.value)} rows={4} placeholder="Cole o texto do documento…" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "10px 12px", fontSize: "13.5px", outline: "none", resize: "vertical", minHeight: "90px", lineHeight: 1.5 }} />
+          <div style={{ marginTop: "10px" }}>
+            <Hoverable onClick={loading || !docTitulo.trim() || !docTexto.trim() ? undefined : indexarDoc} base={{ display: "inline-flex", padding: "9px 18px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: loading || !docTitulo.trim() || !docTexto.trim() ? "not-allowed" : "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)", opacity: loading || !docTitulo.trim() || !docTexto.trim() ? 0.5 : 1 }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Indexar documento</Hoverable>
+          </div>
+        </div>
+      )}
+
+      {/* ── Conversa ── */}
+      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "18px", boxShadow: "var(--shadow-md)" }}>
+        {msgs.length === 0 ? (
+          <div style={{ fontSize: "13px", color: "var(--gray-400)", padding: "10px 4px" }}>
+            Ex.: “qual produto desengordurante vocês têm?”, “o Primmax serve pra cozinha industrial?”, “qual a embalagem e preço?”. (Indexe o catálogo primeiro em “Gerenciar base”.)
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "14px" }}>
+            {msgs.map((m, i) => (
+              <div key={i} style={{ alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth: "84%" }}>
+                <div style={{ padding: "10px 14px", borderRadius: "12px", fontSize: "13.5px", lineHeight: 1.5, whiteSpace: "pre-wrap", color: m.role === "user" ? "white" : "var(--gray-900)", background: m.role === "user" ? "var(--blue-600)" : "var(--gray-100)" }}>
+                  {m.texto}
+                </div>
+                {m.fontes && m.fontes.length > 0 && (
+                  <div style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "5px" }}>
+                    {m.fontes.map((f, j) => (
+                      <div key={j} style={{ fontSize: "11px", color: "var(--gray-500)", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "6px 9px" }}>
+                        <b>[{j + 1}] {f.titulo}</b> <span style={{ color: "var(--gray-400)" }}>· {f.tipo} · {(f.score * 100).toFixed(0)}%</span>
+                        <div style={{ marginTop: "2px", color: "var(--gray-500)" }}>{f.trecho.slice(0, 160)}…</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {m.role === "assistant" && <FeedbackResposta agente="atendimento" pergunta={msgs[i - 1]?.texto ?? null} resposta={m.texto} />}
+              </div>
+            ))}
+            {loading && <div style={{ alignSelf: "flex-start", fontSize: "13px", color: "var(--gray-400)" }}>Buscando na base…</div>}
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
+          <textarea
+            value={pergunta}
+            onChange={(e) => setPergunta(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); perguntar(); } }}
+            placeholder="Pergunte sobre os produtos…"
+            rows={1}
+            style={{ flex: 1, border: "1px solid var(--gray-200)", borderRadius: "11px", padding: "11px 14px", fontSize: "14px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", outline: "none", resize: "none", lineHeight: 1.5 }}
+          />
+          <Hoverable
+            onClick={podePerguntar ? perguntar : undefined}
+            base={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: podePerguntar ? "pointer" : "not-allowed", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: podePerguntar ? 1 : 0.5, flex: "none" }}
+            hover={podePerguntar ? { transform: "translateY(-2px)" } : {}}
+          >
+            {loading ? "…" : "Enviar"}
+          </Hoverable>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ContratoScreen({ scope, onVerProposta }: { scope: PropostaScope | null; onVerProposta: () => void }) {
+  const [modo, setModo] = useState<"gerar" | "analisar">("gerar");
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [contrato, setContrato] = useState<ContratoScope | null>(null);
+  const [texto, setTexto] = useState("");
+  const [analise, setAnalise] = useState<ContratoAnalise | null>(null);
+
+  async function chamar(body: object) {
+    setLoading(true);
+    setErro(null);
+    try {
+      const r = await fetch("/api/contrato", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const raw = await r.text();
+      let d: unknown = null;
+      try {
+        d = raw ? JSON.parse(raw) : null;
+      } catch {
+        /* corpo não-JSON */
+      }
+      if (!r.ok || !d) {
+        const e = (d as { erro?: unknown } | null)?.erro;
+        throw new Error(typeof e === "string" ? e : `Falha (HTTP ${r.status}).`);
+      }
+      return d;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function gerar() {
+    if (!scope) return;
+    setContrato(null);
+    try {
+      setContrato((await chamar({ acao: "gerar", proposta: scope })) as ContratoScope);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao gerar.");
+    }
+  }
+
+  async function analisar() {
+    if (!texto.trim()) return;
+    setAnalise(null);
+    try {
+      setAnalise((await chamar({ acao: "analisar", texto })) as ContratoAnalise);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao analisar.");
+    }
+  }
+
+  function imprimir(c: ContratoScope) {
+    const itens = c.itens
+      .map((i) => `<tr><td>${i.codigo}</td><td>${i.nome}</td><td style="text-align:right">${i.quantidade}</td><td style="text-align:right">R$ ${i.precoUnitario}</td><td style="text-align:right">R$ ${i.subtotal}</td></tr>`)
+      .join("");
+    const clausulas = c.clausulas
+      .map((cl, n) => `<h3>${n + 1}. ${cl.titulo}</h3><p>${cl.texto}</p>`)
+      .join("");
+    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Contrato</title>
+<style>body{font-family:Georgia,serif;max-width:760px;margin:40px auto;color:#1a1a1a;line-height:1.6;padding:0 24px}h1{text-align:center;font-size:20px}h3{font-size:14px;margin:18px 0 4px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}td,th{border:1px solid #ccc;padding:6px 8px}.tot{text-align:right;font-weight:bold;font-size:15px;margin-top:8px}.parte{margin:6px 0;font-size:14px}</style></head>
+<body><h1>CONTRATO DE FORNECIMENTO</h1>
+<p class="parte"><b>CONTRATADA:</b> ${c.contratada.razaoSocial} — CNPJ ${c.contratada.cnpj}</p>
+<p class="parte"><b>CONTRATANTE:</b> ${c.contratante.razaoSocial} — CNPJ ${c.contratante.cnpj}</p>
+<p><b>Objeto:</b> ${c.objeto}.</p>
+<table><thead><tr><th>Cód.</th><th>Item</th><th>Qtd</th><th>Preço un.</th><th>Subtotal</th></tr></thead><tbody>${itens}</tbody></table>
+<p class="tot">Valor total: R$ ${c.valorTotal}</p>
+${clausulas}
+<p style="margin-top:40px;font-size:12px;color:#777">Gerado pelo Agente de Proposta Indeba — origem proposta ${c.origemPropostaId}.</p>
+</body></html>`;
+    const w = window.open("", "_blank");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.print();
+  }
+
+  const corSev = (s: string) =>
+    s === "alta" ? { bg: "#FEF2F2", fg: "#B91C1C", bd: "#FECACA" } : s === "media" ? { bg: "#FFFBEB", fg: "#B45309", bd: "#FDE68A" } : { bg: "#F3F4F6", fg: "#4B5563", bd: "#E5E7EB" };
+
+  return (
+    <div style={{ padding: "28px", maxWidth: "920px" }}>
+      {/* ── Hero ── */}
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#334155 0%,#1E6BB8 70%,#0EA5E9 130%)", boxShadow: "0 14px 34px rgba(30,107,184,.26)", animation: "fadeUp .5s ease both" }}>
+        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
+        <div style={{ position: "relative" }}>
+          <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Agente de Contrato</h2>
+          <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "640px" }}>
+            Gere o contrato a partir de uma proposta (valor e partes vêm do escopo, a IA só redige as cláusulas) ou cole um contrato recebido para a IA apontar os riscos.
+          </div>
+        </div>
+      </div>
+
+      {/* ── Toggle de modo ── */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
+        {(["gerar", "analisar"] as const).map((m) => (
+          <button key={m} onClick={() => { setModo(m); setErro(null); }} style={{ padding: "9px 18px", borderRadius: "10px", border: `1px solid ${modo === m ? "var(--blue-600)" : "var(--gray-200)"}`, background: modo === m ? "var(--blue-600)" : "white", color: modo === m ? "white" : "var(--gray-700)", fontSize: "13.5px", fontWeight: 700, cursor: "pointer" }}>
+            {m === "gerar" ? "Gerar de proposta" : "Analisar contrato"}
+          </button>
+        ))}
+      </div>
+
+      {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+
+      {/* ── Modo GERAR ── */}
+      {modo === "gerar" && (
+        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "22px", boxShadow: "var(--shadow-md)" }}>
+          {!scope ? (
+            <div style={{ textAlign: "center", padding: "20px" }}>
+              <div style={{ fontSize: "14px", color: "var(--gray-500)", marginBottom: "14px" }}>Nenhuma proposta aberta. Gere ou abra uma proposta para criar o contrato a partir dela.</div>
+              <Hoverable onClick={onVerProposta} base={{ display: "inline-flex", padding: "10px 18px", background: "var(--blue-600)", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "white" }} hover={{ transform: "translateY(-2px)" }}>Ir para a proposta</Hoverable>
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: "13px", color: "var(--gray-600)", marginBottom: "14px" }}>
+                Proposta de <b>{scope.cliente.razaoSocial}</b> — {scope.itens.length} {scope.itens.length === 1 ? "item" : "itens"}.
+              </div>
+              <Hoverable onClick={loading ? undefined : gerar} base={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "11px 22px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: loading ? "wait" : "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: loading ? 0.6 : 1 }} hover={loading ? {} : { transform: "translateY(-2px)" }}>
+                {loading ? "Gerando…" : "Gerar contrato"}
+              </Hoverable>
+
+              {contrato && (
+                <div style={{ marginTop: "22px", borderTop: "1px solid var(--gray-200)", paddingTop: "20px", animation: "fadeUp .4s ease both" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                    <h3 style={{ fontSize: "18px", fontWeight: 800, color: "var(--gray-900)", margin: 0 }}>Contrato de Fornecimento</h3>
+                    <Hoverable onClick={() => imprimir(contrato)} base={{ padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Imprimir / Salvar PDF</Hoverable>
+                  </div>
+                  <div style={{ fontSize: "13px", color: "var(--gray-600)", marginTop: "10px" }}>
+                    <div><b>Contratada:</b> {contrato.contratada.razaoSocial} (CNPJ {contrato.contratada.cnpj})</div>
+                    <div><b>Contratante:</b> {contrato.contratante.razaoSocial} (CNPJ {contrato.contratante.cnpj})</div>
+                  </div>
+                  <table style={{ width: "100%", borderCollapse: "collapse", margin: "14px 0", fontSize: "13px" }}>
+                    <thead><tr style={{ color: "var(--gray-500)", textAlign: "left" }}><th style={{ padding: "6px" }}>Item</th><th style={{ padding: "6px", textAlign: "right" }}>Qtd</th><th style={{ padding: "6px", textAlign: "right" }}>Preço un.</th><th style={{ padding: "6px", textAlign: "right" }}>Subtotal</th></tr></thead>
+                    <tbody>
+                      {contrato.itens.map((i) => (
+                        <tr key={i.codigo} style={{ borderTop: "1px solid var(--gray-100)" }}>
+                          <td style={{ padding: "6px" }}>{i.nome}</td>
+                          <td style={{ padding: "6px", textAlign: "right" }}>{i.quantidade}</td>
+                          <td style={{ padding: "6px", textAlign: "right" }}>R$ {i.precoUnitario}</td>
+                          <td style={{ padding: "6px", textAlign: "right" }}>R$ {i.subtotal}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div style={{ textAlign: "right", fontWeight: 800, fontSize: "15px", color: "var(--gray-900)" }}>Valor total: R$ {contrato.valorTotal}</div>
+                  <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {contrato.clausulas.map((cl, n) => (
+                      <div key={n}>
+                        <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--gray-800)" }}>{n + 1}. {cl.titulo} <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--gray-400)", marginLeft: "6px" }}>{cl.procedencia}</span></div>
+                        <div style={{ fontSize: "13px", color: "var(--gray-600)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{cl.texto}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── Modo ANALISAR ── */}
+      {modo === "analisar" && (
+        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "22px", boxShadow: "var(--shadow-md)" }}>
+          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "6px" }}>Cole o texto do contrato</label>
+          <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={8} placeholder="Cole aqui o contrato recebido…" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "11px", padding: "12px 14px", fontSize: "13.5px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", outline: "none", resize: "vertical", minHeight: "150px", lineHeight: 1.5 }} />
+          <div style={{ marginTop: "12px" }}>
+            <Hoverable onClick={loading || !texto.trim() ? undefined : analisar} base={{ display: "inline-flex", padding: "11px 22px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: loading || !texto.trim() ? "not-allowed" : "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: loading || !texto.trim() ? 0.5 : 1 }} hover={loading || !texto.trim() ? {} : { transform: "translateY(-2px)" }}>
+              {loading ? "Analisando…" : "Analisar riscos"}
+            </Hoverable>
+          </div>
+
+          {analise && (
+            <div style={{ marginTop: "20px", borderTop: "1px solid var(--gray-200)", paddingTop: "18px", animation: "fadeUp .4s ease both" }}>
+              <h4 style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-500)", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: ".4px" }}>{analise.achados.length} ponto(s) encontrado(s)</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+                {analise.achados.map((a, i) => {
+                  const c = corSev(a.severidade);
+                  return (
+                    <div key={i} style={{ padding: "10px 12px", background: c.bg, border: `1px solid ${c.bd}`, borderRadius: "9px" }}>
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "11px", fontWeight: 800, color: c.fg, textTransform: "uppercase" }}>{a.tipo}</span>
+                        {a.valor && <span style={{ fontSize: "12px", fontWeight: 700, color: c.fg }}>{a.valor}</span>}
+                        <span style={{ fontSize: "10px", color: c.fg, opacity: 0.8 }}>severidade {a.severidade}</span>
+                      </div>
+                      <div style={{ fontSize: "12px", color: "var(--gray-600)", marginTop: "4px", fontStyle: "italic" }}>“…{a.trecho}…”</div>
+                    </div>
+                  );
+                })}
+              </div>
+              {analise.explicacao && <div style={{ fontSize: "13.5px", color: "var(--gray-700)", lineHeight: 1.6, whiteSpace: "pre-wrap", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "14px" }}>{analise.explicacao}</div>}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+type MsgFinanceiro = { role: "user" | "assistant"; texto: string; resumo?: string };
+
+function FinanceiroScreen() {
+  const [planilhas, setPlanilhas] = useState<{ nome: string; csv: string }[]>([]);
+  const [planilhaAtual, setPlanilhaAtual] = useState<string | null>(null);
+  const [pergunta, setPergunta] = useState("");
+  const [msgs, setMsgs] = useState<MsgFinanceiro[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [foco, setFoco] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const podePerguntar = pergunta.trim().length > 0 && !loading;
+
+  async function adicionarArquivos(files: FileList | null) {
+    if (!files) return;
+    const novos: { nome: string; csv: string }[] = [];
+    for (const f of Array.from(files)) {
+      const csv = await f.text();
+      novos.push({ nome: f.name.replace(/\.[^.]+$/, ""), csv });
+    }
+    setPlanilhas((p) => {
+      const merged = [...p.filter((x) => !novos.some((n) => n.nome === x.nome)), ...novos];
+      return merged.slice(0, 8);
+    });
+    setErro(null);
+  }
+
+  function removerPlanilha(nome: string) {
+    setPlanilhas((p) => p.filter((x) => x.nome !== nome));
+    if (planilhaAtual === nome) setPlanilhaAtual(null);
+  }
+
+  async function perguntar() {
+    if (!podePerguntar) return;
+    const texto = pergunta.trim();
+    setMsgs((m) => [...m, { role: "user", texto }]);
+    setPergunta("");
+    setLoading(true);
+    setErro(null);
+    try {
+      const r = await fetch("/api/financeiro", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pergunta: texto, planilhas, planilhaAtual }),
+      });
+      const raw = await r.text();
+      let d: unknown = null;
+      try {
+        d = raw ? JSON.parse(raw) : null;
+      } catch {
+        /* corpo não-JSON */
+      }
+      if (!r.ok || !d) {
+        const erroApi = (d as { erro?: unknown } | null)?.erro;
+        const msg =
+          typeof erroApi === "string"
+            ? erroApi
+            : r.status === 503
+              ? "A IA está indisponível (precisa do Ollama no ar) — sem ela não consigo entender a pergunta."
+              : `Falha ao responder (HTTP ${r.status}).`;
+        throw new Error(msg);
+      }
+      const res = d as FinanceiroResponse;
+      if (res.planilhaAtual) setPlanilhaAtual(res.planilhaAtual);
+      setMsgs((m) => [
+        ...m,
+        { role: "assistant", texto: res.resposta, resumo: res.resumoNumerico || undefined },
+      ]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro ao responder.";
+      setErro(msg);
+      setMsgs((m) => [...m, { role: "assistant", texto: msg }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ padding: "28px", maxWidth: "920px" }}>
+      {/* ── Hero ── */}
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#0F766E 0%,#0EA5E9 60%,#1E6BB8 130%)", boxShadow: "0 14px 34px rgba(14,165,233,.26)", animation: "fadeUp .5s ease both" }}>
+        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
+        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: "rgba(255,255,255,.16)", border: "1px solid rgba(255,255,255,.25)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 21h18" />
+              <rect x="4" y="11" width="3.5" height="7" rx="1" />
+              <rect x="10.2" y="7" width="3.5" height="11" rx="1" />
+              <rect x="16.5" y="3" width="3.5" height="15" rx="1" />
+            </svg>
+          </div>
+          <div>
+            <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Agente Financeiro</h2>
+            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "640px" }}>
+              Suba suas planilhas (CSV) e pergunte em português. O motor faz as contas; a IA só explica — nenhum número vem do modelo.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Planilhas ── */}
+      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "18px", boxShadow: "var(--shadow-md)", marginBottom: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-500)" }}>Planilhas carregadas (CSV)</div>
+          <Hoverable
+            onClick={() => fileRef.current?.click()}
+            base={{ display: "flex", alignItems: "center", gap: "7px", padding: "8px 14px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "var(--gray-700)" }}
+            hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}
+          >
+            + Adicionar CSV
+          </Hoverable>
+          <input ref={fileRef} type="file" accept=".csv,text/csv" multiple style={{ display: "none" }} onChange={(e) => adicionarArquivos(e.target.files)} />
+        </div>
+        {planilhas.length === 0 ? (
+          <div style={{ fontSize: "13px", color: "var(--gray-400)", marginTop: "10px" }}>Nenhuma planilha ainda. Adicione ao menos uma para consultar; duas para conciliar.</div>
+        ) : (
+          <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
+            {planilhas.map((p) => {
+              const ativa = planilhaAtual === p.nome;
+              return (
+                <div key={p.nome} onClick={() => setPlanilhaAtual(p.nome)} title="Clique para definir como planilha ativa" style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 10px", borderRadius: "999px", cursor: "pointer", fontSize: "12.5px", fontWeight: 600, color: ativa ? "white" : "var(--gray-700)", background: ativa ? "var(--blue-600)" : "var(--gray-100)", border: `1px solid ${ativa ? "var(--blue-600)" : "var(--gray-200)"}` }}>
+                  {p.nome}
+                  <span onClick={(e) => { e.stopPropagation(); removerPlanilha(p.nome); }} style={{ opacity: 0.7, cursor: "pointer", fontWeight: 700 }}>×</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Conversa ── */}
+      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "18px", boxShadow: "var(--shadow-md)" }}>
+        {msgs.length === 0 ? (
+          <div style={{ fontSize: "13px", color: "var(--gray-400)", padding: "10px 4px" }}>
+            Ex.: “quanto vendi no total?”, “total por categoria”, “bate as vendas com as notas”, “calcule ICMS no presumido sobre 10.000”.
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "14px" }}>
+            {msgs.map((m, i) => (
+              <div key={i} style={{ alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth: "82%" }}>
+                <div style={{ padding: "10px 14px", borderRadius: "12px", fontSize: "13.5px", lineHeight: 1.5, whiteSpace: "pre-wrap", color: m.role === "user" ? "white" : "var(--gray-900)", background: m.role === "user" ? "var(--blue-600)" : "var(--gray-100)" }}>
+                  {m.texto}
+                </div>
+                {m.resumo && (
+                  <details style={{ marginTop: "5px" }}>
+                    <summary style={{ fontSize: "11px", color: "var(--gray-400)", cursor: "pointer" }}>verdade do motor (auditável)</summary>
+                    <pre style={{ margin: "5px 0 0", padding: "10px 12px", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "9px", fontSize: "11.5px", color: "var(--gray-600)", whiteSpace: "pre-wrap", fontFamily: "monospace" }}>{m.resumo}</pre>
+                  </details>
+                )}
+              </div>
+            ))}
+            {loading && <div style={{ alignSelf: "flex-start", fontSize: "13px", color: "var(--gray-400)" }}>Calculando…</div>}
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
+          <textarea
+            value={pergunta}
+            onChange={(e) => setPergunta(e.target.value)}
+            onFocus={() => setFoco(true)}
+            onBlur={() => setFoco(false)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); perguntar(); } }}
+            placeholder="Pergunte sobre suas planilhas…"
+            rows={1}
+            style={{ flex: 1, border: `1px solid ${foco ? "var(--blue-500)" : "var(--gray-200)"}`, borderRadius: "11px", padding: "11px 14px", fontSize: "14px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", background: "white", outline: "none", resize: "none", lineHeight: 1.5, boxShadow: foco ? "0 0 0 3px rgba(30,107,184,.14)" : "none" }}
+          />
+          <Hoverable
+            onClick={podePerguntar ? perguntar : undefined}
+            base={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: podePerguntar ? "pointer" : "not-allowed", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: podePerguntar ? 1 : 0.5, flex: "none" }}
+            hover={podePerguntar ? { transform: "translateY(-2px)" } : {}}
+          >
+            {loading ? "…" : "Enviar"}
+          </Hoverable>
+        </div>
+        {erro && <div style={{ marginTop: "12px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+      </div>
+    </div>
+  );
 }
 
 function InstagramScreen() {
