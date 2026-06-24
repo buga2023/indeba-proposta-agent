@@ -1,0 +1,132 @@
+{
+  "atualizadoEm": "2026-06-24",
+  "avisoLegal": "Alíquotas com VIGÊNCIA e FONTE. Onde a fonte não é oficial, é EXEMPLO a validar com o contador. O agente nunca inventa alíquota; sempre informa vigência e fonte. Reforma tributária (LC 214/2025) em transição 2026–2033: CBS substitui PIS/COFINS/IPI e IBS substitui ICMS/ISS.",
+  "regras": [
+    {
+      "regime": "ibs_cbs",
+      "imposto": "CBS",
+      "aliquota": 0.9,
+      "vigenciaInicio": "2026-01-01",
+      "vigenciaFim": "2026-12-31",
+      "fonte": { "nome": "LC 214/2025 — fase de testes 2026", "url": "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm", "oficial": true },
+      "nota": "Fase de testes (alíquota simbólica 0,9%); destaque obrigatório na nota e dispensa de penalidades. Optantes do Simples (incl. MEI) não têm alteração prática em 2026."
+    },
+    {
+      "regime": "ibs_cbs",
+      "imposto": "IBS",
+      "aliquota": 0.1,
+      "vigenciaInicio": "2026-01-01",
+      "vigenciaFim": "2026-12-31",
+      "fonte": { "nome": "LC 214/2025 — fase de testes 2026", "url": "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm", "oficial": true },
+      "nota": "Fase de testes (alíquota simbólica 0,1%). Simples passa a destacar IBS/CBS só a partir de 2027."
+    },
+    {
+      "regime": "simples",
+      "imposto": "DAS",
+      "aliquota": 6.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules) — validar no Portal do Simples Nacional (anexo/faixa/fator R)", "url": null, "oficial": false },
+      "nota": "Exemplo de alíquota efetiva única. A real depende do anexo, faixa de faturamento e fator R."
+    },
+    {
+      "regime": "presumido",
+      "imposto": "PIS",
+      "aliquota": 0.65,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules)", "url": null, "oficial": false },
+      "nota": "Modelo atual — em extinção pela CBS na transição."
+    },
+    {
+      "regime": "presumido",
+      "imposto": "COFINS",
+      "aliquota": 3.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules)", "url": null, "oficial": false },
+      "nota": "Modelo atual — em extinção pela CBS na transição."
+    },
+    {
+      "regime": "presumido",
+      "imposto": "ISS",
+      "aliquota": 5.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules) — validar na prefeitura de Salvador", "url": null, "oficial": false },
+      "nota": "Modelo atual — em extinção pelo IBS na transição."
+    },
+    {
+      "regime": "presumido",
+      "imposto": "ICMS",
+      "aliquota": 18.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules) — validar na SEFAZ-BA", "url": null, "oficial": false },
+      "nota": "Modelo atual — em extinção pelo IBS na transição."
+    },
+    {
+      "regime": "presumido",
+      "imposto": "IRPJ",
+      "aliquota": 15.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules)", "url": null, "oficial": false },
+      "nota": null
+    },
+    {
+      "regime": "presumido",
+      "imposto": "CSLL",
+      "aliquota": 9.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules)", "url": null, "oficial": false },
+      "nota": null
+    },
+    {
+      "regime": "real",
+      "imposto": "PIS",
+      "aliquota": 1.65,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules)", "url": null, "oficial": false },
+      "nota": "Modelo atual — em extinção pela CBS na transição."
+    },
+    {
+      "regime": "real",
+      "imposto": "COFINS",
+      "aliquota": 7.6,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules)", "url": null, "oficial": false },
+      "nota": "Modelo atual — em extinção pela CBS na transição."
+    },
+    {
+      "regime": "real",
+      "imposto": "ICMS",
+      "aliquota": 18.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules) — validar na SEFAZ-BA", "url": null, "oficial": false },
+      "nota": "Modelo atual — em extinção pelo IBS na transição."
+    },
+    {
+      "regime": "real",
+      "imposto": "IRPJ",
+      "aliquota": 15.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules)", "url": null, "oficial": false },
+      "nota": null
+    },
+    {
+      "regime": "real",
+      "imposto": "CSLL",
+      "aliquota": 9.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo (tax-rules)", "url": null, "oficial": false },
+      "nota": null
+    }
+  ]
+}
