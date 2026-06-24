@@ -1,7 +1,14 @@
 import { describe, it, expect } from "vitest";
 import type { PropostaScope, PropostaItem } from "@/lib/contracts";
-import { propostaParaPlanilha, totalPropostaCentavos, subtotalCentavos } from "@/lib/financeiro/from-proposta";
+import {
+  propostaParaPlanilha,
+  totalPropostaCentavos,
+  subtotalCentavos,
+  propostaParaCsv,
+  propostaParaPlanilhaInput,
+} from "@/lib/financeiro/from-proposta";
 import { totalizar } from "@/lib/financeiro/engine";
+import { carregarCsv } from "@/lib/financeiro/ingest";
 
 // Constrói um item com preço de catálogo (1ª embalagem). Só o que o adapter lê importa,
 // mas montamos itens válidos para casar com o contrato.
@@ -60,5 +67,34 @@ describe("handoff proposta→financeiro: preço crítico vem do catálogo (§2)"
   it("item sem embalagem → subtotal 0 (lacuna, não preço inventado)", () => {
     const semEmb = { ...item("C3", "Sem preço", "0.00", 1), embalagens: [] };
     expect(subtotalCentavos(semEmb)).toBe(0);
+  });
+});
+
+describe("handoff via CSV: o que a FinanceiroScreen envia reconstrói o total exato", () => {
+  it("teste-guardião round-trip: CSV -> ingest -> motor == total da proposta", () => {
+    const scope = scopeDe([
+      item("A1", "Desengordurante", "130.00", 2),
+      item("B2", "Detergente", "45.50", 3),
+    ]);
+    const csv = propostaParaCsv(scope);
+    // reparse pelo MESMO ingest que o /api/financeiro usa
+    const tabela = carregarCsv(csv);
+    const r = totalizar(tabela, { colunaValor: "valor_total", metrica: "soma" });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(Math.round((r.valor as number) * 100)).toBe(totalPropostaCentavos(scope));
+  });
+
+  it("nome com ';' não quebra o CSV (escapado)", () => {
+    const scope = scopeDe([item("A1", "Limpa; Brilha", "10.00", 1)]);
+    const tabela = carregarCsv(propostaParaCsv(scope));
+    expect(tabela.linhas).toHaveLength(1);
+    expect(tabela.linhas[0].produto).toBe("Limpa; Brilha");
+  });
+
+  it("propostaParaPlanilhaInput devolve {nome, csv} pronto p/ a UI empilhar", () => {
+    const scope = scopeDe([item("A1", "X", "10.00", 1)]);
+    const p = propostaParaPlanilhaInput(scope);
+    expect(p.nome).toBe("Proposta Cliente X");
+    expect(p.csv).toContain("valor_total");
   });
 });
