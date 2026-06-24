@@ -42,19 +42,30 @@ async function assinar(msg: string): Promise<string> {
     .join("");
 }
 
-// Cookie de sessão = "login.hmac(login)". Opaco, httpOnly, validável no edge.
-export async function criarSessao(login: string): Promise<string> {
-  return `${login}.${await assinar(login)}`;
+// Validade da sessão — casa com o maxAge do cookie (login/route.ts). A expiração vai
+// ASSINADA no token: um cookie capturado deixa de ser replayável pra sempre.
+const TTL_MS = 8 * 60 * 60 * 1000; // 8h
+
+// Cookie de sessão = "login.exp.hmac(login.exp)". Opaco, httpOnly, validável no edge.
+export async function criarSessao(login: string, agora = Date.now()): Promise<string> {
+  const payload = `${login}.${agora + TTL_MS}`;
+  return `${payload}.${await assinar(payload)}`;
 }
 
-export async function validarSessao(cookie: string | undefined): Promise<Usuario | null> {
+export async function validarSessao(cookie: string | undefined, agora = Date.now()): Promise<Usuario | null> {
   if (!cookie) return null;
   const i = cookie.lastIndexOf(".");
   if (i < 1) return null;
-  const login = cookie.slice(0, i);
+  const payload = cookie.slice(0, i); // "login.exp"
   const sig = cookie.slice(i + 1);
-  const esperado = await assinar(login);
+  const esperado = await assinar(payload);
   // comparação de tamanho fixo evita vazar por timing trivial
   if (sig.length !== esperado.length || sig !== esperado) return null;
+  // exp é o último segmento (numérico) — separa do login mesmo que o login tenha ponto.
+  const j = payload.lastIndexOf(".");
+  if (j < 1) return null;
+  const exp = Number(payload.slice(j + 1));
+  if (!Number.isFinite(exp) || exp < agora) return null; // expirada
+  const login = payload.slice(0, j);
   return usuarios().find((u) => u.login === login) ?? null;
 }

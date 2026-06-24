@@ -31,4 +31,19 @@ describe("auth — sessão assinada", () => {
     expect(await validarSessao(undefined)).toBeNull();
     expect(await validarSessao("")).toBeNull();
   });
+
+  it("rejeita sessão expirada (cookie não é replayável pra sempre)", async () => {
+    const t0 = 1_000_000_000_000;
+    const cookie = await criarSessao("mateus", t0);
+    expect((await validarSessao(cookie, t0 + 1000))?.login).toBe("mateus"); // recém-criada: válida
+    expect(await validarSessao(cookie, t0 + 8 * 60 * 60 * 1000 + 1)).toBeNull(); // 8h+1ms: expirada
+  });
+
+  it("rejeita cookie com exp adulterado (assinatura cobre o exp)", async () => {
+    const t0 = 1_000_000_000_000;
+    const cookie = await criarSessao("mateus", t0);
+    const [login, , sig] = cookie.split(".");
+    const forjado = `${login}.${t0 + 999 * 60 * 60 * 1000}.${sig}`; // tenta estender a validade
+    expect(await validarSessao(forjado, t0 + 1000)).toBeNull();
+  });
 });
