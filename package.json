@@ -11,7 +11,9 @@
     "test:watch": "vitest",
     "db:up": "docker compose up -d db",
     "db:migrate": "prisma migrate dev",
-    "db:seed-amostra": "node --env-file=.env.local prisma/seed-amostra.mjs"
+    "db:seed-amostra": "node --env-file=.env.local prisma/seed-amostra.mjs",
+    "rag:up": "docker compose up -d qdrant",
+    "rag:index": "node --env-file=.env.local scripts/rag-index.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.16.0",
