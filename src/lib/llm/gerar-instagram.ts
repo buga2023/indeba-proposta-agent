@@ -1,5 +1,6 @@
 import { InstagramResponse, type InstagramRequest, type TomPost } from "../contracts";
 import { gerarJson, ollamaDisponivel } from "./ollama";
+import { carregarPerfilEstilo } from "../referencias/analisar";
 
 // JSON Schema entregue ao Ollama (saída restrita). Espelha PostInstagram/InstagramResponse.
 const JSON_SCHEMA = {
@@ -56,17 +57,18 @@ const ESTILO_INDEBA =
   "vertical 4:5, no text, no letters, no numbers, no watermark, no logos, no labels"; // negações
 
 // O modelo escreve só a CENA (blocos criativos); aqui acoplamos a identidade visual
-// (blocos de marca), removendo termos que o modelo possa ter duplicado.
-function montarImagemPrompt(cena: string): string {
+// (blocos de marca), removendo termos que o modelo possa ter duplicado. `estilo` é o
+// descritor visual: ESTILO_INDEBA fixo, ou o derivado das referências (perfil de estilo).
+export function montarImagemPrompt(cena: string, estilo: string = ESTILO_INDEBA): string {
   const limpa = cena
     .replace(/vertical\s*\d+:\d+/gi, "")
     .replace(/\bno (text|letters|numbers|watermark|logos?|labels?)\b/gi, "")
     .replace(/[\s,]+$/g, "")
     .trim();
-  return `${limpa}, ${ESTILO_INDEBA}`;
+  return `${limpa}, ${estilo}`;
 }
 
-function prompt(req: InstagramRequest): string {
+function prompt(req: InstagramRequest, exemplos: string[] = []): string {
   // Entrada do usuário é dado não-confiável: tira delimitador, normaliza e limita.
   const sane = (s: string, max: number) =>
     s.replace(/"""/g, '"').replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
@@ -75,6 +77,8 @@ function prompt(req: InstagramRequest): string {
   const produto = req.produtoServico ? sane(req.produtoServico, 200) : null;
   const publico = req.publicoAlvo ? sane(req.publicoAlvo, 200) : null;
   const temas = TEMAS.slice(0, req.numPosts);
+  // Legendas reais de referência (do Drive) como few-shot do TOM — imitar, não copiar.
+  const refs = exemplos.slice(0, 5).map((e) => sane(e, 400));
 
   return `Você é o social media de uma empresa, especialista em copywriting para Instagram. Sua missão é PROMOVER A MARCA: gerar ${req.numPosts} posts que aumentem reconhecimento, confiança e vendas. Responda APENAS o JSON pedido.
 
@@ -108,7 +112,7 @@ COMO ESCREVER (siga à risca — é isso que separa post bom de post ruim):
   NÃO escreva estilo, iluminação, paleta de cores, era artística nem negações: o sistema completa esses blocos finais com a identidade visual da Indeba ("mundo mais azul") automaticamente. A cena tem que parecer uma FOTO REAL DE CELULAR de gente comum (estilo UGC), casual, candid e autêntica — NÃO ensaio editorial, NÃO foto de catálogo, NÃO render perfeito. Escolha o sujeito/cena conforme o tema, entre: alguém relaxando ou sorrindo num lar moderno recém-limpo banhado de luz suave (ex.: "a happy young woman relaxing on a sofa in a freshly cleaned bright modern living room"), uma cozinha aconchegante e impecável com luz da manhã e uma xícara de café num balcão reluzente, close-up de mãos com luvas estilosas deixando uma superfície num brilho satisfatório, um flat-lay estético de utensílios de limpeza arranjados sobre mármore, ou um canto de casa claro e arejado, fresco e convidativo. Prefira cenas com pessoas ou com vida (não ambientes vazios). NUNCA embalagens, rótulos ou produtos específicos (a IA não reproduz o rótulo real).
 - "versao": numere de 1 a ${req.numPosts}.
 
-EXEMPLO do nível esperado (padaria — adapte ao negócio real, NÃO copie):
+${refs.length ? `REFERÊNCIAS DE TOM (legendas reais da marca — imite a VOZ, o ritmo e a estrutura, NUNCA copie o conteúdo nem o assunto):\n${refs.map((e, i) => `[ref ${i + 1}] ${e}`).join("\n")}\n\n` : ""}EXEMPLO do nível esperado (padaria — adapte ao negócio real, NÃO copie):
 abertura: "Tem gente que chega 6h30 só pra pegar o pão antes de acabar."
 legenda: "A gente deixa a massa fermentando a noite toda, umas 18 horas, pra te entregar quentinho de manhã. 🥖\\n\\nÉ aquele pão de casca que estala quando você aperta. Sério, dá pra ouvir.\\n\\nPassa aqui amanhã cedo que eu separo o seu. A gente abre 6h30."
 (1ª pessoa, sensorial, espontâneo, com CTA específico — faça nesse padrão, SEM soar de IA.)
@@ -120,6 +124,11 @@ legenda: "A gente deixa a massa fermentando a noite toda, umas 18 horas, pra te 
 export async function gerarPostsInstagram(req: InstagramRequest): Promise<InstagramResponse> {
   if (await ollamaDisponivel()) {
     try {
+      // Perfil de estilo derivado das referências (Drive): descritor visual no lugar do
+      // ESTILO_INDEBA fixo + legendas como few-shot do tom. Ausente → estilo padrão.
+      const perfil = await carregarPerfilEstilo();
+      const estilo = perfil?.descritorVisual ?? ESTILO_INDEBA;
+      const exemplos = perfil?.exemplosLegenda ?? [];
       // Vários posts numa tacada só pedem mais tempo; temperatura alta = copy menos genérico.
       // OLLAMA_MODEL_POSTS permite um modelo melhor só para os posts (ex.: qwen3:14b),
       // sem trocar o modelo das propostas. Sem a env, usa o modelo padrão.
@@ -128,12 +137,12 @@ export async function gerarPostsInstagram(req: InstagramRequest): Promise<Instag
       // de 60s da Vercel. Desligamos o thinking só nesses modelos — copy continua boa.
       const modeloEfetivo = modelo ?? process.env.OLLAMA_MODEL ?? "";
       const think = /qwen3|qwq|deepseek-r1|:r1/i.test(modeloEfetivo) ? false : undefined;
-      const cru = await gerarJson(prompt(req), JSON_SCHEMA, 180_000, 0.8, modelo, think);
+      const cru = await gerarJson(prompt(req, exemplos), JSON_SCHEMA, 180_000, 0.8, modelo, think);
       const out = InstagramResponse.parse(JSON.parse(cru));
-      // Garante a identidade visual da marca em toda imagem (não depende do modelo).
+      // Garante a identidade visual (derivada ou padrão) em toda imagem — não depende do modelo.
       const posts = out.posts.slice(0, req.numPosts).map((p) => ({
         ...p,
-        imagemPrompt: montarImagemPrompt(p.imagemPrompt),
+        imagemPrompt: montarImagemPrompt(p.imagemPrompt, estilo),
       }));
       return { ...out, posts };
     } catch {

@@ -47,6 +47,55 @@ export async function gerarJson(
   return data.response;
 }
 
+// Acumula uma resposta NDJSON do Ollama (stream:true) num texto só. Streaming evita o
+// headers-timeout da fetch durante o cold-load de um modelo grande (ex.: visão).
+async function acumularStream(body: ReadableStream<Uint8Array>): Promise<string> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  let saida = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const linha = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!linha) continue;
+      const obj = JSON.parse(linha) as { response?: string; error?: string };
+      if (obj.error) throw new Error(`Ollama: ${obj.error}`);
+      if (obj.response) saida += obj.response;
+    }
+  }
+  return saida.trim();
+}
+
+// Descreve uma imagem com um modelo de VISÃO (ex.: qwen2.5vl). `imagemBase64` cru,
+// sem o prefixo "data:". Usado para extrair o estilo visual de posts de referência.
+export async function descreverImagem(
+  prompt: string,
+  imagemBase64: string,
+  timeoutMs = 180_000,
+  model = process.env.OLLAMA_MODEL_VISAO ?? "qwen2.5vl:7b",
+): Promise<string> {
+  const r = await fetch(`${BASE}/api/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model,
+      prompt,
+      images: [imagemBase64],
+      stream: true,
+      options: { temperature: 0.2 }, // descrição factual do estilo, não criativa
+      keep_alive: "30m",
+    }),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+  if (!r.ok || !r.body) throw new Error(`Ollama visão ${r.status}`);
+  return acumularStream(r.body);
+}
+
 export async function gerarTexto(prompt: string): Promise<string> {
   const r = await fetch(`${BASE}/api/generate`, {
     method: "POST",

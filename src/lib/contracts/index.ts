@@ -6,3 +6,5 @@ export * from "./entrada";
 export * from "./prospeccao";
 export * from "./empresa";
 export * from "./instagram";
+export * from "./referencias";
+export * from "./financeiro";

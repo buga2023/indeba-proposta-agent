@@ -1,0 +1,119 @@
+{
+  "name": "Referências de estilo — Google Drive → Agente de Proposta",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-manual",
+      "name": "Disparar manualmente",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "operation": "search",
+        "queryString": "='1ABCxyz_TROQUE_PELO_ID_DA_PASTA' in parents and trashed = false",
+        "returnAll": true,
+        "filter": {},
+        "options": {}
+      },
+      "id": "drive-listar",
+      "name": "Drive — listar arquivos da pasta",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [220, 0],
+      "credentials": {
+        "googleDriveOAuth2Api": { "id": "TROQUE", "name": "Google Drive (sua conta)" }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.mimeType }}",
+              "rightValue": "image/",
+              "operator": { "type": "string", "operation": "startsWith" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "filtro-imagem",
+      "name": "Só imagens",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "download",
+        "fileId": { "__rl": true, "value": "={{ $json.id }}", "mode": "id" },
+        "options": {}
+      },
+      "id": "drive-baixar",
+      "name": "Drive — baixar imagem",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [660, 0],
+      "credentials": {
+        "googleDriveOAuth2Api": { "id": "TROQUE", "name": "Google Drive (sua conta)" }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsResource": "code",
+        "language": "javaScript",
+        "jsCode": "// Imagem binária → base64 (sem prefixo data:). Legenda opcional via descrição do Drive.\nconst bin = $binary.data;\nconst b64 = bin ? bin.data : null;\nreturn {\n  json: {\n    nomeArquivo: $json.name,\n    imagemBase64: b64,\n    legenda: $json.description || null,\n  },\n};"
+      },
+      "id": "para-base64",
+      "name": "Imagem → base64",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToAggregate": {
+          "fieldToAggregate": [{ "fieldToAggregate": "" }]
+        },
+        "options": {},
+        "aggregate": "aggregateAllItemData"
+      },
+      "id": "agrupar",
+      "name": "Agrupar num array 'itens'",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [1100, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/referencias/sync",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { itens: $json.data } }}",
+        "options": { "timeout": 300000 }
+      },
+      "id": "post-sync",
+      "name": "POST /api/referencias/sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 0]
+    }
+  ],
+  "connections": {
+    "Disparar manualmente": { "main": [[{ "node": "Drive — listar arquivos da pasta", "type": "main", "index": 0 }]] },
+    "Drive — listar arquivos da pasta": { "main": [[{ "node": "Só imagens", "type": "main", "index": 0 }]] },
+    "Só imagens": { "main": [[{ "node": "Drive — baixar imagem", "type": "main", "index": 0 }]] },
+    "Drive — baixar imagem": { "main": [[{ "node": "Imagem → base64", "type": "main", "index": 0 }]] },
+    "Imagem → base64": { "main": [[{ "node": "Agrupar num array 'itens'", "type": "main", "index": 0 }]] },
+    "Agrupar num array 'itens'": { "main": [[{ "node": "POST /api/referencias/sync", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
