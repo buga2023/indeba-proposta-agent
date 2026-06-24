@@ -76,7 +76,7 @@ async function acumularStream(body: ReadableStream<Uint8Array>): Promise<string>
 export async function descreverImagem(
   prompt: string,
   imagemBase64: string,
-  timeoutMs = 180_000,
+  timeoutMs = 300_000, // imagem grande + cold-load + disputa de VRAM pode passar de 180s
   model = process.env.OLLAMA_MODEL_VISAO ?? "qwen2.5vl:7b",
 ): Promise<string> {
   const r = await fetch(`${BASE}/api/generate`, {
@@ -87,12 +87,17 @@ export async function descreverImagem(
       prompt,
       images: [imagemBase64],
       stream: true,
-      options: { temperature: 0.2 }, // descrição factual do estilo, não criativa
+      // num_ctx alto: imagem grande vira muitos "tokens visuais" e estoura o ctx padrão
+      // (4096) → Ollama 400 exceed_context_size. 8192 cobre artes de post de alta resolução.
+      options: { temperature: 0.2, num_ctx: 8192 },
       keep_alive: "30m",
     }),
     signal: AbortSignal.timeout(timeoutMs),
   });
-  if (!r.ok || !r.body) throw new Error(`Ollama visão ${r.status}`);
+  if (!r.ok || !r.body) {
+    const corpo = await r.text().catch(() => "");
+    throw new Error(`Ollama visão ${r.status}: ${corpo.slice(0, 300)}`);
+  }
   return acumularStream(r.body);
 }
 

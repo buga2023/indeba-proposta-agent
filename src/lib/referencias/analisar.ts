@@ -35,6 +35,7 @@ ${notas.map((n, i) => `${i + 1}. ${n}`).join("\n")}`;
 export async function analisarReferencias(itens: ReferenciaItem[]): Promise<PerfilEstilo> {
   const fontes: FonteReferencia[] = [];
   const notas: string[] = [];
+  const erros: string[] = [];
 
   for (const item of itens) {
     let notaVisual: string | null = null;
@@ -42,17 +43,18 @@ export async function analisarReferencias(itens: ReferenciaItem[]): Promise<Perf
       try {
         notaVisual = await descreverImagem(PROMPT_VISAO, item.imagemBase64);
         if (notaVisual) notas.push(notaVisual);
-      } catch {
-        // Imagem ilegível / modelo de visão indisponível → ignora essa imagem, segue.
+      } catch (e) {
+        // Imagem ilegível / visão indisponível → registra o motivo e segue.
+        erros.push(`${item.nomeArquivo}: ${e instanceof Error ? e.message : "falha"}`);
       }
     }
     fontes.push({ arquivo: item.nomeArquivo, notaVisual });
   }
 
-  // Sem nenhuma nota visual (nenhuma imagem ou visão indisponível) → não dá pra derivar estilo.
+  // Sem nenhuma nota visual → não dá pra derivar estilo. Expõe o motivo real (não engole).
   if (notas.length === 0) {
     throw new Error(
-      "Nenhuma imagem de referência pôde ser analisada (modelo de visão indisponível ou imagens inválidas).",
+      `Nenhuma imagem de referência pôde ser analisada. ${erros.length ? "Motivos: " + erros.join(" | ") : "(itens sem imagem)"}`,
     );
   }
 

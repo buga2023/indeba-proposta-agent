@@ -30,11 +30,12 @@ Pasta no Drive (imagens + legendas)
 3. Configure a **credencial Google Drive OAuth2** (Credentials → New → Google Drive OAuth2)
    e selecione-a nos dois nós "Drive". *(Isto é seu — eu não tenho acesso à sua conta.)*
 
-4. No nó **"Drive — listar arquivos da pasta"**, troque `1ABCxyz_TROQUE_PELO_ID_DA_PASTA`
-   pelo ID real da pasta.
+4. O ID da pasta **já está preenchido** (`1ozIa5X5GDUm_8UDFkaoJodhpV3rw6lcN`). Só troque
+   se mudar de pasta. Garanta que a conta da credencial OAuth tem acesso a ela.
 
-5. Confirme a URL no nó **"POST /api/referencias/sync"**: `http://localhost:3000` (local)
-   ou a URL do app na sua rede.
+5. URL no nó **"POST /api/referencias/sync"**: como o n8n roda em **container**, está como
+   `http://host.docker.internal:3000` (alcança o app Next no host pelo Docker Desktop).
+   Se o app rodar noutra máquina, troque pela URL dele na LAN.
 
 6. **Execute** o workflow ("Disparar manualmente"). Ao terminar, confira o resultado:
    `GET http://localhost:3000/api/referencias/sync` deve devolver o perfil derivado.

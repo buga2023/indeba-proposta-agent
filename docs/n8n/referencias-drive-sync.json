@@ -13,7 +13,8 @@
       "parameters": {
         "resource": "fileFolder",
         "operation": "search",
-        "queryString": "='1ABCxyz_TROQUE_PELO_ID_DA_PASTA' in parents and trashed = false",
+        "searchMethod": "query",
+        "queryString": "'1ozIa5X5GDUm_8UDFkaoJodhpV3rw6lcN' in parents and mimeType contains 'image/' and trashed = false",
         "returnAll": true,
         "filter": {},
         "options": {}
@@ -26,26 +27,6 @@
       "credentials": {
         "googleDriveOAuth2Api": { "id": "TROQUE", "name": "Google Drive (sua conta)" }
       }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": false },
-          "conditions": [
-            {
-              "leftValue": "={{ $json.mimeType }}",
-              "rightValue": "image/",
-              "operator": { "type": "string", "operation": "startsWith" }
-            }
-          ],
-          "combinator": "and"
-        }
-      },
-      "id": "filtro-imagem",
-      "name": "Só imagens",
-      "type": "n8n-nodes-base.filter",
-      "typeVersion": 2,
-      "position": [440, 0]
     },
     {
       "parameters": {
@@ -65,10 +46,9 @@
     },
     {
       "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsResource": "code",
+        "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "// Imagem binária → base64 (sem prefixo data:). Legenda opcional via descrição do Drive.\nconst bin = $binary.data;\nconst b64 = bin ? bin.data : null;\nreturn {\n  json: {\n    nomeArquivo: $json.name,\n    imagemBase64: b64,\n    legenda: $json.description || null,\n  },\n};"
+        "jsCode": "// Binário → base64 ROBUSTO (funciona em modo memória E filesystem) via helper oficial.\nconst items = $input.all();\nconst out = [];\nfor (let i = 0; i < items.length; i++) {\n  const buf = await this.helpers.getBinaryDataBuffer(i, 'data');\n  out.push({\n    json: {\n      nomeArquivo: items[i].json.name,\n      imagemBase64: buf.toString('base64'),\n      legenda: items[i].json.description || null,\n    },\n    pairedItem: { item: i },\n  });\n}\nreturn out;"
       },
       "id": "para-base64",
       "name": "Imagem → base64",
@@ -94,7 +74,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:3000/api/referencias/sync",
+        "url": "http://host.docker.internal:3000/api/referencias/sync",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ { itens: $json.data } }}",
@@ -109,8 +89,7 @@
   ],
   "connections": {
     "Disparar manualmente": { "main": [[{ "node": "Drive — listar arquivos da pasta", "type": "main", "index": 0 }]] },
-    "Drive — listar arquivos da pasta": { "main": [[{ "node": "Só imagens", "type": "main", "index": 0 }]] },
-    "Só imagens": { "main": [[{ "node": "Drive — baixar imagem", "type": "main", "index": 0 }]] },
+    "Drive — listar arquivos da pasta": { "main": [[{ "node": "Drive — baixar imagem", "type": "main", "index": 0 }]] },
     "Drive — baixar imagem": { "main": [[{ "node": "Imagem → base64", "type": "main", "index": 0 }]] },
     "Imagem → base64": { "main": [[{ "node": "Agrupar num array 'itens'", "type": "main", "index": 0 }]] },
     "Agrupar num array 'itens'": { "main": [[{ "node": "POST /api/referencias/sync", "type": "main", "index": 0 }]] }
