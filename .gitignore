@@ -59,4 +59,7 @@ docs/evidencia/
 
 # logs locais de deploy/tunel
 cf.log
-deploy.log
+deploy*.log
+
+# perfil de estilo derivado das referencias (artefato de runtime; gerado via /api/referencias/sync)
+/data/referencias/
