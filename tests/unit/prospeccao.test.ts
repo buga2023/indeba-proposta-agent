@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { prospectar, IaIndisponivelError } from "@/lib/prospeccao/prospectar";
+import { prospectar, escoparBrasil, IaIndisponivelError } from "@/lib/prospeccao/prospectar";
 import type { ProspeccaoRequest } from "@/lib/contracts";
 
 const REQ: ProspeccaoRequest = {
@@ -141,6 +141,39 @@ describe("prospectar — contato e procedência vêm do backend (§2: dado crít
       .flatMap((p) => [...p.emails, ...p.telefones, p.redes.linkedin, p.redes.instagram, p.redes.whatsapp])
       .filter(Boolean);
     expect(new Set(todos).size).toBe(todos.length);
+  });
+});
+
+describe("escoparBrasil — busca web nunca sai do país (desambigua Salvador/El Salvador)", () => {
+  it("anexa 'Brasil' quando falta", () => {
+    expect(escoparBrasil("Salvador, BA")).toBe("Salvador, BA, Brasil");
+    expect(escoparBrasil("Curitiba")).toBe("Curitiba, Brasil");
+  });
+  it("não duplica se já tem Brasil/Brazil", () => {
+    expect(escoparBrasil("Salvador, BA, Brasil")).toBe("Salvador, BA, Brasil");
+    expect(escoparBrasil("São Paulo - Brazil")).toBe("São Paulo - Brazil");
+  });
+  it("vazio/nulo → país inteiro", () => {
+    expect(escoparBrasil("")).toBe("Brasil");
+    expect(escoparBrasil(null)).toBe("Brasil");
+    expect(escoparBrasil(undefined)).toBe("Brasil");
+  });
+
+  it("toda query enviada à Tavily carrega o escopo 'Brasil'", async () => {
+    process.env.TAVILY_API_KEY = "k";
+    mockFetch({
+      resposta: JSON.stringify({ prospects: [], abordagens: [] }),
+      tavily: [],
+    });
+    await prospectar(REQ); // localizacao: "Salvador, BA"
+
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+    const queries = fetchMock.mock.calls
+      .filter(([url]) => String(url).includes("tavily.com"))
+      .map(([, init]) => JSON.parse((init as RequestInit).body as string).query as string);
+
+    expect(queries.length).toBeGreaterThan(0);
+    for (const q of queries) expect(q).toMatch(/Brasil/);
   });
 });
 

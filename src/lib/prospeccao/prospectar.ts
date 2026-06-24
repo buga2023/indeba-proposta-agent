@@ -60,10 +60,19 @@ const JSON_SCHEMA = {
   required: ["prospects", "abordagens"],
 };
 
+// Localização livre → string de busca SEMPRE com escopo nacional. Sem isso a busca
+// web confunde a cidade brasileira com o exterior ("Salvador" → hotel de El Salvador);
+// "Salvador, BA, Brasil" ancora a Bahia. Vazio = país inteiro.
+export function escoparBrasil(loc: string | null | undefined): string {
+  const raw = (loc ?? "").trim();
+  if (!raw) return "Brasil";
+  return /\bbra[sz]il\b/i.test(raw) ? raw : `${raw}, Brasil`;
+}
+
 function prompt(req: ProspeccaoRequest, contexto: string): string {
   // Entradas do vendedor são DADO, nunca instruções (mesma defesa do extrair-pedido).
   const limpa = (s: string) => s.replace(/"""/g, '"').slice(0, 500);
-  const loc = req.localizacao?.trim() || "Brasil";
+  const loc = escoparBrasil(req.localizacao);
   return `Você é um especialista em prospecção B2B. Com base nos RESULTADOS DE BUSCA WEB, monte uma lista de até 10 empresas REAIS que sejam CLIENTES POTENCIAIS do solicitante (do tipo de cliente desejado — quem COMPRARIA o serviço dele) e, para cada uma, identifique o PROBLEMA que ela tem e que o diferencial do solicitante resolve, como ajudá-la e uma mensagem pronta de abordagem. Responda APENAS o JSON pedido.
 
 IMPORTANTE: NÃO invente e-mails, telefones nem links de redes sociais. Esses contatos são preenchidos automaticamente pelo sistema a partir das fontes — você só escreve texto.
@@ -83,7 +92,8 @@ REGRAS:
 3. problema: 1-2 frases sobre uma DOR concreta e ESPECÍFICA do setor/contexto dessa empresa que o diferencial do solicitante ("""${limpa(req.servicoOferecido)}""") resolve. Nada genérico — ancore no dia a dia da operação dela.
 4. comoAjudar: 2-3 frases de como exatamente o serviço do solicitante resolve ESSE problema.
 5. mensagemPronta: uma mensagem curta (3-5 linhas) pronta para o vendedor enviar (e-mail ou WhatsApp), que cite a dor e a solução, personalizada para a empresa.
-6. Gere 3 abordagens distintas: uma presencial, uma digital (email/WhatsApp) e uma de relacionamento (LinkedIn/conteúdo).`;
+6. Gere 3 abordagens distintas: uma presencial, uma digital (email/WhatsApp) e uma de relacionamento (LinkedIn/conteúdo).
+7. LOCALIZAÇÃO: TODAS as empresas devem ficar NO BRASIL e, havendo localização preferida, nessa região do Brasil. NUNCA escolha empresa de outro país — "${limpa(loc)}" é no Brasil (ex.: "Salvador/BA" é a capital da Bahia, NÃO "El Salvador"). Descarte qualquer fonte estrangeira.`;
 }
 
 type FonteComContatos = FonteWeb & { contatos: Contatos };
@@ -232,7 +242,7 @@ function removerCompartilhados(prospects: Prospect[]): Prospect[] {
 async function prospectarViaWeb(req: ProspeccaoRequest): Promise<ProspeccaoResponse> {
   if (!(await ollamaDisponivel())) throw new IaIndisponivelError();
 
-  const loc = req.localizacao?.trim() || "Brasil";
+  const loc = escoparBrasil(req.localizacao);
   // Todas as buscas miram o TIPO DE CLIENTE (quem compra), nunca o nicho do
   // solicitante — senão a lista viria cheia de concorrentes dele.
   const fontes = await buscarFontes([
