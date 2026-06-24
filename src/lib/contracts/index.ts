@@ -8,3 +8,4 @@ export * from "./empresa";
 export * from "./instagram";
 export * from "./referencias";
 export * from "./financeiro";
+export * from "./contrato";
