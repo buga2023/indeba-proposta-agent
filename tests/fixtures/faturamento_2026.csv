@@ -1,0 +1,56 @@
+Data;NF;Cliente;Categoria;Produto;Quantidade;Valor Unitário (R$);Valor Total (R$);Custo Total (R$);Vendedor;Cidade;Forma de Pagamento;Status
+2026-03-24;10250;Cliente 01;Limpeza;Detergente neutro 5L;38;18.90;718.20;445.28;Vendedor 01;Lauro de Freitas;PIX;Pendente
+2026-03-29;10251;Cliente 02;Descartáveis;Esponja pacote;14;7.80;109.20;58.97;Vendedor 02;Salvador;Boleto;Pago
+2026-01-31;10252;Cliente 03;Limpeza;Detergente neutro 5L;74;18.90;1398.60;867.13;Vendedor 01;Vitória da Conquista;À vista;Pago
+2026-03-18;10253;Cliente 04;Limpeza;Detergente neutro 5L;23;18.90;434.70;269.51;Vendedor 02;Feira de Santana;Cartão;Pago
+2026-02-14;10254;Cliente 01;Limpeza;Água sanitária 5L;51;9.80;499.80;274.89;Vendedor 03;Feira de Santana;Cartão;Pago
+2026-01-07;10255;Cliente 02;Descartáveis;Luva descartável cx;71;22;1562;921.58;Vendedor 03;Camaçari;Boleto;Pago
+2026-03-23;10256;Cliente 05;Higiene;Papel higiênico fardo;76;45;3420;2257.20;Vendedor 01;Vitória da Conquista;Boleto;Pago
+2026-01-31;10257;Cliente 04;Limpeza;Água sanitária 5L;32;9.80;313.60;172.48;Vendedor 03;Camaçari;Cartão;Pago
+2026-02-17;10258;Cliente 06;Higiene;Papel higiênico fardo;48;45;2160;1425.60;Vendedor 01;Vitória da Conquista;Cartão;Pendente
+2026-03-30;10259;Cliente 07;Limpeza;Água sanitária 5L;80;9.80;784;431.20;Vendedor 01;Simões Filho;PIX;Pago
+2026-02-19;10260;Cliente 04;Descartáveis;Esponja pacote;31;7.80;241.80;130.57;Vendedor 04;Salvador;PIX;Pendente
+2026-02-11;10261;Cliente 08;Higiene;Álcool 70 1L;11;8.90;97.90;54.82;Vendedor 01;Simões Filho;Cartão;Pago
+2026-03-06;10262;Cliente 08;Descartáveis;Luva descartável cx;21;22;462;272.58;Vendedor 04;Lauro de Freitas;PIX;Pendente
+2026-03-11;10263;Cliente 04;Descartáveis;Saco de lixo 100L pct;77;24;1848;1108.80;Vendedor 02;Feira de Santana;PIX;Pendente
+2026-01-19;10264;Cliente 03;Descartáveis;Copo descartável pct;14;15;210;119.70;Vendedor 03;Salvador;PIX;Pago
+2026-03-30;10265;Cliente 08;Limpeza;Água sanitária 5L;52;9.80;509.60;280.28;Vendedor 02;Simões Filho;À vista;Pago
+2026-03-13;10266;Cliente 09;Limpeza;Multiuso 500ml;71;6.50;461.50;276.90;Vendedor 04;Vitória da Conquista;Cartão;Pago
+2026-02-26;10267;Cliente 06;Descartáveis;Luva descartável cx;3;22;66;38.94;Vendedor 04;Simões Filho;PIX;Pago
+2026-01-15;10268;Cliente 07;Higiene;Álcool gel 500ml;67;11.50;770.50;446.89;Vendedor 01;Lauro de Freitas;Cartão;Pendente
+2026-03-12;10269;Cliente 03;Limpeza;Detergente neutro 5L;79;18.90;1493.10;925.72;Vendedor 04;Camaçari;Boleto;Pago
+2026-02-17;10270;Cliente 04;Limpeza;Cera líquida 750ml;10;16.80;168;99.12;Vendedor 01;Simões Filho;Boleto;Pago
+2026-03-05;10271;Cliente 01;Descartáveis;Esponja pacote;19;7.80;148.20;80.03;Vendedor 01;Vitória da Conquista;À vista;Pendente
+2026-01-23;10272;Cliente 04;Descartáveis;Guardanapo pct;80;9.50;760;418;Vendedor 02;Lauro de Freitas;PIX;Pendente
+2026-02-22;10273;Cliente 07;Higiene;Papel higiênico fardo;59;45;2655;1752.30;Vendedor 02;Salvador;PIX;Pago
+2026-02-14;10274;Cliente 09;Descartáveis;Esponja pacote;32;7.80;249.60;134.78;Vendedor 01;Salvador;Boleto;Pendente
+2026-01-09;10275;Cliente 10;Limpeza;Água sanitária 5L;7;9.80;68.60;37.73;Vendedor 04;Salvador;PIX;Pago
+2026-03-05;10276;Cliente 10;Descartáveis;Esponja pacote;19;7.80;148.20;80.03;Vendedor 02;Lauro de Freitas;À vista;Pendente
+2026-01-26;10277;Cliente 01;Limpeza;Multiuso 500ml;58;6.50;377;226.20;Vendedor 04;Camaçari;À vista;Pago
+2026-01-08;10278;Cliente 07;Limpeza;Multiuso 500ml;10;6.50;65;39;Vendedor 02;Vitória da Conquista;Cartão;Pendente
+2026-01-15;10279;Cliente 10;Limpeza;Amaciante 2L;27;14.50;391.50;238.81;Vendedor 02;Lauro de Freitas;À vista;Pago
+2026-03-02;10280;Cliente 10;Limpeza;Água sanitária 5L;59;9.80;578.20;318.01;Vendedor 03;Salvador;Boleto;Pendente
+2026-02-01;10281;Cliente 06;Descartáveis;Saco de lixo 100L pct;65;24;1560;936;Vendedor 02;Lauro de Freitas;À vista;Pendente
+2026-01-23;10282;Cliente 08;Limpeza;Detergente neutro 5L;52;18.90;982.80;609.34;Vendedor 04;Camaçari;Cartão;Pago
+2026-03-14;10283;Cliente 07;Descartáveis;Copo descartável pct;22;15;330;188.10;Vendedor 01;Feira de Santana;PIX;Pendente
+2026-03-17;10284;Cliente 02;Descartáveis;Esponja pacote;10;7.80;78;42.12;Vendedor 04;Salvador;Boleto;Pago
+2026-03-07;10285;Cliente 03;Limpeza;Sabão em pó 5kg;10;32;320;204.80;Vendedor 03;Lauro de Freitas;Boleto;Pago
+2026-03-29;10286;Cliente 10;Descartáveis;Papel toalha fardo;18;38;684;444.60;Vendedor 01;Simões Filho;Boleto;Pago
+2026-02-24;10287;Cliente 07;Descartáveis;Guardanapo pct;43;9.50;408.50;224.68;Vendedor 04;Lauro de Freitas;Cartão;Pago
+2026-02-21;10288;Cliente 06;Higiene;Álcool gel 500ml;61;11.50;701.50;406.87;Vendedor 04;Salvador;Boleto;Pago
+2026-03-15;10289;Cliente 01;Limpeza;Água sanitária 5L;71;9.80;695.80;382.69;Vendedor 01;Simões Filho;Cartão;Pago
+2026-02-15;10290;Cliente 01;Limpeza;Cera líquida 750ml;50;16.80;840;495.60;Vendedor 04;Lauro de Freitas;À vista;Pendente
+2026-02-09;10291;Cliente 05;Descartáveis;Guardanapo pct;4;9.50;38;20.90;Vendedor 04;Vitória da Conquista;Boleto;Pendente
+2026-01-19;10292;Cliente 04;Limpeza;Multiuso 500ml;16;6.50;104;62.40;Vendedor 01;Feira de Santana;Cartão;Pago
+2026-02-14;10293;Cliente 10;Higiene;Álcool 70 1L;67;8.90;596.30;333.93;Vendedor 02;Feira de Santana;Boleto;Pago
+2026-02-25;10294;Cliente 04;Limpeza;Desinfetante 2L;3;12.90;38.70;22.45;Vendedor 04;Lauro de Freitas;Cartão;Pago
+2026-02-27;10295;Cliente 03;Descartáveis;Saco de lixo 100L pct;74;24;1776;1065.60;Vendedor 03;Salvador;Boleto;Pendente
+2026-03-31;10296;Cliente 06;Descartáveis;Esponja pacote;7;7.80;54.60;29.48;Vendedor 04;Simões Filho;PIX;Pago
+2026-01-07;10297;Cliente 04;Higiene;Papel higiênico fardo;8;45;360;237.60;Vendedor 04;Lauro de Freitas;PIX;Pago
+2026-02-16;10298;Cliente 03;Descartáveis;Saco de lixo 100L pct;22;24;528;316.80;Vendedor 01;Lauro de Freitas;PIX;Pendente
+2026-01-05;10299;Cliente 06;Higiene;Sabonete líquido 5L;55;28;1540;970.20;Vendedor 01;Feira de Santana;PIX;Pendente
+2026-01-15;10300;Cliente 08;Limpeza;Desinfetante 2L;63;12.90;812.70;471.37;Vendedor 01;Lauro de Freitas;À vista;Pago
+2026-01-31;10301;Cliente 10;Limpeza;Detergente neutro 5L;27;18.90;510.30;316.39;Vendedor 02;Feira de Santana;Cartão;Pendente
+2026-02-06;10302;Cliente 11;Descartáveis;Guardanapo pct;54;9.50;513;282.15;Vendedor 04;Salvador;Boleto;Pendente
+2026-02-04;10303;Cliente 06;Higiene;Álcool 70 1L;7;8.90;62.30;34.89;Vendedor 03;Simões Filho;À vista;Pago
+2026-02-11;10304;Cliente 08;Descartáveis;Guardanapo pct;17;9.50;161.50;88.83;Vendedor 02;Simões Filho;PIX;Pago

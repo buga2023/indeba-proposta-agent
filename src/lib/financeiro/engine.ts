@@ -16,14 +16,39 @@ export function fmt(v: number): string {
   }).format(v);
 }
 
-const PISTAS_VALOR = ["valor", "total", "preco", "receita", "venda", "montante", "custo"];
+// Pontua uma coluna numérica como "coluna de faturamento". Total/receita ganham de
+// unitário e custo: somar PREÇO UNITÁRIO ou CUSTO quase nunca é o faturamento pedido.
+// Sem isso, "Valor Unitário" (que também contém "valor") era escolhido antes de
+// "Valor Total" e o total saía ~40× menor.
+function pontuarColunaValor(nome: string): number {
+  if (/(valor_total|faturamento|receita)/.test(nome)) return 100;
+  if (/total/.test(nome) && !/custo/.test(nome)) return 80;
+  if (/(venda|montante)/.test(nome)) return 60;
+  if (/valor/.test(nome) && !/unit/.test(nome)) return 40;
+  if (/preco/.test(nome) && !/unit/.test(nome)) return 20;
+  return 0;
+}
+
+function melhorColunaValor(t: Tabela): string | null {
+  const cands = [...t.numericas];
+  if (!cands.length) return null;
+  const ranked = cands
+    .map((c) => [c, pontuarColunaValor(c)] as const)
+    .sort((a, b) => b[1] - a[1]);
+  return ranked[0][1] > 0 ? ranked[0][0] : cands[0];
+}
 
 function resolverColunaValor(t: Tabela, coluna?: string | null): string | null {
-  if (coluna && t.colunas.includes(coluna)) return coluna;
-  const candidatos = [...t.numericas];
-  const prefer = candidatos.filter((c) => PISTAS_VALOR.some((p) => c.includes(p)));
-  if (prefer.length) return prefer[0];
-  return candidatos.length ? candidatos[0] : null;
+  if (coluna && t.colunas.includes(coluna)) {
+    // Honra o pedido explícito — EXCETO coluna de unitário quando existe uma de total:
+    // somar valor unitário é quase sempre engano (§2: não confiar cego na escolha do modelo).
+    if (/unit/.test(coluna)) {
+      const melhor = melhorColunaValor(t);
+      if (melhor && pontuarColunaValor(melhor) >= 80) return melhor;
+    }
+    return coluna;
+  }
+  return melhorColunaValor(t);
 }
 
 type ResOk = { ok: true; tipo: string; resumoNumerico: string; [k: string]: unknown };
