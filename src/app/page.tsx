@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta } from "@/lib/contracts";
+import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse } from "@/lib/contracts";
 import { AjudaChat } from "@/components/ajuda-chat";
 
 /* ───────────────────────── helpers ───────────────────────── */
@@ -132,7 +132,7 @@ type PropostaLog = {
 const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
-type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento";
+type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca";
 type TipoProposta = "orcamento" | "implantacao" | "comercial";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -386,7 +386,7 @@ export default function Home() {
               <div style={{ fontSize: "14px", fontWeight: 700, color: "white", lineHeight: 1.1 }}>
                 indeba <span style={{ color: "#EC7A1C" }}>express</span>
               </div>
-              <div style={{ fontSize: "11px", color: "rgba(255,255,255,.45)", marginTop: "2px" }}>Agente de Proposta</div>
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,.45)", marginTop: "2px" }}>Plataforma de IA</div>
             </div>
           </div>
         </div>
@@ -439,6 +439,13 @@ export default function Home() {
             </svg>
             Financeiro
           </Hoverable>
+          <Hoverable base={navItemStyle(["cobranca"])} hover={navHover} onClick={() => setScreen("cobranca")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="8.5" cy="8.5" r="6" />
+              <path d="M8.5 5v3.5l2.2 1.3" />
+            </svg>
+            Cobrança
+          </Hoverable>
           <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => setScreen("contrato")}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 2.5h6l3 3v9H4z" />
@@ -467,9 +474,9 @@ export default function Home() {
         </nav>
 
         <div className="ies-side-foot" style={{ padding: "14px 14px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontWeight: 700, fontSize: "12px", color: "white" }}>N</div>
+          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontWeight: 700, fontSize: "12px", color: "white" }}>M</div>
           <div className="ies-side-text" style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: "white", fontSize: "13px", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Nicolás Ferreira</div>
+            <div style={{ color: "white", fontSize: "13px", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Mateus</div>
             <div style={{ color: "rgba(255,255,255,.4)", fontSize: "11px" }}>Vendedor</div>
           </div>
           <button
@@ -522,6 +529,7 @@ export default function Home() {
         {screen === "prospeccao" && <ProspeccaoScreen onGerarProposta={(d) => { setBriefingText(d.briefing); setScreen("briefing"); startGeneration(d.briefing, d); }} />}
         {screen === "instagram" && <InstagramScreen />}
         {screen === "financeiro" && <FinanceiroScreen />}
+        {screen === "cobranca" && <CobrancaScreen />}
         {screen === "contrato" && <ContratoScreen scope={scope} onVerProposta={() => setScreen(scope ? "review" : "briefing")} />}
         {screen === "atendimento" && <AtendimentoScreen />}
       </main>
@@ -2441,6 +2449,127 @@ ${clausulas}
   );
 }
 
+// Lê um arquivo de planilha como CSV: .xlsx/.xls são convertidos no navegador (SheetJS,
+// import dinâmico, 1ª aba); .csv vai como texto. Compartilhado por Financeiro e Cobrança.
+async function planilhaParaCsv(f: File): Promise<string> {
+  if (/\.xlsx?$/i.test(f.name)) {
+    const XLSX = await import("xlsx");
+    const wb = XLSX.read(await f.arrayBuffer());
+    return XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
+  }
+  return f.text();
+}
+
+function CobrancaScreen() {
+  const [res, setRes] = useState<CobrancaResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [nome, setNome] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function analisar(files: FileList | null) {
+    const f = files?.[0];
+    if (!f) return;
+    setLoading(true);
+    setErro(null);
+    setRes(null);
+    setNome(f.name);
+    try {
+      const csv = await planilhaParaCsv(f);
+      const r = await fetch("/api/cobranca", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planilha: { nome: f.name.replace(/\.[^.]+$/, ""), csv }, hoje: null }),
+      });
+      const raw = await r.text();
+      let d: unknown = null;
+      try {
+        d = raw ? JSON.parse(raw) : null;
+      } catch {
+        /* corpo não-JSON */
+      }
+      if (!r.ok || !d) {
+        const e = (d as { erro?: unknown } | null)?.erro;
+        throw new Error(typeof e === "string" ? e : `Falha (HTTP ${r.status}).`);
+      }
+      setRes(d as CobrancaResponse);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao analisar a inadimplência.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function baixarCsv() {
+    if (!res) return;
+    const head = ["Cliente", "Valor devido", "Titulos", "Venc. mais antigo", "Dias atraso", "Severidade", "Mensagem"];
+    const linhas = [head, ...res.inadimplentes.map((i) => [i.cliente, i.valorDevido, String(i.titulos), i.vencimentoMaisAntigo, String(i.diasAtraso), i.severidade, i.mensagem.replace(/\n/g, " ")])];
+    const csv = linhas.map((l) => l.map((c) => `"${c.replace(/"/g, '""')}"`).join(";")).join("\n");
+    const a = document.createElement("a");
+    a.href = `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
+    a.download = "cobranca.csv";
+    a.click();
+  }
+
+  const corSev = (s: string) => (s === "grave" ? { bg: "#FEF2F2", fg: "#B91C1C" } : s === "media" ? { bg: "#FFFBEB", fg: "#B45309" } : { bg: "#F0FDF4", fg: "#15803D" });
+
+  return (
+    <div style={{ padding: "28px", maxWidth: "920px" }}>
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#B45309 0%,#DC2626 70%,#9333EA 130%)", boxShadow: "0 14px 34px rgba(220,38,38,.24)", animation: "fadeUp .5s ease both" }}>
+        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
+        <div style={{ position: "relative" }}>
+          <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Cobrança</h2>
+          <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "640px" }}>
+            Suba as contas a receber (CSV/XLSX, ex.: export do CRM). O motor acha quem está vencido e em aberto, calcula o atraso, e a IA escreve a régua — os valores vêm do motor, nunca do modelo.
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", boxShadow: "var(--shadow-md)", marginBottom: "16px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+        <Hoverable onClick={() => fileRef.current?.click()} base={{ padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)" }} hover={{ transform: "translateY(-2px)" }}>
+          {loading ? "Analisando…" : "Subir contas a receber"}
+        </Hoverable>
+        <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" style={{ display: "none" }} onChange={(e) => analisar(e.target.files)} />
+        <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "Espera colunas: cliente, valor, vencimento, status."}</div>
+        {res && res.inadimplentes.length > 0 && (
+          <Hoverable onClick={baixarCsv} base={{ marginLeft: "auto", padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Baixar planilha (CSV)</Hoverable>
+        )}
+      </div>
+
+      {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+
+      {res && (
+        <div style={{ animation: "fadeUp .4s ease both" }}>
+          {res.aviso && <div style={{ marginBottom: "14px", padding: "11px 14px", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: "10px", color: "#B45309", fontSize: "13px" }}>{res.aviso}</div>}
+          {res.inadimplentes.length > 0 && (
+            <div style={{ fontSize: "15px", fontWeight: 800, color: "var(--gray-900)", marginBottom: "12px" }}>
+              Total devido: R$ {Number(res.totalDevido).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · {res.inadimplentes.length} cliente(s)
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {res.inadimplentes.map((i, n) => {
+              const c = corSev(i.severidade);
+              return (
+                <div key={n} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "16px", boxShadow: "var(--shadow-sm)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                    <div style={{ fontSize: "15px", fontWeight: 800, color: "var(--gray-900)" }}>{i.cliente}</div>
+                    <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", color: c.fg, background: c.bg, padding: "2px 8px", borderRadius: "999px" }}>{i.severidade}</span>
+                    <span style={{ fontSize: "13px", color: "var(--gray-500)" }}>R$ {Number(i.valorDevido).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · {i.titulos} título(s) · {i.diasAtraso} dias de atraso</span>
+                  </div>
+                  <div style={{ marginTop: "10px", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                    <div style={{ flex: 1, fontSize: "13px", color: "var(--gray-700)", lineHeight: 1.55, whiteSpace: "pre-wrap", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "12px" }}>{i.mensagem}</div>
+                    <Hoverable onClick={() => navigator.clipboard?.writeText(i.mensagem)} base={{ padding: "8px 12px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: 700, color: "var(--gray-600)", flex: "none" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Copiar</Hoverable>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 type MsgFinanceiro = { role: "user" | "assistant"; texto: string; resumo?: string };
 
 function FinanceiroScreen() {
@@ -2460,17 +2589,7 @@ function FinanceiroScreen() {
     try {
       for (const f of Array.from(files)) {
         const nome = f.name.replace(/\.[^.]+$/, "");
-        let csv: string;
-        if (/\.xlsx?$/i.test(f.name)) {
-          // XLSX → CSV no navegador (SheetJS, import dinâmico). O servidor segue recebendo
-          // só CSV — o motor e o contrato não mudam. Pega a 1ª aba da planilha.
-          const XLSX = await import("xlsx");
-          const wb = XLSX.read(await f.arrayBuffer());
-          csv = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
-        } else {
-          csv = await f.text();
-        }
-        novos.push({ nome, csv });
+        novos.push({ nome, csv: await planilhaParaCsv(f) });
       }
     } catch {
       setErro("Não consegui ler a planilha. Aceito CSV e XLSX (.xlsx/.xls).");
@@ -2642,7 +2761,7 @@ function InstagramScreen() {
   const [produto, setProduto] = useState("");
   const [publico, setPublico] = useState("");
   const [tom, setTom] = useState<TomPost>("profissional");
-  const [numPosts, setNumPosts] = useState(1);
+  const numPosts = 1; // travado em 1 post — foco em qualidade máxima
   const [foco, setFoco] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -2742,19 +2861,6 @@ function InstagramScreen() {
                 return (
                   <button key={t.value} onClick={() => setTom(t.value)} style={{ padding: "7px 12px", borderRadius: "999px", border: `1px solid ${ativo ? "var(--blue-500)" : "var(--gray-200)"}`, background: ativo ? "var(--blue-50)" : "white", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontSize: "12.5px", fontWeight: ativo ? 700 : 500, cursor: "pointer", fontFamily: "'Inter',sans-serif", transition: "all .15s ease" }}>
                     {t.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "6px" }}>Nº de posts</label>
-            <div style={{ display: "flex", background: "white", border: "1px solid var(--gray-200)", borderRadius: "999px", padding: "3px", gap: "2px", width: "fit-content", boxShadow: "var(--shadow-sm)" }}>
-              {[1, 2, 3].map((n) => {
-                const ativo = numPosts === n;
-                return (
-                  <button key={n} onClick={() => setNumPosts(n)} style={{ width: "40px", padding: "6px 0", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontSize: "13px", fontWeight: ativo ? 700 : 500, fontFamily: "'Inter',sans-serif" }}>
-                    {n}
                   </button>
                 );
               })}

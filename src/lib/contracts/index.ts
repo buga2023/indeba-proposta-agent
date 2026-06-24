@@ -11,3 +11,4 @@ export * from "./financeiro";
 export * from "./contrato";
 export * from "./rag";
 export * from "./feedback";
+export * from "./cobranca";
