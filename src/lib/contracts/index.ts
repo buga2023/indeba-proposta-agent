@@ -10,3 +10,4 @@ export * from "./referencias";
 export * from "./financeiro";
 export * from "./contrato";
 export * from "./rag";
+export * from "./feedback";
