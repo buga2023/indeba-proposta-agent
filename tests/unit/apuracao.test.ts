@@ -24,9 +24,11 @@ describe("apuração de imposto (especialista, determinística, ciente da ativid
     expect(linha(serv, "ICMS")).toBeUndefined();
   });
 
-  it("Simples: só DAS, 6% = R$ 2.211,95", () => {
+  it("Simples: só DAS, via Anexo oficial (Anexo I, faixa 1, 4%) = R$ 1.474,63", () => {
     const ap = apurar({ regime: "simples", atividade: "comercio", ano: 2026, faturamento: FAT });
-    expect(linha(ap, "DAS")?.valor).toBeCloseTo(2211.95, 2);
+    expect(linha(ap, "DAS")?.valor).toBeCloseTo(1474.63, 2); // 36.865,80 × 4% (faixa 1, PD 0)
+    expect(linha(ap, "DAS")?.aliquota).toBeCloseTo(4, 2);
+    expect(linha(ap, "DAS")?.oficial).toBe(true); // tabela LC 123 (estatutária), não exemplo
     expect(ap.linhas.filter((l) => l.imposto !== "DAS")).toHaveLength(0);
   });
 

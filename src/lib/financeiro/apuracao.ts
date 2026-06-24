@@ -8,6 +8,7 @@
  * pelo tipo de atividade (erro clássico de apuração ingênua).
  */
 import { aliquotaVigente, impostosDoRegime, AVISO_LEGAL } from "./tributario";
+import { calcularDAS, FONTE_SIMPLES, type Anexo } from "./simples";
 
 const brl = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const pct = (v: number) => `${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
@@ -23,6 +24,10 @@ const OPERACAO_POR_ATIVIDADE: Record<Atividade, string[]> = {
 };
 const FEDERAIS_FATURAMENTO = ["PIS", "COFINS", "CBS", "IBS"]; // base = faturamento
 const SOBRE_LUCRO = ["IRPJ", "CSLL"]; // base real = lucro (presumido/real), não faturamento
+
+// Anexo do Simples por atividade (LC 123). Serviços: assume Anexo III; o Fator R
+// (folha÷RBT12) pode reenquadrar no V — sem dado de folha aqui, sinaliza-se na nota.
+const ANEXO_POR_ATIVIDADE: Record<Atividade, Anexo> = { comercio: "I", industria: "II", servico: "III" };
 
 export type LinhaApuracao = {
   imposto: string;
@@ -58,6 +63,54 @@ function impostosAplicaveis(regime: Regime, atividade: Atividade, ano: number): 
   );
 }
 
+// Simples Nacional: tributo unificado (só DAS), pelo motor de anexos OFICIAL (simples.ts),
+// tratando o faturamento informado como RBT12 e receita do período. §2: a tabela é
+// estatutária (LC 123/2006), não número do modelo. RBT12 e Fator R reais → confirmar com o
+// contador. Acima do teto (R$ 4,8M) o Simples não é aplicável — sinaliza, não inventa valor.
+function apurarSimples(atividade: Atividade, ano: number, faturamento: number): Apuracao {
+  const anexo = ANEXO_POR_ATIVIDADE[atividade];
+  const base = {
+    regime: "simples" as const,
+    atividade,
+    ano,
+    faturamento,
+    aviso: AVISO_LEGAL,
+  };
+  try {
+    const r = calcularDAS(faturamento, faturamento, anexo);
+    const caveat =
+      atividade === "servico"
+        ? `Anexo ${anexo} assumido; o Fator R (folha÷RBT12) pode enquadrar no Anexo V. `
+        : "";
+    const linha: LinhaApuracao = {
+      imposto: "DAS",
+      base: faturamento,
+      aliquota: r.aliquotaEfetiva,
+      valor: r.das,
+      vigencia: "desde 2018 (LC 155/2016)",
+      fonte: FONTE_SIMPLES,
+      oficial: true,
+      nota: `${caveat}RBT12 e receita do mês tratados como o faturamento informado — confirme com o contador.`,
+      memoria: r.memoria,
+    };
+    return {
+      ...base,
+      linhas: [linha],
+      totalSobreFaturamento: r.das,
+      cargaEfetiva: r.aliquotaEfetiva,
+      memoria: `Apuração simples/${atividade}, ano ${ano}, faturamento ${brl(faturamento)}. ${r.memoria}`,
+    };
+  } catch (e) {
+    return {
+      ...base,
+      linhas: [],
+      totalSobreFaturamento: 0,
+      cargaEfetiva: 0,
+      memoria: `Simples não aplicável: ${(e as Error).message}`,
+    };
+  }
+}
+
 export function apurar(params: {
   regime: Regime;
   atividade: Atividade;
@@ -65,6 +118,7 @@ export function apurar(params: {
   faturamento: number;
 }): Apuracao {
   const { regime, atividade, ano, faturamento } = params;
+  if (regime === "simples") return apurarSimples(atividade, ano, faturamento);
   const linhas: LinhaApuracao[] = [];
 
   for (const imposto of impostosAplicaveis(regime, atividade, ano)) {
@@ -130,8 +184,12 @@ export function compararRegimes(params: {
   const ranking = regimes
     .map((regime) => {
       const ap = apurar({ regime, atividade: params.atividade, ano: params.ano, faturamento: params.faturamento });
-      return { regime, total: ap.totalSobreFaturamento, cargaEfetiva: ap.cargaEfetiva };
+      return { regime, total: ap.totalSobreFaturamento, cargaEfetiva: ap.cargaEfetiva, aplicavel: ap.linhas.length > 0 };
     })
+    // Regime sem linhas = não aplicável (ex.: Simples acima do teto) — fora do ranking,
+    // senão entraria como "R$ 0" e apareceria falsamente como o mais barato.
+    .filter((r) => r.aplicavel)
+    .map(({ aplicavel: _aplicavel, ...r }) => r)
     .sort((a, b) => a.total - b.total);
   return { ranking, aviso: AVISO_LEGAL };
 }

@@ -21,15 +21,6 @@
       "nota": "Fase de testes (alíquota simbólica 0,1%). Simples passa a destacar IBS/CBS só a partir de 2027."
     },
     {
-      "regime": "simples",
-      "imposto": "DAS",
-      "aliquota": 6.0,
-      "vigenciaInicio": "2025-01-01",
-      "vigenciaFim": null,
-      "fonte": { "nome": "exemplo (tax-rules) — validar no Portal do Simples Nacional (anexo/faixa/fator R)", "url": null, "oficial": false },
-      "nota": "Exemplo de alíquota efetiva única. A real depende do anexo, faixa de faturamento e fator R."
-    },
-    {
       "regime": "presumido",
       "imposto": "PIS",
       "aliquota": 0.65,
