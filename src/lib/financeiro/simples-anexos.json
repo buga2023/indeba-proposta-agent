@@ -1,0 +1,63 @@
+{
+  "fonte": "LC 123/2006, Anexos I–V (redação da LC 155/2016, vigência desde 2018) — confirmar o anexo da atividade com o contador",
+  "oficial": true,
+  "limiteRBT12": 4800000,
+  "fatorRMinimoAnexoIII": 28,
+  "anexos": {
+    "I": {
+      "atividade": "Comércio",
+      "faixas": [
+        { "ate": 180000, "nominal": 4.0, "pd": 0 },
+        { "ate": 360000, "nominal": 7.3, "pd": 5940 },
+        { "ate": 720000, "nominal": 9.5, "pd": 13860 },
+        { "ate": 1800000, "nominal": 10.7, "pd": 22500 },
+        { "ate": 3600000, "nominal": 14.3, "pd": 87300 },
+        { "ate": 4800000, "nominal": 19.0, "pd": 378000 }
+      ]
+    },
+    "II": {
+      "atividade": "Indústria",
+      "faixas": [
+        { "ate": 180000, "nominal": 4.5, "pd": 0 },
+        { "ate": 360000, "nominal": 7.8, "pd": 5940 },
+        { "ate": 720000, "nominal": 10.0, "pd": 13860 },
+        { "ate": 1800000, "nominal": 11.2, "pd": 22500 },
+        { "ate": 3600000, "nominal": 14.7, "pd": 85500 },
+        { "ate": 4800000, "nominal": 30.0, "pd": 720000 }
+      ]
+    },
+    "III": {
+      "atividade": "Serviços (Fator R ≥ 28%)",
+      "faixas": [
+        { "ate": 180000, "nominal": 6.0, "pd": 0 },
+        { "ate": 360000, "nominal": 11.2, "pd": 9360 },
+        { "ate": 720000, "nominal": 13.5, "pd": 17640 },
+        { "ate": 1800000, "nominal": 16.0, "pd": 35640 },
+        { "ate": 3600000, "nominal": 21.0, "pd": 125640 },
+        { "ate": 4800000, "nominal": 33.0, "pd": 648000 }
+      ]
+    },
+    "IV": {
+      "atividade": "Serviços (construção, advocacia, vigilância…)",
+      "faixas": [
+        { "ate": 180000, "nominal": 4.5, "pd": 0 },
+        { "ate": 360000, "nominal": 9.0, "pd": 8100 },
+        { "ate": 720000, "nominal": 10.2, "pd": 12420 },
+        { "ate": 1800000, "nominal": 14.0, "pd": 39780 },
+        { "ate": 3600000, "nominal": 22.0, "pd": 183780 },
+        { "ate": 4800000, "nominal": 33.0, "pd": 828000 }
+      ]
+    },
+    "V": {
+      "atividade": "Serviços (Fator R < 28%)",
+      "faixas": [
+        { "ate": 180000, "nominal": 15.5, "pd": 0 },
+        { "ate": 360000, "nominal": 18.0, "pd": 4500 },
+        { "ate": 720000, "nominal": 19.5, "pd": 9900 },
+        { "ate": 1800000, "nominal": 20.5, "pd": 17100 },
+        { "ate": 3600000, "nominal": 23.0, "pd": 62100 },
+        { "ate": 4800000, "nominal": 30.5, "pd": 540000 }
+      ]
+    }
+  }
+}
