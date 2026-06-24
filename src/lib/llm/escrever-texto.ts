@@ -26,7 +26,8 @@ export async function escreverApresentacao(
 
   if (await ollamaDisponivel()) {
     try {
-      const conteudo = await gerarTexto(prompt(cli, seg, produtos, necessidade), MODEL_TEXTO);
+      // 90s: o 14b paga cold-load na 1ª chamada (via túnel chega perto de estourar 60s).
+      const conteudo = await gerarTexto(prompt(cli, seg, produtos, necessidade), MODEL_TEXTO, 90_000);
       // cap de saída: nunca deixa o modelo despejar conteúdo longo no PDF
       const limpo = conteudo.replace(/\s+/g, " ").trim().slice(0, 900);
       // Guard de idioma: o 7B às vezes surta e escreve em outro idioma (visto chinês

@@ -113,7 +113,7 @@ export async function gerarContrato(proposta: PropostaScope): Promise<ContratoSc
     try {
       // Texto que vira contrato → modelo de melhor redação (think:false: sem raciocínio
       // visível, mantém rápido e não quebra o JSON). Os NÚMEROS já vêm fixos do motor (§2).
-      const bruto = await gerarJson(promptClausulas(scope), CLAUSULAS_SCHEMA, 60_000, 0.2, MODEL_TEXTO, false);
+      const bruto = await gerarJson(promptClausulas(scope), CLAUSULAS_SCHEMA, 90_000, 0.2, MODEL_TEXTO, false);
       const parsed = JSON.parse(bruto.replace(/```json|```/g, "").trim()) as {
         clausulas?: { titulo?: string; texto?: string }[];
       };

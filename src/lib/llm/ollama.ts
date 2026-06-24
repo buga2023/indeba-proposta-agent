@@ -108,7 +108,10 @@ export async function descreverImagem(
   return acumularStream(r.body);
 }
 
-export async function gerarTexto(prompt: string, model = MODEL): Promise<string> {
+// timeoutMs: o caminho de texto-que-vira-documento (apresentação, cláusulas) usa o 14b,
+// cujo cold-load na VRAM via túnel pode passar de 60s. Quem gera documento manda 90s;
+// os caminhos interativos (chat/RAG) ficam no default rápido.
+export async function gerarTexto(prompt: string, model = MODEL, timeoutMs = 60_000): Promise<string> {
   const r = await fetch(`${BASE}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -121,7 +124,7 @@ export async function gerarTexto(prompt: string, model = MODEL): Promise<string>
       options: { temperature: 0.4, num_ctx: 8192, num_predict: 400 },
       ...(model.startsWith("qwen3") ? { think: false } : {}), // qwen3: sem <think> = bem mais rápido
     }),
-    signal: AbortSignal.timeout(60_000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!r.ok) throw new Error(`Ollama ${r.status}`);
   const data = (await r.json()) as { response: string };
