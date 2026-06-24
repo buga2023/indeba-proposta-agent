@@ -8,7 +8,7 @@
  */
 import type { Clausula, ContratoScope, ParteContrato } from "../contracts";
 import type { PropostaScope } from "../contracts";
-import { gerarJson, ollamaDisponivel } from "../llm/ollama";
+import { gerarJson, ollamaDisponivel, MODEL_TEXTO } from "../llm/ollama";
 
 // Fornecedor (Indeba). Nome da marca é dado conhecido do projeto; CNPJ/endereço não estão
 // no escopo, então saem como "[preencher]" — sinaliza a lacuna, não inventa dado legal (§2).
@@ -111,7 +111,9 @@ export async function gerarContrato(proposta: PropostaScope): Promise<ContratoSc
   // A IA só redige o texto das cláusulas. Falha/indisponibilidade → modelo fixo.
   if (await ollamaDisponivel()) {
     try {
-      const bruto = await gerarJson(promptClausulas(scope), CLAUSULAS_SCHEMA, 60_000, 0.2);
+      // Texto que vira contrato → modelo de melhor redação (think:false: sem raciocínio
+      // visível, mantém rápido e não quebra o JSON). Os NÚMEROS já vêm fixos do motor (§2).
+      const bruto = await gerarJson(promptClausulas(scope), CLAUSULAS_SCHEMA, 60_000, 0.2, MODEL_TEXTO, false);
       const parsed = JSON.parse(bruto.replace(/```json|```/g, "").trim()) as {
         clausulas?: { titulo?: string; texto?: string }[];
       };

@@ -1,4 +1,4 @@
-import { gerarTexto, ollamaDisponivel } from "./ollama";
+import { gerarTexto, ollamaDisponivel, MODEL_TEXTO } from "./ollama";
 
 // Entradas vindas do usuário (cliente/segmento) são DADO não-confiável. Normaliza
 // para 1 linha e tamanho limitado: reduz espaço para prompt injection e remove o
@@ -26,7 +26,7 @@ export async function escreverApresentacao(
 
   if (await ollamaDisponivel()) {
     try {
-      const conteudo = await gerarTexto(prompt(cli, seg, produtos, necessidade));
+      const conteudo = await gerarTexto(prompt(cli, seg, produtos, necessidade), MODEL_TEXTO);
       // cap de saída: nunca deixa o modelo despejar conteúdo longo no PDF
       const limpo = conteudo.replace(/\s+/g, " ").trim().slice(0, 900);
       // Guard de idioma: o 7B às vezes surta e escreve em outro idioma (visto chinês

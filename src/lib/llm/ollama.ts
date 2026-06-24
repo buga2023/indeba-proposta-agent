@@ -2,6 +2,11 @@
 const BASE = process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
 const MODEL = process.env.OLLAMA_MODEL ?? "qwen2.5:7b-instruct";
 
+// Modelo para o TEXTO que o cliente lê (apresentação da proposta, cláusulas do contrato):
+// qwen3:14b redige nitidamente melhor que o 7B. Classificação/extração continua no MODEL
+// (rápido; o backbone determinístico já cobre os erros dele). Roteamento híbrido.
+export const MODEL_TEXTO = process.env.OLLAMA_MODEL_TEXTO ?? "qwen3:14b";
+
 export async function ollamaDisponivel(): Promise<boolean> {
   // Produção sem Ollama configurado → roda 100% determinístico, sem tentar
   // (evita o timeout a cada requisição na Vercel).
@@ -27,6 +32,8 @@ export async function gerarJson(
   temperature = 0,
   model = MODEL,
   think?: boolean, // modelos de raciocínio (qwen3): false desliga o <think> e corta MUITO o tempo
+  numCtx = 8192, // janela de contexto: sem isso o Ollama cai no default (~2k) e TRUNCA
+  // prompts longos (RAG, análise de contrato, catálogo) em silêncio — pior resposta.
 ): Promise<string> {
   const r = await fetch(`${BASE}/api/generate`, {
     method: "POST",
@@ -36,7 +43,7 @@ export async function gerarJson(
       prompt,
       stream: false,
       format: schema,
-      options: { temperature },
+      options: { temperature, num_ctx: numCtx },
       ...(think === undefined ? {} : { think }), // só envia p/ modelos que suportam thinking
       keep_alive: "30m", // mantém o modelo na VRAM — evita cold start (que estoura 60s)
     }),
@@ -101,15 +108,18 @@ export async function descreverImagem(
   return acumularStream(r.body);
 }
 
-export async function gerarTexto(prompt: string): Promise<string> {
+export async function gerarTexto(prompt: string, model = MODEL): Promise<string> {
   const r = await fetch(`${BASE}/api/generate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: MODEL,
+      model,
       prompt,
       stream: false,
-      options: { temperature: 0.4 },
+      // num_ctx evita truncar o contexto; num_predict corta divagação (a saída já é
+      // limitada a ~900 chars no chamador) e deixa a geração um pouco mais rápida.
+      options: { temperature: 0.4, num_ctx: 8192, num_predict: 400 },
+      ...(model.startsWith("qwen3") ? { think: false } : {}), // qwen3: sem <think> = bem mais rápido
     }),
     signal: AbortSignal.timeout(60_000),
   });
