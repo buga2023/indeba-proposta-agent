@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse } from "@/lib/contracts";
+import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse } from "@/lib/contracts";
 import { AjudaChat } from "@/components/ajuda-chat";
 
 /* ───────────────────────── helpers ───────────────────────── */
@@ -132,7 +132,7 @@ type PropostaLog = {
 const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
-type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca";
+type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras";
 type TipoProposta = "orcamento" | "implantacao" | "comercial";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -446,6 +446,14 @@ export default function Home() {
             </svg>
             Cobrança
           </Hoverable>
+          <Hoverable base={navItemStyle(["compras"])} hover={navHover} onClick={() => setScreen("compras")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2.5 3h2l1.5 8h6l1.5-5.5h-9" />
+              <circle cx="7" cy="14" r="1" />
+              <circle cx="12" cy="14" r="1" />
+            </svg>
+            Compras
+          </Hoverable>
           <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => setScreen("contrato")}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 2.5h6l3 3v9H4z" />
@@ -530,6 +538,7 @@ export default function Home() {
         {screen === "instagram" && <InstagramScreen />}
         {screen === "financeiro" && <FinanceiroScreen />}
         {screen === "cobranca" && <CobrancaScreen />}
+        {screen === "compras" && <ComprasScreen />}
         {screen === "contrato" && <ContratoScreen scope={scope} onVerProposta={() => setScreen(scope ? "review" : "briefing")} />}
         {screen === "atendimento" && <AtendimentoScreen />}
       </main>
@@ -2458,6 +2467,123 @@ async function planilhaParaCsv(f: File): Promise<string> {
     return XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
   }
   return f.text();
+}
+
+function ComprasScreen() {
+  const [res, setRes] = useState<ComprasResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [nome, setNome] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function comparar(files: FileList | null) {
+    const f = files?.[0];
+    if (!f) return;
+    setLoading(true);
+    setErro(null);
+    setRes(null);
+    setNome(f.name);
+    try {
+      const csv = await planilhaParaCsv(f);
+      const r = await fetch("/api/compras", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planilha: { nome: f.name.replace(/\.[^.]+$/, ""), csv }, taxaMensal: null }),
+      });
+      const raw = await r.text();
+      let d: unknown = null;
+      try {
+        d = raw ? JSON.parse(raw) : null;
+      } catch {
+        /* corpo não-JSON */
+      }
+      if (!r.ok || !d) {
+        const e = (d as { erro?: unknown } | null)?.erro;
+        throw new Error(typeof e === "string" ? e : `Falha (HTTP ${r.status}).`);
+      }
+      setRes(d as ComprasResponse);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao comparar as cotações.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function baixarCsv() {
+    if (!res) return;
+    const head = ["Fornecedor", "Item", "Preço un.", "Qtd", "Frete", "Prazo (dias)", "Custo total", "Custo efetivo"];
+    const linhas = [head, ...res.cotacoes.map((c) => [c.fornecedor, c.item ?? "", c.precoUnitario, String(c.quantidade), c.frete, String(c.prazoDias), c.custoTotal, c.custoEfetivo])];
+    const csv = linhas.map((l) => l.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(";")).join("\n");
+    const a = document.createElement("a");
+    a.href = `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
+    a.download = "cotacoes.csv";
+    a.click();
+  }
+
+  const brl = (s: string) => Number(s).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+
+  return (
+    <div style={{ padding: "28px", maxWidth: "960px" }}>
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#0F766E 0%,#0D9488 60%,#155E75 130%)", boxShadow: "0 14px 34px rgba(13,148,136,.24)", animation: "fadeUp .5s ease both" }}>
+        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
+        <div style={{ position: "relative" }}>
+          <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Compras / Cotação</h2>
+          <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "660px" }}>
+            Suba as cotações dos fornecedores (CSV/XLSX). O motor compara o custo efetivo (preço×qtd + frete, ajustado pelo prazo de pagamento) e a IA recomenda a melhor compra.
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", boxShadow: "var(--shadow-md)", marginBottom: "16px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+        <Hoverable onClick={() => fileRef.current?.click()} base={{ padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)" }} hover={{ transform: "translateY(-2px)" }}>
+          {loading ? "Comparando…" : "Subir cotações"}
+        </Hoverable>
+        <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" style={{ display: "none" }} onChange={(e) => comparar(e.target.files)} />
+        <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "Espera: fornecedor, preço, quantidade, frete, prazo."}</div>
+        {res && res.cotacoes.length > 0 && (
+          <Hoverable onClick={baixarCsv} base={{ marginLeft: "auto", padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Baixar planilha (CSV)</Hoverable>
+        )}
+      </div>
+
+      {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+
+      {res && (
+        <div style={{ animation: "fadeUp .4s ease both" }}>
+          {res.aviso && <div style={{ marginBottom: "14px", padding: "11px 14px", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: "10px", color: "#B45309", fontSize: "13px" }}>{res.aviso}</div>}
+          {res.recomendacao && (
+            <div style={{ marginBottom: "16px", padding: "14px 16px", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: "12px", color: "#065F46", fontSize: "13.5px", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>
+              💡 {res.recomendacao}
+            </div>
+          )}
+          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+              <thead>
+                <tr style={{ background: "var(--gray-50)", color: "var(--gray-500)", textAlign: "left" }}>
+                  <th style={{ padding: "10px" }}>#</th>
+                  <th style={{ padding: "10px" }}>Fornecedor</th>
+                  <th style={{ padding: "10px", textAlign: "right" }}>Custo total</th>
+                  <th style={{ padding: "10px", textAlign: "right" }}>Custo efetivo</th>
+                  <th style={{ padding: "10px", textAlign: "right" }}>Prazo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {res.cotacoes.map((c, i) => (
+                  <tr key={i} style={{ borderTop: "1px solid var(--gray-100)", background: i === 0 ? "#F0FDF4" : "white" }}>
+                    <td style={{ padding: "10px", fontWeight: 800, color: i === 0 ? "#15803D" : "var(--gray-400)" }}>{i === 0 ? "★" : i + 1}</td>
+                    <td style={{ padding: "10px", fontWeight: i === 0 ? 800 : 600, color: "var(--gray-800)" }}>{c.fornecedor}{c.item ? <span style={{ color: "var(--gray-400)", fontWeight: 400 }}> · {c.item}</span> : null}</td>
+                    <td style={{ padding: "10px", textAlign: "right", color: "var(--gray-600)" }}>R$ {brl(c.custoTotal)}</td>
+                    <td style={{ padding: "10px", textAlign: "right", fontWeight: 700, color: i === 0 ? "#15803D" : "var(--gray-800)" }}>R$ {brl(c.custoEfetivo)}</td>
+                    <td style={{ padding: "10px", textAlign: "right", color: "var(--gray-500)" }}>{c.prazoDias}d</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {Number(res.economia) > 0 && <div style={{ marginTop: "12px", fontSize: "13px", color: "var(--gray-500)" }}>Economia da melhor opção vs a 2ª: <b style={{ color: "#15803D" }}>R$ {brl(res.economia)}</b></div>}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function CobrancaScreen() {

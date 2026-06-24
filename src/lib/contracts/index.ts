@@ -12,3 +12,4 @@ export * from "./contrato";
 export * from "./rag";
 export * from "./feedback";
 export * from "./cobranca";
+export * from "./compras";
