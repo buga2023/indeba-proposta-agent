@@ -31,6 +31,12 @@ export type BuscaEmpresas = {
   limite?: number;
 };
 
+// Teto rígido por consulta: a base tem contato (e-mail/telefone) de muitas empresas;
+// sem isso, um `limite` alto viraria coleta em massa (risco LGPD). Backstop independente
+// do caller — não confia no valor que chega.
+const LIMITE_MAX = 50;
+const LIMITE_PADRAO = 12;
+
 // Busca determinística na base da Receita: empresas ATIVAS dos CNAEs do nicho, na
 // localização pedida. Tudo (nome, atividade, contato, endereço) vem do banco — §2.
 export async function buscarEmpresas(opts: BuscaEmpresas): Promise<EmpresaProspecto[]> {
@@ -44,7 +50,7 @@ export async function buscarEmpresas(opts: BuscaEmpresas): Promise<EmpresaProspe
         ? { municipioNome: { equals: opts.municipio, mode: "insensitive" } }
         : {}),
     },
-    take: opts.limite ?? 12,
+    take: Math.min(Math.max(1, opts.limite ?? LIMITE_PADRAO), LIMITE_MAX),
     orderBy: { razaoSocial: "asc" }, // determinístico
   });
 
