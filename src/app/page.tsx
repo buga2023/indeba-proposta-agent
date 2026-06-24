@@ -2209,6 +2209,8 @@ function ContratoScreen({ scope, onVerProposta }: { scope: PropostaScope | null;
   const [contrato, setContrato] = useState<ContratoScope | null>(null);
   const [texto, setTexto] = useState("");
   const [analise, setAnalise] = useState<ContratoAnalise | null>(null);
+  const [extraindo, setExtraindo] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   async function chamar(body: object) {
     setLoading(true);
@@ -2253,6 +2255,35 @@ function ContratoScreen({ scope, onVerProposta }: { scope: PropostaScope | null;
       setAnalise((await chamar({ acao: "analisar", texto })) as ContratoAnalise);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao analisar.");
+    }
+  }
+
+  // Anexa o contrato do computador: extrai o texto (PDF/DOCX/TXT) no servidor e preenche
+  // o campo. A extração é determinística (sem IA); a análise continua sendo o passo seguinte.
+  async function anexar(file: File | null | undefined) {
+    if (!file) return;
+    setExtraindo(true);
+    setErro(null);
+    try {
+      const fd = new FormData();
+      fd.append("arquivo", file);
+      const r = await fetch("/api/contrato/extrair", { method: "POST", body: fd });
+      const raw = await r.text();
+      let d: unknown = null;
+      try {
+        d = raw ? JSON.parse(raw) : null;
+      } catch {
+        /* corpo não-JSON */
+      }
+      if (!r.ok || !d) {
+        const e = (d as { erro?: unknown } | null)?.erro;
+        throw new Error(typeof e === "string" ? e : `Falha ao ler o arquivo (HTTP ${r.status}).`);
+      }
+      setTexto((d as { texto: string }).texto);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao ler o arquivo.");
+    } finally {
+      setExtraindo(false);
     }
   }
 
@@ -2368,8 +2399,15 @@ ${clausulas}
       {/* ── Modo ANALISAR ── */}
       {modo === "analisar" && (
         <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "22px", boxShadow: "var(--shadow-md)" }}>
-          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "6px" }}>Cole o texto do contrato</label>
-          <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={8} placeholder="Cole aqui o contrato recebido…" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "11px", padding: "12px 14px", fontSize: "13.5px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", outline: "none", resize: "vertical", minHeight: "150px", lineHeight: 1.5 }} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
+            <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-500)" }}>Cole o texto do contrato — ou anexe o arquivo</label>
+            <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }} onChange={(e) => { anexar(e.target.files?.[0]); e.target.value = ""; }} />
+            <Hoverable onClick={extraindo ? undefined : () => fileRef.current?.click()} base={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "8px 14px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: extraindo ? "wait" : "pointer", fontSize: "12.5px", fontWeight: 600, color: "var(--gray-700)" }} hover={extraindo ? {} : { border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
+              {extraindo ? "Lendo arquivo…" : "Anexar PDF/DOCX/TXT"}
+            </Hoverable>
+          </div>
+          <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={8} placeholder="Cole aqui o contrato recebido… ou anexe um arquivo acima" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "11px", padding: "12px 14px", fontSize: "13.5px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", outline: "none", resize: "vertical", minHeight: "150px", lineHeight: 1.5 }} />
           <div style={{ marginTop: "12px" }}>
             <Hoverable onClick={loading || !texto.trim() ? undefined : analisar} base={{ display: "inline-flex", padding: "11px 22px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: loading || !texto.trim() ? "not-allowed" : "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: loading || !texto.trim() ? 0.5 : 1 }} hover={loading || !texto.trim() ? {} : { transform: "translateY(-2px)" }}>
               {loading ? "Analisando…" : "Analisar riscos"}
@@ -2419,9 +2457,24 @@ function FinanceiroScreen() {
   async function adicionarArquivos(files: FileList | null) {
     if (!files) return;
     const novos: { nome: string; csv: string }[] = [];
-    for (const f of Array.from(files)) {
-      const csv = await f.text();
-      novos.push({ nome: f.name.replace(/\.[^.]+$/, ""), csv });
+    try {
+      for (const f of Array.from(files)) {
+        const nome = f.name.replace(/\.[^.]+$/, "");
+        let csv: string;
+        if (/\.xlsx?$/i.test(f.name)) {
+          // XLSX → CSV no navegador (SheetJS, import dinâmico). O servidor segue recebendo
+          // só CSV — o motor e o contrato não mudam. Pega a 1ª aba da planilha.
+          const XLSX = await import("xlsx");
+          const wb = XLSX.read(await f.arrayBuffer());
+          csv = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
+        } else {
+          csv = await f.text();
+        }
+        novos.push({ nome, csv });
+      }
+    } catch {
+      setErro("Não consegui ler a planilha. Aceito CSV e XLSX (.xlsx/.xls).");
+      return;
     }
     setPlanilhas((p) => {
       const merged = [...p.filter((x) => !novos.some((n) => n.nome === x.nome)), ...novos];
@@ -2506,15 +2559,15 @@ function FinanceiroScreen() {
       {/* ── Planilhas ── */}
       <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "18px", boxShadow: "var(--shadow-md)", marginBottom: "16px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-500)" }}>Planilhas carregadas (CSV)</div>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-500)" }}>Planilhas carregadas (CSV ou XLSX)</div>
           <Hoverable
             onClick={() => fileRef.current?.click()}
             base={{ display: "flex", alignItems: "center", gap: "7px", padding: "8px 14px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "var(--gray-700)" }}
             hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}
           >
-            + Adicionar CSV
+            + Adicionar CSV/XLSX
           </Hoverable>
-          <input ref={fileRef} type="file" accept=".csv,text/csv" multiple style={{ display: "none" }} onChange={(e) => adicionarArquivos(e.target.files)} />
+          <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" multiple style={{ display: "none" }} onChange={(e) => adicionarArquivos(e.target.files)} />
         </div>
         {planilhas.length === 0 ? (
           <div style={{ fontSize: "13px", color: "var(--gray-400)", marginTop: "10px" }}>Nenhuma planilha ainda. Adicione ao menos uma para consultar; duas para conciliar.</div>

@@ -35,7 +35,9 @@ const nextConfig: NextConfig = {
   // Não revela o framework no header (OWASP A05).
   poweredByHeader: false,
   // Render do PDF roda no server — esses pacotes não podem ser empacotados pelo bundler.
-  serverExternalPackages: ["playwright", "playwright-core", "@sparticuz/chromium"],
+  // pdfjs-dist/mammoth (extração de texto de contrato anexado) idem: o pdfjs procura o
+  // pdf.worker.mjs por caminho de runtime — bundlado, ele quebra com "fake worker failed".
+  serverExternalPackages: ["playwright", "playwright-core", "@sparticuz/chromium", "pdfjs-dist", "mammoth"],
   // Garante que o catálogo e as imagens vão no bundle das funções serverless
   // (são lidos via readFileSync em runtime; o tracing estático não os detecta).
   outputFileTracingIncludes: {
