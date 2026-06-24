@@ -49,6 +49,7 @@ export function parseNfe(xml: string): { nota: NotaFiscal; achados: AchadoFiscal
     return {
       codigo: txt(p.cProd),
       descricao: txt(p.xProd),
+      ncm: txt(p.NCM),
       quantidade: txt(p.qCom),
       valorUnitario: dec(p.vUnCom),
       valorTotal: dec(p.vProd),

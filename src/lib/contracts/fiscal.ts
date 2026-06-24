@@ -11,6 +11,7 @@ import { z } from "zod";
 export const ItemNota = z.object({
   codigo: z.string(),
   descricao: z.string(),
+  ncm: z.string(), // classificação fiscal do produto (vazio se ausente no XML)
   quantidade: z.string(),
   valorUnitario: z.string(),
   valorTotal: z.string(),
