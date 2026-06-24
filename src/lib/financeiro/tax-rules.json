@@ -1,0 +1,17 @@
+{
+  "_aviso": "Alíquotas de EXEMPLO. Edite com seus valores reais e valide com o contador. O agente nunca inventa alíquota: usa apenas o que está aqui.",
+  "regimes": {
+    "simples": {
+      "descricao": "Simples Nacional (exemplo, alíquota efetiva única)",
+      "impostos": { "DAS": 6.0 }
+    },
+    "presumido": {
+      "descricao": "Lucro Presumido (exemplos genéricos)",
+      "impostos": { "PIS": 0.65, "COFINS": 3.0, "ISS": 5.0, "ICMS": 18.0, "IRPJ": 15.0, "CSLL": 9.0 }
+    },
+    "real": {
+      "descricao": "Lucro Real (exemplos genéricos)",
+      "impostos": { "PIS": 1.65, "COFINS": 7.6, "ICMS": 18.0, "IRPJ": 15.0, "CSLL": 9.0 }
+    }
+  }
+}
