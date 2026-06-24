@@ -127,6 +127,42 @@
       "vigenciaFim": null,
       "fonte": { "nome": "exemplo (tax-rules)", "url": null, "oficial": false },
       "nota": null
+    },
+    {
+      "regime": "folha",
+      "imposto": "CPP",
+      "aliquota": 20.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "Lei 8.212/1991 (INSS patronal)", "url": null, "oficial": true },
+      "nota": "Sobre a folha. Setores desonerados recolhem CPRB sobre a receita."
+    },
+    {
+      "regime": "folha",
+      "imposto": "RAT",
+      "aliquota": 2.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo — varia 1/2/3% por grau de risco × FAP", "url": null, "oficial": false },
+      "nota": "Confirme o grau de risco (CNAE) e o FAP da empresa."
+    },
+    {
+      "regime": "folha",
+      "imposto": "TERCEIROS",
+      "aliquota": 5.8,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "exemplo — Sistema S, varia por enquadramento", "url": null, "oficial": false },
+      "nota": "SESI/SENAI/SESC/SENAC/SEBRAE/INCRA/salário-educação."
+    },
+    {
+      "regime": "folha",
+      "imposto": "FGTS",
+      "aliquota": 8.0,
+      "vigenciaInicio": "2025-01-01",
+      "vigenciaFim": null,
+      "fonte": { "nome": "Lei 8.036/1990", "url": null, "oficial": true },
+      "nota": "Depósito na conta do trabalhador (não é imposto)."
     }
   ]
 }

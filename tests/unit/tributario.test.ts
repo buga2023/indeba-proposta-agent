@@ -35,6 +35,13 @@ describe("base tributária datada (reforma IBS/CBS por ano)", () => {
     expect(pres).toEqual(expect.arrayContaining(["PIS", "COFINS", "ICMS", "ISS", "IRPJ", "CSLL"]));
   });
 
+  it("folha: CPP (INSS patronal) 20% é fonte oficial; RAT é exemplo a validar", () => {
+    expect(aliquotaVigente("folha", "CPP", 2026)?.aliquota).toBe(20);
+    expect(aliquotaVigente("folha", "CPP", 2026)?.fonte.oficial).toBe(true);
+    expect(aliquotaVigente("folha", "RAT", 2026)?.fonte.oficial).toBe(false);
+    expect(aliquotaVigente("folha", "FGTS", 2026)?.aliquota).toBe(8);
+  });
+
   it("o aviso legal está sempre disponível para carimbar a resposta", () => {
     expect(AVISO_LEGAL).toMatch(/contador/i);
     expect(regrasVigentes(2026).length).toBeGreaterThan(0);
