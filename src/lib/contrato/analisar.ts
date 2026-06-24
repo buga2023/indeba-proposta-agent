@@ -8,6 +8,7 @@
  */
 import type { Achado, ContratoAnalise, TipoAchado } from "../contracts";
 import { gerarTexto, ollamaDisponivel } from "../llm/ollama";
+import { sanitizarEntrada } from "../llm/sanitizar";
 
 // Recorta um trecho legível em volta do match (contexto da cláusula).
 function trechoEmVolta(texto: string, idx: number, len: number): string {
@@ -109,7 +110,10 @@ export async function analisarContrato(texto: string): Promise<ContratoAnalise> 
   }
 
   const lista = achados
-    .map((a) => `- [${a.severidade}] ${a.tipo}${a.valor ? ` = ${a.valor}` : ""}: "${a.trecho}"`)
+    .map(
+      (a) =>
+        `- [${a.severidade}] ${a.tipo}${a.valor ? ` = ${sanitizarEntrada(a.valor, 120)}` : ""}: "${sanitizarEntrada(a.trecho, 200)}"`,
+    )
     .join("\n");
   const prompt = `Você é um assistente jurídico. Abaixo estão ACHADOS extraídos automaticamente de um contrato (a verdade — não invente outros nem mude valores). Explique em português simples, para um empresário leigo, o RISCO de cada ponto e o que observar. Seja direto e termine lembrando que isto não substitui um advogado.
 
