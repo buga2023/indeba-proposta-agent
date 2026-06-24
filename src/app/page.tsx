@@ -433,7 +433,7 @@ export default function Home() {
       width: "100%",
       background: activeNav ? "rgba(255,255,255,0.13)" : "transparent",
       color: activeNav ? "#FFFFFF" : "rgba(255,255,255,0.6)",
-      fontFamily: "Inter,sans-serif",
+      fontFamily: "var(--font-sans), sans-serif",
       fontSize: "14px",
       fontWeight: activeNav ? 600 : 400,
       transition: "background 0.18s ease, color 0.18s ease",
@@ -449,9 +449,9 @@ export default function Home() {
   }
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--gray-50)", fontFamily: "'Inter',sans-serif", color: "var(--gray-900)" }}>
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--gray-50)", fontFamily: "var(--font-sans), sans-serif", color: "var(--gray-900)" }}>
       {/* ============ SIDEBAR ============ */}
-      <aside className="ies-sidebar" style={{ width: "240px", flex: "none", height: "100vh", background: "var(--blue-800)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <aside className="ies-sidebar" style={{ width: "240px", flex: "none", height: "100vh", background: "var(--gradient-hero)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", boxShadow: "0 2px 8px rgba(30,107,184,.5)" }}>
@@ -459,7 +459,7 @@ export default function Home() {
             </div>
             <div className="ies-side-text">
               <div style={{ fontSize: "14px", fontWeight: 700, color: "white", lineHeight: 1.1 }}>
-                indeba <span style={{ color: "#EC7A1C" }}>express</span>
+                indeba <span style={{ color: "var(--accent)" }}>express</span>
               </div>
               <div style={{ fontSize: "11px", color: "rgba(255,255,255,.45)", marginTop: "2px" }}>Plataforma de IA</div>
             </div>
@@ -726,7 +726,7 @@ function BriefingScreen({
               <span style={{ color: "white", fontWeight: 700, fontSize: "16px", letterSpacing: "-.5px" }}>ies</span>
             </div>
           </div>
-          <h1 style={{ fontSize: "30px", fontWeight: 700, color: "var(--gray-900)", letterSpacing: "-.6px", marginBottom: "12px", fontFamily: "'Fraunces',serif" }}>Vamos montar uma proposta?</h1>
+          <h1 style={{ fontSize: "30px", fontWeight: 800, color: "var(--gray-900)", letterSpacing: "-.6px", marginBottom: "12px", fontFamily: "var(--font-sans)" }}>Vamos montar uma proposta?</h1>
           <p style={{ fontSize: "15px", color: "var(--gray-500)", lineHeight: 1.65 }}>Descreva o cliente e a necessidade em linguagem natural. A IA seleciona os produtos do catálogo, redige o texto e gera o PDF no padrão Indeba Express.</p>
           <div style={{ display: "flex", gap: "10px", marginTop: "28px", flexWrap: "wrap", justifyContent: "center" }}>
             {chips.map((c) => (
@@ -751,7 +751,7 @@ function BriefingScreen({
                     key={t.value}
                     onClick={() => setTipoProposta(t.value)}
                     title={t.hint}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "5px 14px", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontFamily: "'Inter',sans-serif", lineHeight: 1.1 }}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "5px 14px", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontFamily: "var(--font-sans), sans-serif", lineHeight: 1.1 }}
                   >
                     <span style={{ fontSize: "13px", fontWeight: ativo ? 700 : 500 }}>{t.label}</span>
                     <span style={{ fontSize: "10px", color: ativo ? "var(--blue-500)" : "var(--gray-400)", marginTop: "1px" }}>{t.hint}</span>
@@ -784,7 +784,7 @@ function BriefingScreen({
                 }
               }}
               placeholder="Descreva o cliente e a necessidade — ex.: Padaria em Lauro de Freitas. Precisa de detergente, desengordurante e álcool 70 para limpeza pesada da cozinha."
-              style={{ flex: 1, border: "none", background: "transparent", resize: "none", fontSize: "14px", color: "var(--gray-900)", lineHeight: 1.55, padding: "4px 0", minHeight: "26px", maxHeight: "120px", overflow: "hidden", fontFamily: "'Inter',sans-serif" }}
+              style={{ flex: 1, border: "none", background: "transparent", resize: "none", fontSize: "14px", color: "var(--gray-900)", lineHeight: 1.55, padding: "4px 0", minHeight: "26px", maxHeight: "120px", overflow: "hidden", fontFamily: "var(--font-sans), sans-serif" }}
               rows={1}
             />
             <Hoverable
@@ -925,7 +925,7 @@ function ReviewScreen({
     fontWeight: reviewVariant === v ? 600 : 400,
     background: reviewVariant === v ? "#0E3A5F" : "transparent",
     color: reviewVariant === v ? "white" : "#5B6E7D",
-    fontFamily: "Inter,sans-serif",
+    fontFamily: "var(--font-sans), sans-serif",
   });
 
   const orangeBtn: CSSProperties = { display: "flex", alignItems: "center", gap: "7px", padding: "8px 18px", background: "var(--orange-500)", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(236,122,28,.35)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease" };
@@ -992,7 +992,7 @@ function ReviewScreen({
             onChange={(e) => onEditarTexto(e.target.value)}
             rows={3}
             placeholder="Texto de apresentação da proposta…"
-            style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", color: "var(--gray-900)", lineHeight: 1.55, resize: "vertical", fontFamily: "'Inter',sans-serif", outline: "none", background: "var(--gray-50)", boxSizing: "border-box" }}
+            style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", color: "var(--gray-900)", lineHeight: 1.55, resize: "vertical", fontFamily: "var(--font-sans), sans-serif", outline: "none", background: "var(--gray-50)", boxSizing: "border-box" }}
           />
         </div>
 
@@ -1010,7 +1010,7 @@ function ReviewScreen({
             onChange={(e) => setAjuste(e.target.value)}
             disabled={refining}
             placeholder="Refinar com IA — ex.: adicione mais desinfetantes, deixe o texto mais curto e formal"
-            style={{ flex: 1, border: "none", outline: "none", fontSize: "13px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", background: "transparent" }}
+            style={{ flex: 1, border: "none", outline: "none", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", background: "transparent" }}
           />
           <button
             type="submit"
@@ -1071,7 +1071,7 @@ function ReviewScreen({
                   </div>
                   <button
                     onClick={() => toggleProduct(p.codigo)}
-                    style={{ marginTop: "10px", width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid " + (included ? "#A7F3D0" : "#E3EBF3"), background: included ? "#DCFCE7" : "#F7F9FC", color: included ? "#16A34A" : "#94A6B8", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter,sans-serif" }}
+                    style={{ marginTop: "10px", width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid " + (included ? "#A7F3D0" : "#E3EBF3"), background: included ? "#DCFCE7" : "#F7F9FC", color: included ? "#16A34A" : "#94A6B8", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans), sans-serif" }}
                   >
                     {included ? "✓ Incluído" : "+ Incluir"}
                   </button>
@@ -1106,7 +1106,7 @@ function ReviewScreen({
                   <div style={{ textAlign: "right", fontSize: "13.5px", color: "var(--gray-500)" }}>{fmt(precoUnit(p))}</div>
                   <div style={{ textAlign: "right", fontSize: "13.5px", fontWeight: 700, color: "var(--blue-500)" }}>{fmt(precoUnit(p) * p.quantidade)}</div>
                   <div style={{ display: "flex", justifyContent: "center" }}>
-                    <button onClick={() => toggleProduct(p.codigo)} style={{ padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: included ? "#DCFCE7" : "#EEF3F8", color: included ? "#16A34A" : "#94A6B8", fontSize: "12px", fontWeight: 600, fontFamily: "Inter,sans-serif", whiteSpace: "nowrap" }}>{included ? "✓ Incluído" : "+ Incluir"}</button>
+                    <button onClick={() => toggleProduct(p.codigo)} style={{ padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: included ? "#DCFCE7" : "#EEF3F8", color: included ? "#16A34A" : "#94A6B8", fontSize: "12px", fontWeight: 600, fontFamily: "var(--font-sans), sans-serif", whiteSpace: "nowrap" }}>{included ? "✓ Incluído" : "+ Incluir"}</button>
                   </div>
                 </div>
               );
@@ -1649,14 +1649,14 @@ function CatalogScreen({
             <circle cx="6.5" cy="6.5" r="4" />
             <path d="M10 10l3 3" />
           </svg>
-          <input type="text" placeholder="Buscar produto ou SKU..." style={{ border: "none", background: "transparent", fontSize: "14px", color: "var(--gray-900)", flex: 1, fontFamily: "'Inter',sans-serif" }} />
+          <input type="text" placeholder="Buscar produto ou SKU..." style={{ border: "none", background: "transparent", fontSize: "14px", color: "var(--gray-900)", flex: 1, fontFamily: "var(--font-sans), sans-serif" }} />
         </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
           {allCats.map((cat) => (
             <button
               key={cat}
               onClick={() => setCatFilter(cat)}
-              style={{ padding: "5px 14px", borderRadius: "999px", border: "1px solid " + (catFilter === cat ? "#1E6BB8" : "#E3EBF3"), cursor: "pointer", fontSize: "13px", fontWeight: catFilter === cat ? 600 : 400, background: catFilter === cat ? "#EAF2FA" : "white", color: catFilter === cat ? "#1E6BB8" : "#5B6E7D", fontFamily: "Inter,sans-serif" }}
+              style={{ padding: "5px 14px", borderRadius: "999px", border: "1px solid " + (catFilter === cat ? "#1E6BB8" : "#E3EBF3"), cursor: "pointer", fontSize: "13px", fontWeight: catFilter === cat ? 600 : 400, background: catFilter === cat ? "#EAF2FA" : "white", color: catFilter === cat ? "#1E6BB8" : "#5B6E7D", fontFamily: "var(--font-sans), sans-serif" }}
             >
               {cat}
             </button>
@@ -1908,7 +1908,7 @@ function CampoTexto({
           padding: "11px 13px",
           fontSize: "14px",
           color: "var(--gray-900)",
-          fontFamily: "'Inter',sans-serif",
+          fontFamily: "var(--font-sans), sans-serif",
           background: "white",
           outline: "none",
           boxShadow: foco ? "0 0 0 3px rgba(30,107,184,.14)" : "none",
@@ -2351,7 +2351,7 @@ function AtendimentoScreen() {
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); perguntar(); } }}
             placeholder="Pergunte sobre os produtos…"
             rows={1}
-            style={{ flex: 1, border: "1px solid var(--gray-200)", borderRadius: "11px", padding: "11px 14px", fontSize: "14px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", outline: "none", resize: "none", lineHeight: 1.5 }}
+            style={{ flex: 1, border: "1px solid var(--gray-200)", borderRadius: "11px", padding: "11px 14px", fontSize: "14px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", resize: "none", lineHeight: 1.5 }}
           />
           <Hoverable
             onClick={podePerguntar ? perguntar : undefined}
@@ -2571,7 +2571,7 @@ ${clausulas}
               {extraindo ? "Lendo arquivo…" : "Anexar PDF/DOCX/TXT"}
             </Hoverable>
           </div>
-          <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={8} placeholder="Cole aqui o contrato recebido… ou anexe um arquivo acima" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "11px", padding: "12px 14px", fontSize: "13.5px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", outline: "none", resize: "vertical", minHeight: "150px", lineHeight: 1.5 }} />
+          <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={8} placeholder="Cole aqui o contrato recebido… ou anexe um arquivo acima" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "11px", padding: "12px 14px", fontSize: "13.5px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", resize: "vertical", minHeight: "150px", lineHeight: 1.5 }} />
           <div style={{ marginTop: "12px" }}>
             <Hoverable onClick={loading || !texto.trim() ? undefined : analisar} base={{ display: "inline-flex", padding: "11px 22px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: loading || !texto.trim() ? "not-allowed" : "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: loading || !texto.trim() ? 0.5 : 1 }} hover={loading || !texto.trim() ? {} : { transform: "translateY(-2px)" }}>
               {loading ? "Analisando…" : "Analisar riscos"}
@@ -2665,6 +2665,27 @@ function abrirRelatorio(titulo: string, subtitulo: string, blocos: BlocoRelatori
   w.document.close();
   w.focus();
   w.print();
+}
+
+/* Cabeçalho de tela (design app.html) — barra branca fixa com título + subtítulo + ação. */
+function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", height: "56px", background: "white", borderBottom: "1px solid var(--gray-200)", position: "sticky", top: 0, zIndex: 5, flex: "none" }}>
+      <div>
+        <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)" }}>{title}</span>
+        {sub && <span style={{ fontSize: "12px", color: "var(--gray-400)", marginLeft: "10px" }}>{sub}</span>}
+      </div>
+      {right}
+    </div>
+  );
+}
+
+/* Selo de procedência (design app.html): MOTOR/MODELO-FIXO = verde (determinístico); IA = azul. */
+function ProcBadge({ proc }: { proc: string }) {
+  const motor = proc === "MOTOR" || proc === "MODELO-FIXO";
+  return (
+    <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", background: motor ? "#DCFCE7" : "var(--blue-50)", color: motor ? "#16A34A" : "var(--blue-600)", letterSpacing: ".03em" }}>{proc}</span>
+  );
 }
 
 function ContabilScreen() {
@@ -3006,68 +3027,61 @@ function ComprasScreen() {
   }
 
   return (
-    <div style={{ padding: "28px", maxWidth: "960px" }}>
-      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#0F766E 0%,#0D9488 60%,#155E75 130%)", boxShadow: "0 14px 34px rgba(13,148,136,.24)", animation: "fadeUp .5s ease both" }}>
-        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
-        <div style={{ position: "relative" }}>
-          <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Compras / Cotação</h2>
-          <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "660px" }}>
-            Suba as cotações dos fornecedores (CSV/XLSX). O motor compara o custo efetivo (preço×qtd + frete, ajustado pelo prazo de pagamento) e a IA recomenda a melhor compra.
-          </div>
+    <div style={{ background: "var(--gray-50)", minHeight: "100vh", paddingBottom: "40px" }}>
+      <ScreenHead title="Compras / Cotação" sub="Ranking por custo efetivo (valor do dinheiro no tempo)" />
+      <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        {/* upload + ações */}
+        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", padding: "16px 20px", boxShadow: "var(--shadow-sm)", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <Hoverable onClick={() => fileRef.current?.click()} base={{ padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)" }} hover={{ transform: "translateY(-2px)" }}>
+            {loading ? "Comparando…" : "Subir cotações"}
+          </Hoverable>
+          <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" style={{ display: "none" }} onChange={(e) => comparar(e.target.files)} />
+          <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "Espera: fornecedor, preço, quantidade, frete, prazo."}</div>
+          {res && res.cotacoes.length > 0 && (
+            <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+              <Hoverable onClick={relatorio} base={{ padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }} hover={{ transform: "translateY(-1px)" }}>Relatório (PDF)</Hoverable>
+              <Hoverable onClick={baixarCsv} base={{ padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Baixar planilha (CSV)</Hoverable>
+            </div>
+          )}
         </div>
-      </div>
 
-      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", boxShadow: "var(--shadow-md)", marginBottom: "16px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-        <Hoverable onClick={() => fileRef.current?.click()} base={{ padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)" }} hover={{ transform: "translateY(-2px)" }}>
-          {loading ? "Comparando…" : "Subir cotações"}
-        </Hoverable>
-        <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" style={{ display: "none" }} onChange={(e) => comparar(e.target.files)} />
-        <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "Espera: fornecedor, preço, quantidade, frete, prazo."}</div>
-        {res && res.cotacoes.length > 0 && (
-          <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
-            <Hoverable onClick={relatorio} base={{ padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }} hover={{ transform: "translateY(-1px)" }}>Relatório (PDF)</Hoverable>
-            <Hoverable onClick={baixarCsv} base={{ padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Baixar planilha (CSV)</Hoverable>
+        {erro && <div style={{ padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+        {res?.aviso && <div style={{ padding: "11px 14px", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: "10px", color: "#B45309", fontSize: "13px" }}>{res.aviso}</div>}
+
+        {res?.recomendacao && (
+          <div style={{ display: "flex", gap: "12px", padding: "14px 16px", borderRadius: "12px", background: "var(--success-soft)", borderLeft: "3px solid var(--success)", animation: "fadeUp var(--duration-base) var(--ease-out) both" }}>
+            <div>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--success)", marginBottom: "3px" }}>Melhor escolha: {res.melhorFornecedor}</div>
+              <div style={{ fontSize: "13.5px", color: "var(--text-body)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{res.recomendacao}</div>
+            </div>
+          </div>
+        )}
+
+        {res && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {res.cotacoes.map((c, i) => {
+              const best = i === 0;
+              return (
+                <div key={i} style={{ background: "white", border: `1px solid ${best ? "#A7F3D0" : "var(--gray-200)"}`, borderRadius: "12px", padding: "16px 20px", boxShadow: best ? "0 4px 16px rgba(22,163,74,.12)" : "var(--shadow-sm)", display: "flex", alignItems: "center", gap: "20px", animation: `fadeUp .4s var(--ease-out) ${i * 0.08}s both` }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", flex: "none", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: "14px", background: best ? "#16A34A" : "var(--gray-200)", color: best ? "#fff" : "var(--gray-500)" }}>{i + 1}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                      <span style={{ fontWeight: 700, fontSize: "15px", color: "var(--gray-900)" }}>{c.fornecedor}</span>
+                      {best && <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", background: "#DCFCE7", color: "#16A34A" }}>★ Melhor compra</span>}
+                    </div>
+                    <div style={{ fontSize: "12.5px", color: "var(--gray-500)", marginTop: "3px" }}>{c.item ? `${c.item} · ` : ""}{c.quantidade} un · frete R$ {brl(c.frete)} · {c.prazoDias === 0 ? "à vista" : `${c.prazoDias} dias`}</div>
+                  </div>
+                  <div style={{ textAlign: "right", flex: "none" }}>
+                    <div style={{ fontSize: "11px", color: "var(--gray-400)" }}>Custo efetivo</div>
+                    <div style={{ fontSize: "18px", fontWeight: 800, color: best ? "#16A34A" : "var(--gray-900)", fontFamily: "var(--font-mono)" }}>R$ {brl(c.custoEfetivo)}</div>
+                    <div style={{ fontSize: "11px", color: "var(--gray-400)", fontFamily: "var(--font-mono)" }}>total R$ {brl(c.custoTotal)}</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
-
-      {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
-
-      {res && (
-        <div style={{ animation: "fadeUp .4s ease both" }}>
-          {res.aviso && <div style={{ marginBottom: "14px", padding: "11px 14px", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: "10px", color: "#B45309", fontSize: "13px" }}>{res.aviso}</div>}
-          {res.recomendacao && (
-            <div style={{ marginBottom: "16px", padding: "14px 16px", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: "12px", color: "#065F46", fontSize: "13.5px", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>
-              💡 {res.recomendacao}
-            </div>
-          )}
-          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-              <thead>
-                <tr style={{ background: "var(--gray-50)", color: "var(--gray-500)", textAlign: "left" }}>
-                  <th style={{ padding: "10px" }}>#</th>
-                  <th style={{ padding: "10px" }}>Fornecedor</th>
-                  <th style={{ padding: "10px", textAlign: "right" }}>Custo total</th>
-                  <th style={{ padding: "10px", textAlign: "right" }}>Custo efetivo</th>
-                  <th style={{ padding: "10px", textAlign: "right" }}>Prazo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {res.cotacoes.map((c, i) => (
-                  <tr key={i} style={{ borderTop: "1px solid var(--gray-100)", background: i === 0 ? "#F0FDF4" : "white" }}>
-                    <td style={{ padding: "10px", fontWeight: 800, color: i === 0 ? "#15803D" : "var(--gray-400)" }}>{i === 0 ? "★" : i + 1}</td>
-                    <td style={{ padding: "10px", fontWeight: i === 0 ? 800 : 600, color: "var(--gray-800)" }}>{c.fornecedor}{c.item ? <span style={{ color: "var(--gray-400)", fontWeight: 400 }}> · {c.item}</span> : null}</td>
-                    <td style={{ padding: "10px", textAlign: "right", color: "var(--gray-600)" }}>R$ {brl(c.custoTotal)}</td>
-                    <td style={{ padding: "10px", textAlign: "right", fontWeight: 700, color: i === 0 ? "#15803D" : "var(--gray-800)" }}>R$ {brl(c.custoEfetivo)}</td>
-                    <td style={{ padding: "10px", textAlign: "right", color: "var(--gray-500)" }}>{c.prazoDias}d</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {Number(res.economia) > 0 && <div style={{ marginTop: "12px", fontSize: "13px", color: "var(--gray-500)" }}>Economia da melhor opção vs a 2ª: <b style={{ color: "#15803D" }}>R$ {brl(res.economia)}</b></div>}
-        </div>
-      )}
     </div>
   );
 }
@@ -3141,81 +3155,85 @@ function CobrancaScreen() {
   }
 
   return (
-    <div style={{ padding: "28px", maxWidth: "920px" }}>
-      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#B45309 0%,#DC2626 70%,#9333EA 130%)", boxShadow: "0 14px 34px rgba(220,38,38,.24)", animation: "fadeUp .5s ease both" }}>
-        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
-        <div style={{ position: "relative" }}>
-          <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Cobrança</h2>
-          <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "640px" }}>
-            Suba as contas a receber (CSV/XLSX, ex.: export do CRM). O motor acha quem está vencido e em aberto, calcula o atraso, e a IA escreve a régua — os valores vêm do motor, nunca do modelo.
-          </div>
-        </div>
-      </div>
-
-      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", boxShadow: "var(--shadow-md)", marginBottom: "16px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-        <Hoverable onClick={() => fileRef.current?.click()} base={{ padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)" }} hover={{ transform: "translateY(-2px)" }}>
-          {loading ? "Analisando…" : "Subir contas a receber"}
-        </Hoverable>
-        <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" style={{ display: "none" }} onChange={(e) => analisar(e.target.files)} />
-        <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "Espera colunas: cliente, valor, vencimento, status, email."}</div>
-        {res && res.inadimplentes.length > 0 && (
-          <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
-            <Hoverable onClick={relatorio} base={{ padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }} hover={{ transform: "translateY(-1px)" }}>Relatório (PDF)</Hoverable>
-            <Hoverable onClick={baixarCsv} base={{ padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Baixar planilha (CSV)</Hoverable>
-            <Hoverable
-              onClick={async () => {
-                if (!res) return;
-                const comEmail = res.inadimplentes.filter((i) => i.email).length;
-                if (!window.confirm(`Disparar cobrança por e-mail para ${comEmail} cliente(s) com e-mail e enviar o resumo ao gestor?`)) return;
-                try {
-                  const r = await fetch("/api/cobranca/disparar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inadimplentes: res.inadimplentes, totalDevido: res.totalDevido }) });
-                  const d = await r.json();
-                  if (!r.ok) throw new Error(typeof d.erro === "string" ? d.erro : "Falha ao disparar a cobrança.");
-                  setErro(null);
-                  window.alert(`Cobrança disparada: ${d.enviados ?? 0} e-mail(s) ao cliente + resumo ao gestor.`);
-                } catch (e) {
-                  setErro(e instanceof Error ? e.message : "Falha ao disparar a cobrança.");
-                }
-              }}
-              base={{ padding: "9px 16px", background: "var(--orange-500)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }}
-              hover={{ transform: "translateY(-1px)" }}
-            >
-              Disparar cobranças
-            </Hoverable>
-          </div>
-        )}
-      </div>
-
-      {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
-
-      {res && (
-        <div style={{ animation: "fadeUp .4s ease both" }}>
-          {res.aviso && <div style={{ marginBottom: "14px", padding: "11px 14px", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: "10px", color: "#B45309", fontSize: "13px" }}>{res.aviso}</div>}
-          {res.inadimplentes.length > 0 && (
-            <div style={{ fontSize: "15px", fontWeight: 800, color: "var(--gray-900)", marginBottom: "12px" }}>
-              Total devido: R$ {Number(res.totalDevido).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · {res.inadimplentes.length} cliente(s)
+    <div style={{ background: "var(--gray-50)", minHeight: "100vh", paddingBottom: "40px" }}>
+      <ScreenHead
+        title="Cobrança"
+        sub="Inadimplentes do motor · régua redigida pela IA"
+        right={
+          res && res.inadimplentes.length > 0 ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 14px", background: "#FDEAEA", borderRadius: "10px" }}>
+              <span style={{ fontSize: "11px", color: "#991B1B", fontWeight: 500 }}>Total devido</span>
+              <span style={{ fontSize: "15px", fontWeight: 800, color: "#DC2626", fontFamily: "var(--font-mono)" }}>R$ {Number(res.totalDevido).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+            </div>
+          ) : undefined
+        }
+      />
+      <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: "14px" }}>
+        {/* upload + ações */}
+        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", padding: "16px 20px", boxShadow: "var(--shadow-sm)", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <Hoverable onClick={() => fileRef.current?.click()} base={{ padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)" }} hover={{ transform: "translateY(-2px)" }}>
+            {loading ? "Analisando…" : "Subir contas a receber"}
+          </Hoverable>
+          <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" style={{ display: "none" }} onChange={(e) => analisar(e.target.files)} />
+          <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "Espera colunas: cliente, valor, vencimento, status, email."}</div>
+          {res && res.inadimplentes.length > 0 && (
+            <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+              <Hoverable onClick={relatorio} base={{ padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }} hover={{ transform: "translateY(-1px)" }}>Relatório (PDF)</Hoverable>
+              <Hoverable onClick={baixarCsv} base={{ padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Baixar planilha (CSV)</Hoverable>
+              <Hoverable
+                onClick={async () => {
+                  if (!res) return;
+                  const comEmail = res.inadimplentes.filter((i) => i.email).length;
+                  if (!window.confirm(`Disparar cobrança por e-mail para ${comEmail} cliente(s) com e-mail e enviar o resumo ao gestor?`)) return;
+                  try {
+                    const r = await fetch("/api/cobranca/disparar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ inadimplentes: res.inadimplentes, totalDevido: res.totalDevido }) });
+                    const d = await r.json();
+                    if (!r.ok) throw new Error(typeof d.erro === "string" ? d.erro : "Falha ao disparar a cobrança.");
+                    setErro(null);
+                    window.alert(`Cobrança disparada: ${d.enviados ?? 0} e-mail(s) ao cliente + resumo ao gestor.`);
+                  } catch (e) {
+                    setErro(e instanceof Error ? e.message : "Falha ao disparar a cobrança.");
+                  }
+                }}
+                base={{ padding: "9px 16px", background: "var(--orange-500)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }}
+                hover={{ transform: "translateY(-1px)" }}
+              >
+                Disparar cobranças
+              </Hoverable>
             </div>
           )}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {res.inadimplentes.map((i, n) => {
-              const c = corSev(i.severidade);
-              return (
-                <div key={n} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "16px", boxShadow: "var(--shadow-sm)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                    <div style={{ fontSize: "15px", fontWeight: 800, color: "var(--gray-900)" }}>{i.cliente}</div>
-                    <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", color: c.fg, background: c.bg, padding: "2px 8px", borderRadius: "999px" }}>{i.severidade}</span>
-                    <span style={{ fontSize: "13px", color: "var(--gray-500)" }}>R$ {Number(i.valorDevido).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · {i.titulos} título(s) · {i.diasAtraso} dias de atraso</span>
+        </div>
+
+        {erro && <div style={{ padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+        {res?.aviso && <div style={{ padding: "11px 14px", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: "10px", color: "#B45309", fontSize: "13px" }}>{res.aviso}</div>}
+
+        {res?.inadimplentes.map((i, n) => {
+          const c = corSev(i.severidade);
+          const sevLabel = i.severidade === "grave" ? "Grave" : i.severidade === "media" ? "Média" : "Leve";
+          return (
+            <div key={n} style={{ background: "white", border: "1px solid var(--gray-200)", borderLeft: `4px solid ${c.fg}`, borderRadius: "12px", padding: "16px 20px", boxShadow: "var(--shadow-sm)", animation: `fadeUp .4s var(--ease-out) ${n * 0.06}s both` }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                    <span style={{ fontWeight: 700, fontSize: "15px", color: "var(--gray-900)" }}>{i.cliente}</span>
+                    <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", background: c.bg, color: c.fg }}>{sevLabel}</span>
                   </div>
-                  <div style={{ marginTop: "10px", display: "flex", gap: "8px", alignItems: "flex-start" }}>
-                    <div style={{ flex: 1, fontSize: "13px", color: "var(--gray-700)", lineHeight: 1.55, whiteSpace: "pre-wrap", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "12px" }}>{i.mensagem}</div>
-                    <Hoverable onClick={() => navigator.clipboard?.writeText(i.mensagem)} base={{ padding: "8px 12px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: 700, color: "var(--gray-600)", flex: "none" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Copiar</Hoverable>
+                  <div style={{ display: "flex", gap: "20px", marginBottom: "12px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>Devido: <b style={{ color: "var(--gray-900)", fontFamily: "var(--font-mono)" }}>R$ {Number(i.valorDevido).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</b></span>
+                    <span style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{i.titulos} título{i.titulos > 1 ? "s" : ""}</span>
+                    <span style={{ fontSize: "12.5px", color: c.fg, fontWeight: 600 }}>{i.diasAtraso} dias de atraso</span>
+                  </div>
+                  <div style={{ background: "var(--gray-50)", borderRadius: "8px", padding: "11px 14px", fontSize: "13px", color: "var(--gray-700)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}><ProcBadge proc="IA-TEXTO" /><span style={{ fontSize: "11px", color: "var(--gray-400)" }}>mensagem de cobrança</span></div>
+                    {i.mensagem}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                <Hoverable onClick={() => navigator.clipboard?.writeText(i.mensagem)} base={{ flex: "none", padding: "8px 14px", background: "var(--blue-50)", border: "1px solid var(--blue-200)", borderRadius: "8px", cursor: "pointer", fontSize: "13px", color: "var(--blue-600)", fontWeight: 600, whiteSpace: "nowrap" }} hover={{ background: "var(--blue-100)" }}>Copiar mensagem</Hoverable>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -3303,103 +3321,89 @@ function FinanceiroScreen() {
   }
 
   return (
-    <div style={{ padding: "28px", maxWidth: "920px" }}>
-      {/* ── Hero ── */}
-      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#0F766E 0%,#0EA5E9 60%,#1E6BB8 130%)", boxShadow: "0 14px 34px rgba(14,165,233,.26)", animation: "fadeUp .5s ease both" }}>
-        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
-        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "16px" }}>
-          <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: "rgba(255,255,255,.16)", border: "1px solid rgba(255,255,255,.25)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 21h18" />
-              <rect x="4" y="11" width="3.5" height="7" rx="1" />
-              <rect x="10.2" y="7" width="3.5" height="11" rx="1" />
-              <rect x="16.5" y="3" width="3.5" height="15" rx="1" />
-            </svg>
-          </div>
-          <div>
-            <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Agente Financeiro</h2>
-            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "640px" }}>
-              Suba suas planilhas (CSV) e pergunte em português. O motor faz as contas; a IA só explica — nenhum número vem do modelo.
+    <div style={{ background: "var(--gray-50)", display: "flex", flexDirection: "column", height: "100vh" }}>
+      <ScreenHead title="Financeiro" sub="Pergunte sobre suas planilhas — a IA roteia, o motor calcula" />
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        {/* ── Planilhas (sidebar) ── */}
+        <div style={{ width: "240px", flex: "none", borderRight: "1px solid var(--gray-200)", background: "white", padding: "18px 16px", overflowY: "auto" }}>
+          <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: "12px" }}>Planilhas carregadas</div>
+          {planilhas.length === 0 ? (
+            <div style={{ fontSize: "12.5px", color: "var(--gray-400)", lineHeight: 1.5 }}>Nenhuma planilha ainda. Adicione uma para consultar; duas para conciliar.</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {planilhas.map((p) => {
+                const ativa = planilhaAtual === p.nome;
+                return (
+                  <div key={p.nome} onClick={() => setPlanilhaAtual(p.nome)} title="Definir como planilha ativa" style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderRadius: "10px", border: `1px solid ${ativa ? "var(--blue-200)" : "var(--gray-200)"}`, background: ativa ? "var(--blue-50)" : "var(--gray-50)", cursor: "pointer" }}>
+                    <svg width="16" height="16" viewBox="0 0 17 17" fill="none" stroke={ativa ? "var(--blue-600)" : "var(--gray-400)"} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="2" /><path d="M2.5 6.5h12M6.5 6.5v8" /></svg>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: "12.5px", fontWeight: 600, color: ativa ? "var(--blue-700)" : "var(--gray-800)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nome}</div>
+                    </div>
+                    <span onClick={(e) => { e.stopPropagation(); removerPlanilha(p.nome); }} title="Remover" style={{ opacity: 0.6, cursor: "pointer", fontWeight: 700, color: "var(--gray-500)" }}>×</span>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Planilhas ── */}
-      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "18px", boxShadow: "var(--shadow-md)", marginBottom: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-500)" }}>Planilhas carregadas (CSV ou XLSX)</div>
-          <Hoverable
-            onClick={() => fileRef.current?.click()}
-            base={{ display: "flex", alignItems: "center", gap: "7px", padding: "8px 14px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "var(--gray-700)" }}
-            hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}
-          >
-            + Adicionar CSV/XLSX
-          </Hoverable>
+          )}
+          <button onClick={() => fileRef.current?.click()} style={{ marginTop: "14px", width: "100%", padding: "9px 0", border: "1.5px dashed var(--gray-300)", borderRadius: "10px", background: "transparent", color: "var(--gray-500)", fontSize: "12.5px", fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}>+ Carregar planilha</button>
           <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,text/csv" multiple style={{ display: "none" }} onChange={(e) => adicionarArquivos(e.target.files)} />
         </div>
-        {planilhas.length === 0 ? (
-          <div style={{ fontSize: "13px", color: "var(--gray-400)", marginTop: "10px" }}>Nenhuma planilha ainda. Adicione ao menos uma para consultar; duas para conciliar.</div>
-        ) : (
-          <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
-            {planilhas.map((p) => {
-              const ativa = planilhaAtual === p.nome;
-              return (
-                <div key={p.nome} onClick={() => setPlanilhaAtual(p.nome)} title="Clique para definir como planilha ativa" style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 10px", borderRadius: "999px", cursor: "pointer", fontSize: "12.5px", fontWeight: 600, color: ativa ? "white" : "var(--gray-700)", background: ativa ? "var(--blue-600)" : "var(--gray-100)", border: `1px solid ${ativa ? "var(--blue-600)" : "var(--gray-200)"}` }}>
-                  {p.nome}
-                  <span onClick={(e) => { e.stopPropagation(); removerPlanilha(p.nome); }} style={{ opacity: 0.7, cursor: "pointer", fontWeight: 700 }}>×</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
-      {/* ── Conversa ── */}
-      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "18px", boxShadow: "var(--shadow-md)" }}>
-        {msgs.length === 0 ? (
-          <div style={{ fontSize: "13px", color: "var(--gray-400)", padding: "10px 4px" }}>
-            Ex.: “quanto vendi no total?”, “total por categoria”, “bate as vendas com as notas”, “calcule ICMS no presumido sobre 10.000”.
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "14px" }}>
-            {msgs.map((m, i) => (
-              <div key={i} style={{ alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth: "82%" }}>
-                <div style={{ padding: "10px 14px", borderRadius: "12px", fontSize: "13.5px", lineHeight: 1.5, whiteSpace: "pre-wrap", color: m.role === "user" ? "white" : "var(--gray-900)", background: m.role === "user" ? "var(--blue-600)" : "var(--gray-100)" }}>
-                  {m.texto}
-                </div>
-                {m.resumo && (
-                  <details style={{ marginTop: "5px" }}>
-                    <summary style={{ fontSize: "11px", color: "var(--gray-400)", cursor: "pointer" }}>verdade do motor (auditável)</summary>
-                    <pre style={{ margin: "5px 0 0", padding: "10px 12px", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "9px", fontSize: "11.5px", color: "var(--gray-600)", whiteSpace: "pre-wrap", fontFamily: "monospace" }}>{m.resumo}</pre>
-                  </details>
-                )}
+        {/* ── Conversa ── */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <div className="ies-scroll" style={{ flex: 1, padding: "24px 28px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
+            {msgs.length === 0 ? (
+              <div style={{ margin: "auto", textAlign: "center", maxWidth: "420px", fontSize: "13px", color: "var(--gray-400)", lineHeight: 1.6 }}>
+                Ex.: “quanto vendi no total?”, “total por categoria”, “bate as vendas com as notas”, “calcule ICMS no presumido sobre 10.000”.
               </div>
-            ))}
+            ) : (
+              msgs.map((m, i) =>
+                m.role === "user" ? (
+                  <div key={i} style={{ alignSelf: "flex-end", maxWidth: "70%", background: "var(--blue-600)", color: "#fff", padding: "11px 15px", borderRadius: "14px", borderBottomRightRadius: "4px", fontSize: "13.5px", lineHeight: 1.5, whiteSpace: "pre-wrap", animation: "fadeUp .3s var(--ease-out) both" }}>{m.texto}</div>
+                ) : (
+                  <div key={i} style={{ alignSelf: "flex-start", maxWidth: "82%", animation: "fadeUp .3s var(--ease-out) both" }}>
+                    <div style={{ background: "white", border: "1px solid var(--gray-200)", padding: "14px 16px", borderRadius: "14px", borderBottomLeftRadius: "4px", boxShadow: "var(--shadow-sm)" }}>
+                      <div style={{ fontSize: "13.5px", color: "var(--gray-800)", lineHeight: 1.6, whiteSpace: "pre-wrap", marginBottom: m.resumo ? "12px" : 0 }}>{m.texto}</div>
+                      {m.resumo && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "9px 12px", background: "#F0FDF4", borderRadius: "8px", border: "1px solid #A7F3D0" }}>
+                          <ProcBadge proc="MOTOR" />
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "12px", color: "#15803d", whiteSpace: "pre-wrap" }}>{m.resumo}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ),
+              )
+            )}
             {loading && <div style={{ alignSelf: "flex-start", fontSize: "13px", color: "var(--gray-400)" }}>Calculando…</div>}
           </div>
-        )}
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
-          <textarea
-            value={pergunta}
-            onChange={(e) => setPergunta(e.target.value)}
-            onFocus={() => setFoco(true)}
-            onBlur={() => setFoco(false)}
-            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); perguntar(); } }}
-            placeholder="Pergunte sobre suas planilhas…"
-            rows={1}
-            style={{ flex: 1, border: `1px solid ${foco ? "var(--blue-500)" : "var(--gray-200)"}`, borderRadius: "11px", padding: "11px 14px", fontSize: "14px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", background: "white", outline: "none", resize: "none", lineHeight: 1.5, boxShadow: foco ? "0 0 0 3px rgba(30,107,184,.14)" : "none" }}
-          />
-          <Hoverable
-            onClick={podePerguntar ? perguntar : undefined}
-            base={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: podePerguntar ? "pointer" : "not-allowed", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: podePerguntar ? 1 : 0.5, flex: "none" }}
-            hover={podePerguntar ? { transform: "translateY(-2px)" } : {}}
-          >
-            {loading ? "…" : "Enviar"}
-          </Hoverable>
+          <div style={{ padding: "14px 28px 22px", background: "linear-gradient(to top,var(--gray-50) 70%,transparent)" }}>
+            <div style={{ maxWidth: "760px", margin: "0 auto", background: "white", border: `1.5px solid ${foco ? "var(--blue-500)" : "var(--gray-200)"}`, borderRadius: "14px", boxShadow: "var(--shadow-md)", display: "flex", alignItems: "center", padding: "8px 8px 8px 16px", gap: "8px" }}>
+              <input
+                value={pergunta}
+                onChange={(e) => setPergunta(e.target.value)}
+                onFocus={() => setFoco(true)}
+                onBlur={() => setFoco(false)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); perguntar(); } }}
+                placeholder="Ex.: Some o valor da coluna total agrupado por cliente…"
+                style={{ flex: 1, border: "none", outline: "none", fontSize: "14px", fontFamily: "var(--font-sans), sans-serif", color: "var(--gray-900)", background: "transparent" }}
+              />
+              <button onClick={() => podePerguntar && perguntar()} disabled={!podePerguntar} title="Enviar" style={{ width: "38px", height: "38px", borderRadius: "10px", background: "var(--orange-500)", border: "none", cursor: podePerguntar ? "pointer" : "not-allowed", opacity: podePerguntar ? 1 : 0.5, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
+                {loading ? (
+                  <div style={{ width: "16px", height: "16px", border: "2px solid rgba(255,255,255,.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                )}
+              </button>
+            </div>
+            {erro ? (
+              <p style={{ textAlign: "center", fontSize: "12px", color: "#DC2626", marginTop: "8px" }}>{erro}</p>
+            ) : (
+              <p style={{ textAlign: "center", fontSize: "11px", color: "var(--gray-400)", marginTop: "8px" }}>Todo número vem do motor determinístico — a IA só verbaliza o resultado.</p>
+            )}
+          </div>
         </div>
-        {erro && <div style={{ marginTop: "12px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
       </div>
     </div>
   );
@@ -3496,7 +3500,7 @@ function InstagramScreen() {
           onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) gerar(); }}
           placeholder="Ex.: Lançamento do nosso desengordurante profissional com 20% de desconto na primeira compra. Foco em donos de restaurante e cozinha industrial."
           rows={3}
-          style={{ width: "100%", border: `1px solid ${foco ? "var(--blue-500)" : "var(--gray-200)"}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", color: "var(--gray-900)", fontFamily: "'Inter',sans-serif", background: "white", outline: "none", resize: "vertical", minHeight: "84px", lineHeight: 1.55, boxShadow: foco ? "0 0 0 3px rgba(30,107,184,.14)" : "none", transition: "border-color .16s ease,box-shadow .16s ease" }}
+          style={{ width: "100%", border: `1px solid ${foco ? "var(--blue-500)" : "var(--gray-200)"}`, borderRadius: "12px", padding: "12px 14px", fontSize: "14px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", background: "white", outline: "none", resize: "vertical", minHeight: "84px", lineHeight: 1.55, boxShadow: foco ? "0 0 0 3px rgba(30,107,184,.14)" : "none", transition: "border-color .16s ease,box-shadow .16s ease" }}
         />
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginTop: "16px" }}>
@@ -3509,7 +3513,7 @@ function InstagramScreen() {
               {TONS_POST.map((t) => {
                 const ativo = tom === t.value;
                 return (
-                  <button key={t.value} onClick={() => setTom(t.value)} style={{ padding: "7px 12px", borderRadius: "999px", border: `1px solid ${ativo ? "var(--blue-500)" : "var(--gray-200)"}`, background: ativo ? "var(--blue-50)" : "white", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontSize: "12.5px", fontWeight: ativo ? 700 : 500, cursor: "pointer", fontFamily: "'Inter',sans-serif", transition: "all .15s ease" }}>
+                  <button key={t.value} onClick={() => setTom(t.value)} style={{ padding: "7px 12px", borderRadius: "999px", border: `1px solid ${ativo ? "var(--blue-500)" : "var(--gray-200)"}`, background: ativo ? "var(--blue-50)" : "white", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontSize: "12.5px", fontWeight: ativo ? 700 : 500, cursor: "pointer", fontFamily: "var(--font-sans), sans-serif", transition: "all .15s ease" }}>
                     {t.label}
                   </button>
                 );

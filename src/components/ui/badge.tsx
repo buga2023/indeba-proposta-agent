@@ -1,13 +1,17 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type Tom = "neutro" | "ia" | "manual" | "catalogo";
+type Tom = "neutro" | "ia" | "manual" | "catalogo" | "success" | "warning" | "danger" | "info";
 
 const tons: Record<Tom, string> = {
   neutro: "bg-muted text-muted-foreground",
   ia: "bg-primary/10 text-primary",
   manual: "bg-accent/15 text-accent",
-  catalogo: "bg-success/10 text-success",
+  catalogo: "bg-[var(--success-soft)] text-success",
+  success: "bg-[var(--success-soft)] text-success",
+  warning: "bg-[var(--warning-soft)] text-[var(--warning)]",
+  danger: "bg-[var(--danger-soft)] text-[var(--danger)]",
+  info: "bg-[var(--info-soft)] text-[var(--info)]",
 };
 
 export function Badge({
