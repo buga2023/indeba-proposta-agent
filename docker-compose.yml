@@ -18,5 +18,17 @@ services:
       timeout: 3s
       retries: 10
 
+  # Vector DB do RAG (Atendimento/SAC). Embeddings vêm do Ollama (host); aqui só busca vetorial.
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: indeba-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333" # REST
+      - "6334:6334" # gRPC
+    volumes:
+      - indeba_qdrant:/qdrant/storage
+
 volumes:
   indeba_pgdata:
+  indeba_qdrant:
