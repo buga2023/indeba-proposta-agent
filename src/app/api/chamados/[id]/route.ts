@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ChamadoUpdate } from "@/lib/contracts";
 import { usuarioAtual, atualizarChamado } from "@/lib/chamados";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 
@@ -19,9 +20,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json(chamado);
   } catch (e) {
     // update num id inexistente → Prisma lança; tratamos como 404.
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao atualizar o chamado." },
-      { status: 404 },
-    );
+    return respostaErro(e, "Falha ao atualizar o chamado.", 404);
   }
 }

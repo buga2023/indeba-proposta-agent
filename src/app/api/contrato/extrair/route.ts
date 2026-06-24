@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extrairTextoContrato } from "@/lib/contrato/extrair-texto";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 export const maxDuration = 30; // PDF grande pode levar alguns segundos
@@ -29,9 +30,6 @@ export async function POST(req: NextRequest) {
     const texto = await extrairTextoContrato(bytes, file.name);
     return NextResponse.json({ texto, nomeArquivo: file.name, chars: texto.length });
   } catch (e) {
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao extrair o texto do arquivo." },
-      { status: 422 },
-    );
+    return respostaErro(e, "Falha ao extrair o texto do arquivo.", 422);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FinanceiroRequest } from "@/lib/contracts";
 import { perguntar, IaIndisponivelError } from "@/lib/financeiro/agente";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -18,9 +19,6 @@ export async function POST(req: NextRequest) {
     if (e instanceof IaIndisponivelError) {
       return NextResponse.json({ erro: e.message }, { status: 503 });
     }
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao processar a pergunta." },
-      { status: 500 },
-    );
+    return respostaErro(e, "Falha ao processar a pergunta.", 500);
   }
 }

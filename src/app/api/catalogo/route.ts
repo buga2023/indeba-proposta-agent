@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { carregarCatalogo } from "@/lib/catalogo";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 
@@ -10,9 +11,6 @@ export async function GET() {
     const catalogo = carregarCatalogo();
     return NextResponse.json(catalogo);
   } catch (e) {
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao carregar catálogo" },
-      { status: 500 },
-    );
+    return respostaErro(e, "Falha ao carregar catálogo", 500);
   }
 }

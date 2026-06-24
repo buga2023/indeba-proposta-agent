@@ -3,6 +3,7 @@ import { z } from "zod";
 import { usuarioAtual } from "@/lib/chamados";
 import { dispararCobranca } from "@/lib/contatos";
 import { Inadimplente } from "@/lib/contracts";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -33,9 +34,6 @@ export async function POST(req: NextRequest) {
     const r = await dispararCobranca(parsed.data.inadimplentes, parsed.data.totalDevido);
     return NextResponse.json({ ok: true, ...r });
   } catch (e) {
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao disparar a cobrança." },
-      { status: 502 },
-    );
+    return respostaErro(e, "Falha ao disparar a cobrança.", 502);
   }
 }

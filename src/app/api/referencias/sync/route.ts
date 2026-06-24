@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SyncReferenciasRequest } from "@/lib/contracts";
 import { analisarReferencias, salvarPerfilEstilo, carregarPerfilEstilo } from "@/lib/referencias/analisar";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // visão por imagem + síntese: bem mais lento que um post
@@ -16,10 +17,7 @@ export async function POST(req: NextRequest) {
     await salvarPerfilEstilo(perfil);
     return NextResponse.json(perfil);
   } catch (e) {
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao analisar as referências." },
-      { status: 500 },
-    );
+    return respostaErro(e, "Falha ao analisar as referências.", 500);
   }
 }
 

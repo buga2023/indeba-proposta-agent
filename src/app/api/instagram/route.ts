@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { InstagramRequest } from "@/lib/contracts";
 import { gerarPostsInstagram } from "@/lib/llm/gerar-instagram";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,9 +16,6 @@ export async function POST(req: NextRequest) {
     const res = await gerarPostsInstagram(parsed.data);
     return NextResponse.json(res);
   } catch (e) {
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao gerar os posts." },
-      { status: 500 },
-    );
+    return respostaErro(e, "Falha ao gerar os posts.", 500);
   }
 }

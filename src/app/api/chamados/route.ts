@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ChamadoCreate } from "@/lib/contracts";
 import { usuarioAtual, criarChamado, listarChamados } from "@/lib/chamados";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 
@@ -12,10 +13,7 @@ export async function GET(req: NextRequest) {
     const chamados = await listarChamados(usuario);
     return NextResponse.json({ chamados, souGestor: usuario.papel === "admin" });
   } catch (e) {
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao listar os chamados." },
-      { status: 500 },
-    );
+    return respostaErro(e, "Falha ao listar os chamados.", 500);
   }
 }
 
@@ -29,9 +27,6 @@ export async function POST(req: NextRequest) {
     const chamado = await criarChamado(usuario.login, parsed.data);
     return NextResponse.json(chamado, { status: 201 });
   } catch (e) {
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao abrir o chamado." },
-      { status: 500 },
-    );
+    return respostaErro(e, "Falha ao abrir o chamado.", 500);
   }
 }

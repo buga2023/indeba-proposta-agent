@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ProspeccaoRequest } from "@/lib/contracts";
 import { IaIndisponivelError, prospectar } from "@/lib/prospeccao/prospectar";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // a IA pode levar alguns segundos
@@ -21,10 +22,6 @@ export async function POST(req: NextRequest) {
         { status: 503 },
       );
     }
-    console.error("falha na prospecção:", e);
-    return NextResponse.json(
-      { erro: "Falha ao gerar a prospecção.", detalhe: e instanceof Error ? e.message : String(e) },
-      { status: 502 },
-    );
+    return respostaErro(e, "Falha ao gerar a prospecção.", 502);
   }
 }

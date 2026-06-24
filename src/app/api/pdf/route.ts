@@ -3,6 +3,7 @@ import { PropostaScope } from "@/lib/contracts";
 import { renderPdf } from "@/lib/pdf/render";
 import { validarSessao } from "@/lib/auth";
 import { eventoDe, registrarProposta } from "@/lib/log";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // render do Chromium serverless (Vercel)
@@ -21,11 +22,7 @@ export async function POST(req: NextRequest) {
   try {
     pdf = await renderPdf(parsed.data);
   } catch (e) {
-    console.error("falha ao renderizar PDF:", e);
-    return NextResponse.json(
-      { erro: "Falha ao gerar o PDF.", detalhe: e instanceof Error ? e.message : String(e) },
-      { status: 500 },
-    );
+    return respostaErro(e, "Falha ao gerar o PDF.", 500);
   }
 
   // Log append-only (§1.8): quem gerou, cliente, itens e preços. Best-effort —

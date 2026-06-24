@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { EntradaEstruturada } from "@/lib/contracts";
 import { montarPropostaEstruturada } from "@/lib/montar";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,6 @@ export async function POST(req: NextRequest) {
     const scope = await montarPropostaEstruturada(parsed.data);
     return NextResponse.json(scope);
   } catch (e) {
-    return NextResponse.json({ erro: e instanceof Error ? e.message : "Erro" }, { status: 400 });
+    return respostaErro(e, "Erro", 400);
   }
 }

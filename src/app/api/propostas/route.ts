@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PropostaScope } from "@/lib/contracts";
 import { validarSessao } from "@/lib/auth";
 import { listarPropostas, salvarProposta } from "@/lib/propostas";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 
@@ -10,10 +11,7 @@ export async function GET() {
   try {
     return NextResponse.json({ propostas: await listarPropostas() });
   } catch (e) {
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao listar propostas" },
-      { status: 500 },
-    );
+    return respostaErro(e, "Falha ao listar propostas", 500);
   }
 }
 
@@ -29,9 +27,6 @@ export async function POST(req: NextRequest) {
     const registro = await salvarProposta(parsed.data, autor);
     return NextResponse.json(registro, { status: 201 });
   } catch (e) {
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao salvar a proposta" },
-      { status: 500 },
-    );
+    return respostaErro(e, "Falha ao salvar a proposta", 500);
   }
 }

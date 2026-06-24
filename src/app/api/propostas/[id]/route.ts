@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { StatusUpdate } from "@/lib/contracts";
 import { obterProposta, atualizarStatusProposta } from "@/lib/propostas";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 
@@ -13,10 +14,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!registro) return NextResponse.json({ erro: "Proposta não encontrada." }, { status: 404 });
     return NextResponse.json(registro);
   } catch (e) {
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao carregar a proposta" },
-      { status: 500 },
-    );
+    return respostaErro(e, "Falha ao carregar a proposta", 500);
   }
 }
 
@@ -30,9 +28,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json(await atualizarStatusProposta(id, parsed.data.status));
   } catch (e) {
     // update num id inexistente → Prisma lança; tratamos como 404.
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao atualizar o status" },
-      { status: 404 },
-    );
+    return respostaErro(e, "Falha ao atualizar o status", 404);
   }
 }
