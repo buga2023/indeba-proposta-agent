@@ -9,6 +9,9 @@
  */
 import { aliquotaVigente, impostosDoRegime, AVISO_LEGAL } from "./tributario";
 
+const brl = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const pct = (v: number) => `${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+
 export type Atividade = "comercio" | "servico" | "industria";
 export type Regime = "simples" | "presumido" | "real" | "ibs_cbs";
 
@@ -30,6 +33,7 @@ export type LinhaApuracao = {
   fonte: string; // nome da fonte
   oficial: boolean; // false = exemplo a validar
   nota: string | null;
+  memoria: string; // o "por quê": base × alíquota = valor, com vigência + fonte
 };
 
 export type Apuracao = {
@@ -40,6 +44,7 @@ export type Apuracao = {
   linhas: LinhaApuracao[];
   totalSobreFaturamento: number; // soma dos impostos de operação + federais (base faturamento)
   cargaEfetiva: number; // totalSobreFaturamento / faturamento * 100
+  memoria: string; // explicação consolidada (o porquê do total)
   aviso: string;
 };
 
@@ -69,23 +74,34 @@ export function apurar(params: {
     const sobreLucro = SOBRE_LUCRO.includes(imposto);
     const base = faturamento;
     const valor = (base * regra.aliquota) / 100;
+    const vigencia = regra.vigenciaFim ? `${regra.vigenciaInicio}…${regra.vigenciaFim}` : `${regra.vigenciaInicio}…`;
     linhas.push({
       imposto,
       base,
       aliquota: regra.aliquota,
       valor,
-      vigencia: regra.vigenciaFim ? `${regra.vigenciaInicio}…${regra.vigenciaFim}` : `${regra.vigenciaInicio}…`,
+      vigencia,
       fonte: regra.fonte.nome,
       oficial: regra.fonte.oficial,
       nota: sobreLucro
         ? "Base ilustrada = faturamento; a base REAL é o lucro (presumido/real). Confirme com o contador."
         : regra.nota,
+      memoria:
+        `${imposto} (${regime}): ${brl(base)} × ${pct(regra.aliquota)} = ${brl(valor)} ` +
+        `· vigência ${vigencia} · fonte: ${regra.fonte.nome}${regra.fonte.oficial ? "" : " (exemplo, validar)"}` +
+        `${sobreLucro ? " · base ilustrada = faturamento (real é o lucro)" : ""}`,
     });
   }
 
   // Carga "sobre faturamento" não soma IRPJ/CSLL (base diferente) — evita inflar a comparação.
   const sobreFaturamento = linhas.filter((l) => !SOBRE_LUCRO.includes(l.imposto));
   const total = sobreFaturamento.reduce((a, l) => a + l.valor, 0);
+
+  const carga = faturamento ? (total / faturamento) * 100 : 0;
+  const memoria =
+    `Apuração ${regime}/${atividade}, ano ${ano}, faturamento ${brl(faturamento)}. ` +
+    `Impostos sobre faturamento: ${sobreFaturamento.map((l) => `${l.imposto} ${brl(l.valor)}`).join(" + ") || "nenhum"} ` +
+    `= ${brl(total)} (carga ${pct(carga)}).`;
 
   return {
     regime,
@@ -94,7 +110,8 @@ export function apurar(params: {
     faturamento,
     linhas,
     totalSobreFaturamento: total,
-    cargaEfetiva: faturamento ? (total / faturamento) * 100 : 0,
+    cargaEfetiva: carga,
+    memoria,
     aviso: AVISO_LEGAL,
   };
 }
