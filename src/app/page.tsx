@@ -13,7 +13,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse } from "@/lib/contracts";
+import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse } from "@/lib/contracts";
 import { AjudaChat } from "@/components/ajuda-chat";
 
 /* ───────────────────────── helpers ───────────────────────── */
@@ -132,7 +132,7 @@ type PropostaLog = {
 const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
-type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras";
+type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal";
 type TipoProposta = "orcamento" | "implantacao" | "comercial";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -454,6 +454,13 @@ export default function Home() {
             </svg>
             Compras
           </Hoverable>
+          <Hoverable base={navItemStyle(["fiscal"])} hover={navHover} onClick={() => setScreen("fiscal")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 2.5h6l3 3v9H4z" />
+              <path d="M6 8h5M6 10.5h5M6 5.5h2" />
+            </svg>
+            Fiscal
+          </Hoverable>
           <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => setScreen("contrato")}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 2.5h6l3 3v9H4z" />
@@ -539,6 +546,7 @@ export default function Home() {
         {screen === "financeiro" && <FinanceiroScreen />}
         {screen === "cobranca" && <CobrancaScreen />}
         {screen === "compras" && <ComprasScreen />}
+        {screen === "fiscal" && <FiscalScreen />}
         {screen === "contrato" && <ContratoScreen scope={scope} onVerProposta={() => setScreen(scope ? "review" : "briefing")} />}
         {screen === "atendimento" && <AtendimentoScreen />}
       </main>
@@ -2467,6 +2475,132 @@ async function planilhaParaCsv(f: File): Promise<string> {
     return XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
   }
   return f.text();
+}
+
+function FiscalScreen() {
+  const [res, setRes] = useState<FiscalResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [nome, setNome] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function ler(files: FileList | null) {
+    const f = files?.[0];
+    if (!f) return;
+    setLoading(true);
+    setErro(null);
+    setRes(null);
+    setNome(f.name);
+    try {
+      const xml = await f.text();
+      const r = await fetch("/api/fiscal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ xml }),
+      });
+      const raw = await r.text();
+      let d: unknown = null;
+      try {
+        d = raw ? JSON.parse(raw) : null;
+      } catch {
+        /* corpo não-JSON */
+      }
+      if (!r.ok || !d) {
+        const e = (d as { erro?: unknown } | null)?.erro;
+        throw new Error(typeof e === "string" ? e : `Falha (HTTP ${r.status}).`);
+      }
+      setRes(d as FiscalResponse);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao ler a NF-e.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const corSev = (s: string) => (s === "alta" ? { bg: "#FEF2F2", fg: "#B91C1C" } : s === "media" ? { bg: "#FFFBEB", fg: "#B45309" } : { bg: "#F3F4F6", fg: "#4B5563" });
+
+  return (
+    <div style={{ padding: "28px", maxWidth: "960px" }}>
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#1E3A8A 0%,#1E6BB8 60%,#0EA5E9 130%)", boxShadow: "0 14px 34px rgba(30,107,184,.26)", animation: "fadeUp .5s ease both" }}>
+        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
+        <div style={{ position: "relative" }}>
+          <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Fiscal / NF-e</h2>
+          <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "660px" }}>
+            Suba o XML da nota. O motor extrai os dados e valida a consistência (soma dos itens, chave, CNPJ); a IA resume e aponta os riscos — sem recalcular imposto.
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", boxShadow: "var(--shadow-md)", marginBottom: "16px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+        <Hoverable onClick={() => fileRef.current?.click()} base={{ padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)" }} hover={{ transform: "translateY(-2px)" }}>
+          {loading ? "Lendo…" : "Subir XML da NF-e"}
+        </Hoverable>
+        <input ref={fileRef} type="file" accept=".xml,text/xml,application/xml" style={{ display: "none" }} onChange={(e) => ler(e.target.files)} />
+        <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "XML de NF-e (modelo 55)."}</div>
+      </div>
+
+      {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+
+      {res && (
+        <div style={{ animation: "fadeUp .4s ease both" }}>
+          {res.resumo && (
+            <div style={{ marginBottom: "16px", padding: "14px 16px", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: "12px", color: "#1E40AF", fontSize: "13.5px", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{res.resumo}</div>
+          )}
+          {res.achados.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+              {res.achados.map((a, i) => {
+                const c = corSev(a.severidade);
+                return (
+                  <div key={i} style={{ padding: "10px 12px", background: c.bg, border: `1px solid ${c.bg}`, borderRadius: "9px", fontSize: "12.5px", color: c.fg }}>
+                    <b style={{ textTransform: "uppercase", fontSize: "11px" }}>{a.tipo}</b> · {a.descricao}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", fontSize: "13px", color: "var(--gray-700)" }}>
+              <div><b>NF-e {res.nota.numero}</b> · série {res.nota.serie} · {res.nota.naturezaOperacao}</div>
+              <div style={{ color: "var(--gray-400)" }}>{res.nota.dataEmissao}</div>
+            </div>
+            <div style={{ fontSize: "13px", color: "var(--gray-600)", marginTop: "8px" }}>
+              <div><b>Emitente:</b> {res.nota.emitente.nome} ({res.nota.emitente.documento})</div>
+              <div><b>Destinatário:</b> {res.nota.destinatario.nome} ({res.nota.destinatario.documento})</div>
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse", margin: "14px 0", fontSize: "12.5px" }}>
+              <thead>
+                <tr style={{ color: "var(--gray-500)", textAlign: "left" }}>
+                  <th style={{ padding: "6px" }}>Código</th>
+                  <th style={{ padding: "6px" }}>Descrição</th>
+                  <th style={{ padding: "6px", textAlign: "right" }}>Qtd</th>
+                  <th style={{ padding: "6px", textAlign: "right" }}>Vlr un.</th>
+                  <th style={{ padding: "6px", textAlign: "right" }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {res.nota.itens.map((i, n) => (
+                  <tr key={n} style={{ borderTop: "1px solid var(--gray-100)" }}>
+                    <td style={{ padding: "6px" }}>{i.codigo}</td>
+                    <td style={{ padding: "6px" }}>{i.descricao}</td>
+                    <td style={{ padding: "6px", textAlign: "right" }}>{i.quantidade}</td>
+                    <td style={{ padding: "6px", textAlign: "right" }}>R$ {i.valorUnitario}</td>
+                    <td style={{ padding: "6px", textAlign: "right" }}>R$ {i.valorTotal}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "18px", fontSize: "13px", color: "var(--gray-600)" }}>
+              <div>Produtos: <b>R$ {res.nota.valorProdutos}</b></div>
+              <div>Frete: <b>R$ {res.nota.valorFrete}</b></div>
+              <div>ICMS: <b>R$ {res.nota.valorICMS}</b></div>
+              <div style={{ color: "var(--gray-900)" }}>Total: <b>R$ {res.nota.valorTotal}</b></div>
+            </div>
+            <div style={{ marginTop: "10px", fontSize: "10.5px", color: "var(--gray-400)", fontFamily: "monospace", wordBreak: "break-all" }}>Chave: {res.nota.chaveAcesso}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function ComprasScreen() {
