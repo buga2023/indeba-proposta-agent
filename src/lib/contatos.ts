@@ -59,10 +59,17 @@ export async function setGestorEmail(email: string): Promise<void> {
 export async function dispararCobranca(inadimplentes: unknown[], totalDevido: string): Promise<{ enviados: number }> {
   const url = process.env.N8N_COBRANCA_WEBHOOK;
   if (!url) throw new Error("Webhook de cobrança não configurado (N8N_COBRANCA_WEBHOOK).");
+  // Segredo compartilhado: o webhook n8n (Header Auth) exige este header. Sem ele,
+  // a URL do webhook seria um open-relay de e-mail. Só envia se configurado; o
+  // enforcement fica no n8n — assim o dev local sem segredo continua funcionando.
+  const segredo = process.env.N8N_WEBHOOK_SECRET;
   const gestorEmail = await getGestorEmail();
   const r = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(segredo ? { "x-webhook-secret": segredo } : {}),
+    },
     body: JSON.stringify({ gestorEmail, totalDevido, inadimplentes }),
     signal: AbortSignal.timeout(15_000),
   });

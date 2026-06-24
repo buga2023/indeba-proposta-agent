@@ -37,5 +37,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/api/montar", "/api/pdf", "/api/montar-estruturado", "/api/catalogo", "/api/propostas", "/api/prospectar", "/api/financeiro", "/api/contrato", "/api/contrato/:path*", "/api/rag", "/api/feedback", "/api/cobranca", "/api/compras", "/api/fiscal", "/api/contabil"],
+  matcher: ["/", "/api/montar", "/api/pdf", "/api/montar-estruturado", "/api/catalogo", "/api/propostas", "/api/prospectar", "/api/financeiro", "/api/contrato", "/api/contrato/:path*", "/api/rag", "/api/feedback", "/api/cobranca", "/api/cobranca/:path*", "/api/compras", "/api/fiscal", "/api/contabil"],
 };
