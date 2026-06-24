@@ -1,0 +1,69 @@
+{
+  "atualizadoEm": "2026-06-24",
+  "aviso": "RASCUNHOS — modelos genéricos para triagem, NÃO substituem revisão por advogado. Onde revisadoPor é null, a cláusula ainda não foi validada juridicamente. O agente entrega minuta, não parecer.",
+  "clausulas": [
+    {
+      "id": "obj-fornecimento",
+      "categoria": "objeto",
+      "tiposContrato": ["fornecimento", "prestacao_servico"],
+      "titulo": "Do Objeto",
+      "texto": "O presente contrato tem por objeto o fornecimento, pela CONTRATADA à CONTRATANTE, dos produtos descritos em {itens}, nas condições aqui pactuadas.",
+      "fundamento": "CC art. 104 (objeto lícito e determinado)",
+      "fonte": { "nome": "modelo interno", "url": null, "revisadoPor": null, "oficial": false }
+    },
+    {
+      "id": "pag-padrao",
+      "categoria": "preco_pagamento",
+      "tiposContrato": ["fornecimento", "prestacao_servico", "compra_venda"],
+      "titulo": "Do Preço e do Pagamento",
+      "texto": "Pelo objeto deste contrato, a CONTRATANTE pagará à CONTRATADA o valor total de {valorTotal}, na forma de {pagamento}, com vencimento conforme {condicoes}.",
+      "fundamento": null,
+      "fonte": { "nome": "modelo interno", "url": null, "revisadoPor": null, "oficial": false }
+    },
+    {
+      "id": "vig-prazo",
+      "categoria": "vigencia",
+      "tiposContrato": ["fornecimento", "prestacao_servico", "locacao"],
+      "titulo": "Da Vigência",
+      "texto": "Este contrato vigorará pelo prazo de {prazo}, contado da data de sua assinatura, podendo ser renovado mediante acordo escrito entre as partes.",
+      "fundamento": null,
+      "fonte": { "nome": "modelo interno", "url": null, "revisadoPor": null, "oficial": false }
+    },
+    {
+      "id": "multa-penal",
+      "categoria": "multa",
+      "tiposContrato": ["fornecimento", "prestacao_servico", "compra_venda", "locacao"],
+      "titulo": "Da Cláusula Penal",
+      "texto": "O descumprimento de qualquer obrigação contratual sujeitará a parte infratora ao pagamento de multa de {percentualMulta} sobre o valor {baseMulta}, sem prejuízo das perdas e danos.",
+      "fundamento": "CC art. 408-416 (cláusula penal)",
+      "fonte": { "nome": "modelo interno", "url": null, "revisadoPor": null, "oficial": false }
+    },
+    {
+      "id": "lgpd-padrao",
+      "categoria": "lgpd",
+      "tiposContrato": ["fornecimento", "prestacao_servico", "nda", "locacao", "compra_venda"],
+      "titulo": "Da Proteção de Dados Pessoais",
+      "texto": "As partes tratarão eventuais dados pessoais a que tenham acesso exclusivamente para a execução deste contrato, em conformidade com a Lei nº 13.709/2018 (LGPD), adotando medidas de segurança adequadas e respeitando os direitos dos titulares.",
+      "fundamento": "Lei 13.709/2018 (LGPD)",
+      "fonte": { "nome": "modelo interno", "url": null, "revisadoPor": null, "oficial": false }
+    },
+    {
+      "id": "confid-padrao",
+      "categoria": "confidencialidade",
+      "tiposContrato": ["fornecimento", "prestacao_servico", "nda"],
+      "titulo": "Da Confidencialidade",
+      "texto": "As partes obrigam-se a manter sigilo sobre todas as informações confidenciais a que tiverem acesso em razão deste contrato, durante sua vigência e por {prazoSigilo} após seu término.",
+      "fundamento": null,
+      "fonte": { "nome": "modelo interno", "url": null, "revisadoPor": null, "oficial": false }
+    },
+    {
+      "id": "foro-eleicao",
+      "categoria": "foro",
+      "tiposContrato": ["fornecimento", "prestacao_servico", "nda", "locacao", "compra_venda"],
+      "titulo": "Do Foro",
+      "texto": "Fica eleito o foro da comarca de {foro} para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia a qualquer outro, por mais privilegiado que seja.",
+      "fundamento": "CPC art. 63 (foro de eleição)",
+      "fonte": { "nome": "modelo interno", "url": null, "revisadoPor": null, "oficial": false }
+    }
+  ]
+}
