@@ -15,7 +15,12 @@ export type AchadoQdrant = { score: number; payload: Record<string, unknown> };
 
 export async function qdrantDisponivel(): Promise<boolean> {
   try {
-    const r = await fetch(`${QDRANT_URL}/healthz`, { signal: AbortSignal.timeout(2500) });
+    // Qdrant Cloud exige a api-key até no /healthz (403 sem ela). Timeout com folga: o
+    // hop Vercel→Qdrant Cloud (ex.: eu-west) é bem mais lento que o localhost.
+    const r = await fetch(`${QDRANT_URL}/healthz`, {
+      headers: headers(),
+      signal: AbortSignal.timeout(6000),
+    });
     return r.ok;
   } catch {
     return false;
