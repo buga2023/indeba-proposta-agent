@@ -1,33 +1,34 @@
+"use client";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type Tone = "neutro" | "azul" | "laranja" | "sucesso";
-
-const tones: Record<Tone, string> = {
-  neutro: "bg-muted text-muted-foreground",
-  azul: "bg-primary/10 text-primary",
-  laranja: "bg-accent/15 text-accent",
-  sucesso: "bg-[var(--success-soft)] text-success",
-};
-
 export function Tag({
-  tone = "neutro",
-  dot,
+  active = false,
+  removable = false,
+  onRemove,
   className,
   children,
   ...props
-}: React.HTMLAttributes<HTMLSpanElement> & { tone?: Tone; dot?: boolean }) {
+}: React.HTMLAttributes<HTMLSpanElement> & {
+  active?: boolean;
+  removable?: boolean;
+  onRemove?: (e: React.MouseEvent) => void;
+}) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium",
-        tones[tone],
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition",
+        active ? "border-primary bg-primary text-white" : "border-gray-300 bg-card text-foreground hover:bg-muted",
         className,
       )}
       {...props}
     >
-      {dot && <span className="h-1.5 w-1.5 rounded-full bg-current" />}
       {children}
+      {removable && (
+        <button onClick={(e) => { e.stopPropagation(); onRemove?.(e); }} className="ml-0.5 inline-flex opacity-70 hover:opacity-100" aria-label="remover">
+          ×
+        </button>
+      )}
     </span>
   );
 }

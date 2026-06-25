@@ -1,19 +1,18 @@
 "use client";
-
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
 type Tab = string | { value: string; label: React.ReactNode };
 
 export function Tabs({
-  tabs,
+  tabs = [],
   value,
   onChange,
   className,
 }: {
-  tabs: Tab[];
+  tabs?: Tab[];
   value?: string;
-  onChange?: (next: string) => void;
+  onChange?: (v: string) => void;
   className?: string;
 }) {
   const refs = React.useRef<Record<string, HTMLButtonElement | null>>({});
@@ -36,13 +35,12 @@ export function Tabs({
           return (
             <button
               key={val}
-              type="button"
               ref={(el) => {
                 refs.current[val] = el;
               }}
               onClick={() => onChange?.(val)}
               className={cn(
-                "px-3.5 py-2.5 text-sm transition-colors duration-200",
+                "px-3.5 py-2.5 text-sm transition-colors",
                 on ? "font-semibold text-primary" : "font-medium text-muted-foreground hover:text-foreground",
               )}
             >
@@ -52,12 +50,8 @@ export function Tabs({
         })}
       </div>
       <span
-        className="absolute -bottom-px h-[2.5px] rounded-full bg-primary"
-        style={{
-          left: ind.left,
-          width: ind.width,
-          transition: "left var(--duration-base) var(--ease-out), width var(--duration-base) var(--ease-out)",
-        }}
+        className="absolute -bottom-px h-[2.5px] rounded-full bg-primary transition-[left,width] duration-200"
+        style={{ left: ind.left, width: ind.width, transitionTimingFunction: "var(--ease-out)" }}
       />
     </div>
   );

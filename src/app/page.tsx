@@ -17,6 +17,8 @@ import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, Prospec
 import { AjudaChat } from "@/components/ajuda-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
 import { AdminScreen } from "@/components/admin-screen";
+import { useToast } from "./_app/toast";
+import { CommandPalette, type PaletteItem } from "./_app/command-palette";
 
 /* ───────────────────────── helpers ───────────────────────── */
 
@@ -147,7 +149,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
 const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
-type Screen = "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config";
+type Screen = "dashboard" | "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config";
 type TipoProposta = "orcamento" | "implantacao" | "comercial";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -158,10 +160,31 @@ const TIPOS: { value: TipoProposta; label: string; hint: string }[] = [
 ];
 const tipoLabel = (t: string) => TIPOS.find((x) => x.value === t)?.label ?? "Orçamento";
 
+// Itens da command palette (Ctrl/Cmd+K) — só telas reais.
+const CMD_ITEMS: PaletteItem[] = [
+  { key: "dashboard", label: "Dashboard" },
+  { key: "briefing", label: "Nova proposta" },
+  { key: "history", label: "Propostas" },
+  { key: "catalog", label: "Catálogo" },
+  { key: "prospeccao", label: "Prospecção" },
+  { key: "instagram", label: "Posts Instagram" },
+  { key: "financeiro", label: "Financeiro" },
+  { key: "cobranca", label: "Cobrança" },
+  { key: "compras", label: "Compras" },
+  { key: "fiscal", label: "Fiscal / NF-e" },
+  { key: "contabil", label: "Contábil" },
+  { key: "contrato", label: "Contrato" },
+  { key: "atendimento", label: "Atendimento" },
+  { key: "chamados", label: "Chamados" },
+  { key: "config", label: "Configurações" },
+];
+
 /* ───────────────────────── componente principal ───────────────────────── */
 
 export default function Home() {
-  const [screen, setScreen] = useState<Screen>("briefing");
+  const [screen, setScreen] = useState<Screen>("dashboard");
+  const toast = useToast();
+  const [palette, setPalette] = useState(false);
   const [reviewVariant, setReviewVariant] = useState<"A" | "B">("A");
   const [briefingText, setBriefingText] = useState("");
   const [loadingStep, setLoadingStep] = useState(0);
@@ -193,6 +216,18 @@ export default function Home() {
   }, []);
 
   useEffect(() => () => stopStepTimer(), [stopStepTimer]);
+
+  // Command palette: Ctrl/Cmd+K alterna o overlay de navegação.
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPalette((p) => !p);
+      }
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
 
   // Carrega catálogo / histórico sob demanda (uma vez por entrada na tela).
   useEffect(() => {
@@ -266,6 +301,7 @@ export default function Home() {
       setExcluded(new Set());
       setHasLoadedOnce(true);
       setScreen("review");
+      toast("Proposta montada — revise os produtos", "success");
       persistirProposta(novo); // auto-save: proposta gerada já vira registro (rascunho)
     } catch (e) {
       stopStepTimer();
@@ -411,6 +447,7 @@ export default function Home() {
       URL.revokeObjectURL(url);
       // persiste as edições (quantidade/texto) e força recarga do histórico
       persistirProposta(scope);
+      toast("PDF gerado", "success");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao gerar PDF.");
     } finally {
@@ -467,6 +504,15 @@ export default function Home() {
         </div>
 
         <nav style={{ padding: "10px 8px", flex: 1, display: "flex", flexDirection: "column", gap: "2px", overflowY: "auto" }}>
+          <Hoverable base={navItemStyle(["dashboard"])} hover={navHover} onClick={() => setScreen("dashboard")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1" />
+              <rect x="9" y="2.5" width="5.5" height="3.5" rx="1" />
+              <rect x="9" y="7.5" width="5.5" height="7" rx="1" />
+              <rect x="2.5" y="9.5" width="5.5" height="5" rx="1" />
+            </svg>
+            Dashboard
+          </Hoverable>
           <Hoverable base={navItemStyle(["briefing", "loading", "review", "pdf"])} hover={navHover} onClick={novaProposta}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M9.5 2H4.5A1 1 0 003.5 3v11a1 1 0 001 1h8a1 1 0 001-1V6.5L9.5 2z" />
@@ -599,6 +645,7 @@ export default function Home() {
 
       {/* ============ MAIN ============ */}
       <main className="ies-scroll" style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden", position: "relative" }}>
+        {screen === "dashboard" && <DashboardScreen setScreen={setScreen} />}
         {screen === "briefing" && (
           <BriefingScreen {...{ quickLoading, briefingText, setBriefingText, startGeneration, textareaRef, error, tipoProposta, setTipoProposta }} />
         )}
@@ -652,8 +699,146 @@ export default function Home() {
         {screen === "config" && <AdminScreen />}
       </main>
 
+      {/* Command palette (Ctrl/Cmd+K) */}
+      <CommandPalette open={palette} onClose={() => setPalette(false)} items={CMD_ITEMS} onGo={(k) => { setScreen(k as Screen); setPalette(false); }} />
+
       {/* Assistente de ajuda — overlay global (canto inferior direito) */}
       <AjudaChat />
+    </div>
+  );
+}
+
+/* ═══════════════════════ TELA: DASHBOARD ═══════════════════════ */
+
+function DashboardScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
+  const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
+  const [catalogoCount, setCatalogoCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/propostas")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then((d: { propostas: PropostaLog[] }) => setPropostas(d.propostas))
+      .catch(() => setPropostas([]));
+    fetch("/api/catalogo")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then((d: { produtos: unknown[] }) => setCatalogoCount(d.produtos.length))
+      .catch(() => setCatalogoCount(null));
+  }, []);
+
+  const lista = propostas ?? [];
+  const totalProp = lista.length;
+  const valorTotal = lista.reduce((s, p) => s + Number(p.total || 0), 0);
+  const aprovadas = lista.filter((p) => p.status === "aprovada").length;
+
+  const statusCount = (Object.keys(STATUS_UI) as StatusProposta[])
+    .map((k) => ({ k, n: lista.filter((p) => p.status === k).length, label: STATUS_UI[k].label, fg: STATUS_UI[k].fg }))
+    .filter((s) => s.n > 0);
+  const donut = (() => {
+    if (!totalProp) return "var(--gray-100)";
+    let acc = 0;
+    const stops = statusCount.map((s) => {
+      const from = (acc / totalProp) * 100;
+      acc += s.n;
+      const to = (acc / totalProp) * 100;
+      return `${s.fg} ${from}% ${to}%`;
+    });
+    return `conic-gradient(${stops.join(",")})`;
+  })();
+
+  const porTipo = TIPOS.map((t) => ({ label: t.label, n: lista.filter((p) => p.tipo === t.value).length }));
+  const maxTipo = Math.max(1, ...porTipo.map((t) => t.n));
+
+  const KPIS = [
+    { label: "Propostas", valor: String(totalProp), cor: "var(--blue-600)" },
+    { label: "Valor total", valor: fmt(valorTotal), cor: "var(--success)" },
+    { label: "Aprovadas", valor: String(aprovadas), cor: "var(--blue-800)" },
+    { label: "Produtos no catálogo", valor: catalogoCount == null ? "—" : String(catalogoCount), cor: "var(--orange-600)" },
+  ];
+
+  return (
+    <div style={{ background: "var(--gray-50)", minHeight: "100vh" }}>
+      <ScreenHead
+        title="Dashboard"
+        sub="Olá, Mateus — visão geral"
+        right={
+          <Hoverable onClick={() => setScreen("history")} base={{ padding: "8px 16px", background: "var(--blue-600)", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13.5px", fontWeight: 600, color: "white" }} hover={{ background: "var(--blue-700)" }}>Ver propostas</Hoverable>
+        }
+      />
+      <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: "20px" }}>
+        {/* KPIs */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "16px" }}>
+          {KPIS.map((k, i) => (
+            <div key={k.label} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", animation: `popIn .4s var(--ease-spring) ${i * 0.05}s both` }}>
+              <div style={{ fontSize: "12px", color: "var(--gray-500)", fontWeight: 500 }}>{k.label}</div>
+              <div style={{ fontSize: "26px", fontWeight: 800, color: k.cor, fontFamily: "var(--font-mono)", marginTop: "6px" }}>{k.valor}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+          {/* Donut: status */}
+          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "20px", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)", marginBottom: "16px" }}>Propostas por status</div>
+            {totalProp === 0 ? (
+              <div style={{ fontSize: "13px", color: "var(--gray-400)", padding: "20px 0" }}>{propostas == null ? "Carregando…" : "Nenhuma proposta ainda."}</div>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+                <div style={{ width: 120, height: 120, borderRadius: "50%", background: donut, flex: "none", position: "relative" }}>
+                  <div style={{ position: "absolute", inset: 18, borderRadius: "50%", background: "white", display: "grid", placeItems: "center" }}>
+                    <span style={{ fontSize: "22px", fontWeight: 800, color: "var(--gray-900)", fontFamily: "var(--font-mono)" }}>{totalProp}</span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {statusCount.map((s) => (
+                    <div key={s.k} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: "var(--gray-600)" }}>
+                      <span style={{ width: 10, height: 10, borderRadius: "3px", background: s.fg, flex: "none" }} />
+                      {s.label} <b style={{ color: "var(--gray-900)", fontFamily: "var(--font-mono)" }}>{s.n}</b>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Barras: por tipo */}
+          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "20px", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)", marginBottom: "16px" }}>Propostas por tipo</div>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: "20px", height: "140px", padding: "0 10px" }}>
+              {porTipo.map((t) => (
+                <div key={t.label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", height: "100%", justifyContent: "flex-end" }}>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--blue-600)", fontFamily: "var(--font-mono)" }}>{t.n}</span>
+                  <div style={{ width: "100%", maxWidth: "56px", height: `${(t.n / maxTipo) * 100}%`, minHeight: "4px", background: "linear-gradient(180deg,var(--blue-500),var(--blue-700))", borderRadius: "8px 8px 0 0", transition: "height .4s var(--ease-out)" }} />
+                  <span style={{ fontSize: "12px", color: "var(--gray-500)" }}>{t.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Recentes */}
+        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "20px", boxShadow: "var(--shadow-sm)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)" }}>Propostas recentes</div>
+            <Hoverable onClick={() => setScreen("history")} base={{ background: "none", border: "none", color: "var(--blue-600)", fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: 0 }}>Ver todas →</Hoverable>
+          </div>
+          {lista.length === 0 ? (
+            <div style={{ fontSize: "13px", color: "var(--gray-400)" }}>{propostas == null ? "Carregando…" : "Nenhuma proposta ainda."}</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {lista.slice(0, 6).map((p) => {
+                const st = STATUS_UI[p.status];
+                return (
+                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 0", borderTop: "1px solid var(--gray-100)" }}>
+                    <span style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--gray-900)", flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.cliente}</span>
+                    <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", background: st.bg, color: st.fg }}>{st.label}</span>
+                    <span style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--gray-700)", minWidth: "90px", textAlign: "right" }}>R$ {Number(p.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -2279,87 +2464,85 @@ function AtendimentoScreen() {
   }
 
   return (
-    <div style={{ padding: "28px", maxWidth: "920px" }}>
-      {/* ── Hero ── */}
-      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#0F766E 0%,#14B8A6 60%,#0EA5E9 130%)", boxShadow: "0 14px 34px rgba(20,184,166,.26)", animation: "fadeUp .5s ease both" }}>
-        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
-        <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          <div>
-            <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Atendimento (RAG)</h2>
-            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "620px" }}>
-              Tira dúvidas sobre os produtos a partir da base (Qdrant). Responde só com o que está indexado — e cita a fonte. Se não souber, diz que não sabe.
-            </div>
-          </div>
-          <button onClick={() => setAdmin((a) => !a)} style={{ padding: "8px 14px", borderRadius: "9px", border: "1px solid rgba(255,255,255,.35)", background: "rgba(255,255,255,.16)", color: "white", fontSize: "12.5px", fontWeight: 700, cursor: "pointer", flex: "none" }}>
+    <div style={{ background: "var(--gray-50)", display: "flex", flexDirection: "column", height: "100vh" }}>
+      <ScreenHead
+        title="Atendimento"
+        sub="Dúvidas sobre produtos — responde só com o que está na base e cita a fonte"
+        right={
+          <button onClick={() => setAdmin((a) => !a)} style={{ padding: "8px 14px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: admin ? "var(--blue-50)" : "white", color: admin ? "var(--blue-600)" : "var(--gray-700)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
             {admin ? "Fechar base" : "Gerenciar base"}
           </button>
-        </div>
-      </div>
+        }
+      />
 
-      {info && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: "10px", color: "#047857", fontSize: "13px" }}>{info}</div>}
-      {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
-
-      {/* ── Admin: indexação ── */}
-      {admin && (
-        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", boxShadow: "var(--shadow-md)", marginBottom: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "14px" }}>
-            <div style={{ fontSize: "13px", color: "var(--gray-600)" }}>Indexe o catálogo (base de produtos) e anexe documentos (FAQ, políticas).</div>
-            <Hoverable onClick={loading ? undefined : reindexar} base={{ padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: loading ? "wait" : "pointer", fontSize: "13px", fontWeight: 700, color: "white", opacity: loading ? 0.6 : 1 }} hover={loading ? {} : { transform: "translateY(-2px)" }}>Reindexar catálogo</Hoverable>
-          </div>
-          <input value={docTitulo} onChange={(e) => setDocTitulo(e.target.value)} placeholder="Título do documento (ex.: Política de troca)" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "10px 12px", fontSize: "13.5px", marginBottom: "8px", outline: "none" }} />
-          <textarea value={docTexto} onChange={(e) => setDocTexto(e.target.value)} rows={4} placeholder="Cole o texto do documento…" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "10px 12px", fontSize: "13.5px", outline: "none", resize: "vertical", minHeight: "90px", lineHeight: 1.5 }} />
-          <div style={{ marginTop: "10px" }}>
-            <Hoverable onClick={loading || !docTitulo.trim() || !docTexto.trim() ? undefined : indexarDoc} base={{ display: "inline-flex", padding: "9px 18px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: loading || !docTitulo.trim() || !docTexto.trim() ? "not-allowed" : "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)", opacity: loading || !docTitulo.trim() || !docTexto.trim() ? 0.5 : 1 }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Indexar documento</Hoverable>
-          </div>
+      {(info || erro || admin) && (
+        <div style={{ padding: "16px 28px 0" }}>
+          {info && <div style={{ marginBottom: "12px", padding: "11px 14px", background: "#ECFDF5", border: "1px solid #A7F3D0", borderRadius: "10px", color: "#047857", fontSize: "13px" }}>{info}</div>}
+          {erro && <div style={{ marginBottom: "12px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+          {admin && (
+            <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", padding: "18px", boxShadow: "var(--shadow-sm)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "12px" }}>
+                <div style={{ fontSize: "13px", color: "var(--gray-600)" }}>Indexe o catálogo (base de produtos) e anexe documentos (FAQ, políticas).</div>
+                <Hoverable onClick={loading ? undefined : reindexar} base={{ padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: loading ? "wait" : "pointer", fontSize: "13px", fontWeight: 700, color: "white", opacity: loading ? 0.6 : 1 }} hover={loading ? {} : { transform: "translateY(-2px)" }}>Reindexar catálogo</Hoverable>
+              </div>
+              <input value={docTitulo} onChange={(e) => setDocTitulo(e.target.value)} placeholder="Título do documento (ex.: Política de troca)" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "10px 12px", fontSize: "13.5px", marginBottom: "8px", outline: "none" }} />
+              <textarea value={docTexto} onChange={(e) => setDocTexto(e.target.value)} rows={4} placeholder="Cole o texto do documento…" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "10px 12px", fontSize: "13.5px", outline: "none", resize: "vertical", minHeight: "90px", lineHeight: 1.5 }} />
+              <div style={{ marginTop: "10px" }}>
+                <Hoverable onClick={loading || !docTitulo.trim() || !docTexto.trim() ? undefined : indexarDoc} base={{ display: "inline-flex", padding: "9px 18px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: loading || !docTitulo.trim() || !docTexto.trim() ? "not-allowed" : "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)", opacity: loading || !docTitulo.trim() || !docTexto.trim() ? 0.5 : 1 }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Indexar documento</Hoverable>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* ── Conversa ── */}
-      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "18px", boxShadow: "var(--shadow-md)" }}>
+      <div className="ies-scroll" style={{ flex: 1, padding: "24px 28px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
         {msgs.length === 0 ? (
-          <div style={{ fontSize: "13px", color: "var(--gray-400)", padding: "10px 4px" }}>
+          <div style={{ margin: "auto", textAlign: "center", maxWidth: "440px", fontSize: "13px", color: "var(--gray-400)", lineHeight: 1.6 }}>
             Ex.: “qual produto desengordurante vocês têm?”, “o Primmax serve pra cozinha industrial?”, “qual a embalagem e preço?”. (Indexe o catálogo primeiro em “Gerenciar base”.)
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "14px" }}>
-            {msgs.map((m, i) => (
-              <div key={i} style={{ alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth: "84%" }}>
-                <div style={{ padding: "10px 14px", borderRadius: "12px", fontSize: "13.5px", lineHeight: 1.5, whiteSpace: "pre-wrap", color: m.role === "user" ? "white" : "var(--gray-900)", background: m.role === "user" ? "var(--blue-600)" : "var(--gray-100)" }}>
+          msgs.map((m, i) =>
+            m.role === "user" ? (
+              <div key={i} style={{ alignSelf: "flex-end", maxWidth: "70%", background: "var(--blue-600)", color: "#fff", padding: "11px 15px", borderRadius: "14px", borderBottomRightRadius: "4px", fontSize: "13.5px", lineHeight: 1.5, whiteSpace: "pre-wrap", animation: "fadeUp .3s var(--ease-out) both" }}>{m.texto}</div>
+            ) : (
+              <div key={i} style={{ alignSelf: "flex-start", maxWidth: "82%", animation: "fadeUp .3s var(--ease-out) both" }}>
+                <div style={{ background: "white", border: "1px solid var(--gray-200)", padding: "14px 16px", borderRadius: "14px", borderBottomLeftRadius: "4px", boxShadow: "var(--shadow-sm)", fontSize: "13.5px", color: "var(--gray-800)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
                   {m.texto}
+                  {m.fontes && m.fontes.length > 0 && (
+                    <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "5px" }}>
+                      {m.fontes.map((f, j) => (
+                        <div key={j} style={{ fontSize: "11px", color: "var(--gray-500)", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "6px 9px" }}>
+                          <b>[{j + 1}] {f.titulo}</b> <span style={{ color: "var(--gray-400)" }}>· {f.tipo} · {(f.score * 100).toFixed(0)}%</span>
+                          <div style={{ marginTop: "2px", color: "var(--gray-500)" }}>{f.trecho.slice(0, 160)}…</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                {m.fontes && m.fontes.length > 0 && (
-                  <div style={{ marginTop: "6px", display: "flex", flexDirection: "column", gap: "5px" }}>
-                    {m.fontes.map((f, j) => (
-                      <div key={j} style={{ fontSize: "11px", color: "var(--gray-500)", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "6px 9px" }}>
-                        <b>[{j + 1}] {f.titulo}</b> <span style={{ color: "var(--gray-400)" }}>· {f.tipo} · {(f.score * 100).toFixed(0)}%</span>
-                        <div style={{ marginTop: "2px", color: "var(--gray-500)" }}>{f.trecho.slice(0, 160)}…</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {m.role === "assistant" && <FeedbackResposta agente="atendimento" pergunta={msgs[i - 1]?.texto ?? null} resposta={m.texto} />}
+                <FeedbackResposta agente="atendimento" pergunta={msgs[i - 1]?.texto ?? null} resposta={m.texto} />
               </div>
-            ))}
-            {loading && <div style={{ alignSelf: "flex-start", fontSize: "13px", color: "var(--gray-400)" }}>Buscando na base…</div>}
-          </div>
+            ),
+          )
         )}
+        {loading && <div style={{ alignSelf: "flex-start", fontSize: "13px", color: "var(--gray-400)" }}>Buscando na base…</div>}
+      </div>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
-          <textarea
+      <div style={{ padding: "14px 28px 22px", background: "linear-gradient(to top,var(--gray-50) 70%,transparent)" }}>
+        <div style={{ maxWidth: "760px", margin: "0 auto", background: "white", border: "1.5px solid var(--gray-200)", borderRadius: "14px", boxShadow: "var(--shadow-md)", display: "flex", alignItems: "center", padding: "8px 8px 8px 16px", gap: "8px" }}>
+          <input
             value={pergunta}
             onChange={(e) => setPergunta(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); perguntar(); } }}
             placeholder="Pergunte sobre os produtos…"
-            rows={1}
-            style={{ flex: 1, border: "1px solid var(--gray-200)", borderRadius: "11px", padding: "11px 14px", fontSize: "14px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", resize: "none", lineHeight: 1.5 }}
+            style={{ flex: 1, border: "none", outline: "none", fontSize: "14px", fontFamily: "var(--font-sans), sans-serif", color: "var(--gray-900)", background: "transparent" }}
           />
-          <Hoverable
-            onClick={podePerguntar ? perguntar : undefined}
-            base={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: podePerguntar ? "pointer" : "not-allowed", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: podePerguntar ? 1 : 0.5, flex: "none" }}
-            hover={podePerguntar ? { transform: "translateY(-2px)" } : {}}
-          >
-            {loading ? "…" : "Enviar"}
-          </Hoverable>
+          <button onClick={() => podePerguntar && perguntar()} disabled={!podePerguntar} title="Enviar" style={{ width: "38px", height: "38px", borderRadius: "10px", background: "var(--orange-500)", border: "none", cursor: podePerguntar ? "pointer" : "not-allowed", opacity: podePerguntar ? 1 : 0.5, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
+            {loading ? (
+              <div style={{ width: "16px", height: "16px", border: "2px solid rgba(255,255,255,.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+            )}
+          </button>
         </div>
       </div>
     </div>
@@ -2481,126 +2664,98 @@ ${clausulas}
     s === "alta" ? { bg: "#FEF2F2", fg: "#B91C1C", bd: "#FECACA" } : s === "media" ? { bg: "#FFFBEB", fg: "#B45309", bd: "#FDE68A" } : { bg: "#F3F4F6", fg: "#4B5563", bd: "#E5E7EB" };
 
   return (
-    <div style={{ padding: "28px", maxWidth: "920px" }}>
-      {/* ── Hero ── */}
-      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#334155 0%,#1E6BB8 70%,#0EA5E9 130%)", boxShadow: "0 14px 34px rgba(30,107,184,.26)", animation: "fadeUp .5s ease both" }}>
-        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
-        <div style={{ position: "relative" }}>
-          <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Agente de Contrato</h2>
-          <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "640px" }}>
-            Gere o contrato a partir de uma proposta (valor e partes vêm do escopo, a IA só redige as cláusulas) ou cole um contrato recebido para a IA apontar os riscos.
+    <div style={{ background: "var(--gray-50)", minHeight: "100vh", paddingBottom: "40px" }}>
+      <ScreenHead
+        title="Contrato"
+        sub="View determinística da proposta · cláusulas redigidas pela IA"
+        right={
+          <div style={{ display: "flex", background: "var(--gray-100)", borderRadius: "8px", padding: "3px", gap: "2px" }}>
+            {(["gerar", "analisar"] as const).map((m) => (
+              <button key={m} onClick={() => { setModo(m); setErro(null); }} style={{ padding: "6px 14px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: modo === m ? 600 : 400, background: modo === m ? "var(--blue-800)" : "transparent", color: modo === m ? "#fff" : "var(--gray-500)", fontFamily: "inherit" }}>{m === "gerar" ? "Gerar" : "Analisar recebido"}</button>
+            ))}
           </div>
-        </div>
-      </div>
+        }
+      />
+      <div style={{ padding: "20px 28px", maxWidth: "860px", margin: "0 auto" }}>
+        {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
 
-      {/* ── Toggle de modo ── */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
-        {(["gerar", "analisar"] as const).map((m) => (
-          <button key={m} onClick={() => { setModo(m); setErro(null); }} style={{ padding: "9px 18px", borderRadius: "10px", border: `1px solid ${modo === m ? "var(--blue-600)" : "var(--gray-200)"}`, background: modo === m ? "var(--blue-600)" : "white", color: modo === m ? "white" : "var(--gray-700)", fontSize: "13.5px", fontWeight: 700, cursor: "pointer" }}>
-            {m === "gerar" ? "Gerar de proposta" : "Analisar contrato"}
-          </button>
-        ))}
-      </div>
-
-      {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
-
-      {/* ── Modo GERAR ── */}
-      {modo === "gerar" && (
-        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "22px", boxShadow: "var(--shadow-md)" }}>
-          {!scope ? (
-            <div style={{ textAlign: "center", padding: "20px" }}>
+        {modo === "gerar" ? (
+          !scope ? (
+            <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "40px", textAlign: "center", boxShadow: "var(--shadow-sm)" }}>
               <div style={{ fontSize: "14px", color: "var(--gray-500)", marginBottom: "14px" }}>Nenhuma proposta aberta. Gere ou abra uma proposta para criar o contrato a partir dela.</div>
               <Hoverable onClick={onVerProposta} base={{ display: "inline-flex", padding: "10px 18px", background: "var(--blue-600)", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "white" }} hover={{ transform: "translateY(-2px)" }}>Ir para a proposta</Hoverable>
             </div>
-          ) : (
-            <>
-              <div style={{ fontSize: "13px", color: "var(--gray-600)", marginBottom: "14px" }}>
-                Proposta de <b>{scope.cliente.razaoSocial}</b> — {scope.itens.length} {scope.itens.length === 1 ? "item" : "itens"}.
-              </div>
-              <Hoverable onClick={loading ? undefined : gerar} base={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "11px 22px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: loading ? "wait" : "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: loading ? 0.6 : 1 }} hover={loading ? {} : { transform: "translateY(-2px)" }}>
-                {loading ? "Gerando…" : "Gerar contrato"}
-              </Hoverable>
-
-              {contrato && (
-                <div style={{ marginTop: "22px", borderTop: "1px solid var(--gray-200)", paddingTop: "20px", animation: "fadeUp .4s ease both" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
-                    <h3 style={{ fontSize: "18px", fontWeight: 800, color: "var(--gray-900)", margin: 0 }}>Contrato de Fornecimento</h3>
-                    <Hoverable onClick={() => imprimir(contrato)} base={{ padding: "9px 16px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Imprimir / Salvar PDF</Hoverable>
-                  </div>
-                  <div style={{ fontSize: "13px", color: "var(--gray-600)", marginTop: "10px" }}>
-                    <div><b>Contratada:</b> {contrato.contratada.razaoSocial} (CNPJ {contrato.contratada.cnpj})</div>
-                    <div><b>Contratante:</b> {contrato.contratante.razaoSocial} (CNPJ {contrato.contratante.cnpj})</div>
-                  </div>
-                  <table style={{ width: "100%", borderCollapse: "collapse", margin: "14px 0", fontSize: "13px" }}>
-                    <thead><tr style={{ color: "var(--gray-500)", textAlign: "left" }}><th style={{ padding: "6px" }}>Item</th><th style={{ padding: "6px", textAlign: "right" }}>Qtd</th><th style={{ padding: "6px", textAlign: "right" }}>Preço un.</th><th style={{ padding: "6px", textAlign: "right" }}>Subtotal</th></tr></thead>
-                    <tbody>
-                      {contrato.itens.map((i) => (
-                        <tr key={i.codigo} style={{ borderTop: "1px solid var(--gray-100)" }}>
-                          <td style={{ padding: "6px" }}>{i.nome}</td>
-                          <td style={{ padding: "6px", textAlign: "right" }}>{i.quantidade}</td>
-                          <td style={{ padding: "6px", textAlign: "right" }}>R$ {i.precoUnitario}</td>
-                          <td style={{ padding: "6px", textAlign: "right" }}>R$ {i.subtotal}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <div style={{ textAlign: "right", fontWeight: 800, fontSize: "15px", color: "var(--gray-900)" }}>Valor total: R$ {contrato.valorTotal}</div>
-                  <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {contrato.clausulas.map((cl, n) => (
-                      <div key={n}>
-                        <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--gray-800)" }}>{n + 1}. {cl.titulo} <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--gray-400)", marginLeft: "6px" }}>{cl.procedencia}</span></div>
-                        <div style={{ fontSize: "13px", color: "var(--gray-600)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{cl.texto}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {/* ── Modo ANALISAR ── */}
-      {modo === "analisar" && (
-        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "22px", boxShadow: "var(--shadow-md)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", flexWrap: "wrap", marginBottom: "6px" }}>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-500)" }}>Cole o texto do contrato — ou anexe o arquivo</label>
-            <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }} onChange={(e) => { anexar(e.target.files?.[0]); e.target.value = ""; }} />
-            <Hoverable onClick={extraindo ? undefined : () => fileRef.current?.click()} base={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "8px 14px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: extraindo ? "wait" : "pointer", fontSize: "12.5px", fontWeight: 600, color: "var(--gray-700)" }} hover={extraindo ? {} : { border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
-              {extraindo ? "Lendo arquivo…" : "Anexar PDF/DOCX/TXT"}
-            </Hoverable>
-          </div>
-          <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={8} placeholder="Cole aqui o contrato recebido… ou anexe um arquivo acima" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "11px", padding: "12px 14px", fontSize: "13.5px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", resize: "vertical", minHeight: "150px", lineHeight: 1.5 }} />
-          <div style={{ marginTop: "12px" }}>
-            <Hoverable onClick={loading || !texto.trim() ? undefined : analisar} base={{ display: "inline-flex", padding: "11px 22px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: loading || !texto.trim() ? "not-allowed" : "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: loading || !texto.trim() ? 0.5 : 1 }} hover={loading || !texto.trim() ? {} : { transform: "translateY(-2px)" }}>
-              {loading ? "Analisando…" : "Analisar riscos"}
-            </Hoverable>
-          </div>
-
-          {analise && (
-            <div style={{ marginTop: "20px", borderTop: "1px solid var(--gray-200)", paddingTop: "18px", animation: "fadeUp .4s ease both" }}>
-              <h4 style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-500)", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: ".4px" }}>{analise.achados.length} ponto(s) encontrado(s)</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-                {analise.achados.map((a, i) => {
-                  const c = corSev(a.severidade);
-                  return (
-                    <div key={i} style={{ padding: "10px 12px", background: c.bg, border: `1px solid ${c.bd}`, borderRadius: "9px" }}>
-                      <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-                        <span style={{ fontSize: "11px", fontWeight: 800, color: c.fg, textTransform: "uppercase" }}>{a.tipo}</span>
-                        {a.valor && <span style={{ fontSize: "12px", fontWeight: 700, color: c.fg }}>{a.valor}</span>}
-                        <span style={{ fontSize: "10px", color: c.fg, opacity: 0.8 }}>severidade {a.severidade}</span>
-                      </div>
-                      <div style={{ fontSize: "12px", color: "var(--gray-600)", marginTop: "4px", fontStyle: "italic" }}>“…{a.trecho}…”</div>
-                    </div>
-                  );
-                })}
-              </div>
-              {analise.explicacao && <div style={{ fontSize: "13.5px", color: "var(--gray-700)", lineHeight: 1.6, whiteSpace: "pre-wrap", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "14px" }}>{analise.explicacao}</div>}
+          ) : !contrato ? (
+            <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "28px", textAlign: "center", boxShadow: "var(--shadow-sm)" }}>
+              <div style={{ fontSize: "13px", color: "var(--gray-600)", marginBottom: "16px" }}>Proposta de <b>{scope.cliente.razaoSocial}</b> — {scope.itens.length} {scope.itens.length === 1 ? "item" : "itens"}.</div>
+              <Hoverable onClick={loading ? undefined : gerar} base={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "11px 22px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: loading ? "wait" : "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: loading ? 0.6 : 1 }} hover={loading ? {} : { transform: "translateY(-2px)" }}>{loading ? "Gerando…" : "Gerar contrato"}</Hoverable>
             </div>
-          )}
-        </div>
-      )}
+          ) : (
+            <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", overflow: "hidden", boxShadow: "var(--shadow-sm)", animation: "fadeUp .4s var(--ease-out) both" }}>
+              <div style={{ padding: "22px 28px", borderBottom: "1px solid var(--gray-200)", textAlign: "center" }}>
+                <div style={{ fontSize: "11px", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--gray-400)" }}>Contrato de Fornecimento</div>
+                <div style={{ fontSize: "18px", fontWeight: 800, color: "var(--gray-900)", marginTop: "4px" }}>{contrato.contratada.razaoSocial} × {contrato.contratante.razaoSocial}</div>
+              </div>
+              <div style={{ padding: "20px 28px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", borderBottom: "1px solid var(--gray-200)", background: "var(--gray-50)" }}>
+                <div><div style={{ fontSize: "11px", color: "var(--gray-400)", marginBottom: "3px" }}>CONTRATADA</div><div style={{ fontSize: "13.5px", fontWeight: 600 }}>{contrato.contratada.razaoSocial}</div><div style={{ fontSize: "12px", color: "var(--gray-500)", fontFamily: "var(--font-mono)" }}>CNPJ {contrato.contratada.cnpj}</div></div>
+                <div><div style={{ fontSize: "11px", color: "var(--gray-400)", marginBottom: "3px" }}>CONTRATANTE</div><div style={{ fontSize: "13.5px", fontWeight: 600 }}>{contrato.contratante.razaoSocial}</div><div style={{ fontSize: "12px", color: "var(--gray-500)", fontFamily: "var(--font-mono)" }}>CNPJ {contrato.contratante.cnpj}</div></div>
+              </div>
+              <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: "18px" }}>
+                {contrato.clausulas.map((cl, n) => (
+                  <div key={n} style={{ animation: `fadeUp .35s var(--ease-out) ${n * 0.06}s both` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
+                      <span style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--gray-900)" }}>{n + 1}. {cl.titulo}</span>
+                      <ProcBadge proc={cl.procedencia} />
+                    </div>
+                    <p style={{ fontSize: "13px", color: "var(--gray-600)", lineHeight: 1.6, margin: 0, whiteSpace: "pre-wrap" }}>{cl.texto}</p>
+                  </div>
+                ))}
+              </div>
+              <div style={{ padding: "16px 28px", borderTop: "1px solid var(--gray-200)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--gray-50)" }}>
+                <span style={{ fontSize: "13px", color: "var(--gray-500)" }}>Valor total <b style={{ fontFamily: "var(--font-mono)", color: "var(--blue-600)", fontSize: "15px" }}>R$ {contrato.valorTotal}</b></span>
+                <Hoverable onClick={() => imprimir(contrato)} base={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", background: "var(--orange-500)", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13.5px", fontWeight: 600, color: "white" }} hover={{ transform: "translateY(-1px)" }}>
+                  <svg width="14" height="14" viewBox="0 0 17 17" fill="none" stroke="white" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 2v8M5.5 7.5l3 3 3-3M3 13.5h11" /></svg>Baixar PDF
+                </Hoverable>
+              </div>
+            </div>
+          )
+        ) : (
+          <div>
+            <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", marginBottom: "18px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", flexWrap: "wrap", marginBottom: "8px" }}>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--gray-700)" }}>Cole o texto do contrato recebido — ou anexe o arquivo</div>
+                <input ref={fileRef} type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }} onChange={(e) => { anexar(e.target.files?.[0]); e.target.value = ""; }} />
+                <Hoverable onClick={extraindo ? undefined : () => fileRef.current?.click()} base={{ display: "inline-flex", alignItems: "center", gap: "7px", padding: "8px 14px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: extraindo ? "wait" : "pointer", fontSize: "12.5px", fontWeight: 600, color: "var(--gray-700)" }} hover={extraindo ? {} : { border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
+                  {extraindo ? "Lendo arquivo…" : "Anexar PDF/DOCX/TXT"}
+                </Hoverable>
+              </div>
+              <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={6} placeholder="Cole aqui o contrato recebido… ou anexe um arquivo acima" style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "12px 14px", fontSize: "13.5px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", resize: "vertical", minHeight: "140px", lineHeight: 1.5 }} />
+              <div style={{ marginTop: "12px" }}>
+                <Hoverable onClick={loading || !texto.trim() ? undefined : analisar} base={{ display: "inline-flex", padding: "11px 22px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: loading || !texto.trim() ? "not-allowed" : "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)", opacity: loading || !texto.trim() ? 0.5 : 1 }} hover={loading || !texto.trim() ? {} : { transform: "translateY(-2px)" }}>{loading ? "Analisando…" : "Analisar riscos"}</Hoverable>
+              </div>
+            </div>
+            {analise && (
+              <div style={{ animation: "fadeUp .4s var(--ease-out) both" }}>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "10px" }}>{analise.achados.length} ponto(s) encontrado(s)</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
+                  {analise.achados.map((a, i) => {
+                    const c = corSev(a.severidade);
+                    return (
+                      <div key={i} style={{ background: "white", border: "1px solid var(--gray-200)", borderLeft: `3px solid ${c.fg}`, borderRadius: "10px", padding: "12px 16px", display: "flex", alignItems: "center", gap: "14px", boxShadow: "var(--shadow-xs)", animation: `fadeUp .35s var(--ease-out) ${i * 0.07}s both` }}>
+                        <span style={{ fontSize: "11px", fontWeight: 700, padding: "3px 9px", borderRadius: "999px", background: c.bg, color: c.fg, minWidth: "60px", textAlign: "center" }}>{a.tipo}</span>
+                        {a.valor && <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", fontWeight: 700, color: "var(--gray-900)", minWidth: "80px" }}>{a.valor}</span>}
+                        <span style={{ fontSize: "13px", color: "var(--gray-600)", flex: 1, fontStyle: "italic" }}>“…{a.trecho}…”</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {analise.explicacao && <div style={{ fontSize: "13.5px", color: "var(--gray-700)", lineHeight: 1.6, whiteSpace: "pre-wrap", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "14px" }}>{analise.explicacao}</div>}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -2614,6 +2769,15 @@ async function planilhaParaCsv(f: File): Promise<string> {
     return XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
   }
   return f.text();
+}
+
+// Monta uma célula CSV segura: neutraliza formula injection (célula iniciada por
+// =,+,-,@ ou tab/CR é tratada como fórmula pelo Excel/Sheets → prefixa aspa simples
+// para virar texto inerte) e escapa aspas. Use em todo export CSV.
+function csvCelula(valor: unknown): string {
+  const s = String(valor ?? "");
+  const seguro = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+  return `"${seguro.replace(/"/g, '""')}"`;
 }
 
 // ── Relatório unificado (print → PDF) ──────────────────────────────────────────
@@ -2873,88 +3037,86 @@ function FiscalScreen() {
   }
 
   return (
-    <div style={{ padding: "28px", maxWidth: "960px" }}>
-      <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#1E3A8A 0%,#1E6BB8 60%,#0EA5E9 130%)", boxShadow: "0 14px 34px rgba(30,107,184,.26)", animation: "fadeUp .5s ease both" }}>
-        <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
-        <div style={{ position: "relative" }}>
-          <h2 style={{ fontSize: "25px", fontWeight: 800, color: "white", letterSpacing: "-.5px", margin: 0 }}>Fiscal / NF-e</h2>
-          <div style={{ fontSize: "14px", color: "rgba(255,255,255,.9)", marginTop: "4px", maxWidth: "660px" }}>
-            Suba o XML da nota. O motor extrai os dados e valida a consistência (soma dos itens, chave, CNPJ); a IA resume e aponta os riscos — sem recalcular imposto.
+    <div style={{ background: "var(--gray-50)", minHeight: "100vh", paddingBottom: "40px" }}>
+      <ScreenHead
+        title="Fiscal / NF-e"
+        sub="Parse do XML · validações do motor"
+        right={
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {res && <Hoverable onClick={relatorio} base={{ padding: "8px 14px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "var(--gray-700)" }} hover={{ border: "1px solid var(--blue-500)", color: "var(--blue-600)" }}>Relatório (PDF)</Hoverable>}
+            <Hoverable onClick={() => fileRef.current?.click()} base={{ display: "flex", alignItems: "center", gap: "7px", padding: "8px 16px", background: "var(--blue-600)", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13.5px", fontWeight: 600, color: "white" }} hover={{ background: "var(--blue-700)" }}>
+              <svg width="14" height="14" viewBox="0 0 17 17" fill="none" stroke="white" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 11V3M5.5 6l3-3 3 3M3 13.5h11" /></svg>
+              {loading ? "Lendo…" : "Carregar XML"}
+            </Hoverable>
           </div>
-        </div>
-      </div>
-
-      <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", boxShadow: "var(--shadow-md)", marginBottom: "16px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-        <Hoverable onClick={() => fileRef.current?.click()} base={{ padding: "11px 20px", background: "linear-gradient(135deg,var(--orange-500),var(--orange-600))", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: 700, color: "white", boxShadow: "0 6px 18px rgba(236,122,28,.4)" }} hover={{ transform: "translateY(-2px)" }}>
-          {loading ? "Lendo…" : "Subir XML da NF-e"}
-        </Hoverable>
-        <input ref={fileRef} type="file" accept=".xml,text/xml,application/xml" style={{ display: "none" }} onChange={(e) => ler(e.target.files)} />
-        <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{nome ? `Arquivo: ${nome}` : "XML de NF-e (modelo 55)."}</div>
-        {res && (
-          <Hoverable onClick={relatorio} base={{ marginLeft: "auto", padding: "9px 16px", background: "var(--blue-600)", border: "none", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: "white" }} hover={{ transform: "translateY(-1px)" }}>Relatório (PDF)</Hoverable>
+        }
+      />
+      <input ref={fileRef} type="file" accept=".xml,text/xml,application/xml" style={{ display: "none" }} onChange={(e) => ler(e.target.files)} />
+      <div style={{ padding: "20px 28px" }}>
+        {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+        {!res && !erro && (
+          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "40px", textAlign: "center", color: "var(--gray-400)", fontSize: "14px", boxShadow: "var(--shadow-sm)" }}>
+            {nome ? `Arquivo: ${nome}` : "Carregue o XML de uma NF-e (modelo 55) para extrair os dados e ver as validações do motor."}
+          </div>
         )}
-      </div>
-
-      {erro && <div style={{ marginBottom: "16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
-
-      {res && (
-        <div style={{ animation: "fadeUp .4s ease both" }}>
-          {res.resumo && (
-            <div style={{ marginBottom: "16px", padding: "14px 16px", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: "12px", color: "#1E40AF", fontSize: "13.5px", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{res.resumo}</div>
-          )}
-          {res.achados.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+        {res && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: "20px", animation: "fadeUp .4s var(--ease-out) both" }}>
+            {/* nota */}
+            <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
+              <div style={{ background: "var(--gradient-brand)", color: "#fff", padding: "16px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+                <div><div style={{ fontSize: "11px", opacity: .8, letterSpacing: ".08em", textTransform: "uppercase" }}>Nota Fiscal Eletrônica</div><div style={{ fontSize: "18px", fontWeight: 800, marginTop: "2px" }}>Nº {res.nota.numero} · Série {res.nota.serie}</div></div>
+                <div style={{ textAlign: "right", fontSize: "12px", opacity: .9 }}>{res.nota.dataEmissao}<br />{res.nota.naturezaOperacao}</div>
+              </div>
+              <div style={{ padding: "16px 22px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", fontSize: "13px" }}>
+                <div><div style={{ fontSize: "11px", color: "var(--gray-400)", marginBottom: "2px" }}>Emitente</div><div style={{ fontWeight: 600, color: "var(--gray-900)" }}>{res.nota.emitente.nome}</div><div style={{ fontSize: "12px", color: "var(--gray-500)", fontFamily: "var(--font-mono)" }}>{res.nota.emitente.documento}</div></div>
+                <div><div style={{ fontSize: "11px", color: "var(--gray-400)", marginBottom: "2px" }}>Destinatário</div><div style={{ fontWeight: 600, color: "var(--gray-900)" }}>{res.nota.destinatario.nome}</div><div style={{ fontSize: "12px", color: "var(--gray-500)", fontFamily: "var(--font-mono)" }}>{res.nota.destinatario.documento}</div></div>
+              </div>
+              <div style={{ padding: "0 22px 6px" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead><tr>{["Código", "Descrição", "Qtd", "Unit.", "Total"].map((h, j) => <th key={h} style={{ padding: "8px 6px", fontSize: "10.5px", fontWeight: 600, color: "var(--gray-400)", textTransform: "uppercase", textAlign: j >= 2 ? "right" : "left", borderBottom: "1px solid var(--gray-200)" }}>{h}</th>)}</tr></thead>
+                  <tbody>{res.nota.itens.map((it, n) => (
+                    <tr key={n}>
+                      <td style={{ padding: "9px 6px", fontSize: "12px", fontFamily: "var(--font-mono)", color: "var(--gray-500)", borderBottom: "1px solid var(--gray-100)" }}>{it.codigo}</td>
+                      <td style={{ padding: "9px 6px", fontSize: "12.5px", color: "var(--gray-800)", borderBottom: "1px solid var(--gray-100)" }}>{it.descricao}</td>
+                      <td style={{ padding: "9px 6px", fontSize: "12.5px", textAlign: "right", fontFamily: "var(--font-mono)", borderBottom: "1px solid var(--gray-100)" }}>{it.quantidade}</td>
+                      <td style={{ padding: "9px 6px", fontSize: "12.5px", textAlign: "right", fontFamily: "var(--font-mono)", borderBottom: "1px solid var(--gray-100)" }}>R$ {it.valorUnitario}</td>
+                      <td style={{ padding: "9px 6px", fontSize: "12.5px", textAlign: "right", fontFamily: "var(--font-mono)", fontWeight: 600, borderBottom: "1px solid var(--gray-100)" }}>R$ {it.valorTotal}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "28px", padding: "12px 6px 16px", fontSize: "13px" }}>
+                  <span style={{ color: "var(--gray-500)" }}>Frete <b style={{ fontFamily: "var(--font-mono)", color: "var(--gray-800)" }}>R$ {res.nota.valorFrete}</b></span>
+                  <span style={{ color: "var(--gray-500)" }}>ICMS <b style={{ fontFamily: "var(--font-mono)", color: "var(--gray-800)" }}>R$ {res.nota.valorICMS}</b></span>
+                  <span style={{ color: "var(--gray-900)", fontWeight: 700 }}>Total <b style={{ fontFamily: "var(--font-mono)", color: "var(--blue-600)", fontSize: "15px" }}>R$ {res.nota.valorTotal}</b></span>
+                </div>
+                <div style={{ fontSize: "10.5px", color: "var(--gray-400)", fontFamily: "var(--font-mono)", wordBreak: "break-all", paddingBottom: "12px" }}>Chave: {res.nota.chaveAcesso}</div>
+              </div>
+            </div>
+            {/* achados */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--gray-700)" }}>Validações do motor</div>
               {res.achados.map((a, i) => {
                 const c = corSev(a.severidade);
                 return (
-                  <div key={i} style={{ padding: "10px 12px", background: c.bg, border: `1px solid ${c.bg}`, borderRadius: "9px", fontSize: "12.5px", color: c.fg }}>
-                    <b style={{ textTransform: "uppercase", fontSize: "11px" }}>{a.tipo}</b> · {a.descricao}
+                  <div key={i} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "12px 14px", boxShadow: "var(--shadow-xs)", animation: `fadeUp .4s var(--ease-out) ${i * 0.08}s both` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
+                      <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke={c.fg} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="8.5" cy="8.5" r="6.5" /><path d="M5.5 8.5l2 2 4-4.5" /></svg>
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--gray-900)" }}>{a.tipo}</span>
+                    </div>
+                    <div style={{ fontSize: "12.5px", color: "var(--gray-500)", lineHeight: 1.5 }}>{a.descricao}</div>
                   </div>
                 );
               })}
+              {res.resumo && (
+                <div style={{ background: "var(--blue-50)", border: "1px solid var(--blue-200)", borderRadius: "10px", padding: "12px 14px", marginTop: "4px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "5px" }}><ProcBadge proc="IA-TEXTO" /><span style={{ fontSize: "11px", color: "var(--gray-500)" }}>resumo</span></div>
+                  <div style={{ fontSize: "12.5px", color: "var(--gray-700)", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{res.resumo}</div>
+                </div>
+              )}
             </div>
-          )}
-          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px", boxShadow: "var(--shadow-sm)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", fontSize: "13px", color: "var(--gray-700)" }}>
-              <div><b>NF-e {res.nota.numero}</b> · série {res.nota.serie} · {res.nota.naturezaOperacao}</div>
-              <div style={{ color: "var(--gray-400)" }}>{res.nota.dataEmissao}</div>
-            </div>
-            <div style={{ fontSize: "13px", color: "var(--gray-600)", marginTop: "8px" }}>
-              <div><b>Emitente:</b> {res.nota.emitente.nome} ({res.nota.emitente.documento})</div>
-              <div><b>Destinatário:</b> {res.nota.destinatario.nome} ({res.nota.destinatario.documento})</div>
-            </div>
-            <table style={{ width: "100%", borderCollapse: "collapse", margin: "14px 0", fontSize: "12.5px" }}>
-              <thead>
-                <tr style={{ color: "var(--gray-500)", textAlign: "left" }}>
-                  <th style={{ padding: "6px" }}>Código</th>
-                  <th style={{ padding: "6px" }}>Descrição</th>
-                  <th style={{ padding: "6px", textAlign: "right" }}>Qtd</th>
-                  <th style={{ padding: "6px", textAlign: "right" }}>Vlr un.</th>
-                  <th style={{ padding: "6px", textAlign: "right" }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {res.nota.itens.map((i, n) => (
-                  <tr key={n} style={{ borderTop: "1px solid var(--gray-100)" }}>
-                    <td style={{ padding: "6px" }}>{i.codigo}</td>
-                    <td style={{ padding: "6px" }}>{i.descricao}</td>
-                    <td style={{ padding: "6px", textAlign: "right" }}>{i.quantidade}</td>
-                    <td style={{ padding: "6px", textAlign: "right" }}>R$ {i.valorUnitario}</td>
-                    <td style={{ padding: "6px", textAlign: "right" }}>R$ {i.valorTotal}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "18px", fontSize: "13px", color: "var(--gray-600)" }}>
-              <div>Produtos: <b>R$ {res.nota.valorProdutos}</b></div>
-              <div>Frete: <b>R$ {res.nota.valorFrete}</b></div>
-              <div>ICMS: <b>R$ {res.nota.valorICMS}</b></div>
-              <div style={{ color: "var(--gray-900)" }}>Total: <b>R$ {res.nota.valorTotal}</b></div>
-            </div>
-            <div style={{ marginTop: "10px", fontSize: "10.5px", color: "var(--gray-400)", fontFamily: "monospace", wordBreak: "break-all" }}>Chave: {res.nota.chaveAcesso}</div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -3003,7 +3165,7 @@ function ComprasScreen() {
     if (!res) return;
     const head = ["Fornecedor", "Item", "Preço un.", "Qtd", "Frete", "Prazo (dias)", "Custo total", "Custo efetivo"];
     const linhas = [head, ...res.cotacoes.map((c) => [c.fornecedor, c.item ?? "", c.precoUnitario, String(c.quantidade), c.frete, String(c.prazoDias), c.custoTotal, c.custoEfetivo])];
-    const csv = linhas.map((l) => l.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(";")).join("\n");
+    const csv = linhas.map((l) => l.map(csvCelula).join(";")).join("\n");
     const a = document.createElement("a");
     a.href = `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
     a.download = "cotacoes.csv";
@@ -3130,7 +3292,7 @@ function CobrancaScreen() {
     if (!res) return;
     const head = ["Cliente", "Valor devido", "Titulos", "Venc. mais antigo", "Dias atraso", "Severidade", "Mensagem"];
     const linhas = [head, ...res.inadimplentes.map((i) => [i.cliente, i.valorDevido, String(i.titulos), i.vencimentoMaisAntigo, String(i.diasAtraso), i.severidade, i.mensagem.replace(/\n/g, " ")])];
-    const csv = linhas.map((l) => l.map((c) => `"${c.replace(/"/g, '""')}"`).join(";")).join("\n");
+    const csv = linhas.map((l) => l.map(csvCelula).join(";")).join("\n");
     const a = document.createElement("a");
     a.href = `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
     a.download = "cobranca.csv";

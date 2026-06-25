@@ -1,15 +1,16 @@
+"use client";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
 export function Checkbox({
   checked = false,
-  onChange,
+  onCheckedChange,
   label,
-  disabled = false,
+  disabled,
   className,
 }: {
   checked?: boolean;
-  onChange?: (next: boolean) => void;
+  onCheckedChange?: (v: boolean) => void;
   label?: React.ReactNode;
   disabled?: boolean;
   className?: string;
@@ -23,10 +24,10 @@ export function Checkbox({
       )}
     >
       <span
-        onClick={() => !disabled && onChange?.(!checked)}
+        onClick={() => !disabled && onCheckedChange?.(!checked)}
         className={cn(
-          "inline-flex h-5 w-5 flex-none items-center justify-center rounded-[var(--radius-xs)] border transition-all duration-150",
-          checked ? "border-primary bg-primary" : "border-[var(--border-strong)] bg-card",
+          "flex h-5 w-5 flex-none items-center justify-center rounded-[6px] border transition",
+          checked ? "border-primary bg-primary" : "border-gray-300 bg-card",
         )}
       >
         {checked && (

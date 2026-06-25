@@ -3,11 +3,17 @@ import { cn } from "@/lib/utils";
 
 type Tone = "info" | "success" | "warning" | "danger";
 
-const tones: Record<Tone, { wrap: string; bar: string; title: string }> = {
-  info: { wrap: "bg-[var(--info-soft)]", bar: "border-l-primary", title: "text-[var(--info)]" },
-  success: { wrap: "bg-[var(--success-soft)]", bar: "border-l-success", title: "text-success" },
-  warning: { wrap: "bg-[var(--warning-soft)]", bar: "border-l-[var(--warning)]", title: "text-[var(--warning)]" },
-  danger: { wrap: "bg-[var(--danger-soft)]", bar: "border-l-[var(--danger)]", title: "text-[var(--danger)]" },
+const tones: Record<Tone, string> = {
+  info: "bg-blue-50 border-l-primary",
+  success: "bg-success/10 border-l-success",
+  warning: "bg-orange-500/10 border-l-orange-600",
+  danger: "bg-red-100 border-l-red-600",
+};
+const fg: Record<Tone, string> = {
+  info: "text-primary",
+  success: "text-success",
+  warning: "text-orange-700",
+  danger: "text-red-600",
 };
 
 export function Alert({
@@ -21,14 +27,10 @@ export function Alert({
   children?: React.ReactNode;
   className?: string;
 }) {
-  const t = tones[tone];
   return (
-    <div
-      className={cn("flex gap-3 rounded-lg border-l-[3px] px-4 py-3.5", t.wrap, t.bar, className)}
-      style={{ animation: "fadeUp var(--duration-base) var(--ease-out) both" }}
-    >
+    <div className={cn("flex gap-3 rounded-md border-l-[3px] p-4", tones[tone], className)}>
       <div>
-        {title && <div className={cn("text-sm font-bold", t.title, children ? "mb-0.5" : "")}>{title}</div>}
+        {title && <div className={cn("mb-0.5 text-sm font-bold", fg[tone])}>{title}</div>}
         {children && <div className="text-sm leading-normal text-foreground">{children}</div>}
       </div>
     </div>
