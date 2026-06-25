@@ -1,171 +1,172 @@
 # Indeba Proposta Agent
 
-Plataforma local da Indeba que faz três coisas a partir de linguagem natural:
+Plataforma interna da Indeba. Começou gerando propostas comerciais a partir de um
+briefing em linguagem natural e cresceu para um conjunto de agentes que cobrem boa parte
+do dia a dia comercial e administrativo: prospecção, posts de Instagram, atendimento,
+financeiro, cobrança, compras, fiscal, contábil e contratos.
 
-1. **Gera propostas comerciais em PDF** — o vendedor descreve o cliente e a
-   necessidade; a IA seleciona produtos do catálogo e escreve o texto; o PDF sai no
-   padrão visual da Indeba.
-2. **Prospecta leads** — o vendedor descreve o que vende e que cliente quer; o agente
-   busca empresas reais na web, **minera contatos** (e-mail, telefone, redes) das
-   páginas e a IA escreve a abordagem.
-3. **Gera posts para Instagram** — o vendedor descreve em linguagem natural o que quer
-   divulgar; a IA escreve legenda, gancho, hashtags e o roteiro do criativo.
+A ideia por trás de tudo é a mesma: um backbone determinístico faz o trabalho que não
+pode errar, e a IA entra só onde faz sentido — selecionar e escrever. Preço, ficha,
+embalagem e imagem vêm sempre do catálogo; na prospecção, empresa e contato vêm de fontes
+reais (base da Receita e páginas web), nunca inventados pelo modelo. Se um dado crítico
+não tem origem confiável, ele não sai.
 
-> **Regra de ouro (constituição §2):** preço, imagem, embalagem, ficha — e, na
-> prospecção, os contatos — **nunca são fabricados pelo modelo**. Preço/ficha vêm do
-> catálogo; contatos vêm minerados de páginas web reais. A IA só **seleciona e escreve**.
+## O que tem dentro
 
----
+- **Propostas** — o vendedor descreve o cliente e a necessidade; a IA escolhe os produtos
+  no catálogo e escreve o texto; o PDF sai no padrão Indeba. O tipo (orçamento,
+  implantação ou comercial) é detectado pelo prompt e, em caso de dúvida, perguntado. Dá
+  para refinar tudo antes de exportar. Existe também a via **manual**, sem IA, em que o
+  vendedor monta a proposta direto do catálogo.
+- **Prospecção** — descreve o que vende e o cliente ideal; o agente busca empresas reais
+  (base da Receita Federal no Postgres, ou busca web via Tavily), minera contatos das
+  páginas por regex e a IA escreve só a abordagem. Cada contato vem marcado como
+  confirmado ou estimado, com a fonte que o embasou.
+- **Posts de Instagram** — gera até cinco posts (gancho, legenda, hashtags, melhor horário
+  e prompt de imagem) e renderiza a arte via Pollinations/Flux, sem chave nem login.
+- **Atendimento** — perguntas e respostas sobre a base de conhecimento da empresa, com
+  busca vetorial (Qdrant) e um corte de relevância que faz o agente dizer "não sei" em vez
+  de inventar. Tem feedback 👍/👎 que vira conhecimento indexado.
+- **Financeiro** — sobe uma planilha (CSV/XLSX) e o motor concilia, totaliza e comenta;
+  a IA só escreve a leitura por cima dos números.
+- **Cobrança** — a partir da planilha de títulos, o motor monta a lista de inadimplentes
+  com severidade e a mensagem pronta, e o disparo envia o e-mail a cada cliente mais um
+  resumo ao gestor (SMTP direto, sem depender de serviço externo).
+- **Compras** — compara cotações de fornecedores trazendo o custo efetivo (com frete e
+  prazo embutidos no valor do dinheiro no tempo).
+- **Fiscal / NF-e** — lê o XML da nota, lista os itens e aponta divergências.
+- **Contábil** — sobe o diário/razão e o motor fecha o balanço (partida dobrada, A = P +
+  PL) e monta BP e DRE; a IA só comenta.
+- **Contrato** — gera o contrato a partir de uma proposta existente e também extrai e
+  analisa um contrato que você sobe.
+- **Chamados** — suporte interno: o colaborador abre, o gestor (admin) responde.
+- **Configurações** — cadastro de e-mails de cliente e ajustes do gestor.
 
-## Stack e versões
+A regra de procedência vale para tudo: cada item carrega de onde veio (`CATÁLOGO`,
+`IA-SELEÇÃO`, `IA-TEXTO`, `MANUAL`; na prospecção, `confirmado`/`estimado` + fonte). Todo
+PDF de proposta entra num log append-only.
 
-| Camada | Tecnologia | Versão |
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Runtime | Node.js 24 · runtime `nodejs` nas rotas |
+| Pacotes | pnpm |
+| Framework | Next.js 16 (App Router, app único — UI + API) |
+| UI | React 19 · Tailwind CSS v4 · estilos inline |
+| Linguagem | TypeScript strict |
+| Contratos | Zod — fonte única de tipos, validação de API e validação da saída da IA |
+| Banco | PostgreSQL + Prisma (Receita, propostas, chamados, contatos, config) |
+| Vetorial | Qdrant (RAG do atendimento) |
+| IA | Ollama via HTTP — `qwen2.5:7b` (classificação), `qwen3:14b` (texto), `qwen2.5vl` (visão), `nomic-embed-text` (embeddings) |
+| Busca web | Tavily (prospecção) |
+| Imagens IG | Pollinations.ai / Flux |
+| PDF | Playwright + Chromium (`@sparticuz/chromium` na Vercel) |
+| E-mail | Nodemailer (SMTP) |
+| Rate limit / log | Upstash Redis em produção; JSONL local em dev |
+| Testes | Vitest |
+
+O catálogo continua sendo um arquivo (`data/catalogo.json`) — é a fonte de preço e ficha,
+versionada junto com o código. O Postgres guarda o que muda no tempo: a base da Receita
+para prospecção, o store de propostas, os chamados, os e-mails aprendidos e a config.
+
+## Rotas de API
+
+| Rota | Método | Para quê |
 |---|---|---|
-| Runtime | Node.js | 24.15 (dev) · `nodejs` runtime nas rotas |
-| Gerenciador | pnpm | 11.8 |
-| Framework | **Next.js** (App Router, app único) | **16.2.9** |
-| UI | React / React DOM | 19.2.4 |
-| Linguagem | TypeScript (strict) | ^5 |
-| Estilo | Tailwind CSS + `@tailwindcss/postcss` | ^4 |
-| Fonte | geist | ^1.7.2 |
-| Contratos/validação | **Zod** (fonte única de tipos/validação) | ^4.4.3 |
-| PDF | Playwright / playwright-core | ^1.61.0 |
-| PDF serverless | `@sparticuz/chromium` (Chromium na Vercel) | ^149.0.0 |
-| IA | **Ollama** (modelo padrão `qwen2.5:7b-instruct`) | via HTTP, sem SDK |
-| Busca web | **Tavily** (prospecção) | via `fetch`, sem SDK |
-| Rate limit | `@upstash/ratelimit` + `@upstash/redis` | ^2.0.8 / ^1.38.0 |
-| Log/persistência | Upstash Redis (prod) · JSONL local (dev) | — |
-| Testes | Vitest | ^4.1.9 |
-| Lint | ESLint + `eslint-config-next` | ^9 / 16.2.9 |
-
-> ⚠️ **Não usa** Prisma/PostgreSQL, shadcn/ui, React Hook Form, TanStack Query nem
-> sharp (apesar de citados em docs antigas). O catálogo é um **arquivo JSON**
-> (`data/catalogo.json`); a UI é feita com estilos inline + Tailwind. Persistência do
-> log é Redis (Vercel) ou JSONL local — **sem banco relacional**.
-
----
-
-## Funcionalidades
-
-### Propostas
-O tipo é detectado pelo prompt; em dúvida, o sistema pergunta antes de gerar.
-
-- **Orçamento** — tabela enxuta (produto, embalagem, valor, subtotal, total).
-- **Proposta de Implantação** — formato Indeba Express, um produto por bloco, com
-  custo por litro diluído em destaque.
-- **Proposta Comercial** — formato institucional (capa, apresentação, programa de
-  higienização, soluções e condições comerciais).
-
-A proposta é editável/refinável antes do export. Todo PDF gerado entra num **log
-append-only** (cliente, itens, preços aplicados, autor, timestamp).
-
-### Prospecção de leads
-- Traz **clientes potenciais** (o `tipoCliente` — quem compra), **nunca concorrentes
-  do mesmo nicho** do solicitante. O nicho/diferencial é só contexto pra entender o encaixe.
-- Busca web (Tavily) em **2 passadas**: genérica do tipo de cliente (escolha das empresas)
-  e **dirigida por empresa** depois que a IA escolhe (acha as redes/contatos de cada uma).
-- **Minerador determinístico** (`src/lib/prospeccao/contatos.ts`) raspa por regex e-mail,
-  telefone BR (só formatado — descarta timestamps/IDs) e LinkedIn/Instagram/Facebook/WhatsApp.
-- **Individualidade garantida** (`prospectar.ts`): e-mail casa por domínio do site, perfil
-  social casa por **slug ↔ nome**, e a passada `removerCompartilhados` elimina qualquer
-  contato repetido em 2+ empresas (vazamento de diretório). Cada empresa fica só com o que é dela.
-- A IA só seleciona empresas e escreve: o **`problema`** (dor que o diferencial resolve),
-  `comoAjudar` (o encaixe) e uma **mensagem pronta** por canal.
-- `confiabilidade` (`confirmado`/`estimado`), `total` e contatos são **derivados no backend**,
-  nunca pelo modelo. Cada prospect carrega a **fonte** (URL) que embasou os contatos.
-- Botão **"Gerar proposta"** leva o prospect direto pro briefing e já gera a proposta.
-
-### Posts para Instagram
-- O vendedor descreve o post em **linguagem natural** (input principal); nicho,
-  produto/serviço, público-alvo, tom de voz e nº de posts (1/3/5) são ajustes opcionais.
-- A IA (`src/lib/llm/gerar-instagram.ts`, saída JSON restrita por schema) escreve até 5
-  posts num **framework editorial** (autoridade, educativo, prova social, oferta, conexão):
-  **abertura** (gancho), legenda com CTA, 5–15 **hashtags**, **melhor horário** (com
-  justificativa) e um **prompt de imagem em inglês** por post — mais uma nota editorial.
-- **Imagem por IA (4:5):** gerada via **Pollinations.ai** (modelo **Flux**) — grátis, **sem
-  chave e sem login**. Cada card carrega a imagem direto de `image.pollinations.ai` (URL com
-  o `imagemPrompt` em inglês + seed estável) no `<img>`, com loading, fade e botão "tentar
-  de novo" em caso de falha. Só `*.pollinations.ai` é liberado na CSP (`img-src`).
-- Idioma: todo o conteúdo sai em **português**; só o `imagemPrompt` (técnico, para a
-  imagem) é em inglês — os modelos de imagem entendem melhor.
-- Texto é 100% criativo (IA-TEXTO) — **não** há dado crítico do catálogo. Sem Ollama, cai
-  num **template determinístico** (degradação graciosa, §5).
-- Cada card permite **copiar** legenda + hashtags e **baixar** a imagem.
-
----
-
-## Rotas de API (`src/app/api`)
-
-| Rota | Método | Função |
-|---|---|---|
-| `/api/montar` | POST | briefing/entrada → `PropostaScope` |
-| `/api/montar-estruturado` | POST | itens estruturados → `PropostaScope` |
+| `/api/montar` | POST | briefing → `PropostaScope` (detecta o tipo; pode pedir confirmação) |
+| `/api/montar-estruturado` | POST | itens escolhidos à mão → `PropostaScope` (sem IA) |
 | `/api/pdf` | POST | `PropostaScope` → PDF (Playwright) |
-| `/api/catalogo` | GET | catálogo de produtos (protegido) |
-| `/api/propostas` | GET | log append-only das propostas geradas |
-| `/api/prospectar` | POST | prospecção de leads (IA + Tavily + mineração) |
-| `/api/instagram` | POST | briefing → posts de Instagram (legenda, hashtags, horário) |
-| `/api/login` · `/api/logout` | POST | autenticação por cookie de sessão |
+| `/api/catalogo` | GET | catálogo de produtos |
+| `/api/propostas` | GET · POST | log/store das propostas |
+| `/api/propostas/[id]` | GET · PATCH | abre e atualiza uma proposta |
+| `/api/prospectar` | POST | prospecção (Receita/Tavily + mineração + IA) |
+| `/api/instagram` | POST | briefing → posts de Instagram |
+| `/api/referencias/sync` | GET · POST | perfil de estilo (GET na UI; POST alimentado por n8n/Drive) |
+| `/api/rag` | POST | atendimento (busca vetorial + resposta) |
+| `/api/feedback` | POST | 👍/👎 e correções dos agentes |
+| `/api/contrato` | POST | gera o contrato a partir da proposta |
+| `/api/contrato/extrair` | POST | extrai o texto de um contrato enviado |
+| `/api/financeiro` | POST | análise de planilha financeira |
+| `/api/cobranca` | POST | planilha de títulos → lista de inadimplentes |
+| `/api/cobranca/disparar` | POST | dispara os e-mails de cobrança (admin) |
+| `/api/compras` | POST | comparação de cotações |
+| `/api/fiscal` | POST | leitura e análise de NF-e (XML) |
+| `/api/contabil` | POST | diário/razão → BP + DRE |
+| `/api/chamados` | GET · POST | chamados de suporte |
+| `/api/chamados/[id]` | PATCH | gestor responde/atualiza um chamado |
+| `/api/admin-config` | GET · PUT | configurações do gestor |
+| `/api/contatos` | GET · POST · DELETE | cadastro de e-mails de cliente |
+| `/api/login` · `/api/logout` | POST | sessão por cookie assinado |
 
-Auth (cookie assinado) e rate limit são aplicados no `src/middleware.ts`.
-
----
+Auth (cookie assinado) e rate limit ficam no `src/middleware.ts`, que cobre `/` e toda
+`/api/*` exceto as rotas públicas de login.
 
 ## Estrutura
 
 ```
 src/
-  app/                      UI (App Router) + rotas de API
-    api/...                 ver tabela acima
-    page.tsx                telas: briefing, review, PDF, histórico, catálogo, prospecção, instagram
+  app/
+    api/...                 rotas (ver tabela)
+    page.tsx                a aplicação — todas as telas e a navegação
+    login/                  tela de login
+    _app/                   command palette, toast, helpers de UI
   middleware.ts             auth + rate limit
+  components/               telas que saíram do page.tsx (chamados, admin, ...)
   lib/
-    contracts/              schemas Zod — fonte única (produto, pedido, selecao,
-                            proposta, entrada, prospeccao, instagram)
-    catalogo.ts             leitura/validação do catálogo
-    montar.ts               orquestra briefing → PropostaScope
-    tipo-proposta.ts        detecção do tipo de proposta
-    selecao/                matcher por facetas (linha, segmento, função, método)
-    llm/                    cliente Ollama (gerarJson/gerarTexto) + gerar-instagram.ts
+    contracts/              schemas Zod — a fonte única
+    catalogo.ts             leitura e validação do catálogo
+    montar.ts               briefing → PropostaScope
+    selecao/                matcher por facetas
+    llm/                    cliente Ollama (gerarJson/gerarTexto) + geradores
     pdf/                    render Playwright + templates por tipo
-    prospeccao/             tavily.ts (busca) · contatos.ts (mineração) · prospectar.ts
-    auth.ts · ratelimit.ts · log.ts · imagens · utils.ts
+    prospeccao/             tavily · contatos (mineração) · prospectar
+    rag/                    embeddings + busca (Qdrant)
+    financeiro/             motor de apuração, conciliação e fontes fiscais
+    contrato/               geração e análise de contrato
+    cobranca/ · contatos.ts motor de inadimplência + envio de e-mail
+    db.ts · auth.ts · ratelimit.ts · log.ts · erro.ts
+prisma/
+  schema.prisma             modelos + seed (importa data/catalogo.json e a base Receita)
 data/
-  catalogo.json             catálogo de produtos (fonte de preço/ficha)
-  imagens/                  imagens dos produtos
-docs/                       documentação de apoio (spec e guia)
+  catalogo.json             catálogo — fonte de preço e ficha
+docs/                       spec, guia e templates de apoio
 ```
-
----
 
 ## Variáveis de ambiente
 
 Copie `.env.example` para `.env.local` (local) ou configure no dashboard da Vercel (prod).
+O arquivo de exemplo comenta cada uma; o resumo:
 
-| Variável | Obrigatória | Para quê |
+| Variável | Quando precisa | Para quê |
 |---|---|---|
-| `OLLAMA_BASE_URL` | recomendada | URL do Ollama (local `http://127.0.0.1:11434`; prod via túnel) |
-| `OLLAMA_MODEL` | não | modelo (default `qwen2.5:7b-instruct`) |
-| `MARCA_PADRAO` | não | marca/template padrão do PDF |
-| `TAVILY_API_KEY` | só p/ prospecção | busca web p/ minerar contatos (free em app.tavily.com) |
-| `AUTH_USERS` | recomendada | `login:senha:papel,...` — vazio = auth desligada (uso local) |
-| `AUTH_SESSION_SECRET` | com auth | segredo p/ assinar o cookie de sessão |
-| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | prod | rate limit + log durável; sem isso, rate limit desligado e log em JSONL |
+| `DATABASE_URL` / `DIRECT_URL` | sempre | Postgres (runtime e migrations) |
+| `OLLAMA_BASE_URL` | com IA | URL do Ollama (local, ou via túnel em prod) |
+| `OLLAMA_MODEL` / `_TEXTO` / `_VISAO` / `_EMBED_MODEL` | não | escolha dos modelos por tarefa |
+| `OLLAMA_AUTH_TOKEN` | túnel com bearer | autentica o caminho Vercel→túnel (proxy local) |
+| `OLLAMA_CF_ACCESS_CLIENT_ID` / `_SECRET` | túnel via Cloudflare Access | service token do Zero Trust |
+| `QDRANT_URL` / `_API_KEY` / `_COLLECTION` | atendimento | banco vetorial do RAG |
+| `TAVILY_API_KEY` | prospecção web | enriquece os prospects com busca web |
+| `SMTP_HOST` / `_PORT` / `_USER` / `_PASS` / `_FROM` | cobrança | envio de e-mail |
+| `GESTOR_EMAIL` | cobrança | destinatário do resumo (editável no painel) |
+| `AUTH_USERS` / `AUTH_SESSION_SECRET` | com auth | usuários (senha em hash) e assinatura do cookie |
+| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | prod | rate limit e log durável |
 
-Sem `TAVILY_API_KEY` a prospecção roda só com o conhecimento do modelo (tudo `estimado`).
-Sem Ollama, a prospecção retorna 503 (não há fallback determinístico); já o fluxo de
-proposta degrada para o caminho determinístico.
+Sem `TAVILY_API_KEY` a prospecção roda só com o conhecimento do modelo. Sem Ollama, a
+proposta degrada para o caminho determinístico; a prospecção e o atendimento dependem da
+IA. As envs SMTP precisam estar preenchidas para o disparo de cobrança funcionar — sem
+elas, a rota responde que o envio não está configurado.
 
----
-
-## Como rodar (local)
+## Rodando local
 
 ```bash
 pnpm install
-pnpm exec playwright install chromium     # navegador para o render de PDF
-ollama serve                              # IA (host) — modelo: ollama pull qwen2.5:7b-instruct
-# .env.local: preencha TAVILY_API_KEY para a prospecção achar contatos reais
-pnpm dev                                  # http://localhost:3000
+pnpm exec playwright install chromium      # navegador do render de PDF
+docker compose up -d db qdrant             # Postgres + Qdrant
+pnpm prisma migrate dev                     # aplica o schema
+pnpm prisma db seed                         # importa data/catalogo.json
+ollama serve                                # IA — ollama pull qwen2.5:7b-instruct
+pnpm dev                                     # http://localhost:3000
 ```
 
 Build de produção local:
@@ -174,39 +175,36 @@ Build de produção local:
 pnpm build && pnpm start
 ```
 
----
-
 ## Testes
 
 ```bash
-pnpm test          # Vitest (unit/integração)
+pnpm test
 ```
 
-Todo PR entrega o **teste-guardião** da sua área:
-- Proposta: o preço que sai no PDF é igual ao do catálogo, com a IA no fluxo.
-- Prospecção: sem fonte web que case, o contato **não sai** e o prospect fica `estimado`.
-
----
+Cada área entrega o seu teste-guardião. Os dois principais: o preço que sai no PDF é
+sempre igual ao do catálogo, mesmo com a IA no fluxo; e, na prospecção, sem fonte web que
+case, o contato não sai e o prospect fica como estimado.
 
 ## Deploy
 
-- **Plataforma:** Vercel — projeto `indeba-propostas-agent`.
-- **URL:** https://indeba-propostas-agent.vercel.app
-- **Sem IA (padrão):** estável; proposta cai no determinístico, prospecção exige IA.
-- **Com IA:** Ollama no PC + túnel `cloudflared` apontando `OLLAMA_BASE_URL` para a prod.
-  Atenção ao `maxDuration` de 60s da Vercel — geração em CPU pode estourar o limite.
-- Detalhes e causas-raiz de armadilhas estão no skill `/deploy-prod` e em `docs/`.
+Roda na Vercel (projeto `indeba-propostas-agent`,
+https://indeba-propostas-agent.vercel.app). O padrão é subir sem IA — a proposta cai no
+determinístico e os agentes que dependem do modelo ficam indisponíveis. Para ligar a IA em
+produção, o Ollama roda no PC e é exposto por um túnel autenticado (proxy com bearer ou
+Cloudflare Access), com `OLLAMA_BASE_URL` apontando para ele. Vale lembrar que a Vercel
+corta a função em 60s, então geração pesada em CPU pode estourar o limite — o caminho
+robusto de verdade é hospedar tudo numa VPS. O skill `/deploy-prod` e os arquivos em
+`docs/` guardam o passo a passo e as armadilhas já resolvidas.
 
----
-
-## Princípios (constituição)
+## Princípios
 
 1. Backbone determinístico, IA como tempero.
 2. Dado crítico (preço, contato) nunca vem do modelo.
 3. Dados primeiro: nada antes do schema Zod em `src/lib/contracts`.
-4. Renderização ≠ geração: o PDF é *view* do `PropostaScope`.
+4. Renderização não é geração — o PDF é uma view do `PropostaScope`.
 5. Estender, não bifurcar contratos.
 6. A IA é sempre revisável antes do export.
-7. Procedência em todo item (`CATÁLOGO`/`IA-SELEÇÃO`/`IA-TEXTO`/`MANUAL`; na
-   prospecção, `confirmado`/`estimado` + fonte).
+7. Procedência em todo item.
 8. Log append-only de toda proposta gerada.
+</content>
+</invoke>

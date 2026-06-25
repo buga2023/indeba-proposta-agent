@@ -57,9 +57,10 @@ docs/evidencia/
 
 .vercel
 
-# logs locais de deploy/tunel
+# logs locais de deploy/tunel/dev
 cf.log
 deploy*.log
+dev.log
 
 # perfil de estilo derivado das referencias (artefato de runtime; gerado via /api/referencias/sync)
 /data/referencias/
