@@ -1116,6 +1116,11 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
   const [segmento, setSegmento] = useState("");
   const [tipo, setTipo] = useState<TipoProposta>("orcamento");
   const [itens, setItens] = useState<Record<string, number>>({}); // codigo → quantidade
+  // Itens próprios (fora do catálogo): preço digitado por humano → procedência MANUAL.
+  const [custom, setCustom] = useState<{ id: number; nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; qtd: number }[]>([]);
+  const [draft, setDraft] = useState<{ nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string }>({ nome: "", tamanho: "", unidade: "L", preco: "" });
+  const [showCustom, setShowCustom] = useState(false);
+  const nextId = useRef(1);
   const [montando, setMontando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -1134,10 +1139,15 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
   const q = busca.trim().toLowerCase();
   const filtrados = q ? ativos.filter((p) => `${p.nome} ${p.codigo} ${p.descricaoCurta}`.toLowerCase().includes(q)) : ativos;
   const precoDe = (p: Produto) => Number(p.embalagens[0]?.preco ?? 0);
-  const selecionados = Object.entries(itens)
+  const selCat = Object.entries(itens)
     .map(([codigo, qtd]) => ({ produto: ativos.find((p) => p.codigo === codigo), qtd }))
     .filter((x): x is { produto: Produto; qtd: number } => Boolean(x.produto));
-  const total = selecionados.reduce((s, x) => s + precoDe(x.produto) * x.qtd, 0);
+  // Linhas unificadas (catálogo + próprias) para render e total.
+  const rows: { key: string; nome: string; sub: string; preco: number; qtd: number; onQtd: (q: number) => void }[] = [
+    ...selCat.map((x) => ({ key: x.produto.codigo, nome: x.produto.nome, sub: `${fmt(precoDe(x.produto))} un. · catálogo`, preco: precoDe(x.produto), qtd: x.qtd, onQtd: (q: number) => setQtd(x.produto.codigo, q) })),
+    ...custom.map((c) => ({ key: `c${c.id}`, nome: c.nome, sub: `${fmt(Number(c.preco) || 0)} un. · ${c.tamanho}${c.unidade} · manual`, preco: Number(c.preco) || 0, qtd: c.qtd, onQtd: (q: number) => setCustomQtd(c.id, q) })),
+  ];
+  const total = rows.reduce((s, r) => s + r.preco * r.qtd, 0);
 
   function add(codigo: string) {
     setItens((m) => (m[codigo] ? m : { ...m, [codigo]: 1 }));
@@ -1152,6 +1162,22 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
       return { ...m, [codigo]: q };
     });
   }
+  function setCustomQtd(id: number, q: number) {
+    setCustom((cs) => (q <= 0 ? cs.filter((c) => c.id !== id) : cs.map((c) => (c.id === id ? { ...c, qtd: q } : c))));
+  }
+  function addCustom() {
+    const nome = draft.nome.trim();
+    const tam = Number(draft.tamanho);
+    const preco = Number(draft.preco.replace(",", "."));
+    if (!nome || !(tam > 0) || !(preco > 0)) {
+      setErro("Item próprio: preencha nome, tamanho e preço válidos.");
+      return;
+    }
+    setErro(null);
+    setCustom((cs) => [...cs, { id: nextId.current++, nome, tamanho: draft.tamanho, unidade: draft.unidade, preco: preco.toFixed(2), qtd: 1 }]);
+    setDraft({ nome: "", tamanho: "", unidade: "L", preco: "" });
+    setShowCustom(false);
+  }
 
   async function montar() {
     if (montando) return;
@@ -1159,8 +1185,8 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
       setErro("Informe a razão social do cliente.");
       return;
     }
-    if (selecionados.length === 0) {
-      setErro("Adicione ao menos um produto do catálogo.");
+    if (rows.length === 0) {
+      setErro("Adicione ao menos um produto (catálogo ou item próprio).");
       return;
     }
     setMontando(true);
@@ -1169,7 +1195,10 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
       const body = {
         tipo,
         cliente: { razaoSocial: razaoSocial.trim(), cnpj: null, segmento: segmento.trim() || null },
-        itens: selecionados.map((x) => ({ codigo: x.produto.codigo, quantidade: x.qtd })),
+        itens: [
+          ...selCat.map((x) => ({ codigo: x.produto.codigo, quantidade: x.qtd })),
+          ...custom.map((c) => ({ nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: null, custoDiluido: null }], quantidade: c.qtd })),
+        ],
       };
       const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!r.ok) throw new Error(`Falha ao montar a proposta (${r.status}).`);
@@ -1246,27 +1275,55 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
               })}
               {catalogo !== null && filtrados.length === 0 && <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "12px 0" }}>Nenhum produto encontrado.</div>}
             </div>
+            {/* Item próprio (fora do catálogo) — preço digitado por humano (MANUAL) */}
+            <div style={{ borderTop: "1px solid var(--border)", marginTop: "14px", paddingTop: "14px" }}>
+              {!showCustom ? (
+                <button onClick={() => setShowCustom(true)} style={{ display: "flex", alignItems: "center", gap: "7px", background: "none", border: "none", color: "var(--primary)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)", padding: 0 }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M7 1.5v11M1.5 7h11" /></svg>
+                  Item próprio (fora do catálogo)
+                </button>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-strong)" }}>Item próprio — preço digitado (MANUAL)</div>
+                  <input value={draft.nome} onChange={(e) => setDraft((d) => ({ ...d, nome: e.target.value }))} placeholder="Nome do produto" style={campoInput} />
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <input value={draft.tamanho} onChange={(e) => setDraft((d) => ({ ...d, tamanho: e.target.value }))} inputMode="decimal" placeholder="Tam." style={{ ...campoInput, width: "70px", flex: "none" }} />
+                    <select value={draft.unidade} onChange={(e) => setDraft((d) => ({ ...d, unidade: e.target.value as "L" | "kg" | "un" | "ml" }))} style={{ ...campoInput, width: "74px", flex: "none", padding: "0 8px", cursor: "pointer" }}>
+                      <option value="L">L</option>
+                      <option value="kg">kg</option>
+                      <option value="un">un</option>
+                      <option value="ml">ml</option>
+                    </select>
+                    <input value={draft.preco} onChange={(e) => setDraft((d) => ({ ...d, preco: e.target.value }))} inputMode="decimal" placeholder="Preço R$" style={{ ...campoInput, flex: 1 }} />
+                  </div>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <Hoverable onClick={addCustom} base={{ flex: 1, height: "36px", borderRadius: "9px", border: "none", background: "var(--primary)", color: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center" }} hover={{ background: "var(--primary-hover)" }}>Adicionar item</Hoverable>
+                    <button onClick={() => { setShowCustom(false); setDraft({ nome: "", tamanho: "", unidade: "L", preco: "" }); }} style={{ height: "36px", padding: "0 14px", borderRadius: "9px", border: "1px solid var(--border-strong)", background: "var(--surface)", color: "var(--text-muted)", cursor: "pointer", fontSize: "13px" }}>Cancelar</button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Selecionados */}
           <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px 18px", boxShadow: "var(--shadow-sm)", position: "sticky", top: "78px" }}>
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)", marginBottom: "12px" }}>Selecionados ({selecionados.length})</div>
-            {selecionados.length === 0 ? (
-              <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "20px 0", textAlign: "center" }}>Adicione produtos do catálogo ao lado.</div>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)", marginBottom: "12px" }}>Selecionados ({rows.length})</div>
+            {rows.length === 0 ? (
+              <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "20px 0", textAlign: "center" }}>Adicione produtos do catálogo (ou um item próprio) ao lado.</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {selecionados.map(({ produto, qtd }) => (
-                  <div key={produto.codigo} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {rows.map((r) => (
+                  <div key={r.key} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{produto.nome}</div>
-                      <div style={{ fontSize: "11.5px", color: "var(--text-subtle)", fontFamily: "var(--font-mono)" }}>{fmt(precoDe(produto))} un.</div>
+                      <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.nome}</div>
+                      <div style={{ fontSize: "11.5px", color: "var(--text-subtle)", fontFamily: "var(--font-mono)" }}>{r.sub}</div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: "none" }}>
-                      <button onClick={() => setQtd(produto.codigo, qtd - 1)} style={qtdBtn}>−</button>
-                      <span style={{ minWidth: "22px", textAlign: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "13px" }}>{qtd}</span>
-                      <button onClick={() => setQtd(produto.codigo, qtd + 1)} style={qtdBtn}>+</button>
+                      <button onClick={() => r.onQtd(r.qtd - 1)} style={qtdBtn}>−</button>
+                      <span style={{ minWidth: "22px", textAlign: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "13px" }}>{r.qtd}</span>
+                      <button onClick={() => r.onQtd(r.qtd + 1)} style={qtdBtn}>+</button>
                     </div>
-                    <button onClick={() => setQtd(produto.codigo, 0)} title="Remover" style={{ ...qtdBtn, color: "var(--danger)", borderColor: "transparent", background: "transparent" }}>×</button>
+                    <button onClick={() => r.onQtd(0)} title="Remover" style={{ ...qtdBtn, color: "var(--danger)", borderColor: "transparent", background: "transparent" }}>×</button>
                   </div>
                 ))}
                 <div style={{ borderTop: "1px solid var(--border)", marginTop: "4px", paddingTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
@@ -2234,7 +2291,9 @@ function ProspeccaoScreen({ onGerarProposta }: { onGerarProposta: (d: ProspectPa
   }
 
   return (
-    <div style={{ padding: "28px", maxWidth: "1120px" }}>
+    <>
+      <ScreenHead title="Prospecção" sub="Garimpe leads reais — a IA escreve a abordagem" />
+      <div style={{ padding: "28px", maxWidth: "1120px" }}>
       {/* ── Hero ── */}
       <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "24px", background: "linear-gradient(120deg,var(--blue-700) 0%,var(--blue-500) 52%,var(--orange-500) 135%)", boxShadow: "0 14px 34px rgba(30,107,184,.28)", animation: "fadeUp .5s ease both" }}>
         <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
@@ -2338,6 +2397,7 @@ function ProspeccaoScreen({ onGerarProposta }: { onGerarProposta: (d: ProspectPa
         </>
       )}
     </div>
+    </>
   );
 }
 
@@ -3219,7 +3279,9 @@ function ContabilScreen() {
   }
 
   return (
-    <div style={{ padding: "28px", maxWidth: "960px" }}>
+    <>
+      <ScreenHead title="Contábil" sub="Diário/razão → partida dobrada e equação patrimonial" />
+      <div style={{ padding: "28px", maxWidth: "960px" }}>
       <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "20px", background: "linear-gradient(120deg,#312E81 0%,#1E3A8A 60%,#0F766E 130%)", boxShadow: "0 14px 34px rgba(49,46,129,.26)", animation: "fadeUp .5s ease both" }}>
         <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
         <div style={{ position: "relative" }}>
@@ -3296,6 +3358,7 @@ function ContabilScreen() {
         </div>
       )}
     </div>
+    </>
   );
 }
 
@@ -3958,7 +4021,9 @@ function InstagramScreen() {
   }
 
   return (
-    <div style={{ padding: "28px", maxWidth: "1120px" }}>
+    <>
+      <ScreenHead title="Posts Instagram" sub="Descreva o que divulgar — a IA escreve e gera a imagem" />
+      <div style={{ padding: "28px", maxWidth: "1120px" }}>
       {/* ── Hero ── */}
       <div style={{ position: "relative", overflow: "hidden", borderRadius: "18px", padding: "26px 30px", marginBottom: "24px", background: "linear-gradient(120deg,#7C3AED 0%,#DB2777 55%,var(--orange-500) 135%)", boxShadow: "0 14px 34px rgba(219,39,119,.28)", animation: "fadeUp .5s ease both" }}>
         <div style={{ position: "absolute", top: "-60px", right: "-30px", width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,.10)" }} />
@@ -4069,6 +4134,7 @@ function InstagramScreen() {
         </>
       )}
     </div>
+    </>
   );
 }
 
