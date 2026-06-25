@@ -33,6 +33,13 @@ export function AjudaChat() {
     corpoRef.current?.scrollTo({ top: corpoRef.current.scrollHeight, behavior: "smooth" });
   }, [msgs]);
 
+  // Abre o assistente quando o header global pede (botão "Assistente").
+  useEffect(() => {
+    const abrir = () => setAberto(true);
+    window.addEventListener("ies:assistente", abrir);
+    return () => window.removeEventListener("ies:assistente", abrir);
+  }, []);
+
   function enviar(texto: string) {
     const q = texto.trim();
     if (!q) return;

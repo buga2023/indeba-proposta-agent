@@ -12,7 +12,7 @@
  * Constituição: preço/embalagem vêm SEMPRE do catálogo; a IA só seleciona e escreve.
  */
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse } from "@/lib/contracts";
 import { AjudaChat } from "@/components/ajuda-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
@@ -120,6 +120,12 @@ function Hoverable({
     </button>
   );
 }
+
+/* ── Chrome global: ações do header (busca/assistente) compartilhadas com as telas ── */
+const ChromeContext = createContext<{ openPalette: () => void; openAssistant: () => void }>({
+  openPalette: () => {},
+  openAssistant: () => {},
+});
 
 /* tipo do registro do histórico (espelha EventoProposta da API, sem importar node) */
 type StatusProposta = "rascunho" | "em_edicao" | "enviada" | "aprovada" | "recusada";
@@ -461,22 +467,24 @@ export default function Home() {
     return {
       display: "flex",
       alignItems: "center",
-      gap: "10px",
+      gap: "11px",
       padding: "9px 12px",
-      borderRadius: "8px",
+      borderRadius: "10px",
       border: "none",
       cursor: "pointer",
       textAlign: "left",
       width: "100%",
       background: activeNav ? "rgba(255,255,255,0.13)" : "transparent",
-      color: activeNav ? "#FFFFFF" : "rgba(255,255,255,0.6)",
+      color: activeNav ? "#FFFFFF" : "rgba(255,255,255,0.62)",
       fontFamily: "var(--font-sans), sans-serif",
-      fontSize: "14px",
-      fontWeight: activeNav ? 600 : 400,
-      transition: "background 0.18s ease, color 0.18s ease",
+      fontSize: "13.5px",
+      fontWeight: activeNav ? 600 : 500,
+      transition: "background 0.16s ease, color 0.16s ease",
     };
   }
-  const navHover: CSSProperties = { background: "rgba(255,255,255,0.16)", color: "#fff" };
+  const navHover: CSSProperties = { background: "rgba(255,255,255,0.08)", color: "#fff" };
+  // Rótulo de seção da sidebar agrupada (design "Plataforma IA Indeba").
+  const navSection: CSSProperties = { fontSize: "10px", fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: "rgba(255,255,255,.34)", padding: "14px 12px 5px" };
 
   function novaProposta() {
     setScreen("briefing");
@@ -485,10 +493,17 @@ export default function Home() {
     setError(null);
   }
 
+  const chrome = {
+    openPalette: () => setPalette(true),
+    // O Assistente (AjudaChat) é um overlay independente; o header pede a abertura via evento.
+    openAssistant: () => window.dispatchEvent(new CustomEvent("ies:assistente")),
+  };
+
   return (
+    <ChromeContext.Provider value={chrome}>
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--gray-50)", fontFamily: "var(--font-sans), sans-serif", color: "var(--gray-900)" }}>
       {/* ============ SIDEBAR ============ */}
-      <aside className="ies-sidebar" style={{ width: "240px", flex: "none", height: "100vh", background: "var(--gradient-hero)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <aside className="ies-sidebar" style={{ width: "248px", flex: "none", height: "100vh", background: "var(--gradient-hero)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", boxShadow: "0 2px 8px rgba(30,107,184,.5)" }}>
@@ -503,7 +518,8 @@ export default function Home() {
           </div>
         </div>
 
-        <nav style={{ padding: "10px 8px", flex: 1, display: "flex", flexDirection: "column", gap: "2px", overflowY: "auto" }}>
+        <nav style={{ padding: "6px 8px 8px", flex: 1, display: "flex", flexDirection: "column", gap: "1px", overflowY: "auto" }}>
+          <div className="ies-side-text" style={navSection}>Visão geral</div>
           <Hoverable base={navItemStyle(["dashboard"])} hover={navHover} onClick={() => setScreen("dashboard")}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1" />
@@ -513,6 +529,7 @@ export default function Home() {
             </svg>
             Dashboard
           </Hoverable>
+          <div className="ies-side-text" style={navSection}>IA &amp; Vendas</div>
           <Hoverable base={navItemStyle(["briefing", "loading", "review", "pdf"])} hover={navHover} onClick={novaProposta}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M9.5 2H4.5A1 1 0 003.5 3v11a1 1 0 001 1h8a1 1 0 001-1V6.5L9.5 2z" />
@@ -551,6 +568,7 @@ export default function Home() {
             </svg>
             Posts Instagram
           </Hoverable>
+          <div className="ies-side-text" style={navSection}>Operações</div>
           <Hoverable base={navItemStyle(["financeiro"])} hover={navHover} onClick={() => setScreen("financeiro")}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M2.5 14.5h12" />
@@ -612,8 +630,7 @@ export default function Home() {
             Chamados
           </Hoverable>
 
-          <div style={{ height: "1px", background: "rgba(255,255,255,.07)", margin: "8px 4px" }} />
-
+          <div className="ies-side-text" style={navSection}>Sistema</div>
           <Hoverable base={navItemStyle(["config"])} hover={navHover} onClick={() => setScreen("config")}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <circle cx="8.5" cy="8.5" r="2.25" />
@@ -624,10 +641,10 @@ export default function Home() {
         </nav>
 
         <div className="ies-side-foot" style={{ padding: "14px 14px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontWeight: 700, fontSize: "12px", color: "white" }}>M</div>
+          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontWeight: 700, fontSize: "13px", color: "white" }}>M</div>
           <div className="ies-side-text" style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: "white", fontSize: "13px", fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Mateus</div>
-            <div style={{ color: "rgba(255,255,255,.4)", fontSize: "11px" }}>Vendedor</div>
+            <div style={{ color: "white", fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Mateus Oliveira</div>
+            <div style={{ color: "rgba(255,255,255,.42)", fontSize: "11px" }}>Vendedor · Salvador/BA</div>
           </div>
           <button
             onClick={() => {
@@ -705,6 +722,7 @@ export default function Home() {
       {/* Assistente de ajuda — overlay global (canto inferior direito) */}
       <AjudaChat />
     </div>
+    </ChromeContext.Provider>
   );
 }
 
@@ -713,8 +731,18 @@ export default function Home() {
 function DashboardScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
   const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
   const [catalogoCount, setCatalogoCount] = useState<number | null>(null);
+  // Data/saudação calculadas só no cliente (evita divergência de hidratação SSR≠cliente).
+  const [hdr, setHdr] = useState({ hoje: "", saudacao: "Olá" });
+  const { hoje, saudacao } = hdr;
 
   useEffect(() => {
+    const d = new Date();
+    const h = d.getHours();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- valor client-only (data/hora atual), por design
+    setHdr({
+      hoje: d.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase(),
+      saudacao: h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite",
+    });
     fetch("/api/propostas")
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
       .then((d: { propostas: PropostaLog[] }) => setPropostas(d.propostas))
@@ -755,88 +783,143 @@ function DashboardScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
     { label: "Produtos no catálogo", valor: catalogoCount == null ? "—" : String(catalogoCount), cor: "var(--orange-600)" },
   ];
 
+  // Widget financeiro — derivado das propostas reais (sem números inventados, constituição §1.2):
+  // "aprovado" = soma das aprovadas; "em negociação" = soma das enviadas.
+  const somaPorStatus = (st: StatusProposta) => lista.filter((p) => p.status === st).reduce((s, p) => s + Number(p.total || 0), 0);
+  const valorAprovado = somaPorStatus("aprovada");
+  const valorEmNegociacao = somaPorStatus("enviada");
+  const recentes = lista.slice(0, 4);
+
   return (
-    <div style={{ background: "var(--gray-50)", minHeight: "100vh" }}>
-      <ScreenHead
-        title="Dashboard"
-        sub="Olá, Mateus — visão geral"
-        right={
-          <Hoverable onClick={() => setScreen("history")} base={{ padding: "8px 16px", background: "var(--blue-600)", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13.5px", fontWeight: 600, color: "white" }} hover={{ background: "var(--blue-700)" }}>Ver propostas</Hoverable>
-        }
-      />
-      <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: "20px" }}>
-        {/* KPIs */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: "16px" }}>
-          {KPIS.map((k, i) => (
-            <div key={k.label} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", animation: `popIn .4s var(--ease-spring) ${i * 0.05}s both` }}>
-              <div style={{ fontSize: "12px", color: "var(--gray-500)", fontWeight: 500 }}>{k.label}</div>
-              <div style={{ fontSize: "26px", fontWeight: 800, color: k.cor, fontFamily: "var(--font-mono)", marginTop: "6px" }}>{k.valor}</div>
+    <div style={{ background: "var(--background)", minHeight: "100vh" }}>
+      <ScreenHead title="Dashboard" sub={`${saudacao}, Mateus — visão geral`} />
+      <div style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "20px", animation: "fadeUp var(--duration-slow) var(--ease-out) both" }}>
+        {/* ── Hero ── */}
+        <div style={{ borderRadius: "18px", background: "var(--gradient-hero)", color: "#fff", padding: "26px 30px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "24px", position: "relative", overflow: "hidden", boxShadow: "var(--shadow-lg)" }}>
+          <div style={{ position: "absolute", right: "-60px", top: "-70px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle,rgba(247,130,27,.28),transparent 68%)" }} />
+          <div style={{ position: "absolute", right: "80px", bottom: "-120px", width: "260px", height: "260px", borderRadius: "50%", background: "radial-gradient(circle,rgba(30,107,184,.45),transparent 70%)" }} />
+          <div style={{ position: "relative", zIndex: 1, maxWidth: "560px" }}>
+            <div style={{ fontSize: "12.5px", color: "rgba(255,255,255,.66)", fontWeight: 600, letterSpacing: ".02em", minHeight: "16px" }}>{hoje}</div>
+            <div style={{ fontSize: "27px", fontWeight: 800, letterSpacing: "-.02em", marginTop: "5px" }}>{saudacao}, Mateus</div>
+            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.74)", marginTop: "7px", lineHeight: 1.55 }}>Descreva um cliente em linguagem natural — a IA seleciona produtos do catálogo, redige o texto e gera o PDF. Você revisa antes de exportar.</div>
+            <div style={{ display: "flex", gap: "10px", marginTop: "20px", flexWrap: "wrap" }}>
+              <Hoverable onClick={() => setScreen("briefing")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 18px", borderRadius: "12px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600, boxShadow: "var(--shadow-accent)" }} hover={{ background: "var(--accent-hover)" }}>
+                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.8} strokeLinecap="round"><path d="M8.5 3v11M3 8.5h11" /></svg>Nova proposta
+              </Hoverable>
+              <Hoverable onClick={() => setScreen("prospeccao")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 17px", borderRadius: "12px", border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600 }} hover={{ background: "rgba(255,255,255,.16)" }}>
+                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="7" r="4.25" /><path d="M10.2 10.2l4 4" /></svg>Prospectar
+              </Hoverable>
+              <Hoverable onClick={() => setScreen("instagram")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 17px", borderRadius: "12px", border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600 }} hover={{ background: "rgba(255,255,255,.16)" }}>
+                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="3.5" /><circle cx="8.5" cy="8.5" r="3" /></svg>Gerar posts
+              </Hoverable>
             </div>
+          </div>
+          <div style={{ position: "relative", zIndex: 1, textAlign: "right", flex: "none" }}>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,.6)", fontWeight: 600 }}>PROPOSTAS REGISTRADAS</div>
+            <div style={{ fontSize: "52px", fontWeight: 900, letterSpacing: "-.03em", lineHeight: 1, fontFamily: "var(--font-mono)" }}>{propostas == null ? "—" : totalProp}</div>
+            <div style={{ fontSize: "12.5px", color: "#7ee2a8", fontWeight: 700, marginTop: "4px" }}>{aprovadas} aprovada{aprovadas === 1 ? "" : "s"}</div>
+          </div>
+        </div>
+
+        {/* ── KPIs ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px" }}>
+          {KPIS.map((k, i) => (
+            <Hoverable as="div" key={k.label} base={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderTop: `3px solid ${k.cor}`, borderRadius: "14px", padding: "17px 19px", minWidth: 0, boxShadow: "var(--shadow-sm)", transition: "transform var(--duration-base) var(--ease-out),box-shadow var(--duration-base) var(--ease-standard)", animation: `popIn .4s var(--ease-spring) ${i * 0.05}s both` }} hover={{ transform: "translateY(-3px)", boxShadow: "var(--shadow-lg)" }}>
+              <div style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500, marginBottom: "9px" }}>{k.label}</div>
+              <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-strong)", fontFamily: "var(--font-mono)", letterSpacing: "-.02em" }}>{k.valor}</div>
+            </Hoverable>
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-          {/* Donut: status */}
-          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "20px", boxShadow: "var(--shadow-sm)" }}>
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)", marginBottom: "16px" }}>Propostas por status</div>
-            {totalProp === 0 ? (
-              <div style={{ fontSize: "13px", color: "var(--gray-400)", padding: "20px 0" }}>{propostas == null ? "Carregando…" : "Nenhuma proposta ainda."}</div>
-            ) : (
-              <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-                <div style={{ width: 120, height: 120, borderRadius: "50%", background: donut, flex: "none", position: "relative" }}>
-                  <div style={{ position: "absolute", inset: 18, borderRadius: "50%", background: "white", display: "grid", placeItems: "center" }}>
-                    <span style={{ fontSize: "22px", fontWeight: 800, color: "var(--gray-900)", fontFamily: "var(--font-mono)" }}>{totalProp}</span>
-                  </div>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {statusCount.map((s) => (
-                    <div key={s.k} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: "var(--gray-600)" }}>
-                      <span style={{ width: 10, height: 10, borderRadius: "3px", background: s.fg, flex: "none" }} />
-                      {s.label} <b style={{ color: "var(--gray-900)", fontFamily: "var(--font-mono)" }}>{s.n}</b>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
+        {/* ── Gráficos reais (status / tipo) ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.45fr 1fr", gap: "16px" }}>
           {/* Barras: por tipo */}
-          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "20px", boxShadow: "var(--shadow-sm)" }}>
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)", marginBottom: "16px" }}>Propostas por tipo</div>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: "20px", height: "140px", padding: "0 10px" }}>
+          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Propostas por tipo</div>
+            <div style={{ fontSize: "12px", color: "var(--text-subtle)", marginBottom: "14px" }}>Distribuição por estrutura de PDF</div>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: "20px", height: "150px", padding: "0 10px" }}>
               {porTipo.map((t) => (
                 <div key={t.label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", height: "100%", justifyContent: "flex-end" }}>
                   <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--blue-600)", fontFamily: "var(--font-mono)" }}>{t.n}</span>
                   <div style={{ width: "100%", maxWidth: "56px", height: `${(t.n / maxTipo) * 100}%`, minHeight: "4px", background: "linear-gradient(180deg,var(--blue-500),var(--blue-700))", borderRadius: "8px 8px 0 0", transition: "height .4s var(--ease-out)" }} />
-                  <span style={{ fontSize: "12px", color: "var(--gray-500)" }}>{t.label}</span>
+                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{t.label}</span>
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Donut: status */}
+          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ width: "100%", fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Propostas por status</div>
+            <div style={{ width: "100%", fontSize: "12px", color: "var(--text-subtle)", marginBottom: "14px" }}>Funil comercial</div>
+            {totalProp === 0 ? (
+              <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "30px 0" }}>{propostas == null ? "Carregando…" : "Nenhuma proposta ainda."}</div>
+            ) : (
+              <>
+                <div style={{ position: "relative", width: 150, height: 150 }}>
+                  <div style={{ width: 150, height: 150, borderRadius: "50%", background: donut }} />
+                  <div style={{ position: "absolute", inset: 22, borderRadius: "50%", background: "var(--surface-card)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ fontSize: "30px", fontWeight: 800, color: "var(--text-strong)", lineHeight: 1, fontFamily: "var(--font-mono)" }}>{totalProp}</div>
+                    <div style={{ fontSize: "10.5px", color: "var(--text-subtle)", marginTop: "3px" }}>propostas</div>
+                  </div>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px 18px", marginTop: "18px" }}>
+                  {statusCount.map((s) => (
+                    <div key={s.k} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11.5px", color: "var(--text-muted)" }}>
+                      <span style={{ width: 9, height: 9, borderRadius: "50%", background: s.fg, flex: "none" }} />
+                      {s.label} <b style={{ color: "var(--text-strong)", fontFamily: "var(--font-mono)" }}>{s.n}</b>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Recentes */}
-        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "20px", boxShadow: "var(--shadow-sm)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)" }}>Propostas recentes</div>
-            <Hoverable onClick={() => setScreen("history")} base={{ background: "none", border: "none", color: "var(--blue-600)", fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: 0 }}>Ver todas →</Hoverable>
-          </div>
-          {lista.length === 0 ? (
-            <div style={{ fontSize: "13px", color: "var(--gray-400)" }}>{propostas == null ? "Carregando…" : "Nenhuma proposta ainda."}</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {lista.slice(0, 6).map((p) => {
-                const st = STATUS_UI[p.status];
-                return (
-                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 0", borderTop: "1px solid var(--gray-100)" }}>
-                    <span style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--gray-900)", flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.cliente}</span>
-                    <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", background: st.bg, color: st.fg }}>{st.label}</span>
-                    <span style={{ fontSize: "13px", fontFamily: "var(--font-mono)", color: "var(--gray-700)", minWidth: "90px", textAlign: "right" }}>R$ {Number(p.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                  </div>
-                );
-              })}
+        {/* ── Atividade recente + Financeiro ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.45fr 1fr", gap: "16px", alignItems: "start" }}>
+          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Atividade recente</div>
+              <Hoverable onClick={() => setScreen("history")} base={{ background: "none", border: "none", color: "var(--primary)", fontSize: "12.5px", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)", padding: 0 }}>Ver tudo →</Hoverable>
             </div>
-          )}
+            {lista.length === 0 ? (
+              <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "16px 0" }}>{propostas == null ? "Carregando…" : "Nenhuma proposta ainda."}</div>
+            ) : (
+              recentes.map((p) => (
+                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "12px 0", borderBottom: "1px solid var(--border)" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "10px", flex: "none", background: "var(--info-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)" }}>
+                    <svg width="16" height="16" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2H4.5A1 1 0 003.5 3v11a1 1 0 001 1h8a1 1 0 001-1V6.5L9.5 2z" /><path d="M9.5 2v4.5h4.5" /></svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.cliente}</div>
+                    <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{tipoLabel(p.tipo)} · {p.qtdItens} {p.qtdItens === 1 ? "item" : "itens"} · {STATUS_UI[p.status].label}</div>
+                  </div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--primary)", fontSize: "14px", whiteSpace: "nowrap" }}>R$ {Number(p.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Widget financeiro — derivado das propostas reais */}
+          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+              <span style={{ fontSize: "12.5px", color: "var(--text-muted)", fontWeight: 500 }}>Valor aprovado</span>
+              <span style={{ width: "30px", height: "30px", borderRadius: "9px", background: "var(--success-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--success)" }}>
+                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M3 12l4-4 3 2 4-5" /></svg>
+              </span>
+            </div>
+            <div style={{ fontSize: "21px", fontWeight: 800, color: "var(--text-strong)", fontFamily: "var(--font-mono)" }}>{fmt(valorAprovado)}</div>
+            <div style={{ height: "1px", background: "var(--border)", margin: "13px 0" }} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+              <span style={{ fontSize: "12.5px", color: "var(--text-muted)", fontWeight: 500 }}>Em negociação (enviadas)</span>
+              <span style={{ width: "30px", height: "30px", borderRadius: "9px", background: "var(--info-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--info)" }}>
+                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 4.5v5M6 7h5" /></svg>
+              </span>
+            </div>
+            <div style={{ fontSize: "21px", fontWeight: 800, color: "var(--info)", fontFamily: "var(--font-mono)" }}>{fmt(valorEmNegociacao)}</div>
+            <Hoverable onClick={() => setScreen("cobranca")} base={{ marginTop: "12px", width: "100%", height: "36px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", color: "var(--text-body)", fontWeight: 600, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center" }} hover={{ background: "var(--surface-muted)" }}>Abrir régua de cobrança</Hoverable>
+          </div>
         </div>
       </div>
     </div>
@@ -2833,13 +2916,46 @@ function abrirRelatorio(titulo: string, subtitulo: string, blocos: BlocoRelatori
 
 /* Cabeçalho de tela (design app.html) — barra branca fixa com título + subtítulo + ação. */
 function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) {
+  const { openPalette, openAssistant } = useContext(ChromeContext);
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", height: "56px", background: "white", borderBottom: "1px solid var(--gray-200)", position: "sticky", top: 0, zIndex: 5, flex: "none" }}>
-      <div>
-        <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)" }}>{title}</span>
-        {sub && <span style={{ fontSize: "12px", color: "var(--gray-400)", marginLeft: "10px" }}>{sub}</span>}
+    <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "0 24px", height: "62px", background: "var(--surface)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 20, flex: "none" }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-strong)", letterSpacing: "-.01em", lineHeight: 1.15 }}>{title}</div>
+        {sub && <div style={{ fontSize: "12.5px", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sub}</div>}
       </div>
+      <div style={{ flex: 1 }} />
       {right}
+      {/* Busca global → abre a command palette (Ctrl/Cmd+K) */}
+      <Hoverable
+        onClick={openPalette}
+        title="Buscar (Ctrl/Cmd+K)"
+        base={{ display: "flex", alignItems: "center", gap: "9px", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface-sunken)", color: "var(--text-subtle)", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "13px", minWidth: "210px" }}
+        hover={{ background: "var(--surface-muted)" }}
+      >
+        <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5l4 4" /></svg>
+        <span style={{ flex: 1, textAlign: "left" }}>Buscar telas, produtos…</span>
+        <span style={{ fontSize: "10.5px", fontWeight: 700, padding: "2px 6px", borderRadius: "5px", background: "var(--surface-card)", border: "1px solid var(--border)", color: "var(--text-subtle)" }}>⌘K</span>
+      </Hoverable>
+      {/* Notificações → atalho para Cobrança (régua/inadimplência) */}
+      <Hoverable
+        onClick={openPalette}
+        title="Notificações"
+        base={{ position: "relative", width: "38px", height: "38px", borderRadius: "10px", border: "1px solid var(--border)", background: "var(--surface)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}
+        hover={{ background: "var(--surface-muted)" }}
+      >
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M5 7a3.5 3.5 0 017 0c0 3 1.5 4 1.5 4h-10S5 10 5 7z" /><path d="M7.3 13.5a1.4 1.4 0 002.4 0" /></svg>
+        <span style={{ position: "absolute", top: "7px", right: "8px", width: "7px", height: "7px", borderRadius: "50%", background: "var(--accent)", border: "1.5px solid var(--surface)" }} />
+      </Hoverable>
+      {/* Assistente → abre o overlay AjudaChat */}
+      <Hoverable
+        onClick={openAssistant}
+        title="Assistente"
+        base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 14px", borderRadius: "10px", border: "none", background: "var(--primary)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "13px", fontWeight: 600, boxShadow: "var(--shadow-sm)" }}
+        hover={{ background: "var(--primary-hover)" }}
+      >
+        <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 2.2l1.5 3.3 3.3 1.5-3.3 1.5L8.5 12 7 8l-3.3-1.5L7 5z" /></svg>
+        Assistente
+      </Hoverable>
     </div>
   );
 }
