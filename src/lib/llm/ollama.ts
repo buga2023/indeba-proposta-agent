@@ -7,12 +7,14 @@ const MODEL = process.env.OLLAMA_MODEL ?? "qwen2.5:7b-instruct";
 // (rápido; o backbone determinístico já cobre os erros dele). Roteamento híbrido.
 export const MODEL_TEXTO = process.env.OLLAMA_MODEL_TEXTO ?? "qwen3:14b";
 
-// Headers de toda chamada ao Ollama. Em prod o túnel fica atrás de Cloudflare Access
-// (named tunnel): se as credenciais do service token estiverem no ambiente, manda os
-// headers CF-Access pra autenticar o caminho Vercel→túnel. Sem elas (dev local) não
-// envia nada — o Ollama no 127.0.0.1 não pede auth.
+// Headers de toda chamada ao Ollama, autenticando o caminho Vercel→túnel→PC. Dois modos,
+// ambos opcionais (vazios em dev local → nada é enviado, o Ollama no 127.0.0.1 não pede auth):
+//   • OLLAMA_AUTH_TOKEN → Authorization: Bearer (proxy local com bearer; grátis, sem domínio).
+//   • OLLAMA_CF_ACCESS_CLIENT_ID/SECRET → headers CF-Access (named tunnel + Cloudflare Access).
 export function ollamaHeaders(extra?: Record<string, string>): HeadersInit {
   const h: Record<string, string> = { ...extra };
+  const token = process.env.OLLAMA_AUTH_TOKEN;
+  if (token) h["Authorization"] = `Bearer ${token}`;
   const id = process.env.OLLAMA_CF_ACCESS_CLIENT_ID;
   const secret = process.env.OLLAMA_CF_ACCESS_CLIENT_SECRET;
   if (id && secret) {
