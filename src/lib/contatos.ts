@@ -1,4 +1,6 @@
+import nodemailer from "nodemailer";
 import { prisma } from "@/lib/db";
+import type { Inadimplente } from "@/lib/contracts";
 
 // "Sistema que aprende": cada planilha que traz o e-mail de um cliente grava no cadastro;
 // clientes sem e-mail na planilha são preenchidos pelo que já foi aprendido antes.
@@ -55,25 +57,66 @@ export async function setGestorEmail(email: string): Promise<void> {
   });
 }
 
-// ── Disparo da cobrança para o webhook do n8n ─────────────────────────
-export async function dispararCobranca(inadimplentes: unknown[], totalDevido: string): Promise<{ enviados: number }> {
-  const url = process.env.N8N_COBRANCA_WEBHOOK;
-  if (!url) throw new Error("Webhook de cobrança não configurado (N8N_COBRANCA_WEBHOOK).");
-  // Segredo compartilhado: o webhook n8n (Header Auth) exige este header. Sem ele,
-  // a URL do webhook seria um open-relay de e-mail. Só envia se configurado; o
-  // enforcement fica no n8n — assim o dev local sem segredo continua funcionando.
-  const segredo = process.env.N8N_WEBHOOK_SECRET;
+// ── Disparo da cobrança: envia e-mail direto via SMTP (sem n8n) ───────────────
+// Serverless-native (roda no runtime Node da rota, não depende de PC/n8n ligado).
+// Um e-mail por inadimplente COM e-mail (corpo = a régua já pronta do motor §2) +
+// um resumo ao gestor. Mesmo assunto/corpo do fluxo n8n antigo (docs/n8n/cobranca-email.json).
+// Credencial via SMTP_* — sem domínio, use Gmail (smtp.gmail.com + app password).
+export async function dispararCobranca(
+  inadimplentes: Inadimplente[],
+  totalDevido: string,
+): Promise<{ enviados: number; falhas: number }> {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!host || !user || !pass) {
+    throw new Error("Envio de e-mail não configurado (SMTP_HOST/SMTP_USER/SMTP_PASS).");
+  }
+  const port = Number(process.env.SMTP_PORT ?? 465);
+  const from = process.env.SMTP_FROM ?? user;
   const gestorEmail = await getGestorEmail();
-  const r = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(segredo ? { "x-webhook-secret": segredo } : {}),
-    },
-    body: JSON.stringify({ gestorEmail, totalDevido, inadimplentes }),
-    signal: AbortSignal.timeout(15_000),
+  const transport = nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465, // 465 = SSL direto; 587 = STARTTLS
+    auth: { user, pass },
   });
-  if (!r.ok) throw new Error(`n8n respondeu ${r.status}`);
-  const comEmail = (inadimplentes as { email?: string | null }[]).filter((i) => i.email).length;
-  return { enviados: comEmail };
+
+  // 1) Um e-mail por cliente que tem e-mail.
+  const comEmail = inadimplentes.filter((i) => i.email);
+  const semEmail = inadimplentes.filter((i) => !i.email);
+  const resultados = await Promise.allSettled(
+    comEmail.map((i) =>
+      transport.sendMail({
+        from,
+        to: i.email!,
+        subject: `Indeba — aviso de pagamento em aberto (${i.cliente})`,
+        text: i.mensagem,
+      }),
+    ),
+  );
+  const enviados = resultados.filter((r) => r.status === "fulfilled").length;
+  const falhas = resultados.length - enviados;
+
+  // 2) Resumo ao gestor (mesma formatação do nó "resumo gestor" do n8n).
+  const linha = (i: Inadimplente) => `• ${i.cliente} — R$ ${i.valorDevido} (${i.diasAtraso} dias, ${i.severidade})`;
+  const corpo = [
+    `Disparo de cobrança concluído.`,
+    ``,
+    `Clientes cobrados por e-mail: ${enviados} de ${inadimplentes.length}`,
+    `Total em aberto: R$ ${totalDevido}`,
+    ``,
+    `— Enviados —`,
+    ...comEmail.map(linha),
+    ...(semEmail.length ? [``, `— SEM E-MAIL (não enviados, cadastre o e-mail) —`, ...semEmail.map(linha)] : []),
+    ...(falhas ? [``, `⚠ ${falhas} e-mail(s) ao cliente falharam no envio.`] : []),
+  ].join("\n");
+  await transport.sendMail({
+    from,
+    to: gestorEmail,
+    subject: `Resumo de cobrança Indeba — ${enviados}/${inadimplentes.length} enviados`,
+    text: corpo,
+  });
+
+  return { enviados, falhas };
 }
