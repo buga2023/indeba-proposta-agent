@@ -976,16 +976,16 @@ function BriefingScreen({
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", height: "56px", background: "white", borderBottom: "1px solid var(--gray-200)", flex: "none", position: "sticky", top: 0, zIndex: 5 }}>
-        <div>
-          <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)" }}>Nova proposta</span>
-          <span style={{ fontSize: "12px", color: "var(--gray-400)", marginLeft: "10px" }}>IA seleciona os produtos e redige o texto</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "5px 12px", background: "#DCFCE7", borderRadius: "999px" }}>
-          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16A34A", animation: "pulse 2s infinite" }} />
-          <span style={{ fontSize: "12px", color: "#16A34A", fontWeight: 500 }}>IA disponível</span>
-        </div>
-      </div>
+      <ScreenHead
+        title="Nova proposta"
+        sub="IA seleciona os produtos e redige o texto"
+        right={
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "5px 12px", background: "var(--success-soft)", borderRadius: "999px" }}>
+            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--success)", animation: "pulse 2s infinite" }} />
+            <span style={{ fontSize: "12px", color: "var(--success)", fontWeight: 500 }}>IA disponível</span>
+          </div>
+        }
+      />
 
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 32px 210px" }}>
         <div style={{ textAlign: "center", maxWidth: "640px" }}>
@@ -1207,46 +1207,44 @@ function ReviewScreen({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--gray-50)" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", height: "56px", background: "white", borderBottom: "1px solid var(--gray-200)", flex: "none" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <button onClick={goToBriefing} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: "white", cursor: "pointer", fontSize: "13px", color: "var(--gray-500)" }}>
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 2L3 6.5 8 11" />
-            </svg>
-            Nova proposta
-          </button>
-          <div>
-            <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)" }}>Revisão da proposta</span>
-            <span style={{ fontSize: "12px", color: "var(--gray-400)", marginLeft: "10px" }}>{scope.cliente.razaoSocial} · {includedItems.length} produtos selecionados</span>
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ display: "flex", background: "var(--gray-100)", borderRadius: "8px", padding: "3px", gap: "2px" }}>
-            <button onClick={() => setReviewVariant("A")} style={vTab("A")}>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round">
-                <rect x="1" y="1" width="4.5" height="4.5" rx="1" />
-                <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" />
-                <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" />
-                <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" />
+      <ScreenHead
+        title="Revisão da proposta"
+        sub={`${scope.cliente.razaoSocial} · ${includedItems.length} produtos selecionados`}
+        right={
+          <>
+            <button onClick={goToBriefing} title="Nova proposta" style={{ display: "flex", alignItems: "center", gap: "5px", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", cursor: "pointer", fontSize: "13px", color: "var(--text-muted)" }}>
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 2L3 6.5 8 11" />
               </svg>
-              Cards
+              Nova
             </button>
-            <button onClick={() => setReviewVariant("B")} style={vTab("B")}>
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round">
-                <path d="M1 3h11M1 6.5h11M1 10h11" />
+            <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
+              <button onClick={() => setReviewVariant("A")} style={vTab("A")}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round">
+                  <rect x="1" y="1" width="4.5" height="4.5" rx="1" />
+                  <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" />
+                  <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" />
+                  <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" />
+                </svg>
+                Cards
+              </button>
+              <button onClick={() => setReviewVariant("B")} style={vTab("B")}>
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round">
+                  <path d="M1 3h11M1 6.5h11M1 10h11" />
+                </svg>
+                Tabela
+              </button>
+            </div>
+            <Hoverable base={orangeBtn} hover={orangeHover} active={orangeActive} onClick={goToPDF}>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7.5 1.5v8M4.5 7l3 3 3-3" />
+                <path d="M1.5 12.5h12" />
               </svg>
-              Tabela
-            </button>
-          </div>
-          <Hoverable base={orangeBtn} hover={orangeHover} active={orangeActive} onClick={goToPDF}>
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M7.5 1.5v8M4.5 7l3 3 3-3" />
-              <path d="M1.5 12.5h12" />
-            </svg>
-            Gerar PDF
-          </Hoverable>
-        </div>
-      </div>
+              Gerar PDF
+            </Hoverable>
+          </>
+        }
+      />
 
       {/* Edição e refino pelo funcionário (antes do PDF final): texto editável + refino por IA */}
       <div style={{ flex: "none", padding: "14px 28px 0", display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -1764,22 +1762,24 @@ function HistoryScreen({
 
   return (
     <div style={{ padding: "28px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
-        <div>
-          <h2 style={{ fontSize: "24px", fontWeight: 700, color: "var(--gray-900)", letterSpacing: "-.4px" }}>Propostas</h2>
-          <div style={{ fontSize: "14px", color: "var(--gray-500)", marginTop: "3px" }}>{propostas === null ? "Carregando…" : `${lista.length} proposta(s) gerada(s)`}</div>
-        </div>
-        <Hoverable
-          base={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", background: "var(--orange-500)", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(236,122,28,.35)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease" }}
-          hover={{ background: "#D2680F", boxShadow: "0 4px 14px rgba(236,122,28,.5)", transform: "translateY(-1px)" }}
-          active={{ transform: "translateY(0)", background: "#A8530C" }}
-          onClick={goToBriefing}
-        >
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round">
-            <path d="M7.5 1.5v12M1.5 7.5h12" />
-          </svg>
-          Nova proposta
-        </Hoverable>
+      <div style={{ margin: "-28px -28px 24px" }}>
+        <ScreenHead
+          title="Propostas"
+          sub={propostas === null ? "Carregando…" : `${lista.length} proposta(s) gerada(s)`}
+          right={
+            <Hoverable
+              base={{ display: "flex", alignItems: "center", gap: "8px", height: "38px", padding: "0 18px", background: "var(--orange-500)", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(236,122,28,.35)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease" }}
+              hover={{ background: "#D2680F", boxShadow: "0 4px 14px rgba(236,122,28,.5)", transform: "translateY(-1px)" }}
+              active={{ transform: "translateY(0)", background: "#A8530C" }}
+              onClick={goToBriefing}
+            >
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round">
+                <path d="M7.5 1.5v12M1.5 7.5h12" />
+              </svg>
+              Nova proposta
+            </Hoverable>
+          }
+        />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "14px", marginBottom: "24px" }}>
@@ -1895,20 +1895,22 @@ function CatalogScreen({
 
   return (
     <div style={{ padding: "28px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "22px" }}>
-        <div>
-          <h2 style={{ fontSize: "24px", fontWeight: 700, color: "var(--gray-900)", letterSpacing: "-.4px" }}>Catálogo</h2>
-          <div style={{ fontSize: "14px", color: "var(--gray-500)", marginTop: "3px" }}>{catalogo === null ? "Carregando…" : `${filtered.length} produtos · Higiene & Limpeza`}</div>
-        </div>
-        <Hoverable
-          base={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", background: "var(--blue-500)", border: "none", borderRadius: "8px", cursor: "not-allowed", fontSize: "14px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(30,107,184,.3)", opacity: 0.6 }}
-          title="Cadastro de produto — em breve"
-        >
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round">
-            <path d="M7.5 1.5v12M1.5 7.5h12" />
-          </svg>
-          Novo produto
-        </Hoverable>
+      <div style={{ margin: "-28px -28px 22px" }}>
+        <ScreenHead
+          title="Catálogo"
+          sub={catalogo === null ? "Carregando…" : `${filtered.length} produtos · Higiene & Limpeza`}
+          right={
+            <Hoverable
+              base={{ display: "flex", alignItems: "center", gap: "8px", height: "38px", padding: "0 18px", background: "var(--blue-500)", border: "none", borderRadius: "10px", cursor: "not-allowed", fontSize: "13px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(30,107,184,.3)", opacity: 0.6 }}
+              title="Cadastro de produto — em breve"
+            >
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round">
+                <path d="M7.5 1.5v12M1.5 7.5h12" />
+              </svg>
+              Novo produto
+            </Hoverable>
+          }
+        />
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px", flexWrap: "wrap" }}>
