@@ -7,6 +7,21 @@ const MODEL = process.env.OLLAMA_MODEL ?? "qwen2.5:7b-instruct";
 // (rápido; o backbone determinístico já cobre os erros dele). Roteamento híbrido.
 export const MODEL_TEXTO = process.env.OLLAMA_MODEL_TEXTO ?? "qwen3:14b";
 
+// Headers de toda chamada ao Ollama. Em prod o túnel fica atrás de Cloudflare Access
+// (named tunnel): se as credenciais do service token estiverem no ambiente, manda os
+// headers CF-Access pra autenticar o caminho Vercel→túnel. Sem elas (dev local) não
+// envia nada — o Ollama no 127.0.0.1 não pede auth.
+export function ollamaHeaders(extra?: Record<string, string>): HeadersInit {
+  const h: Record<string, string> = { ...extra };
+  const id = process.env.OLLAMA_CF_ACCESS_CLIENT_ID;
+  const secret = process.env.OLLAMA_CF_ACCESS_CLIENT_SECRET;
+  if (id && secret) {
+    h["CF-Access-Client-Id"] = id;
+    h["CF-Access-Client-Secret"] = secret;
+  }
+  return h;
+}
+
 export async function ollamaDisponivel(): Promise<boolean> {
   // Produção sem Ollama configurado → roda 100% determinístico, sem tentar
   // (evita o timeout a cada requisição na Vercel).
@@ -15,7 +30,7 @@ export async function ollamaDisponivel(): Promise<boolean> {
   // latência bem maior que o localhost: 1,5s não basta e dá 503 falso. Dá folga.
   const timeout = process.env.OLLAMA_BASE_URL ? 6000 : 1500;
   try {
-    const r = await fetch(`${BASE}/api/tags`, { signal: AbortSignal.timeout(timeout) });
+    const r = await fetch(`${BASE}/api/tags`, { headers: ollamaHeaders(), signal: AbortSignal.timeout(timeout) });
     return r.ok;
   } catch {
     return false;
@@ -37,7 +52,7 @@ export async function gerarJson(
 ): Promise<string> {
   const r = await fetch(`${BASE}/api/generate`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: ollamaHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
       model,
       prompt,
@@ -88,7 +103,7 @@ export async function descreverImagem(
 ): Promise<string> {
   const r = await fetch(`${BASE}/api/generate`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: ollamaHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
       model,
       prompt,
@@ -114,7 +129,7 @@ export async function descreverImagem(
 export async function gerarTexto(prompt: string, model = MODEL, timeoutMs = 60_000): Promise<string> {
   const r = await fetch(`${BASE}/api/generate`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: ollamaHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
       model,
       prompt,
