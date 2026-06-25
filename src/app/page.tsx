@@ -13,7 +13,7 @@
  */
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse } from "@/lib/contracts";
+import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo } from "@/lib/contracts";
 import { AjudaChat } from "@/components/ajuda-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
 import { AdminScreen } from "@/components/admin-screen";
@@ -155,7 +155,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
 const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
-type Screen = "dashboard" | "briefing" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config";
+type Screen = "dashboard" | "briefing" | "manual" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config";
 type TipoProposta = "orcamento" | "implantacao" | "comercial";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -170,6 +170,7 @@ const tipoLabel = (t: string) => TIPOS.find((x) => x.value === t)?.label ?? "Or�
 const CMD_ITEMS: PaletteItem[] = [
   { key: "dashboard", label: "Dashboard" },
   { key: "briefing", label: "Nova proposta" },
+  { key: "manual", label: "Proposta manual" },
   { key: "history", label: "Propostas" },
   { key: "catalog", label: "Catálogo" },
   { key: "prospeccao", label: "Prospecção" },
@@ -396,6 +397,17 @@ export default function Home() {
     }
   }
 
+  // Proposta manual (sem IA): a tela monta o scope via /api/montar-estruturado e entrega
+  // aqui; cai no MESMO fluxo de revisão/PDF e vira registro (rascunho), igual à via IA.
+  function aplicarScopeManual(novo: PropostaScope) {
+    setScope(novo);
+    setExcluded(new Set());
+    setHasLoadedOnce(true);
+    setScreen("review");
+    toast("Proposta montada — revise os produtos", "success");
+    persistirProposta(novo);
+  }
+
   // Gerar contrato a partir de uma proposta que já existe: carrega o scope e abre o agente
   // de contrato (que gera a partir desse scope — preço/itens vêm do registro, não do modelo).
   async function contratoDeProposta(id: string) {
@@ -538,6 +550,13 @@ export default function Home() {
             </svg>
             Nova proposta
           </Hoverable>
+          <Hoverable base={navItemStyle(["manual"])} hover={navHover} onClick={() => setScreen("manual")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2.5" y="2.5" width="12" height="12" rx="2" />
+              <path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" />
+            </svg>
+            Proposta manual
+          </Hoverable>
           <Hoverable base={navItemStyle(["history"])} hover={navHover} onClick={() => setScreen("history")}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
               <path d="M3 4.5h11M3 8.5h11M3 12.5h7" />
@@ -666,6 +685,7 @@ export default function Home() {
         {screen === "briefing" && (
           <BriefingScreen {...{ quickLoading, briefingText, setBriefingText, startGeneration, textareaRef, error, tipoProposta, setTipoProposta }} />
         )}
+        {screen === "manual" && <ManualScreen onMontar={aplicarScopeManual} />}
         {screen === "loading" && <LoadingScreen loadingStep={loadingStep} />}
         {screen === "review" && scope && (
           <ReviewScreen
@@ -1077,6 +1097,185 @@ function BriefingScreen({
               {quickLoading ? "Analisando o briefing e selecionando os produtos do catálogo…" : "O preço, a imagem e a ficha vêm sempre do catálogo — a IA só seleciona e escreve."}
             </p>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════ TELA: PROPOSTA MANUAL ═══════════════════════ */
+
+// Monta proposta SEM IA: o vendedor escolhe direto do catálogo e define quantidades.
+// Preço vem SEMPRE do catálogo (constituição §1.1). POST /api/montar-estruturado devolve
+// o MESMO PropostaScope da via IA → cai no fluxo de revisão/PDF existente.
+function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
+  const [catalogo, setCatalogo] = useState<Produto[] | null>(null);
+  const [erroCat, setErroCat] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [segmento, setSegmento] = useState("");
+  const [tipo, setTipo] = useState<TipoProposta>("orcamento");
+  const [itens, setItens] = useState<Record<string, number>>({}); // codigo → quantidade
+  const [montando, setMontando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/catalogo")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((d: { produtos: Produto[] }) => setCatalogo(d.produtos))
+      .catch((e) => setErroCat(e instanceof Error ? e.message : "Erro ao carregar o catálogo."));
+  }, []);
+
+  const campoLabel: CSSProperties = { fontSize: "11.5px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "5px" };
+  const campoInput: CSSProperties = { width: "100%", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", fontSize: "13.5px", color: "var(--text-strong)", fontFamily: "var(--font-sans)", outline: "none" };
+  const qtdBtn: CSSProperties = { width: "26px", height: "26px", borderRadius: "7px", border: "1px solid var(--border-strong)", background: "var(--surface)", cursor: "pointer", color: "var(--text-muted)", fontSize: "15px", lineHeight: 1, flex: "none" };
+
+  const ativos = (catalogo ?? []).filter((p) => p.ativo);
+  const q = busca.trim().toLowerCase();
+  const filtrados = q ? ativos.filter((p) => `${p.nome} ${p.codigo} ${p.descricaoCurta}`.toLowerCase().includes(q)) : ativos;
+  const precoDe = (p: Produto) => Number(p.embalagens[0]?.preco ?? 0);
+  const selecionados = Object.entries(itens)
+    .map(([codigo, qtd]) => ({ produto: ativos.find((p) => p.codigo === codigo), qtd }))
+    .filter((x): x is { produto: Produto; qtd: number } => Boolean(x.produto));
+  const total = selecionados.reduce((s, x) => s + precoDe(x.produto) * x.qtd, 0);
+
+  function add(codigo: string) {
+    setItens((m) => (m[codigo] ? m : { ...m, [codigo]: 1 }));
+  }
+  function setQtd(codigo: string, q: number) {
+    setItens((m) => {
+      if (q <= 0) {
+        const n = { ...m };
+        delete n[codigo];
+        return n;
+      }
+      return { ...m, [codigo]: q };
+    });
+  }
+
+  async function montar() {
+    if (montando) return;
+    if (!razaoSocial.trim()) {
+      setErro("Informe a razão social do cliente.");
+      return;
+    }
+    if (selecionados.length === 0) {
+      setErro("Adicione ao menos um produto do catálogo.");
+      return;
+    }
+    setMontando(true);
+    setErro(null);
+    try {
+      const body = {
+        tipo,
+        cliente: { razaoSocial: razaoSocial.trim(), cnpj: null, segmento: segmento.trim() || null },
+        itens: selecionados.map((x) => ({ codigo: x.produto.codigo, quantidade: x.qtd })),
+      };
+      const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (!r.ok) throw new Error(`Falha ao montar a proposta (${r.status}).`);
+      const scope = await r.json();
+      if (!scope || !Array.isArray(scope.itens)) throw new Error("Resposta inesperada do servidor.");
+      onMontar(scope as PropostaScope);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao montar a proposta.");
+    } finally {
+      setMontando(false);
+    }
+  }
+
+  return (
+    <div style={{ background: "var(--background)", minHeight: "100vh" }}>
+      <ScreenHead
+        title="Proposta manual"
+        sub="Monte direto do catálogo — sem IA, preço do catálogo"
+        right={
+          <Hoverable onClick={montar} base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 18px", borderRadius: "10px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: 600, boxShadow: "var(--shadow-accent)", opacity: montando ? 0.7 : 1 }} hover={{ background: "var(--accent-hover)" }}>
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M8 3l5 5-5 5" /></svg>
+            {montando ? "Montando…" : "Montar proposta"}
+          </Hoverable>
+        }
+      />
+      <div style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        {/* Cliente + tipo */}
+        <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "flex-end" }}>
+          <label style={{ flex: "1 1 240px", minWidth: 0 }}>
+            <div style={campoLabel}>Razão social *</div>
+            <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Ex.: Laticínio São João Ltda" style={campoInput} />
+          </label>
+          <label style={{ flex: "1 1 200px", minWidth: 0 }}>
+            <div style={campoLabel}>Segmento</div>
+            <input value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="Ex.: Laticínio" style={campoInput} />
+          </label>
+          <div>
+            <div style={campoLabel}>Tipo</div>
+            <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
+              {TIPOS.map((t) => {
+                const at = tipo === t.value;
+                return (
+                  <button key={t.value} onClick={() => setTipo(t.value)} title={t.hint} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: at ? 600 : 500, background: at ? "var(--primary)" : "transparent", color: at ? "#fff" : "var(--text-muted)", fontFamily: "inherit" }}>
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {erro && <div style={{ padding: "11px 14px", background: "var(--danger-soft)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "16px", alignItems: "start" }}>
+          {/* Catálogo */}
+          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px 18px", boxShadow: "var(--shadow-sm)" }}>
+            <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar produto por nome ou código…" style={{ ...campoInput, marginBottom: "12px" }} />
+            {erroCat && <div style={{ fontSize: "13px", color: "#B91C1C" }}>{erroCat}</div>}
+            {catalogo === null && !erroCat && <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "12px 0" }}>Carregando catálogo…</div>}
+            <div className="ies-scroll" style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "440px", overflowY: "auto" }}>
+              {filtrados.map((p) => {
+                const incluido = Boolean(itens[p.codigo]);
+                return (
+                  <div key={p.codigo} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "10px", border: "1px solid var(--border)", background: incluido ? "var(--info-soft)" : "var(--surface)" }}>
+                    <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: linhaCor(p.linha), flex: "none" }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nome}</div>
+                      <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{p.codigo} · {humaniza(p.linha)}</div>
+                    </div>
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--primary)", fontSize: "13px", whiteSpace: "nowrap" }}>{fmt(precoDe(p))}</span>
+                    <button onClick={() => add(p.codigo)} disabled={incluido} title={incluido ? "Já incluído" : "Adicionar"} style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--border-strong)", background: incluido ? "var(--surface-muted)" : "var(--surface)", cursor: incluido ? "default" : "pointer", color: incluido ? "var(--text-subtle)" : "var(--primary)", fontSize: "18px", lineHeight: 1, flex: "none" }}>+</button>
+                  </div>
+                );
+              })}
+              {catalogo !== null && filtrados.length === 0 && <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "12px 0" }}>Nenhum produto encontrado.</div>}
+            </div>
+          </div>
+
+          {/* Selecionados */}
+          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px 18px", boxShadow: "var(--shadow-sm)", position: "sticky", top: "78px" }}>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)", marginBottom: "12px" }}>Selecionados ({selecionados.length})</div>
+            {selecionados.length === 0 ? (
+              <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "20px 0", textAlign: "center" }}>Adicione produtos do catálogo ao lado.</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {selecionados.map(({ produto, qtd }) => (
+                  <div key={produto.codigo} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{produto.nome}</div>
+                      <div style={{ fontSize: "11.5px", color: "var(--text-subtle)", fontFamily: "var(--font-mono)" }}>{fmt(precoDe(produto))} un.</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: "none" }}>
+                      <button onClick={() => setQtd(produto.codigo, qtd - 1)} style={qtdBtn}>−</button>
+                      <span style={{ minWidth: "22px", textAlign: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "13px" }}>{qtd}</span>
+                      <button onClick={() => setQtd(produto.codigo, qtd + 1)} style={qtdBtn}>+</button>
+                    </div>
+                    <button onClick={() => setQtd(produto.codigo, 0)} title="Remover" style={{ ...qtdBtn, color: "var(--danger)", borderColor: "transparent", background: "transparent" }}>×</button>
+                  </div>
+                ))}
+                <div style={{ borderTop: "1px solid var(--border)", marginTop: "4px", paddingTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-muted)" }}>Total</span>
+                  <span style={{ fontSize: "18px", fontWeight: 800, color: "var(--primary)", fontFamily: "var(--font-mono)" }}>{fmt(total)}</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -3700,7 +3899,19 @@ function InstagramScreen() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [res, setRes] = useState<InstagramResponse | null>(null);
+  const [perfil, setPerfil] = useState<PerfilEstilo | null>(null);
   const podeGerar = briefing.trim().length > 0 && !loading;
+
+  // Perfil de estilo ativo (GET /api/referencias/sync) — derivado das referências sincronizadas
+  // pelo n8n/Drive. As imagens dos posts seguem esse descritor visual. 404 = nenhum ainda.
+  useEffect(() => {
+    fetch("/api/referencias/sync")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d && typeof d.descritorVisual === "string") setPerfil(d as PerfilEstilo);
+      })
+      .catch(() => {});
+  }, []);
 
   async function gerar() {
     if (!podeGerar) return;
@@ -3768,6 +3979,24 @@ function InstagramScreen() {
           </div>
         </div>
       </div>
+
+      {/* ── Perfil de estilo ativo (referências sincronizadas) ── */}
+      {perfil && (
+        <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderLeft: "3px solid var(--accent)", borderRadius: "14px", padding: "16px 18px", boxShadow: "var(--shadow-sm)", marginBottom: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 9px", borderRadius: "999px", background: "var(--warning-soft)", color: "var(--warning)", letterSpacing: ".03em" }}>PERFIL DE ESTILO ATIVO</span>
+            <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>
+              {perfil.fontes.length} referência{perfil.fontes.length === 1 ? "" : "s"} · atualizado em {new Date(perfil.atualizadoEm).toLocaleDateString("pt-BR")}
+            </span>
+          </div>
+          <div style={{ fontSize: "13px", color: "var(--text-body)", lineHeight: 1.55 }}>
+            As imagens dos posts seguem este descritor visual derivado das suas referências:
+          </div>
+          <div style={{ fontSize: "12.5px", color: "var(--text-muted)", fontStyle: "italic", marginTop: "6px", background: "var(--surface-sunken)", borderRadius: "8px", padding: "9px 12px" }}>
+            “{perfil.descritorVisual}”
+          </div>
+        </div>
+      )}
 
       {/* ── Formulário ── */}
       <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "22px", boxShadow: "var(--shadow-md)", marginBottom: "24px", animation: "fadeUp .5s ease both", animationDelay: "60ms" }}>
