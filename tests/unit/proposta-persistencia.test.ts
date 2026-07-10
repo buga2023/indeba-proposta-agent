@@ -11,7 +11,7 @@ const scopeBase: PropostaScope = {
   status: "rascunho",
   tipo: "orcamento",
   template: "indeba",
-  cliente: { razaoSocial: "Frigorífico X", cnpj: null, segmento: null },
+  cliente: { razaoSocial: "Frigorífico X", cnpj: null, segmento: null, responsavel: null },
   textoApresentacao: { conteudo: "texto", procedencia: "IA-TEXTO" },
   itens: [
     {

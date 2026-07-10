@@ -3,6 +3,7 @@ export * from "./pedido";
 export * from "./selecao";
 export * from "./proposta";
 export * from "./entrada";
+export * from "./orcamento-import";
 export * from "./prospeccao";
 export * from "./empresa";
 export * from "./instagram";

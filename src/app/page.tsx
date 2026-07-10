@@ -13,7 +13,7 @@
  */
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo } from "@/lib/contracts";
+import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse } from "@/lib/contracts";
 import { setPrecoEmbalagem } from "@/lib/proposta-edit";
 import { AjudaChat } from "@/components/ajuda-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
@@ -156,7 +156,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
 const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
-type Screen = "dashboard" | "briefing" | "manual" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config";
+type Screen = "dashboard" | "briefing" | "manual" | "importar" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config";
 type TipoProposta = "orcamento" | "implantacao" | "comercial" | "consolidada";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -173,18 +173,9 @@ const CMD_ITEMS: PaletteItem[] = [
   { key: "dashboard", label: "Dashboard" },
   { key: "briefing", label: "Nova proposta" },
   { key: "manual", label: "Proposta manual" },
+  { key: "importar", label: "Importar orçamento" },
   { key: "history", label: "Propostas" },
   { key: "catalog", label: "Catálogo" },
-  { key: "prospeccao", label: "Prospecção" },
-  { key: "instagram", label: "Posts Instagram" },
-  { key: "financeiro", label: "Financeiro" },
-  { key: "cobranca", label: "Cobrança" },
-  { key: "compras", label: "Compras" },
-  { key: "fiscal", label: "Fiscal / NF-e" },
-  { key: "contabil", label: "Contábil" },
-  { key: "contrato", label: "Contrato" },
-  { key: "atendimento", label: "Atendimento" },
-  { key: "chamados", label: "Chamados" },
   { key: "config", label: "Configurações" },
 ];
 
@@ -358,7 +349,7 @@ export default function Home() {
       const r = await fetch("/api/montar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ briefing: novoBriefing, razaoSocial: scope.cliente.razaoSocial, cnpj: scope.cliente.cnpj, segmento: scope.cliente.segmento, tipo: scope.tipo }),
+        body: JSON.stringify({ briefing: novoBriefing, razaoSocial: scope.cliente.razaoSocial, cnpj: scope.cliente.cnpj, segmento: scope.cliente.segmento, responsavel: scope.cliente.responsavel, tipo: scope.tipo }),
       });
       if (!r.ok) throw new Error(`Falha ao refinar (${r.status}).`);
       const data = await r.json();
@@ -413,20 +404,6 @@ export default function Home() {
     setScreen("review");
     toast("Proposta montada — revise os produtos", "success");
     persistirProposta(novo);
-  }
-
-  // Gerar contrato a partir de uma proposta que já existe: carrega o scope e abre o agente
-  // de contrato (que gera a partir desse scope — preço/itens vêm do registro, não do modelo).
-  async function contratoDeProposta(id: string) {
-    try {
-      const r = await fetch(`/api/propostas/${id}`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const reg = await r.json();
-      setScope(reg.scope as PropostaScope);
-      setScreen("contrato");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao abrir o contrato.");
-    }
   }
 
   // Muda o status comercial. Otimista: atualiza a lista local; se falhar, recarrega do servidor.
@@ -564,6 +541,13 @@ export default function Home() {
             </svg>
             Proposta manual
           </Hoverable>
+          <Hoverable base={navItemStyle(["importar"])} hover={navHover} onClick={() => setScreen("importar")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8.5 10.5V3M5.5 6l3-3 3 3" />
+              <path d="M3 11v2a1 1 0 001 1h9a1 1 0 001-1v-2" />
+            </svg>
+            Importar orçamento
+          </Hoverable>
           <Hoverable base={navItemStyle(["history"])} hover={navHover} onClick={() => setScreen("history")}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
               <path d="M3 4.5h11M3 8.5h11M3 12.5h7" />
@@ -578,82 +562,6 @@ export default function Home() {
               <rect x="9.5" y="9.5" width="5" height="5" rx="1" />
             </svg>
             Catálogo
-          </Hoverable>
-          <Hoverable base={navItemStyle(["prospeccao"])} hover={navHover} onClick={() => setScreen("prospeccao")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="7" cy="7" r="4.25" />
-              <path d="M10.2 10.2l4 4" />
-            </svg>
-            Prospecção
-          </Hoverable>
-          <Hoverable base={navItemStyle(["instagram"])} hover={navHover} onClick={() => setScreen("instagram")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2.5" y="2.5" width="12" height="12" rx="3.5" />
-              <circle cx="8.5" cy="8.5" r="3" />
-              <circle cx="12" cy="5" r="0.6" fill="currentColor" stroke="none" />
-            </svg>
-            Posts Instagram
-          </Hoverable>
-          <div className="ies-side-text" style={navSection}>Operações</div>
-          <Hoverable base={navItemStyle(["financeiro"])} hover={navHover} onClick={() => setScreen("financeiro")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2.5 14.5h12" />
-              <rect x="3.5" y="8" width="2.5" height="5" rx="0.5" />
-              <rect x="7.5" y="5" width="2.5" height="8" rx="0.5" />
-              <rect x="11.5" y="2.5" width="2.5" height="10.5" rx="0.5" />
-            </svg>
-            Financeiro
-          </Hoverable>
-          <Hoverable base={navItemStyle(["cobranca"])} hover={navHover} onClick={() => setScreen("cobranca")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="8.5" cy="8.5" r="6" />
-              <path d="M8.5 5v3.5l2.2 1.3" />
-            </svg>
-            Cobrança
-          </Hoverable>
-          <Hoverable base={navItemStyle(["compras"])} hover={navHover} onClick={() => setScreen("compras")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2.5 3h2l1.5 8h6l1.5-5.5h-9" />
-              <circle cx="7" cy="14" r="1" />
-              <circle cx="12" cy="14" r="1" />
-            </svg>
-            Compras
-          </Hoverable>
-          <Hoverable base={navItemStyle(["fiscal"])} hover={navHover} onClick={() => setScreen("fiscal")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 2.5h6l3 3v9H4z" />
-              <path d="M6 8h5M6 10.5h5M6 5.5h2" />
-            </svg>
-            Fiscal
-          </Hoverable>
-          <Hoverable base={navItemStyle(["contabil"])} hover={navHover} onClick={() => setScreen("contabil")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 3.5h11v10H3z" />
-              <path d="M8.5 3.5v10M3 8.5h11" />
-            </svg>
-            Contábil
-          </Hoverable>
-          <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => setScreen("contrato")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 2.5h6l3 3v9H4z" />
-              <path d="M10 2.5v3h3" />
-              <path d="M6 9h5M6 11.5h5" />
-            </svg>
-            Contrato
-          </Hoverable>
-          <Hoverable base={navItemStyle(["atendimento"])} hover={navHover} onClick={() => setScreen("atendimento")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 4.5h11v7H8l-3 2.5V11.5H3z" />
-              <path d="M5.5 7h6M5.5 9h4" />
-            </svg>
-            Atendimento
-          </Hoverable>
-          <Hoverable base={navItemStyle(["chamados"])} hover={navHover} onClick={() => setScreen("chamados")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8.5 2.5a3.5 3.5 0 0 0-3.5 3.5c0 3-1.5 4-1.5 4h10s-1.5-1-1.5-4a3.5 3.5 0 0 0-3.5-3.5z" />
-              <path d="M7.3 14a1.3 1.3 0 0 0 2.4 0" />
-            </svg>
-            Chamados
           </Hoverable>
 
           <div className="ies-side-text" style={navSection}>Sistema</div>
@@ -693,6 +601,7 @@ export default function Home() {
           <BriefingScreen {...{ quickLoading, briefingText, setBriefingText, startGeneration, textareaRef, error, tipoProposta, setTipoProposta }} />
         )}
         {screen === "manual" && <ManualScreen onMontar={aplicarScopeManual} />}
+        {screen === "importar" && <ImportarOrcamentoScreen onMontar={aplicarScopeManual} />}
         {screen === "loading" && <LoadingScreen loadingStep={loadingStep} />}
         {screen === "review" && scope && (
           <ReviewScreen
@@ -725,7 +634,6 @@ export default function Home() {
             erro={propostasErro}
             goToBriefing={novaProposta}
             onReabrir={reabrirProposta}
-            onContrato={contratoDeProposta}
             onStatus={mudarStatus}
           />
         )}
@@ -833,11 +741,8 @@ function DashboardScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
               <Hoverable onClick={() => setScreen("briefing")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 18px", borderRadius: "12px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600, boxShadow: "var(--shadow-accent)" }} hover={{ background: "var(--accent-hover)" }}>
                 <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.8} strokeLinecap="round"><path d="M8.5 3v11M3 8.5h11" /></svg>Nova proposta
               </Hoverable>
-              <Hoverable onClick={() => setScreen("prospeccao")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 17px", borderRadius: "12px", border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600 }} hover={{ background: "rgba(255,255,255,.16)" }}>
-                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="7" r="4.25" /><path d="M10.2 10.2l4 4" /></svg>Prospectar
-              </Hoverable>
-              <Hoverable onClick={() => setScreen("instagram")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 17px", borderRadius: "12px", border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600 }} hover={{ background: "rgba(255,255,255,.16)" }}>
-                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="3.5" /><circle cx="8.5" cy="8.5" r="3" /></svg>Gerar posts
+              <Hoverable onClick={() => setScreen("manual")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 17px", borderRadius: "12px", border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600 }} hover={{ background: "rgba(255,255,255,.16)" }}>
+                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="2" /><path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" /></svg>Proposta manual
               </Hoverable>
             </div>
           </div>
@@ -945,7 +850,6 @@ function DashboardScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
               </span>
             </div>
             <div style={{ fontSize: "21px", fontWeight: 800, color: "var(--info)", fontFamily: "var(--font-mono)" }}>{fmt(valorEmNegociacao)}</div>
-            <Hoverable onClick={() => setScreen("cobranca")} base={{ marginTop: "12px", width: "100%", height: "36px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", color: "var(--text-body)", fontWeight: 600, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center" }} hover={{ background: "var(--surface-muted)" }}>Abrir régua de cobrança</Hoverable>
           </div>
         </div>
       </div>
@@ -1121,6 +1025,7 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
   const [busca, setBusca] = useState("");
   const [razaoSocial, setRazaoSocial] = useState("");
   const [segmento, setSegmento] = useState("");
+  const [responsavel, setResponsavel] = useState("");
   const [tipo, setTipo] = useState<TipoProposta>("orcamento");
   const [itens, setItens] = useState<Record<string, number>>({}); // codigo → quantidade
   // Itens próprios (fora do catálogo): preço digitado por humano → procedência MANUAL.
@@ -1201,7 +1106,7 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
     try {
       const body = {
         tipo,
-        cliente: { razaoSocial: razaoSocial.trim(), cnpj: null, segmento: segmento.trim() || null },
+        cliente: { razaoSocial: razaoSocial.trim(), cnpj: null, segmento: segmento.trim() || null, responsavel: responsavel.trim() || null },
         itens: [
           ...selCat.map((x) => ({ codigo: x.produto.codigo, quantidade: x.qtd })),
           ...custom.map((c) => ({ nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: null, custoDiluido: null }], quantidade: c.qtd })),
@@ -1241,6 +1146,10 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
           <label style={{ flex: "1 1 200px", minWidth: 0 }}>
             <div style={campoLabel}>Segmento</div>
             <input value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="Ex.: Laticínio" style={campoInput} />
+          </label>
+          <label style={{ flex: "1 1 200px", minWidth: 0 }}>
+            <div style={campoLabel}>Responsável</div>
+            <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Quem recebe a proposta" style={campoInput} />
           </label>
           <div>
             <div style={campoLabel}>Tipo</div>
@@ -1341,6 +1250,200 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════ TELA: IMPORTAR ORÇAMENTO ═══════════════════════ */
+
+// Importa um orçamento pronto (PDF do ERP): extração de texto determinística +
+// IA estruturando com GUARDA de preço (só entra preço que consta no documento;
+// o que falha aparece em "rejeitados"). O vendedor confere e edita tudo aqui e
+// a montagem converge no MESMO /api/montar-estruturado da Proposta manual.
+type ItemImportado = { nome: string; quantidade: number; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; codigoCatalogo: string | null; nomeCatalogo: string | null };
+
+// O input já É um orçamento — o documento gerado só faz sentido como
+// Implantação (Express) ou Comercial (fabricante).
+const TIPOS_IMPORT = TIPOS.filter((t) => t.value !== "orcamento");
+
+function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [importando, setImportando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [conferindo, setConferindo] = useState(false);
+  const [rejeitados, setRejeitados] = useState<ItemRejeitado[]>([]);
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [segmento, setSegmento] = useState("");
+  const [responsavel, setResponsavel] = useState("");
+  const [tipo, setTipo] = useState<TipoProposta>("implantacao");
+  const [itens, setItens] = useState<ItemImportado[]>([]);
+  const [montando, setMontando] = useState(false);
+
+  const campoLabel: CSSProperties = { fontSize: "11.5px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "5px" };
+  const campoInput: CSSProperties = { width: "100%", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", fontSize: "13.5px", color: "var(--text-strong)", fontFamily: "var(--font-sans)", outline: "none" };
+
+  async function importar() {
+    if (!arquivo || importando) return;
+    setImportando(true);
+    setErro(null);
+    try {
+      const form = new FormData();
+      form.append("arquivo", arquivo);
+      const r = await fetch("/api/orcamento/importar", { method: "POST", body: form });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d?.erro || `Falha ao importar (${r.status}).`);
+      const res = d as OrcamentoImportResponse;
+      setRazaoSocial(res.extraido.cliente.razaoSocial ?? "");
+      setCnpj(res.extraido.cliente.cnpj ?? "");
+      setSegmento(res.extraido.cliente.segmento ?? "");
+      setResponsavel(res.extraido.cliente.responsavel ?? "");
+      setItens(res.extraido.itens.map((it) => ({ nome: it.nome, quantidade: it.quantidade, tamanho: it.tamanho == null ? "" : String(it.tamanho), unidade: it.unidade ?? "un", preco: it.preco, codigoCatalogo: it.codigoCatalogo, nomeCatalogo: it.nomeCatalogo })));
+      setRejeitados(res.rejeitados);
+      setConferindo(true);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao importar o orçamento.");
+    } finally {
+      setImportando(false);
+    }
+  }
+
+  async function montar() {
+    if (montando) return;
+    if (!razaoSocial.trim()) { setErro("Informe a razão social do cliente."); return; }
+    if (itens.length === 0) { setErro("Nenhum item para montar — confira o orçamento."); return; }
+    const invalido = itens.find((it) => !it.nome.trim() || !/^\d+([.,]\d{1,2})?$/.test(it.preco.trim()));
+    if (invalido) { setErro(`Item "${invalido.nome || "sem nome"}": preço inválido (use ex.: 130,00).`); return; }
+    setMontando(true);
+    setErro(null);
+    try {
+      const body = {
+        tipo,
+        cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmento.trim() || null, responsavel: responsavel.trim() || null },
+        itens: itens.map((it) => ({
+          // codigo (quando casou com o catálogo) → foto/descrição do catálogo no PDF;
+          // as embalagens SEMPRE vão junto: o preço autoritativo é o do orçamento.
+          ...(it.codigoCatalogo ? { codigo: it.codigoCatalogo } : {}),
+          nome: it.nome.trim(),
+          embalagens: [{ tamanho: Number(it.tamanho) > 0 ? Number(it.tamanho) : 1, unidade: it.unidade, preco: Number(it.preco.replace(",", ".")).toFixed(2), diluicaoMax: null, custoDiluido: null }],
+          quantidade: it.quantidade,
+        })),
+      };
+      const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (!r.ok) throw new Error(`Falha ao montar a proposta (${r.status}).`);
+      const scope = await r.json();
+      if (!scope || !Array.isArray(scope.itens)) throw new Error("Resposta inesperada do servidor.");
+      onMontar(scope as PropostaScope);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao montar a proposta.");
+    } finally {
+      setMontando(false);
+    }
+  }
+
+  const setItem = (i: number, patch: Partial<ItemImportado>) => setItens((xs) => xs.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+
+  return (
+    <div style={{ background: "var(--background)", minHeight: "100vh" }}>
+      <ScreenHead
+        title="Importar orçamento"
+        sub="PDF do orçamento → proposta no padrão Indeba — preço sai do documento"
+        right={
+          conferindo ? (
+            <Hoverable onClick={montar} base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 18px", borderRadius: "10px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: 600, boxShadow: "var(--shadow-accent)", opacity: montando ? 0.7 : 1 }} hover={{ background: "var(--accent-hover)" }}>
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M8 3l5 5-5 5" /></svg>
+              {montando ? "Montando…" : "Montar proposta"}
+            </Hoverable>
+          ) : undefined
+        }
+      />
+      <div style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "980px" }}>
+        {/* Upload */}
+        <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", display: "flex", flexWrap: "wrap", gap: "14px", alignItems: "center" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", borderRadius: "10px", border: "1px dashed var(--border-strong)", background: "var(--surface-muted)", cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "var(--text-body)" }}>
+            <svg width="16" height="16" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 11V3.5M5.5 6.5l3-3 3 3" /><path d="M3 11.5v2a1 1 0 001 1h9a1 1 0 001-1v-2" /></svg>
+            {arquivo ? arquivo.name : "Escolher arquivo (PDF, DOCX ou TXT)"}
+            <input type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }} onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} />
+          </label>
+          <Hoverable onClick={importar} base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 18px", borderRadius: "10px", border: "none", background: arquivo ? "var(--primary)" : "var(--surface-muted)", color: arquivo ? "#fff" : "var(--text-subtle)", cursor: arquivo ? "pointer" : "default", fontSize: "13px", fontWeight: 600, opacity: importando ? 0.7 : 1 }} hover={arquivo ? { background: "var(--primary-hover)" } : {}}>
+            {importando ? "Extraindo…" : "Extrair dados"}
+          </Hoverable>
+          <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>A IA estrutura o documento; preços só entram se constarem no texto. Você confere tudo antes de montar.</span>
+        </div>
+
+        {erro && <div style={{ background: "var(--danger-soft, #FEE2E2)", border: "1px solid #fca5a5", color: "#b91c1c", borderRadius: "10px", padding: "10px 14px", fontSize: "13px" }}>{erro}</div>}
+
+        {conferindo && rejeitados.length > 0 && (
+          <div style={{ background: "#FFF7ED", border: "1px solid #fdba74", color: "#9a3412", borderRadius: "10px", padding: "10px 14px", fontSize: "13px" }}>
+            <b>{rejeitados.length} {rejeitados.length === 1 ? "item ficou de fora" : "itens ficaram de fora"}</b> — preço não confere com o documento: {rejeitados.map((r) => `${r.nome} (${r.preco})`).join(", ")}. Confira o PDF e adicione manualmente se precisar.
+          </div>
+        )}
+
+        {conferindo && (
+          <>
+            {/* Cliente + tipo */}
+            <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "flex-end" }}>
+              <label style={{ flex: "1 1 220px", minWidth: 0 }}>
+                <div style={campoLabel}>Razão social *</div>
+                <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Ex.: Laticínio São João Ltda" style={campoInput} />
+              </label>
+              <label style={{ flex: "1 1 160px", minWidth: 0 }}>
+                <div style={campoLabel}>CNPJ</div>
+                <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" style={campoInput} />
+              </label>
+              <label style={{ flex: "1 1 150px", minWidth: 0 }}>
+                <div style={campoLabel}>Segmento</div>
+                <input value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="Ex.: Laticínio" style={campoInput} />
+              </label>
+              <label style={{ flex: "1 1 170px", minWidth: 0 }}>
+                <div style={campoLabel}>Responsável</div>
+                <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Quem recebe a proposta" style={campoInput} />
+              </label>
+              <div>
+                <div style={campoLabel}>Tipo</div>
+                <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
+                  {TIPOS_IMPORT.map((t) => {
+                    const at = tipo === t.value;
+                    return (
+                      <button key={t.value} onClick={() => setTipo(t.value)} title={t.hint} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: at ? 600 : 500, background: at ? "var(--primary)" : "transparent", color: at ? "#fff" : "var(--text-muted)", fontFamily: "inherit" }}>
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Itens extraídos (conferência) */}
+            <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)" }}>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)", marginBottom: "12px" }}>Itens do orçamento <span style={{ fontWeight: 500, color: "var(--text-subtle)", fontSize: "12px" }}>— confira nome, embalagem e preço</span></div>
+              <div style={{ display: "grid", gridTemplateColumns: "2.2fr 70px 90px 80px 120px 34px", gap: "8px", fontSize: "11px", fontWeight: 700, color: "var(--text-subtle)", textTransform: "uppercase", letterSpacing: ".04em", padding: "0 2px 6px" }}>
+                <span>Item</span><span>Qtd</span><span>Tamanho</span><span>Unid.</span><span>Preço (R$)</span><span />
+              </div>
+              {itens.map((it, i) => (
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "2.2fr 70px 90px 80px 120px 34px", gap: "8px", alignItems: "center", padding: "5px 0" }}>
+                  <div style={{ minWidth: 0 }}>
+                    <input value={it.nome} onChange={(e) => setItem(i, { nome: e.target.value })} style={campoInput} />
+                    {it.nomeCatalogo && (
+                      <div style={{ marginTop: "3px", display: "inline-flex", alignItems: "center", gap: "5px", padding: "1px 8px", borderRadius: "999px", background: "var(--info-soft)", color: "var(--primary)", fontSize: "10px", fontWeight: 700, letterSpacing: ".04em" }} title="Foto e descrição virão do catálogo; o preço segue o do orçamento">
+                        CATÁLOGO · {it.nomeCatalogo}
+                      </div>
+                    )}
+                  </div>
+                  <input value={String(it.quantidade)} onChange={(e) => setItem(i, { quantidade: Math.max(1, Math.floor(Number(e.target.value) || 1)) })} style={{ ...campoInput, textAlign: "center", padding: "0 6px" }} />
+                  <input value={it.tamanho} onChange={(e) => setItem(i, { tamanho: e.target.value })} placeholder="ex.: 5" style={{ ...campoInput, textAlign: "center", padding: "0 6px" }} />
+                  <select value={it.unidade} onChange={(e) => setItem(i, { unidade: e.target.value as ItemImportado["unidade"] })} style={{ ...campoInput, padding: "0 6px" }}>
+                    {(["L", "kg", "un", "ml"] as const).map((u) => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                  <input value={it.preco} onChange={(e) => setItem(i, { preco: e.target.value })} style={{ ...campoInput, textAlign: "right", fontFamily: "var(--font-mono)" }} />
+                  <button onClick={() => setItens((xs) => xs.filter((_, j) => j !== i))} title="Remover" style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--surface)", color: "var(--text-subtle)", cursor: "pointer", fontSize: "15px", lineHeight: 1 }}>×</button>
+                </div>
+              ))}
+              {itens.length === 0 && <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "8px 0" }}>Nenhum item aprovado pela guarda de preço — confira o documento.</div>}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -1803,6 +1906,7 @@ function PdfScreen({
             <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--blue-800)" }}>{scope.cliente.razaoSocial}</div>
             {scope.cliente.cnpj && <div style={{ fontSize: "10.5px", color: "var(--gray-500)", marginTop: "3px" }}>CNPJ: {scope.cliente.cnpj}</div>}
             {scope.cliente.segmento && <div style={{ fontSize: "10.5px", color: "var(--gray-500)", marginTop: "3px", textTransform: "capitalize" }}>{scope.cliente.segmento.replace(/_/g, " ")}</div>}
+            {scope.cliente.responsavel && <div style={{ fontSize: "10.5px", color: "var(--gray-500)", marginTop: "3px" }}>A/C: {scope.cliente.responsavel}</div>}
           </div>
           <div style={{ width: "210px", flex: "none", borderLeft: "1px solid var(--gray-200)", paddingLeft: "16px" }}>
             <div style={{ marginBottom: "8px" }}>
@@ -2017,14 +2121,12 @@ function HistoryScreen({
   erro,
   goToBriefing,
   onReabrir,
-  onContrato,
   onStatus,
 }: {
   propostas: PropostaLog[] | null;
   erro: string | null;
   goToBriefing: () => void;
   onReabrir: (id: string) => void;
-  onContrato: (id: string) => void;
   onStatus: (id: string, status: StatusProposta) => void;
 }) {
   const cols = "1.7fr 1fr 80px 130px 80px 110px 150px";
@@ -2131,12 +2233,6 @@ function HistoryScreen({
                     style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", background: "white", border: "1px solid var(--gray-200)", borderRadius: "7px", cursor: "pointer" }}
                   >
                     Abrir
-                  </button>
-                  <button
-                    onClick={() => onContrato(p.id)}
-                    style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "var(--orange-500)", background: "white", border: "1px solid var(--orange-500)", borderRadius: "7px", cursor: "pointer" }}
-                  >
-                    Contrato
                   </button>
                 </div>
               </Hoverable>
@@ -2254,7 +2350,7 @@ function CatalogScreen({
                   <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--gray-900)", marginBottom: "2px", lineHeight: 1.3 }}>{item.nome}</div>
                   <div style={{ fontSize: "11.5px", color: "var(--gray-400)", flex: 1, marginBottom: "10px" }}>SKU: {item.codigo}</div>
                   <div style={{ paddingTop: "10px", borderTop: "1px solid var(--gray-100)", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-                    <div style={{ fontSize: "17px", fontWeight: 700, color: "var(--blue-500)" }}>{e ? fmt(Number(e.preco)) : "—"}</div>
+                    <div style={{ fontSize: "17px", fontWeight: 700, color: "var(--blue-500)" }}>{e?.preco ? fmt(Number(e.preco)) : "—"}</div>
                     <div style={{ fontSize: "11px", color: "var(--gray-400)" }}>/ {e ? `${e.tamanho} ${e.unidade}` : "un"}</div>
                   </div>
                 </div>
