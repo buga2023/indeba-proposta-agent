@@ -6,6 +6,7 @@ const SINAIS: Record<Tipo, string[]> = {
   orcamento: ["orçament", "orcament", "cotaç", "cotac", "orçar", "orcar", "tabela de preç", "só os preç", "so os prec", "valores dos produt"],
   implantacao: ["implantaç", "implantac", "implantar", "implementaç", "express"],
   comercial: ["proposta comercial", "comercial", "institucional", "fabricante", "experiência segura", "experiencia segura", "completa"],
+  consolidada: ["consolidada", "proposta de soluç", "proposta de soluc", "solução completa", "solucao completa", "comodato", "ies"],
 };
 
 export type Deteccao = { tipo: Tipo | null; motivo: string };
@@ -32,4 +33,5 @@ export const TIPOS_LABEL: Record<Tipo, string> = {
   orcamento: "Orçamento",
   implantacao: "Proposta de Implantação",
   comercial: "Proposta Comercial",
+  consolidada: "Proposta de Solução",
 };
