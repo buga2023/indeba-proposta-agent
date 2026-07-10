@@ -14,6 +14,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo } from "@/lib/contracts";
+import { setPrecoEmbalagem } from "@/lib/proposta-edit";
 import { AjudaChat } from "@/components/ajuda-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
 import { AdminScreen } from "@/components/admin-screen";
@@ -156,13 +157,14 @@ const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "S
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
 type Screen = "dashboard" | "briefing" | "manual" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config";
-type TipoProposta = "orcamento" | "implantacao" | "comercial";
+type TipoProposta = "orcamento" | "implantacao" | "comercial" | "consolidada";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
 const TIPOS: { value: TipoProposta; label: string; hint: string }[] = [
   { value: "orcamento", label: "Orçamento", hint: "Tabela ERP enxuta" },
   { value: "implantacao", label: "Implantação", hint: "Express, 1 produto/página" },
   { value: "comercial", label: "Comercial", hint: "Fabricante, institucional" },
+  { value: "consolidada", label: "Consolidada", hint: "IES, 1 página rica/produto" },
 ];
 const tipoLabel = (t: string) => TIPOS.find((x) => x.value === t)?.label ?? "Orçamento";
 
@@ -324,6 +326,11 @@ export default function Home() {
     setScope((s) =>
       s ? { ...s, itens: s.itens.map((it) => (it.codigo === codigo ? { ...it, quantidade: Math.max(1, it.quantidade + d) } : it)) } : s,
     );
+  }
+  // Preço editável pelo vendedor na revisão (override da 1ª embalagem). Catálogo
+  // permanece intacto; o override vive no PropostaScope (vira PDF/contrato).
+  function editarPreco(codigo: string, idx: number, valor: string) {
+    setScope((s) => (s ? setPrecoEmbalagem(s, codigo, idx, valor) : s));
   }
   function toggleProduct(codigo: string) {
     setExcluded((ex) => {
@@ -689,7 +696,7 @@ export default function Home() {
         {screen === "loading" && <LoadingScreen loadingStep={loadingStep} />}
         {screen === "review" && scope && (
           <ReviewScreen
-            {...{ reviewVariant, setReviewVariant, scope, excluded, includedItems, total, toggleProduct, changeQty }}
+            {...{ reviewVariant, setReviewVariant, scope, excluded, includedItems, total, toggleProduct, changeQty, editarPreco }}
             onRefinar={refinarProposta}
             onEditarTexto={editarTexto}
             refining={refining}
@@ -1417,6 +1424,7 @@ function ReviewScreen({
   total,
   toggleProduct,
   changeQty,
+  editarPreco,
   onRefinar,
   onEditarTexto,
   refining,
@@ -1431,6 +1439,7 @@ function ReviewScreen({
   total: number;
   toggleProduct: (codigo: string) => void;
   changeQty: (codigo: string, d: number) => void;
+  editarPreco: (codigo: string, idx: number, valor: string) => void;
   onRefinar: (texto: string) => void;
   onEditarTexto: (texto: string) => void;
   refining: boolean;
@@ -1587,7 +1596,15 @@ function ReviewScreen({
                       <button onClick={() => changeQty(p.codigo, 1)} style={qtyBtn}>+</button>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--blue-500)" }}>{fmt(precoUnit(p))}</div>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                        <span style={{ fontSize: "13px", color: "var(--blue-500)", fontWeight: 700 }}>R$</span>
+                        <input
+                          aria-label={`Preço de ${p.nome}`}
+                          defaultValue={precoUnit(p).toFixed(2)}
+                          onBlur={(ev) => editarPreco(p.codigo, 0, ev.target.value)}
+                          style={{ width: "72px", textAlign: "right", fontSize: "15px", fontWeight: 700, color: "var(--blue-500)", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "2px 6px", fontFamily: "var(--font-sans), sans-serif" }}
+                        />
+                      </div>
                       <div style={{ fontSize: "11px", color: "var(--gray-400)" }}>/ {unidadeDe(p)}</div>
                     </div>
                   </div>
@@ -1625,7 +1642,14 @@ function ReviewScreen({
                     <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)", minWidth: "16px", textAlign: "center" }}>{p.quantidade}</span>
                     <button onClick={() => changeQty(p.codigo, 1)} style={qtyBtnSm}>+</button>
                   </div>
-                  <div style={{ textAlign: "right", fontSize: "13.5px", color: "var(--gray-500)" }}>{fmt(precoUnit(p))}</div>
+                  <div style={{ textAlign: "right" }}>
+                    <input
+                      aria-label={`Preço de ${p.nome}`}
+                      defaultValue={precoUnit(p).toFixed(2)}
+                      onBlur={(ev) => editarPreco(p.codigo, 0, ev.target.value)}
+                      style={{ width: "88px", textAlign: "right", fontSize: "13.5px", color: "var(--gray-700)", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "3px 6px", fontFamily: "var(--font-sans), sans-serif" }}
+                    />
+                  </div>
                   <div style={{ textAlign: "right", fontSize: "13.5px", fontWeight: 700, color: "var(--blue-500)" }}>{fmt(precoUnit(p) * p.quantidade)}</div>
                   <div style={{ display: "flex", justifyContent: "center" }}>
                     <button onClick={() => toggleProduct(p.codigo)} style={{ padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: included ? "#DCFCE7" : "#EEF3F8", color: included ? "#16A34A" : "#94A6B8", fontSize: "12px", fontWeight: 600, fontFamily: "var(--font-sans), sans-serif", whiteSpace: "nowrap" }}>{included ? "✓ Incluído" : "+ Incluir"}</button>
