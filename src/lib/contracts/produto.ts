@@ -42,6 +42,30 @@ export const Embalagem = z.object({
 });
 export type Embalagem = z.infer<typeof Embalagem>;
 
+// Ficha rica de vendas (modelo Proposta Consolidada). Tudo opcional — o template
+// de PDF omite o bloco quando o dado não existe. Nada aqui é inventado pela IA:
+// são dados técnicos cadastrados por produto.
+export const FichaProduto = z.object({
+  titulo: z.string().optional(),        // "Detergente Desengordurante"
+  subtitulo: z.string().optional(),     // "Alcalino Concentrado"
+  linhaLabel: z.string().optional(),    // "KITCHEN"
+  descricao: z.string().optional(),     // parágrafo hero
+  indicadoPara: z.array(z.object({ label: z.string(), icone: z.string() })).optional(),
+  beneficios: z.array(z.string()).optional(),
+  diluicoes: z.array(z.object({ uso: z.string(), razao: z.string() })).optional(),
+  rendimento: z.string().optional(),
+  caracteristicas: z
+    .object({
+      pH: z.string().optional(),
+      aspecto: z.string().optional(),
+      cor: z.string().optional(),
+      odor: z.string().optional(),
+      uso: z.string().optional(),
+    })
+    .optional(),
+});
+export type FichaProduto = z.infer<typeof FichaProduto>;
+
 export const Produto = z.object({
   codigo: z.string().min(1),
   nome: z.string().min(1),
@@ -55,6 +79,7 @@ export const Produto = z.object({
   fichaTecnicaPath: z.string().nullable(),
   ativo: z.boolean(),
   embalagens: z.array(Embalagem).min(1),
+  ficha: FichaProduto.nullable().optional(),
 });
 export type Produto = z.infer<typeof Produto>;
 
