@@ -4,6 +4,7 @@ import { selecionar } from "./selecao/matcher";
 import { extrairPedido } from "./llm/extrair-pedido";
 import { escreverApresentacao } from "./llm/escrever-texto";
 import { PropostaScope, type PropostaItem, type EntradaEstruturada, type Tipo } from "./contracts";
+import { consolidadaDefaults } from "./consolidada-defaults";
 
 export type DadosCliente = { razaoSocial: string; cnpj: string | null; segmento: string | null };
 
@@ -21,6 +22,11 @@ const CONDICOES_PADRAO = {
   pagamento: "Faturamento boleto 28 dias",
   frete: "CIF",
 };
+
+// Quando tipo === "consolidada", anexa os textos institucionais default (editáveis
+// depois na revisão). Para os demais tipos, retorna undefined (campo omitido).
+const blocoConsolidada = (tipo: Tipo) =>
+  tipo === "consolidada" ? consolidadaDefaults() : undefined;
 
 // Fluxo do produto (spec §2): briefing → PedidoScope → seleção → PropostaScope.
 export async function montarProposta(
@@ -44,6 +50,7 @@ export async function montarProposta(
       descricaoUso: p.descricaoUso,
       imagemPath: p.imagemPath,
       embalagens: p.embalagens, // [CATÁLOGO] — preço nunca vem da IA
+      ficha: p.ficha ?? null, // [CATÁLOGO] snapshot p/ página de produto (consolidada)
       quantidade: 1, // ajustável na revisão pelo vendedor
       procedenciaSelecao: sel.procedencia,
       motivo: sel.motivo,
@@ -70,6 +77,7 @@ export async function montarProposta(
     textoApresentacao: texto,
     itens,
     condicoesComerciais: CONDICOES_PADRAO,
+    consolidada: blocoConsolidada(tipo),
   });
 }
 
@@ -89,6 +97,7 @@ export async function montarPropostaEstruturada(entrada: EntradaEstruturada): Pr
         descricaoUso: p.descricaoUso,
         imagemPath: p.imagemPath,
         embalagens: p.embalagens,
+        ficha: p.ficha ?? null, // [CATÁLOGO] snapshot p/ página de produto (consolidada)
         quantidade: it.quantidade ?? 1,
         procedenciaSelecao: "MANUAL",
         motivo: "Selecionado manualmente do catálogo.",
@@ -101,6 +110,7 @@ export async function montarPropostaEstruturada(entrada: EntradaEstruturada): Pr
       descricaoUso: it.descricaoUso ?? "",
       imagemPath: it.imagemPath ?? "/produtos/_generico.svg",
       embalagens: it.embalagens!,
+      ficha: null, // item próprio não tem ficha de catálogo
       quantidade: it.quantidade ?? 1,
       procedenciaSelecao: "MANUAL",
       motivo: "Item informado manualmente pelo vendedor.",
@@ -129,6 +139,7 @@ export async function montarPropostaEstruturada(entrada: EntradaEstruturada): Pr
     textoApresentacao: texto,
     itens,
     condicoesComerciais: { ...CONDICOES_PADRAO, ...entrada.condicoes },
+    consolidada: blocoConsolidada(tipo),
   });
 }
 
