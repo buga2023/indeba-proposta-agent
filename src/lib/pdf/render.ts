@@ -5,6 +5,7 @@ import type { PropostaScope } from "../contracts";
 import { documentoHtml } from "./template";
 import { orcamentoHtml } from "./template-orcamento";
 import { comercialHtml } from "./template-comercial";
+import { consolidadaHtml } from "./template-consolidada";
 
 // Abre o navegador conforme o ambiente:
 //  - Vercel (serverless): Chromium enxuto do @sparticuz/chromium + playwright-core.
@@ -70,7 +71,7 @@ const FOOTER_PAG = `
 </div>`;
 
 // Escolhe template, rodapé e margem superior conforme o tipo de proposta.
-function montarDocumento(
+export function montarDocumento(
   scope: PropostaScope,
   imagens: Record<string, string>,
   banner: string,
@@ -79,6 +80,12 @@ function montarDocumento(
   switch (scope.tipo) {
     case "orcamento":
       return { html: orcamentoHtml(scope), footer: FOOTER_PAG, marginTop: "12mm" };
+    case "consolidada":
+      return {
+        html: consolidadaHtml(scope, imagens, { logo: asset("/marca/indeba-logo.png") }),
+        footer: FOOTER_PAG,
+        marginTop: "0mm",
+      };
     case "comercial":
       return {
         html: comercialHtml(scope, imagens, {
