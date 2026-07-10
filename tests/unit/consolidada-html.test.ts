@@ -40,4 +40,30 @@ describe("consolidadaHtml", () => {
     const html = consolidadaHtml({ ...scope, consolidada: undefined }, { A: "d", B: "d" }, { logo: "l" });
     expect(html).toContain("Matheus Maristane Resende");
   });
+
+  it("ajustes do Matheus: comodatos só título+ícone, Anvisa, região metropolitana e contrato mínimo", () => {
+    const html = consolidadaHtml(scope, { A: "d", B: "d" }, { logo: "l" });
+    expect(html).toContain("Produtos Indeba certificados pela Anvisa.");
+    expect(html).toContain("Diluidores Automáticos");
+    expect(html).toContain("Dispensers de Sabonete e Papel");
+    expect(html).toContain("Salvador e região metropolitana");
+    expect(html).toContain("Contrato mínimo de 12 (doze) meses.");
+    expect(html).toContain("Pedido mínimo para entrega e faturamento: R$ 400,00.");
+  });
+
+  it("contato preenchido aparece na ficha e no card das condições; null não vaza", () => {
+    const comContato = {
+      ...scope,
+      consolidada: { ...consolidadaDefaults(), contato: { whatsapp: "(71) 90000-0000", emailConsultor: "consultor@indeba.com.br" } },
+    };
+    const html = consolidadaHtml(comContato, { A: "d", B: "d" }, { logo: "l" });
+    expect(html).toContain("WhatsApp (71) 90000-0000");
+    expect(html).toContain("consultor@indeba.com.br");
+
+    // CSS sempre define as classes; o que não pode existir é o ELEMENTO renderizado
+    const semContato = consolidadaHtml(scope, { A: "d", B: "d" }, { logo: "l" });
+    expect(semContato).not.toContain("WhatsApp");
+    expect(semContato).not.toContain('class="cc-contato"');
+    expect(semContato).not.toContain("null");
+  });
 });

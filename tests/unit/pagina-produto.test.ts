@@ -49,4 +49,18 @@ describe("paginaProduto", () => {
     expect(html).toContain("R$ 130,00");
     expect(html).not.toContain("undefined");
   });
+
+  it("rodapé: slogan fixo sempre; WhatsApp + e-mail só quando presentes no payload", () => {
+    const html = paginaProduto(item, "data:,x", { whatsapp: "(71) 90000-0000", emailConsultor: "consultor@indeba.com.br" });
+    expect(html).toContain("Qualidade Profissional");
+    expect(html).toContain("WhatsApp (71) 90000-0000");
+    expect(html).toContain("consultor@indeba.com.br");
+
+    // sem contato: rodapé existe, mas nenhum telefone/e-mail (nunca dado fictício)
+    for (const sem of [paginaProduto(item, "data:,x", { whatsapp: null, emailConsultor: null }), paginaProduto(item, "data:,x")]) {
+      expect(sem).toContain("Qualidade Profissional");
+      expect(sem).not.toContain("WhatsApp");
+      expect(sem).not.toContain("@indeba");
+    }
+  });
 });

@@ -81,8 +81,9 @@ export function montarDocumento(
     case "orcamento":
       return { html: orcamentoHtml(scope), footer: FOOTER_PAG, marginTop: "12mm" };
     case "consolidada":
+      // Logo Indeba Express (IES) — é a marca do modelo consolidado refinado.
       return {
-        html: consolidadaHtml(scope, imagens, { logo: asset("/marca/indeba-logo.png") }),
+        html: consolidadaHtml(scope, imagens, { logo: asset("/marca/indeba-express-logo.png") }),
         footer: FOOTER_PAG,
         marginTop: "0mm",
       };
@@ -103,6 +104,8 @@ export function montarDocumento(
         html: documentoHtml(scope, imagens, banner, {
           seko: asset("/marca/seko-promax.png"),
           painelEpi: asset("/marca/painel-epi.png"),
+          logoExpress: asset("/marca/indeba-express-logo.png"),
+          simboloExpress: asset("/marca/indeba-express-simbolo.png"),
         }),
         footer: FOOTER,
         marginTop: "6mm",

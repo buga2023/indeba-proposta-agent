@@ -8,7 +8,9 @@ export const ClienteSnapshot = z.object({
   razaoSocial: z.string(),
   cnpj: z.string().nullable(),
   segmento: z.string().nullable(),
-  responsavel: z.string().nullable().optional(),
+  // Quem recebe a proposta no cliente (capa Express/consolidada). Default null:
+  // propostas antigas persistidas continuam parseando.
+  responsavel: z.string().nullable().default(null),
 });
 
 export const PropostaItem = z.object({
@@ -43,7 +45,9 @@ export const ConsolidadaBloco = z.object({
   }),
   comodatos: z.object({
     intro: z.string(),
-    equipamentos: z.array(z.object({ titulo: z.string(), descricao: z.string(), icone: z.string() })),
+    // descricao opcional: os cards de comodato passaram a ser só título + ícone
+    // (pedido do Matheus, jul/2026); com texto continua renderizando (compat).
+    equipamentos: z.array(z.object({ titulo: z.string(), descricao: z.string().optional(), icone: z.string() })),
     vantagens: z.array(z.string()),
   }),
   condicoes: z.object({
@@ -52,6 +56,15 @@ export const ConsolidadaBloco = z.object({
     consultor: z.string(),
     cargo: z.string(),
   }),
+  // Contatos exibidos no rodapé da ficha de produto e no card de fechamento das
+  // condições. Payload/config — nunca chumbado no template. null = não exibe.
+  // Default: propostas antigas persistidas continuam parseando.
+  contato: z
+    .object({
+      whatsapp: z.string().nullable(), // WhatsApp da Indeba (empresa)
+      emailConsultor: z.string().nullable(),
+    })
+    .default({ whatsapp: null, emailConsultor: null }),
 });
 export type ConsolidadaBloco = z.infer<typeof ConsolidadaBloco>;
 
