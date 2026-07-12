@@ -2033,6 +2033,7 @@ function PdfScreen({
 
       {scope.tipo === "implantacao" && <ImplantacaoPreview scope={scope} itens={includedItems} />}
       {scope.tipo === "comercial" && <ComercialPreview scope={scope} itens={includedItems} />}
+      {scope.tipo === "consolidada" && <ConsolidadaPreview scope={scope} itens={includedItems} />}
 
       <p style={{ textAlign: "center", fontSize: "11.5px", color: "var(--gray-500)", marginTop: "16px" }}>
         {scope.tipo === "orcamento"
@@ -2169,6 +2170,90 @@ function ComercialPreview({ scope, itens }: { scope: PropostaScope; itens: Propo
       <p style={{ fontSize: "10px", color: "#5a6878", lineHeight: 1.6, marginTop: "12px" }}>
         <b style={{ color: navy }}>Observações:</b><br />— Assistência técnica e manutenção dos equipamentos Indeba são permanentes;<br />— Produtos ofertados são de fabricação da Indeba Indústria e Comércio Ltda, origem nacional e marca Indeba.
       </p>
+    </div>
+  );
+}
+
+// Preview do modelo Proposta de Solução (IES) — espelha template-consolidada.ts (resumo,
+// não paginado: a ficha rica por produto e as seções institucionais completas só saem no PDF).
+function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: PropostaItem[] }) {
+  const c = scope.consolidada;
+  const cli = scope.cliente;
+  const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR");
+  const navy = "#0b2a4a";
+  const orange = "#e8622a";
+  const info = (label: string, value: string) => (
+    <div style={{ flex: 1, background: "#f2f5f9", border: "1px solid #e5ebf2", borderRadius: "8px", padding: "8px 10px", textAlign: "center" }}>
+      <div style={{ fontSize: "8.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".03em", color: navy, marginBottom: "4px" }}>{label}</div>
+      <div style={{ fontSize: "12px", fontWeight: 700, color: "#1f3a52" }}>{value || "—"}</div>
+    </div>
+  );
+  const box = (label: string, value: string, sub?: string) => (
+    <div style={{ flex: 1, background: "#f2f5f9", border: "1px solid #e5ebf2", borderRadius: "8px", padding: "8px 10px", textAlign: "center" }}>
+      <div style={{ fontSize: "8.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".03em", color: navy, marginBottom: "4px" }}>{label}</div>
+      <div style={{ fontSize: "13px", fontWeight: 700, color: navy }}>{value}{sub && <span style={{ fontSize: "9px", fontWeight: 400, color: "#7a8696" }}> {sub}</span>}</div>
+    </div>
+  );
+  return (
+    <div style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", padding: "36px 44px", color: "#25303f" }}>
+      {/* capa compacta */}
+      <div style={{ textAlign: "center", paddingBottom: "18px", borderBottom: "2px solid #e5ebf2", marginBottom: "18px" }}>
+        <div style={{ fontSize: "20px", fontWeight: 800, color: navy, letterSpacing: "3px" }}>PROPOSTA DE SOLUÇÃO</div>
+        <div style={{ fontSize: "11px", color: orange, fontWeight: 700, marginTop: "4px" }}>{c?.capa.subtitulo ?? "Soluções em Higienização Profissional"}</div>
+      </div>
+      <div style={{ display: "flex", gap: "10px", marginBottom: "14px" }}>
+        {info("Cliente", cli.razaoSocial)}
+        {info("CNPJ", cli.cnpj ?? "—")}
+        {info("Segmento", cli.segmento ?? "—")}
+        {info("Responsável", cli.responsavel ?? "—")}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", color: "#5a6878", marginBottom: "22px" }}>
+        <span>Consultor responsável: <b style={{ color: navy }}>{c?.capa.consultor ?? "—"}</b></span>
+        <span>{c?.capa.cidade ?? ""} · {data}</span>
+      </div>
+
+      <h2 style={{ fontSize: "14px", fontWeight: 800, color: navy, borderBottom: "2px solid #e5ebf2", paddingBottom: "5px", marginBottom: "14px" }}>Soluções Indicadas para o {cli.razaoSocial}</h2>
+      {itens.map((p) => {
+        const e = p.embalagens[0];
+        return (
+          <div key={p.codigo} style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
+            <div style={{ flex: "0 0 90px", height: "100px", display: "flex", alignItems: "center", justifyContent: "center", background: "#fbfcfe", border: "1px solid #eef2f7", borderRadius: "8px", overflow: "hidden" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "82px", maxHeight: "92px", objectFit: "contain" }} onError={(ev) => (ev.currentTarget.style.display = "none")} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: navy, fontSize: "13.5px", fontWeight: 800 }}>{p.ficha?.titulo ?? p.nome}</div>
+              <div style={{ fontSize: "11px", color: "#5a6878", lineHeight: 1.45, margin: "4px 0 10px" }}>{p.ficha?.descricao ?? p.descricaoUso}</div>
+              <div style={{ display: "flex", gap: "10px" }}>
+                {box("Embalagem", e ? `${e.tamanho} ${e.unidade}` : "—")}
+                {box("Preço", fmt(precoUnit(p)))}
+                {box("Custo final por litro diluído", e?.custoDiluido ? fmt(Number(e.custoDiluido)) : "—", e?.diluicaoMax ? `até ${e.diluicaoMax}` : undefined)}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      <div style={{ marginTop: "8px", padding: "12px 14px", background: "var(--gray-50)", border: "1px dashed var(--gray-300)", borderRadius: "8px", fontSize: "11.5px", color: "var(--gray-500)" }}>
+        Fechamento no PDF: capa + apresentação institucional + <b>comodatos oferecidos</b> + <b>1 ficha rica por produto</b> + condições comerciais. Aqui é o resumo — o documento final é multi-página.
+      </div>
+
+      <h2 style={{ fontSize: "14px", fontWeight: 800, color: navy, borderBottom: "2px solid #e5ebf2", paddingBottom: "5px", margin: "18px 0 12px" }}>Condições Comerciais</h2>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+        <tbody>
+          {[
+            ["Validade da proposta", scope.condicoesComerciais.validade],
+            ["Prazo de implantação", scope.condicoesComerciais.prazoEntrega],
+            ["Forma de pagamento", scope.condicoesComerciais.pagamento],
+            ["Frete e entrega", scope.condicoesComerciais.frete],
+          ].map(([l, v]) => (
+            <tr key={l}>
+              <td style={{ border: "1px solid #e5ebf2", padding: "7px 10px", background: "#f2f5f9", color: navy, fontWeight: 700, width: "42%" }}>{l}</td>
+              <td style={{ border: "1px solid #e5ebf2", padding: "7px 10px" }}>{v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
