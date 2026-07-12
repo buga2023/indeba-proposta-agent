@@ -488,8 +488,8 @@ export default function Home() {
 
   const includedItems = scope ? scope.itens.filter((it) => !excluded.has(it.codigo)) : [];
   const total = includedItems.reduce((sum, it) => sum + precoUnit(it) * it.quantidade, 0);
-  // Guarda de contato (§P0, rodada 3): Proposta de Solução sem WhatsApp NEM e-mail não pode
-  // sair — o backstop real é /api/pdf (abaixo), isso aqui só bloqueia o clique antes de tentar.
+  // Contato ausente: só aviso visível (banners abaixo/na Revisão) — NÃO bloqueia mais a
+  // geração (pedido explícito). `contatoAusente` continua calculado só pra alimentar os avisos.
   const contatoAusente =
     !!scope && scope.tipo === "consolidada" && !scope.consolidada?.contato?.whatsapp && !scope.consolidada?.contato?.emailConsultor;
 
@@ -497,10 +497,6 @@ export default function Home() {
     if (!scope || downloading) return;
     if (includedItems.length === 0) {
       setError("Inclua ao menos um produto para gerar o PDF.");
-      return;
-    }
-    if (contatoAusente) {
-      setError("Proposta de Solução sem WhatsApp nem e-mail de contato — configure INDEBA_WHATSAPP/INDEBA_CONSULTOR_EMAIL antes de gerar o PDF.");
       return;
     }
     setDownloading(true);
@@ -1702,11 +1698,10 @@ function ReviewScreen({
       />
 
       {/* Aviso: Proposta de Solução sem WhatsApp/e-mail configurado — o cliente não teria
-          como responder. A geração do PDF é BLOQUEADA (server + botões desabilitados na
-          tela seguinte) — isso aqui é só o primeiro lugar onde fica visível o porquê. */}
+          como responder. Só aviso, NÃO bloqueia a geração (pedido explícito). */}
       {scope.tipo === "consolidada" && !scope.consolidada?.contato?.whatsapp && !scope.consolidada?.contato?.emailConsultor && (
         <div style={{ margin: "14px 28px 0", padding: "11px 14px", background: "var(--danger-soft, #FEF2F2)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>
-          Esta proposta NÃO vai gerar PDF sem WhatsApp nem e-mail de contato — o cliente não teria como responder. Configure <code>INDEBA_WHATSAPP</code>/<code>INDEBA_CONSULTOR_EMAIL</code> no ambiente antes de continuar.
+          Esta proposta vai sair sem WhatsApp nem e-mail de contato — o cliente não vai ter como responder. Configure <code>INDEBA_WHATSAPP</code>/<code>INDEBA_CONSULTOR_EMAIL</code> no ambiente quando puder.
         </div>
       )}
 
@@ -1949,10 +1944,9 @@ function PdfScreen({
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           {error && <span style={{ fontSize: "12px", color: "#DC2626", maxWidth: "260px" }}>{error}</span>}
           <Hoverable
-            base={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", borderWidth: "1px", borderStyle: "solid", borderColor: "var(--gray-200)", background: "white", cursor: downloading || contatoAusente ? "not-allowed" : "pointer", fontSize: "14px", fontWeight: 500, color: "var(--gray-900)", opacity: downloading || contatoAusente ? 0.5 : 1 }}
-            hover={downloading || contatoAusente ? {} : { borderColor: "var(--blue-500)", color: "var(--blue-500)" }}
-            onClick={contatoAusente ? undefined : baixarPdf}
-            title={contatoAusente ? "Sem WhatsApp/e-mail de contato configurado" : undefined}
+            base={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", borderWidth: "1px", borderStyle: "solid", borderColor: "var(--gray-200)", background: "white", cursor: downloading ? "wait" : "pointer", fontSize: "14px", fontWeight: 500, color: "var(--gray-900)", opacity: downloading ? 0.7 : 1 }}
+            hover={downloading ? {} : { borderColor: "var(--blue-500)", color: "var(--blue-500)" }}
+            onClick={baixarPdf}
           >
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
               <path d="M7.5 1.5v8M4.5 7l3 3 3-3" />
@@ -1968,11 +1962,10 @@ function PdfScreen({
             Enviar por e-mail
           </button>
           <Hoverable
-            base={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", border: "none", background: "var(--orange-500)", cursor: downloading || contatoAusente ? "not-allowed" : "pointer", fontSize: "14px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(236,122,28,.35)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease", opacity: downloading || contatoAusente ? 0.5 : 1 }}
-            hover={downloading || contatoAusente ? {} : { background: "#D2680F", boxShadow: "0 4px 14px rgba(236,122,28,.5)", transform: "translateY(-1px)" }}
-            active={contatoAusente ? {} : { transform: "translateY(0)", background: "#A8530C" }}
-            onClick={contatoAusente ? undefined : baixarPdf}
-            title={contatoAusente ? "Sem WhatsApp/e-mail de contato configurado" : undefined}
+            base={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", border: "none", background: "var(--orange-500)", cursor: downloading ? "wait" : "pointer", fontSize: "14px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(236,122,28,.35)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease", opacity: downloading ? 0.8 : 1 }}
+            hover={downloading ? {} : { background: "#D2680F", boxShadow: "0 4px 14px rgba(236,122,28,.5)", transform: "translateY(-1px)" }}
+            active={{ transform: "translateY(0)", background: "#A8530C" }}
+            onClick={baixarPdf}
           >
             {downloading ? "Gerando…" : "Gerar PDF"}
           </Hoverable>
@@ -1981,7 +1974,7 @@ function PdfScreen({
 
       {contatoAusente && (
         <div style={{ maxWidth: "820px", margin: "0 auto 16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>
-          Geração de PDF bloqueada: esta Proposta de Solução não tem WhatsApp nem e-mail de contato configurado — o cliente não teria como responder. Configure <code>INDEBA_WHATSAPP</code>/<code>INDEBA_CONSULTOR_EMAIL</code> no ambiente.
+          Esta Proposta de Solução não tem WhatsApp nem e-mail de contato configurado — o cliente não teria como responder. Configure <code>INDEBA_WHATSAPP</code>/<code>INDEBA_CONSULTOR_EMAIL</code> no ambiente quando puder (não bloqueia a geração).
         </div>
       )}
 
