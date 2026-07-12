@@ -145,7 +145,7 @@ const divisor = `<div class="div-badge"><span class="db-fio"></span><span class=
 export function consolidadaHtml(
   scope: PropostaScope,
   imagens: Record<string, string>,
-  assets: { logo: string },
+  assets: { logo: string; fontSans: string; fontMono: string },
 ): string {
   const c = scope.consolidada ?? consolidadaDefaults();
   const cli = scope.cliente;
@@ -223,8 +223,13 @@ export function consolidadaHtml(
   </section>`;
 
   return `<html lang="pt-BR"><head><meta charset="utf-8"/><style>
+/* Tipografia da marca (Geist/Geist Mono — mesma da plataforma, tokens/typography.css
+   do skill indeba-design). Fonte de arquivo (variável), embutida como data-URI: o
+   render bloqueia requisição externa, então CDN não funciona aqui. */
+@font-face { font-family: "Geist"; src: url("${assets.fontSans}") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("${assets.fontMono}") format("woff2"); font-weight: 100 900; font-display: swap; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11.5px; }
+body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11.5px; }
 .pg { padding: 14px 16mm 0; position: relative; }
 /* Cada seção é UMA página — sem quebra, os blocos emendam e o conteúdo vaza
    por cima da seção seguinte. A última (condições) não quebra (evita página vazia). */
@@ -308,7 +313,7 @@ body { font-family: "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11
 .p-vtag { background: ${ORANGE}; color: #fff; font-weight: 800; display: flex; align-items: center; padding: 14px 22px; text-transform: uppercase; letter-spacing: 1px; }
 .p-val { flex: 1; text-align: center; padding: 10px 6px; border-left: 1px solid #e2e8f0; }
 .p-vl { font-size: 10px; color: #7a8696; text-transform: uppercase; letter-spacing: 1px; }
-.p-vp { font-size: 20px; font-weight: 800; color: ${NAVY}; }
+.p-vp { font-family: "Geist Mono", monospace; font-size: 20px; font-weight: 700; color: ${NAVY}; }
 .p-vnota { text-align: center; color: #8a95a3; font-size: 9.5px; margin: 6px 16mm 0; }
 /* Rodapé navy da ficha — reservado no fim da página, nunca sobrepõe a barra */
 .p-rodape { display: flex; align-items: center; justify-content: space-between; gap: 18px; background: ${NAVY}; color: #fff; margin: 10px 16mm 0; border-radius: 10px; padding: 10px 16px; page-break-inside: avoid; }

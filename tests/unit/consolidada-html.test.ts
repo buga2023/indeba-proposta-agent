@@ -3,6 +3,8 @@ import { consolidadaHtml } from "@/lib/pdf/template-consolidada";
 import { consolidadaDefaults } from "@/lib/consolidada-defaults";
 import type { PropostaScope } from "@/lib/contracts";
 
+const assets = { logo: "data:,logo", fontSans: "data:,fonte-sans", fontMono: "data:,fonte-mono" };
+
 const scope: PropostaScope = {
   id: "1", criadoEm: "2026-07-10T00:00:00.000Z", status: "rascunho",
   tipo: "consolidada", template: "indeba_express",
@@ -22,7 +24,7 @@ const scope: PropostaScope = {
 
 describe("consolidadaHtml", () => {
   it("emite as 5 seções e uma página por produto", () => {
-    const html = consolidadaHtml(scope, { A: "data:,x", B: "data:,y" }, { logo: "data:,logo" });
+    const html = consolidadaHtml(scope, { A: "data:,x", B: "data:,y" }, assets);
     expect(html).toContain("Proposta de Solução");
     expect(html).toContain("Sua Empresa");
     expect(html).toContain("00.000.000/0000-00");
@@ -37,12 +39,12 @@ describe("consolidadaHtml", () => {
   });
 
   it("usa consolidadaDefaults quando scope.consolidada está ausente", () => {
-    const html = consolidadaHtml({ ...scope, consolidada: undefined }, { A: "d", B: "d" }, { logo: "l" });
+    const html = consolidadaHtml({ ...scope, consolidada: undefined }, { A: "d", B: "d" }, assets);
     expect(html).toContain("Matheus Maristane Resende");
   });
 
   it("ajustes do Matheus: comodatos só título+ícone, Anvisa, região metropolitana e contrato mínimo", () => {
-    const html = consolidadaHtml(scope, { A: "d", B: "d" }, { logo: "l" });
+    const html = consolidadaHtml(scope, { A: "d", B: "d" }, assets);
     expect(html).toContain("Produtos Indeba certificados pela Anvisa.");
     expect(html).toContain("Diluidores Automáticos");
     expect(html).toContain("Dispensers de Sabonete e Papel");
@@ -56,12 +58,12 @@ describe("consolidadaHtml", () => {
       ...scope,
       consolidada: { ...consolidadaDefaults(), contato: { whatsapp: "(71) 90000-0000", emailConsultor: "consultor@indeba.com.br" } },
     };
-    const html = consolidadaHtml(comContato, { A: "d", B: "d" }, { logo: "l" });
+    const html = consolidadaHtml(comContato, { A: "d", B: "d" }, assets);
     expect(html).toContain("WhatsApp (71) 90000-0000");
     expect(html).toContain("consultor@indeba.com.br");
 
     // CSS sempre define as classes; o que não pode existir é o ELEMENTO renderizado
-    const semContato = consolidadaHtml(scope, { A: "d", B: "d" }, { logo: "l" });
+    const semContato = consolidadaHtml(scope, { A: "d", B: "d" }, assets);
     expect(semContato).not.toContain("WhatsApp");
     expect(semContato).not.toContain('class="cc-contato"');
     expect(semContato).not.toContain("null");
