@@ -69,12 +69,28 @@ describe("paginaProduto", () => {
     expect(html).not.toContain("prodpg-simples");
   });
 
-  it("produto sem ficha (ou ficha rasa) usa o layout compacto — sem meia página vazia", () => {
-    const semFicha = { ...item, ficha: null };
+  it("produto sem ficha e sem diluição na embalagem (ex.: Pratt/Dermol) usa o layout compacto", () => {
+    const semFicha = { ...item, embalagens: [{ tamanho: 800, unidade: "ml" as const, preco: "20.00", diluicaoMax: null, custoDiluido: null }], ficha: null };
     expect(paginaProduto(semFicha, "data:,x")).toContain("prodpg-simples");
 
-    const fichaRasa = { ...item, ficha: { titulo: "Só título" } };
+    const fichaRasa = { ...semFicha, ficha: { titulo: "Só título" } };
     expect(paginaProduto(fichaRasa, "data:,x")).toContain("prodpg-simples");
+  });
+
+  it("Embalagens Disponíveis sempre aparece, mesmo no layout compacto (regressão da rodada 2)", () => {
+    const semFicha = { ...item, ficha: null };
+    const html = paginaProduto(semFicha, "data:,x");
+    expect(html).toContain("Embalagens disponíveis");
+  });
+
+  it("sem ficha.diluicoes mas com diluicaoMax na EMBALAGEM (ex.: Primmax LDF/Hort) — mostra diluição real, não fica 'simples'", () => {
+    // item já tem diluicaoMax:"1:100" nas embalagens; sem ficha, esse dado real de catálogo
+    // (não inventado) deve aparecer, e o produto NÃO deve cair no layout ultra-compacto.
+    const semFicha = { ...item, ficha: null };
+    const html = paginaProduto(semFicha, "data:,x");
+    expect(html).toContain("Modo de diluição");
+    expect(html).toContain("1:100");
+    expect(html).not.toContain("prodpg-simples");
   });
 
   it("sem linha definida na ficha, não renderiza barra navy vazia (.p-head)", () => {

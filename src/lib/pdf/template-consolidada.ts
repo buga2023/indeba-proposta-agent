@@ -56,7 +56,13 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   const badge = f?.linhaLabel ? `<span class="p-badge">LINHA <b>${esc(f.linhaLabel)}</b></span>` : "";
   const headBar = badge ? `<div class="p-head">${badge}</div>` : ""; // sem linha → sem barra vazia
   const descricao = esc(f?.descricao || item.descricaoUso || "");
-  const simples = !f?.indicadoPara?.length && !f?.beneficios?.length && !f?.diluicoes?.length && !f?.caracteristicas && !f?.rendimento;
+  // Diluição: a ficha rica (indicadoPara/benefícios/características/rendimento) é dado de
+  // catálogo que só existe pra alguns produtos (Primmax Plus/DGClor) — não inventamos pros
+  // outros. Mas a EMBALAGEM já carrega diluicaoMax/custoDiluido pra vários produtos "simples"
+  // (ex.: Primmax LDF, Primmax Hort) e o template não lia isso — dado real, só não estava sendo
+  // usado aqui (é lido em template.ts pro modelo Express).
+  const diluicaoEmbalagem = item.embalagens.find((e) => e.diluicaoMax);
+  const simples = !f?.indicadoPara?.length && !f?.beneficios?.length && !f?.diluicoes?.length && !diluicaoEmbalagem && !f?.caracteristicas && !f?.rendimento;
 
   const indicado = f?.indicadoPara?.length
     ? `<div class="p-block"><div class="p-bt">Indicado para</div><div class="p-ind">${f.indicadoPara
@@ -74,13 +80,18 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
     ? `<div class="p-mini"><div class="p-mt">Modo de diluição</div>${f.diluicoes
         .map((d) => `<div class="p-row"><span>${esc(d.uso)}</span><b>${esc(d.razao)}</b></div>`)
         .join("")}</div>`
-    : "";
+    : diluicaoEmbalagem
+      ? `<div class="p-mini"><div class="p-mt">Modo de diluição</div>
+          <div class="p-row"><span>Diluição máxima</span><b>${esc(diluicaoEmbalagem.diluicaoMax!)}</b></div>
+          ${diluicaoEmbalagem.custoDiluido ? `<div class="p-row"><span>Custo/litro diluído</span><b>${brl(diluicaoEmbalagem.custoDiluido)}</b></div>` : ""}
+        </div>`
+      : "";
   const rendimento = f?.rendimento
     ? `<div class="p-mini"><div class="p-mt">Rendimento aproximado</div><div class="p-big">${esc(f.rendimento)}</div></div>`
     : "";
-  // No layout simples, a barra de valores logo abaixo já mostra tamanho+preço de cada
-  // embalagem — repetir aqui só duplicaria informação e esticaria uma caixa sozinha.
-  const embalagens = item.embalagens.length && !simples
+  // Sempre presente quando o item tem embalagem (todo item tem) — a rodada anterior escondia
+  // isso no layout simples achando redundante com a barra de valor; foi regressão, voltou.
+  const embalagens = item.embalagens.length
     ? `<div class="p-mini"><div class="p-mt">Embalagens disponíveis</div>${item.embalagens
         .map((e) => `<div class="p-row"><span>${e.tamanho} ${esc(e.unidade)}</span></div>`)
         .join("")}</div>`
@@ -252,9 +263,14 @@ export function consolidadaHtml(
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11.5px; }
 .pg { padding: 14px 16mm 0; position: relative; }
-/* Cada seção é UMA página — sem quebra, os blocos emendam e o conteúdo vaza
-   por cima da seção seguinte. A última (condições) não quebra (evita página vazia). */
-.sec { page-break-after: always; overflow: hidden; padding-bottom: 28mm; }
+/* Cada seção é UMA página — altura FIXA (não auto): sem isso, se o conteúdo de uma seção
+   passar de 1 página impressa (ex.: comodatos com mais itens), o box CSS cresce além da
+   página física e a onda (position:absolute;bottom:0, ancorada nesse box) passa a flutuar
+   no meio/cortar — porque "bottom" nesse caso não é mais o rodapé da página real, é o fim
+   de um box que já vazou pra página seguinte. 278mm ≈ A4 (297mm) menos a margem inferior do
+   PDF (15mm, render.ts) menos folga de segurança; overflow:hidden é o cinto-e-suspensório
+   se algum conteúdo ainda assim passar do previsto (fica invisível, não mancha a página seguinte). */
+.sec { page-break-after: always; overflow: hidden; padding-bottom: 28mm; height: 278mm; }
 .sec:last-of-type { page-break-after: auto; }
 /* Onda decorativa das páginas internas: SEMPRE atrás do conteúdo (mesma regra da capa) —
    28mm de faixa de segurança acima (padding-bottom do .sec) garante que texto nunca encoste. */
@@ -339,7 +355,12 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .p-desc { color: #4a5768; line-height: 1.5; margin: 12px 0; }
 .p-block { margin-top: 12px; } .p-bt { color: #fff; background: ${NAVY}; display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
 .p-ind { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; } .p-ic { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-size: 9px; color: #6b7787; width: 64px; }
-.p-ic .ic svg { width: 26px; height: 26px; } .p-ben { list-style: none; margin-top: 10px; }
+/* Caixa fixa e centralizada por ícone (não o SVG esticado 1:1 no espaço) — o desenho de
+   cada glifo ocupa uma área diferente dentro do viewBox 24×24 (ex.: "restaurante" usa quase
+   o quadro inteiro, "padaria" fica mais recolhido); sem essa margem uniforme, o ícone com
+   glifo maior encosta na borda enquanto os outros sobram folga. Nunca fica com folga zero. */
+.p-ic .ic { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
+.p-ic .ic svg { width: 22px; height: 22px; } .p-ben { list-style: none; margin-top: 10px; }
 .p-ben li { display: flex; align-items: center; gap: 8px; color: #3a4757; font-size: 11px; padding: 3px 0; }
 .p-grid { display: flex; gap: 12px; padding: 18px 16mm 0; }
 .p-mini { flex: 1; border: 1px solid #e5ebf2; border-radius: 10px; padding: 10px; }
