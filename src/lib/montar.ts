@@ -32,8 +32,16 @@ const CONDICOES_PADRAO = {
 // depois na revisão). Para os demais tipos, retorna undefined (campo omitido).
 // `consultor` vem da sessão (quem está logado) — cai no default do consolidadaDefaults
 // (Matheus Maristane Resende) quando não há sessão ativa (auth desligada localmente).
+// Contato (WhatsApp/e-mail) vem de env — nunca chumbado no código; vazio = PDF não exibe
+// contato nenhum (a Revisão avisa visivelmente quando os dois estão vazios).
 const blocoConsolidada = (tipo: Tipo, consultor?: string | null) =>
-  tipo === "consolidada" ? consolidadaDefaults({ consultor: consultor ?? undefined }) : undefined;
+  tipo === "consolidada"
+    ? consolidadaDefaults({
+        consultor: consultor ?? undefined,
+        whatsapp: process.env.INDEBA_WHATSAPP || null,
+        emailConsultor: process.env.INDEBA_CONSULTOR_EMAIL || null,
+      })
+    : undefined;
 
 // Fluxo do produto (spec §2): briefing → PedidoScope → seleção → PropostaScope.
 export async function montarProposta(

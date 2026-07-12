@@ -3,7 +3,7 @@ import type { ConsolidadaBloco } from "./contracts";
 // Conteúdo institucional padrão do modelo Proposta Consolidada (marca IES),
 // transcrito de proposta-indeba-consolidada.pdf. É só default: cada campo é
 // editável por proposta (Fase 2). Nada de dado crítico (preço/produto) aqui.
-export function consolidadaDefaults(opts?: { consultor?: string; cidade?: string }): ConsolidadaBloco {
+export function consolidadaDefaults(opts?: { consultor?: string; cidade?: string; whatsapp?: string | null; emailConsultor?: string | null }): ConsolidadaBloco {
   const consultor = opts?.consultor ?? "Matheus Maristane Resende";
   const cidade = opts?.cidade ?? "Salvador - BA";
   return {
@@ -53,8 +53,8 @@ export function consolidadaDefaults(opts?: { consultor?: string; cidade?: string
       consultor,
       cargo: "Consultor Comercial",
     },
-    // TODO(gustavo): preencher o WhatsApp real da Indeba e o e-mail do consultor.
-    // Enquanto null, o PDF simplesmente não exibe (nunca sai número fictício).
-    contato: { whatsapp: null, emailConsultor: null },
+    // Vem de INDEBA_WHATSAPP/INDEBA_CONSULTOR_EMAIL (env) — nunca chumbado aqui.
+    // Enquanto vazio, o PDF simplesmente não exibe (nunca sai número fictício).
+    contato: { whatsapp: opts?.whatsapp ?? null, emailConsultor: opts?.emailConsultor ?? null },
   };
 }

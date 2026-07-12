@@ -1689,6 +1689,14 @@ function ReviewScreen({
         }
       />
 
+      {/* Aviso: Proposta de Solução sem WhatsApp/e-mail configurado — o cliente não teria
+          como responder. Não bloqueia (rascunho/teste local), só deixa impossível não ver. */}
+      {scope.tipo === "consolidada" && !scope.consolidada?.contato?.whatsapp && !scope.consolidada?.contato?.emailConsultor && (
+        <div style={{ margin: "14px 28px 0", padding: "11px 14px", background: "var(--danger-soft, #FEF2F2)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>
+          Esta proposta vai sair sem WhatsApp nem e-mail de contato — o cliente não vai ter como responder. Configure <code>INDEBA_WHATSAPP</code>/<code>INDEBA_CONSULTOR_EMAIL</code> no ambiente.
+        </div>
+      )}
+
       {/* Edição e refino pelo funcionário (antes do PDF final): texto editável + refino por IA */}
       <div style={{ flex: "none", padding: "14px 28px 0", display: "flex", flexDirection: "column", gap: "10px" }}>
         <div style={{ background: "white", border: "1px solid var(--gray-200)", borderLeft: "3px solid var(--blue-500)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>

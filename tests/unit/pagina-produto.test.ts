@@ -63,4 +63,34 @@ describe("paginaProduto", () => {
       expect(sem).not.toContain("@indeba");
     }
   });
+
+  it("produto com ficha completa NÃO usa o layout compacto (prodpg-simples)", () => {
+    const html = paginaProduto(item, "data:,x");
+    expect(html).not.toContain("prodpg-simples");
+  });
+
+  it("produto sem ficha (ou ficha rasa) usa o layout compacto — sem meia página vazia", () => {
+    const semFicha = { ...item, ficha: null };
+    expect(paginaProduto(semFicha, "data:,x")).toContain("prodpg-simples");
+
+    const fichaRasa = { ...item, ficha: { titulo: "Só título" } };
+    expect(paginaProduto(fichaRasa, "data:,x")).toContain("prodpg-simples");
+  });
+
+  it("sem linha definida na ficha, não renderiza barra navy vazia (.p-head)", () => {
+    const semLinha = { ...item, ficha: { ...item.ficha, linhaLabel: undefined } };
+    const html = paginaProduto(semLinha, "data:,x");
+    expect(html).not.toContain('class="p-head"');
+  });
+
+  it("com linha definida, renderiza a barra navy com o badge", () => {
+    const html = paginaProduto(item, "data:,x");
+    expect(html).toContain('class="p-head"');
+    expect(html).toContain("KITCHEN");
+  });
+
+  it("header (logo + numeração) só aparece quando passado — nunca inventado aqui", () => {
+    expect(paginaProduto(item, "data:,x")).not.toContain("pg-head");
+    expect(paginaProduto(item, "data:,x", undefined, '<div class="pg-head">X</div>')).toContain('<div class="pg-head">X</div>');
+  });
 });

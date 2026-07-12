@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { selecionarComOrcamento } from "@/lib/selecao/matcher";
-import type { Produto, FacetasDetectadas } from "@/lib/contracts";
+import type { Produto, FacetasDetectadas, Funcao } from "@/lib/contracts";
 
 // Guardião do chat de correção ("selecionar_por_necessidade"): a IA só descreve a
 // necessidade (vira facetas) — quem decide preço/o que cabe é este motor determinístico.
-const produto = (codigo: string, preco: string, funcoes: string[] = ["desengordurante"]): Produto => ({
+const produto = (codigo: string, preco: string, funcoes: Funcao[] = ["desengordurante"]): Produto => ({
   codigo,
   nome: codigo,
   linha: "alimentos_bebidas",

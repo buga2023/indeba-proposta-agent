@@ -34,8 +34,23 @@ describe("consolidadaHtml", () => {
     expect(html).toContain("CONDIÇÕES COMERCIAIS");
     expect(html).toContain("TitA"); // página produto A
     expect(html).toContain("Produto B"); // produto sem ficha cai no nome
-    // duas páginas de produto (dois blocos prodpg)
-    expect(html.match(/class="prodpg"/g)?.length).toBe(2);
+    // duas páginas de produto (dois blocos prodpg — classe pode vir com " prodpg-simples" junto)
+    expect(html.match(/class="prodpg(?: prodpg-simples)?"/g)?.length).toBe(2);
+  });
+
+  it("numeração do header deriva do índice real — bate com a contagem de produtos", () => {
+    const html = consolidadaHtml(scope, { A: "data:,x", B: "data:,y" }, assets);
+    // capa=01 (sem header) · apresentação=02 · comodatos=03 · produto A=04 · produto B=05 · condições=06
+    expect(html).toContain("Proposta de Solução <b>02</b>");
+    expect(html).toContain("Proposta de Solução <b>03</b>");
+    expect(html).toContain("Proposta de Solução <b>04</b>");
+    expect(html).toContain("Proposta de Solução <b>05</b>");
+    expect(html).toContain("Proposta de Solução <b>06</b>");
+  });
+
+  it("onda decorativa (wave-sec) presente em apresentação/comodatos/condições", () => {
+    const html = consolidadaHtml(scope, { A: "data:,x", B: "data:,y" }, assets);
+    expect(html.match(/wave-sec/g)?.length).toBeGreaterThanOrEqual(3);
   });
 
   it("usa consolidadaDefaults quando scope.consolidada está ausente", () => {

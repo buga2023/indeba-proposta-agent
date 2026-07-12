@@ -46,12 +46,17 @@ export const iconeSvg = (nome: string, cor = NAVY): string =>
 export type ContatoConsolidada = { whatsapp: string | null; emailConsultor: string | null };
 
 // Uma página A4 rica por produto. Cada bloco só aparece se o dado existir.
-export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada): string {
+// `headerHtml` (a mesma `.pg-head` das outras seções) e `simples` (produto sem
+// indicado/benefícios/diluição/características/rendimento → layout compacto,
+// centralizado verticalmente, em vez do rígido de sempre deixando meia página vazia).
+export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, headerHtml = ""): string {
   const f = item.ficha ?? null;
   const titulo = f?.titulo ? esc(f.titulo) : esc(item.nome);
   const subtitulo = f?.subtitulo ? `<div class="p-sub">${esc(f.subtitulo)}</div>` : "";
   const badge = f?.linhaLabel ? `<span class="p-badge">LINHA <b>${esc(f.linhaLabel)}</b></span>` : "";
+  const headBar = badge ? `<div class="p-head">${badge}</div>` : ""; // sem linha → sem barra vazia
   const descricao = esc(f?.descricao || item.descricaoUso || "");
+  const simples = !f?.indicadoPara?.length && !f?.beneficios?.length && !f?.diluicoes?.length && !f?.caracteristicas && !f?.rendimento;
 
   const indicado = f?.indicadoPara?.length
     ? `<div class="p-block"><div class="p-bt">Indicado para</div><div class="p-ind">${f.indicadoPara
@@ -73,7 +78,9 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   const rendimento = f?.rendimento
     ? `<div class="p-mini"><div class="p-mt">Rendimento aproximado</div><div class="p-big">${esc(f.rendimento)}</div></div>`
     : "";
-  const embalagens = item.embalagens.length
+  // No layout simples, a barra de valores logo abaixo já mostra tamanho+preço de cada
+  // embalagem — repetir aqui só duplicaria informação e esticaria uma caixa sozinha.
+  const embalagens = item.embalagens.length && !simples
     ? `<div class="p-mini"><div class="p-mt">Embalagens disponíveis</div>${item.embalagens
         .map((e) => `<div class="p-row"><span>${e.tamanho} ${esc(e.unidade)}</span></div>`)
         .join("")}</div>`
@@ -100,8 +107,11 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
     ${contatos}
   </div>`;
 
-  return `<section class="prodpg">
-    <div class="p-head">${badge}</div>
+  const grid = diluicoes || rendimento || embalagens || carac ? `<div class="p-grid">${diluicoes}${rendimento}${embalagens}${carac}</div>` : "";
+
+  return `<section class="prodpg${simples ? " prodpg-simples" : ""}">
+    ${headerHtml}
+    ${headBar}
     <div class="p-top">
       <div class="p-foto"><img src="${dataUri}" alt="${titulo}"/></div>
       <div class="p-main">
@@ -111,7 +121,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
         ${beneficios}
       </div>
     </div>
-    <div class="p-grid">${diluicoes}${rendimento}${embalagens}${carac}</div>
+    ${grid}
     <div class="p-valores"><span class="p-vtag">Valor</span>${valores}</div>
     <div class="p-vnota">Consulte condições especiais para compras de maiores volumes.</div>
     ${rodape}
@@ -120,7 +130,9 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
 
 // Ondas orgânicas confinadas ao canto inferior direito, SEMPRE atrás do
 // conteúdo (mesma arte da capa Express; pedido do Matheus: nunca invadir texto).
-const wave = `<svg class="wave" viewBox="0 0 360 300" fill="none">
+// `cls` escolhe o tamanho via CSS: "wave" (capa, 96mm) ou "wave wave-sec" (páginas
+// internas, 60mm — menor pra não cruzar texto, com faixa de segurança no rodapé).
+const wave = (cls: string) => `<svg class="${cls}" viewBox="0 0 360 300" fill="none">
   <path d="M30 250 C 90 215, 140 220, 195 168" stroke="#ccd3dc" stroke-width="1.4"/>
   <path d="M55 278 C 125 250, 170 252, 232 200" stroke="#dde2e8" stroke-width="1.2"/>
   <path d="M186 162 l 9 -1 -4 8 Z" fill="#ccd3dc"/>
@@ -156,7 +168,7 @@ export function consolidadaHtml(
     `<div class="cc-row"><span class="cc-ic">${iconeSvg(icone)}</span><div><div class="cc-r">${esc(rot)}</div><div class="cc-v">${esc(val)}</div></div></div>`;
 
   const capa = `<section class="capa">
-    ${wave}
+    ${wave("wave")}
     <img class="capa-logo" src="${assets.logo}" alt="Indeba Express"/>
     <div class="capa-tit">PROPOSTA DE SOLUÇÃO</div>
     <div class="capa-sub">${esc(c.capa.subtitulo)}</div>
@@ -174,6 +186,7 @@ export function consolidadaHtml(
   </section>`;
 
   const apres = `<section class="pg sec">
+    ${wave("wave wave-sec")}
     ${header("02")}
     <h1 class="sec-tit">APRESENTAÇÃO</h1><div class="sec-sub">${esc(c.capa.subtitulo)}</div>
     <p class="sd"><b>${esc(c.apresentacao.saudacao)}</b></p>
@@ -189,6 +202,7 @@ export function consolidadaHtml(
   </section>`;
 
   const comod = `<section class="pg sec">
+    ${wave("wave wave-sec")}
     ${header("03")}
     <h1 class="sec-tit">COMODATOS OFERECIDOS</h1><div class="sec-sub">Equipamentos em Comodato</div>
     <p class="pt">${esc(c.comodatos.intro)}</p>
@@ -203,10 +217,17 @@ export function consolidadaHtml(
   </section>`;
 
   const contato = c.contato ?? { whatsapp: null, emailConsultor: null };
-  const produtos = scope.itens.map((it) => paginaProduto(it, imagens[it.codigo] ?? "", contato)).join("");
+  // Numeração do header deriva do índice real (capa=01 sem header, apresentação=02,
+  // comodatos=03, 1 página por produto a partir de 04) — bate com "Página X/Y" do
+  // rodapé (contador nativo do Chromium), já que cada seção é garantidamente 1 página.
+  const PRIMEIRO_PRODUTO = 4;
+  const produtos = scope.itens
+    .map((it, idx) => paginaProduto(it, imagens[it.codigo] ?? "", contato, header(String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"))))
+    .join("");
 
   const cond = `<section class="pg sec">
-    ${header("04")}
+    ${wave("wave wave-sec")}
+    ${header(String(PRIMEIRO_PRODUTO + scope.itens.length).padStart(2, "0"))}
     <h1 class="sec-tit">CONDIÇÕES COMERCIAIS</h1><div class="sec-sub">Informações Gerais da Proposta</div>
     <div class="cond-wrap">
       <div class="cond-list">${c.condicoes.itens
@@ -233,8 +254,12 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pg { padding: 14px 16mm 0; position: relative; }
 /* Cada seção é UMA página — sem quebra, os blocos emendam e o conteúdo vaza
    por cima da seção seguinte. A última (condições) não quebra (evita página vazia). */
-.sec { page-break-after: always; }
+.sec { page-break-after: always; overflow: hidden; padding-bottom: 28mm; }
 .sec:last-of-type { page-break-after: auto; }
+/* Onda decorativa das páginas internas: SEMPRE atrás do conteúdo (mesma regra da capa) —
+   28mm de faixa de segurança acima (padding-bottom do .sec) garante que texto nunca encoste. */
+.sec > *:not(.wave-sec) { position: relative; z-index: 1; }
+.wave.wave-sec { width: 30mm; } /* especificidade > .wave sozinho — .wave define 96mm mais abaixo (capa) */
 .pg-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5ebf2; padding-bottom: 8px; margin-bottom: 18px; }
 .hlogo { height: 34px; } .hpg { color: #7a8696; font-size: 11px; } .hpg b { color: ${NAVY}; }
 .sec-tit { color: ${NAVY}; font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
@@ -291,11 +316,24 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 /* Página de produto — min-height abaixo da área útil (282mm) para a barra de
    valores + contato nunca estourarem sobre o rodapé da página. */
 .prodpg { padding: 0 0 6mm; position: relative; page-break-after: always; min-height: 258mm; }
+.prodpg > .pg-head { padding: 14px 16mm 0; } /* mesma .pg-head das outras seções — aqui sem o padding herdado de .pg */
 .p-head { background: ${NAVY}; height: 46px; display: flex; align-items: center; justify-content: flex-end; padding: 0 16mm; }
 .p-badge { color: #fff; font-size: 12px; letter-spacing: 2px; } .p-badge b { color: ${ORANGE}; }
 .p-top { display: flex; gap: 18px; padding: 20px 16mm 0; }
 .p-foto { flex: 0 0 210px; height: 300px; background: #f2f6fa; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
 .p-foto img { max-width: 180px; max-height: 280px; object-fit: contain; }
+/* Produto simples (sem ficha rica): centraliza o pouco conteúdo na página em vez de
+   empilhar tudo no topo e deixar a metade de baixo vazia; foto bem maior, texto mais
+   respirado — em vez de encolher a página, ocupa mais dela com o que já existe. */
+.prodpg-simples { display: flex; flex-direction: column; justify-content: center; }
+.prodpg-simples .p-top { align-items: center; gap: 32px; }
+.prodpg-simples .p-foto { flex: 0 0 340px; height: 440px; }
+.prodpg-simples .p-foto img { max-width: 290px; max-height: 420px; }
+.prodpg-simples .p-tit { font-size: 30px; }
+.prodpg-simples .p-desc { font-size: 15px; line-height: 1.9; margin: 20px 0; }
+.prodpg-simples .p-valores { margin-top: 40px; }
+.prodpg-simples .p-valores .p-vtag { padding: 20px 26px; }
+.prodpg-simples .p-vp { font-size: 26px; }
 .p-main { flex: 1; } .p-tit { color: ${NAVY}; font-size: 24px; font-weight: 800; line-height: 1.1; }
 .p-sub { color: ${ORANGE}; font-weight: 700; font-size: 15px; margin-top: 2px; }
 .p-desc { color: #4a5768; line-height: 1.5; margin: 12px 0; }
