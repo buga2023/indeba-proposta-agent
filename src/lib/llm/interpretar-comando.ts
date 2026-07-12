@@ -22,6 +22,8 @@ const SCHEMA = {
         "adicionar_item_catalogo",
         "alterar_preco_item",
         "alterar_condicao_comercial",
+        "limitar_orcamento",
+        "selecionar_por_necessidade",
         "nao_entendi",
       ],
     },
@@ -45,6 +47,8 @@ Ações possíveis:
 - "adicionar_item_catalogo": incluir um produto do CATÁLOGO que ainda não está na proposta. Resolva "codigoItem" comparando com a lista do catálogo abaixo.
 - "alterar_preco_item": mudar o preço de um item já na proposta. Resolva "codigoItem". NÃO coloque o número em "valorTexto" — deixe null.
 - "alterar_condicao_comercial": mudar validade/prazo de entrega/pagamento/frete. Em "campoCondicao" use exatamente um de: validade, prazoEntrega, pagamento, frete. Em "valorTexto", o novo texto da condição.
+- "limitar_orcamento": o vendedor quer que o TOTAL da proposta não passe de um valor (ex.: "não deixe passar de R$800", "remove o produto menos importante pra caber no orçamento"). NÃO coloque o número em "valorTexto" — deixe null.
+- "selecionar_por_necessidade": o vendedor pede pra (re)montar a proposta com os melhores produtos do catálogo pra uma necessidade/assunto (ex.: "escolha os melhores produtos pra higienização de cozinha", "monte um orçamento de desinfecção"), com ou sem teto de valor junto. Em "valorTexto", coloque a necessidade descrita em texto livre (ex.: "higienização de cozinha") — NUNCA um número.
 - "nao_entendi": a mensagem não é uma correção clara, ou você não conseguiu resolver o item citado — use isso em vez de chutar.
 
 NUNCA escreva um número (preço/quantidade) em "valorTexto" — isso é sempre extraído do texto original por outra parte do sistema, não por você.

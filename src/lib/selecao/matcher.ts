@@ -29,6 +29,32 @@ export function selecionar(
   return { itens };
 }
 
+// Chat "selecionar_por_necessidade": mesma seleção por faceta de sempre, com um corte por
+// orçamento por cima — greedy por score (melhor casamento primeiro), pulando o que não cabe.
+// Não é knapsack ótimo por valor; é determinístico e explicável. Preço nunca é decidido aqui —
+// só lido do catálogo pra decidir o que cabe no teto (a IA nunca vê/emite esse número).
+export function selecionarComOrcamento(
+  produtos: Produto[],
+  facetas: FacetasDetectadas,
+  orcamentoMax: number | null,
+  limite = 8,
+): SelecaoItem[] {
+  const candidatos = selecionar(produtos, facetas, limite * 3).itens;
+  if (orcamentoMax == null) return candidatos.slice(0, limite);
+  const escolhidos: SelecaoItem[] = [];
+  let total = 0;
+  for (const c of candidatos) {
+    if (escolhidos.length >= limite) break;
+    const p = produtos.find((x) => x.codigo === c.codigo);
+    const preco = Number(p?.embalagens.find((e) => e.preco !== null)?.preco ?? NaN);
+    if (Number.isFinite(preco) && total + preco <= orcamentoMax) {
+      escolhidos.push(c);
+      total += preco;
+    }
+  }
+  return escolhidos;
+}
+
 function pontuar(p: Produto, f: FacetasDetectadas): SelecaoItem {
   const batidas: string[] = [];
 

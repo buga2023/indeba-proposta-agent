@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { setPrecoEmbalagem, normalizarPreco, extrairNumero, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial } from "@/lib/proposta-edit";
+import { setPrecoEmbalagem, normalizarPreco, extrairNumero, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, cortarParaOrcamento } from "@/lib/proposta-edit";
 import type { PropostaScope } from "@/lib/contracts";
 
 const scope = {
@@ -54,5 +54,36 @@ describe("proposta-edit", () => {
     const novo = setCondicaoComercial(scope, "frete", "FOB");
     expect(novo.condicoesComerciais.frete).toBe("FOB");
     expect(novo.condicoesComerciais.pagamento).toBe("Boleto");
+  });
+
+  // Chat "limitar_orcamento" — corta do mais barato pro mais caro, nunca esvazia a proposta.
+  describe("cortarParaOrcamento", () => {
+    const itens = [
+      { codigo: "A", precoUnit: 100, quantidade: 1 },
+      { codigo: "B", precoUnit: 300, quantidade: 1 },
+      { codigo: "C", precoUnit: 50, quantidade: 1 },
+    ]; // total = 450
+
+    it("corta os mais baratos primeiro até caber no teto", () => {
+      const r = cortarParaOrcamento(itens, 450, 200);
+      expect(r.codigosRemover).toEqual(["C", "A"]); // 450 - 50 = 400 (ainda > 200) - 100 = 300... continua
+    });
+
+    it("já dentro do teto → não corta nada", () => {
+      const r = cortarParaOrcamento(itens, 450, 1000);
+      expect(r.codigosRemover).toEqual([]);
+      expect(r.totalFinal).toBe(450);
+    });
+
+    it("nunca esvazia a proposta — para com 1 item restante mesmo sem caber no teto", () => {
+      const r = cortarParaOrcamento(itens, 450, 10);
+      expect(r.codigosRemover.length).toBe(2); // sobra 1 item (o mais caro), mesmo passando do teto
+    });
+
+    it("considera quantidade no total removido", () => {
+      const comQtd = [{ codigo: "A", precoUnit: 100, quantidade: 3 }, { codigo: "B", precoUnit: 50, quantidade: 1 }];
+      const r = cortarParaOrcamento(comQtd, 350, 100);
+      expect(r.codigosRemover).toEqual(["B"]); // remove o mais barato por unidade primeiro
+    });
   });
 });

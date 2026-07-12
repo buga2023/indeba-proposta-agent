@@ -44,6 +44,25 @@ export function setQuantidadeAbsoluta(scope: PropostaScope, codigo: string, qtd:
   return { ...scope, itens: scope.itens.map((it) => (it.codigo === codigo ? { ...it, quantidade: q } : it)) };
 }
 
+// Chat "limitar_orcamento": corta, do item de menor preço unitário pro maior, até o total
+// caber no teto — nunca esvazia a proposta (para com 1 item restante). "Menos importante" não
+// tem julgamento pra IA fazer aqui: preço unitário é o único critério objetivo disponível.
+export function cortarParaOrcamento(
+  itens: { codigo: string; precoUnit: number; quantidade: number }[],
+  total: number,
+  teto: number,
+): { codigosRemover: string[]; totalFinal: number } {
+  const ordenados = [...itens].sort((a, b) => a.precoUnit - b.precoUnit);
+  const codigosRemover: string[] = [];
+  let totalFinal = total;
+  for (const it of ordenados) {
+    if (totalFinal <= teto || itens.length - codigosRemover.length <= 1) break;
+    codigosRemover.push(it.codigo);
+    totalFinal -= it.precoUnit * it.quantidade;
+  }
+  return { codigosRemover, totalFinal };
+}
+
 export function setCondicaoComercial(
   scope: PropostaScope,
   campo: "validade" | "prazoEntrega" | "pagamento" | "frete",

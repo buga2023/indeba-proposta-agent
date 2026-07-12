@@ -14,7 +14,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
-import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial } from "@/lib/proposta-edit";
+import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, cortarParaOrcamento } from "@/lib/proposta-edit";
 import { AjudaChat } from "@/components/ajuda-chat";
 import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
@@ -345,8 +345,8 @@ export default function Home() {
   // ação e resolveu o item/campo alvo (rota /api/comando-edicao); aqui só chamamos os
   // MESMOS setters que os controles manuais da Revisão usam. Preço/quantidade sempre
   // do `numero` extraído por regex da mensagem original — nunca de um campo da IA.
-  function aplicarComandoChat(r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null }) {
-    const { comando, numero, itemResolvido } = r;
+  function aplicarComandoChat(r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null }): string | void {
+    const { comando, numero, itemResolvido, itensSelecionados } = r;
     switch (comando.acao) {
       case "alterar_razao_social":
         if (comando.valorTexto) setScope((s) => (s ? setClienteCampo(s, "razaoSocial", comando.valorTexto!) : s));
@@ -374,6 +374,27 @@ export default function Home() {
         break;
       case "alterar_condicao_comercial":
         if (comando.campoCondicao && comando.valorTexto) setScope((s) => (s ? setCondicaoComercial(s, comando.campoCondicao!, comando.valorTexto!) : s));
+        break;
+      case "limitar_orcamento": {
+        if (!numero) break;
+        const teto = Number(numero.replace(",", "."));
+        const { codigosRemover, totalFinal } = cortarParaOrcamento(
+          includedItems.map((it) => ({ codigo: it.codigo, precoUnit: precoUnit(it), quantidade: it.quantidade })),
+          total,
+          teto,
+        );
+        if (codigosRemover.length === 0) {
+          return total <= teto ? `Já está dentro do teto de R$ ${numero} (total ${fmt(total)}).` : `Não dá pra cortar mais sem esvaziar a proposta — total atual ${fmt(total)}.`;
+        }
+        const nomes = codigosRemover.map((c) => includedItems.find((it) => it.codigo === c)?.nome ?? c);
+        codigosRemover.forEach(toggleProduct);
+        return `Removi ${nomes.map((n) => `"${n}"`).join(", ")} pra caber no teto — total agora ${fmt(totalFinal)}.`;
+      }
+      case "selecionar_por_necessidade":
+        if (itensSelecionados && itensSelecionados.length > 0) {
+          setScope((s) => (s ? { ...s, itens: itensSelecionados } : s));
+          setExcluded(new Set());
+        }
         break;
       case "nao_entendi":
       default:
@@ -1598,7 +1619,7 @@ function ReviewScreen({
   editarPreco: (codigo: string, idx: number, valor: string) => void;
   onRefinar: (texto: string) => void;
   onEditarTexto: (texto: string) => void;
-  onComandoChat: (r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null }) => void;
+  onComandoChat: (r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null }) => string | void;
   refining: boolean;
   goToBriefing: () => void;
   goToPDF: () => void;

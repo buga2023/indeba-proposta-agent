@@ -4,6 +4,8 @@ import { ComandoEdicao, PropostaScope, type PropostaItem } from "@/lib/contracts
 import { carregarCatalogo } from "@/lib/catalogo";
 import { itemDoCatalogo } from "@/lib/montar";
 import { interpretarComando } from "@/lib/llm/interpretar-comando";
+import { extrairPedido } from "@/lib/llm/extrair-pedido";
+import { selecionarComOrcamento } from "@/lib/selecao/matcher";
 import { extrairNumero } from "@/lib/proposta-edit";
 import { respostaErro } from "@/lib/erro";
 
@@ -43,11 +45,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    let itensSelecionados: PropostaItem[] | null = null;
+    if (comando.acao === "selecionar_por_necessidade" && comando.valorTexto) {
+      const linhasCatalogo = new Set(catalogo.produtos.map((p) => p.linha));
+      const pedido = await extrairPedido(comando.valorTexto, linhasCatalogo);
+      const orcamentoMax = numero ? Number(numero.replace(",", ".")) : null;
+      const selecao = selecionarComOrcamento(catalogo.produtos, pedido.facetasDetectadas, orcamentoMax);
+      itensSelecionados = selecao.flatMap((s) => {
+        try {
+          return [itemDoCatalogo(s.codigo, 1)];
+        } catch {
+          return [];
+        }
+      });
+    }
+
     return NextResponse.json({
       comando,
       numero,
       itemResolvido,
-      resposta: montarResposta(comando, numero, itemResolvido, scope),
+      itensSelecionados,
+      resposta: montarResposta(comando, numero, itemResolvido, itensSelecionados, scope),
     });
   } catch (e) {
     return respostaErro(e, "Erro ao interpretar o comando", 400);
@@ -64,6 +82,7 @@ function montarResposta(
   comando: ComandoEdicao,
   numero: string | null,
   itemResolvido: PropostaItem | null,
+  itensSelecionados: PropostaItem[] | null,
   scope: PropostaScope,
 ): string {
   switch (comando.acao) {
@@ -96,6 +115,18 @@ function montarResposta(
     case "alterar_condicao_comercial":
       if (!comando.campoCondicao || !comando.valorTexto) return "Não entendi qual condição comercial mudar — pode detalhar?";
       return `Condição "${comando.campoCondicao}" alterada para "${comando.valorTexto}".`;
+    case "limitar_orcamento":
+      if (!numero) return "Não encontrei o valor do teto na mensagem — pode repetir com o número (ex.: R$ 800)?";
+      return `Ajustando a proposta pro teto de R$ ${numero}…`; // resultado real (o que saiu) vem do cliente, que sabe o total considerando exclusões
+    case "selecionar_por_necessidade":
+      if (!comando.valorTexto) return "Não entendi qual necessidade atender — pode descrever (ex.: \"higienização de cozinha\")?";
+      if (!itensSelecionados || itensSelecionados.length === 0) {
+        return numero
+          ? `Não achei produtos do catálogo pra "${comando.valorTexto}" que coubessem em R$ ${numero}.`
+          : `Não achei produtos do catálogo pra "${comando.valorTexto}".`;
+      }
+      const total = itensSelecionados.reduce((s, it) => s + Number(it.embalagens[0]?.preco ?? 0), 0);
+      return `Selecionei ${itensSelecionados.length} produto${itensSelecionados.length > 1 ? "s" : ""} pra "${comando.valorTexto}" (total R$ ${total.toFixed(2).replace(".", ",")})${numero ? `, dentro do teto de R$ ${numero}` : ""}.`;
     case "nao_entendi":
     default:
       return "Não entendi o pedido — pode reformular? Consigo trocar dados do cliente, quantidade/preço de item, adicionar/remover produto do catálogo e condições comerciais.";

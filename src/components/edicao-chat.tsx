@@ -11,17 +11,20 @@ import type { PropostaScope, PropostaItem, ComandoEdicao } from "@/lib/contracts
 // os controles manuais da Revisão já usam. Preço/quantidade nunca vêm da IA.
 
 type Msg = { de: "bot" | "voce"; texto: string };
-type RespostaComando = { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null };
+type RespostaComando = { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null };
 
 const WELCOME =
-  "Pode me pedir correções pontuais aqui — ex.: \"troca o CNPJ pra 00.000.000/0001-00\", \"muda a quantidade do [produto] pra 5\", \"preço do [produto] pra 32,50\", \"remove o [produto]\", \"adiciona o [produto]\".";
+  "Pode me pedir correções pontuais aqui — ex.: \"troca o CNPJ pra 00.000.000/0001-00\", \"muda a quantidade do [produto] pra 5\", \"preço do [produto] pra 32,50\", \"remove o [produto]\", \"adiciona o [produto]\", \"não deixe passar de R$800\", \"escolha os melhores produtos pra [necessidade]\".";
 
 export function EdicaoChat({
   scope,
   onComando,
 }: {
   scope: PropostaScope;
-  onComando: (r: RespostaComando, mensagemOriginal: string) => void;
+  // Pode devolver uma string com o resultado real da aplicação (ex.: quais itens saíram
+  // num corte de orçamento) — o servidor não sabe disso (não recebe `excluded`), então quem
+  // aplica client-side é quem sabe o resultado final; o chat anexa como uma 2ª bolha de bot.
+  onComando: (r: RespostaComando, mensagemOriginal: string) => string | void;
 }) {
   const [msgs, setMsgs] = useState<Msg[]>([{ de: "bot", texto: WELCOME }]);
   const [input, setInput] = useState("");
@@ -45,9 +48,10 @@ export function EdicaoChat({
         body: JSON.stringify({ mensagem: texto, scope }),
       });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const data = (await r.json()) as { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; resposta: string };
+      const data = (await r.json()) as { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null; resposta: string };
       setMsgs((m) => [...m, { de: "bot", texto: data.resposta }]);
-      onComando({ comando: data.comando, numero: data.numero, itemResolvido: data.itemResolvido }, texto);
+      const seguimento = onComando({ comando: data.comando, numero: data.numero, itemResolvido: data.itemResolvido, itensSelecionados: data.itensSelecionados }, texto);
+      if (seguimento) setMsgs((m) => [...m, { de: "bot", texto: seguimento }]);
     } catch {
       setMsgs((m) => [...m, { de: "bot", texto: "Não consegui processar agora — tenta de novo." }]);
     } finally {
