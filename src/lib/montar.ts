@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { carregarCatalogo } from "./catalogo";
+import { carregarCatalogo, produtoPorCodigo } from "./catalogo";
 import { selecionar } from "./selecao/matcher";
 import { extrairPedido } from "./llm/extrair-pedido";
 import { escreverApresentacao } from "./llm/escrever-texto";
@@ -30,8 +30,10 @@ const CONDICOES_PADRAO = {
 
 // Quando tipo === "consolidada", anexa os textos institucionais default (editáveis
 // depois na revisão). Para os demais tipos, retorna undefined (campo omitido).
-const blocoConsolidada = (tipo: Tipo) =>
-  tipo === "consolidada" ? consolidadaDefaults() : undefined;
+// `consultor` vem da sessão (quem está logado) — cai no default do consolidadaDefaults
+// (Matheus Maristane Resende) quando não há sessão ativa (auth desligada localmente).
+const blocoConsolidada = (tipo: Tipo, consultor?: string | null) =>
+  tipo === "consolidada" ? consolidadaDefaults({ consultor: consultor ?? undefined }) : undefined;
 
 // Fluxo do produto (spec §2): briefing → PedidoScope → seleção → PropostaScope.
 export async function montarProposta(
@@ -39,6 +41,7 @@ export async function montarProposta(
   cliente: DadosCliente,
   tipo: Tipo = "implantacao",
   contexto?: ContextoProspeccao | null,
+  consultor?: string | null,
 ): Promise<PropostaScope> {
   const catalogo = carregarCatalogo();
 
@@ -87,13 +90,16 @@ export async function montarProposta(
     textoApresentacao: texto,
     itens,
     condicoesComerciais: CONDICOES_PADRAO,
-    consolidada: blocoConsolidada(tipo),
+    consolidada: blocoConsolidada(tipo, consultor),
   });
 }
 
 // Caminho estruturado (spec §4.2 produtos_explicitos): o vendedor manda as infos
 // prontas. Converge no MESMO PropostaScope → mesmo PDF. Sem IA de seleção.
-export async function montarPropostaEstruturada(entrada: EntradaEstruturada): Promise<PropostaScope> {
+export async function montarPropostaEstruturada(
+  entrada: EntradaEstruturada,
+  consultor?: string | null,
+): Promise<PropostaScope> {
   const catalogo = carregarCatalogo();
 
   const itens: PropostaItem[] = entrada.itens.map((it) => {
@@ -158,9 +164,31 @@ export async function montarPropostaEstruturada(entrada: EntradaEstruturada): Pr
     textoApresentacao: texto,
     itens,
     condicoesComerciais: { ...CONDICOES_PADRAO, ...entrada.condicoes },
-    consolidada: blocoConsolidada(tipo),
+    consolidada: blocoConsolidada(tipo, consultor),
   });
 }
 
 const slug = (s: string) =>
   s.trim().toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "") || "ITEM";
+
+// Resolve um código do catálogo → PropostaItem com preço/ficha/imagem do CATÁLOGO —
+// usado pelo chat de correção (adicionar_item_catalogo): a IA só emite o `codigo`
+// (classificação), o preço vem sempre daqui, nunca da IA. Lança se o produto não
+// existir ou não tiver nenhum preço cadastrado (chamador decide como comunicar).
+export function itemDoCatalogo(codigo: string, quantidade = 1): PropostaItem {
+  const p = produtoPorCodigo(codigo);
+  if (!p) throw new Error(`Produto "${codigo}" não está no catálogo`);
+  const embalagens = p.embalagens.filter((e): e is (typeof p.embalagens)[number] & { preco: string } => e.preco !== null);
+  if (embalagens.length === 0) throw new Error(`Produto "${p.nome}" está sem preço no catálogo`);
+  return {
+    codigo: p.codigo,
+    nome: p.nome,
+    descricaoUso: p.descricaoUso,
+    imagemPath: p.imagemPath,
+    embalagens,
+    ficha: p.ficha ?? null,
+    quantidade: Math.max(1, Math.round(quantidade)),
+    procedenciaSelecao: "MANUAL",
+    motivo: "Adicionado pelo chat de correção.",
+  };
+}

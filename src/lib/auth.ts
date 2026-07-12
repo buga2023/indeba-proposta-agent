@@ -27,6 +27,12 @@ export function authAtiva(): boolean {
   return usuarios().length > 0;
 }
 
+// Nome de exibição a partir do login — não há campo de nome próprio hoje (só
+// login/credencial/papel). Title-case simples ("gustavo" → "Gustavo").
+export function nomeExibicao(login: string): string {
+  return login.charAt(0).toUpperCase() + login.slice(1);
+}
+
 // ── Hash de senha (PBKDF2-SHA256, Web Crypto — edge-safe) ──────────────
 const PBKDF2_ITER = 100_000;
 

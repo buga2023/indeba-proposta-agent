@@ -3,6 +3,7 @@ import { z } from "zod";
 import { montarProposta } from "@/lib/montar";
 import { Tipo } from "@/lib/contracts";
 import { detectarTipo, TIPOS_LABEL } from "@/lib/tipo-proposta";
+import { validarSessao, nomeExibicao } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // IA pode levar alguns segundos (Vercel)
@@ -50,7 +51,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const scope = await montarProposta(briefing, { razaoSocial, cnpj, segmento, responsavel }, tipoFinal, contextoProspeccao);
+  const login = (await validarSessao(req.cookies.get("sessao")?.value))?.login;
+  const scope = await montarProposta(
+    briefing,
+    { razaoSocial, cnpj, segmento, responsavel },
+    tipoFinal,
+    contextoProspeccao,
+    login ? nomeExibicao(login) : null,
+  );
 
   // Seleção vazia = o briefing não casou com nada do catálogo. Não emite proposta
   // muda: sinaliza pro vendedor refinar (melhor avisar do que entregar PDF vazio).

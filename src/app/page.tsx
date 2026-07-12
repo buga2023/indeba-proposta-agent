@@ -13,9 +13,10 @@
  */
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse } from "@/lib/contracts";
-import { setPrecoEmbalagem } from "@/lib/proposta-edit";
+import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
+import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial } from "@/lib/proposta-edit";
 import { AjudaChat } from "@/components/ajuda-chat";
+import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
 import { AdminScreen } from "@/components/admin-screen";
 import { useToast } from "./_app/toast";
@@ -164,9 +165,12 @@ const TIPOS: { value: TipoProposta; label: string; hint: string }[] = [
   { value: "orcamento", label: "Orçamento", hint: "Tabela ERP enxuta" },
   { value: "implantacao", label: "Implantação", hint: "Express, 1 produto/página" },
   { value: "comercial", label: "Comercial", hint: "Fabricante, institucional" },
-  { value: "consolidada", label: "Consolidada", hint: "IES, 1 página rica/produto" },
+  { value: "consolidada", label: "Proposta de Solução", hint: "IES, 1 página rica/produto" },
 ];
 const tipoLabel = (t: string) => TIPOS.find((x) => x.value === t)?.label ?? "Orçamento";
+// Só "consolidada" é oferecida na criação (pedido do Gustavo, jul/2026) — os outros tipos
+// continuam no código intactos (propostas antigas com esses tipos abrem/exportam normal).
+const TIPOS_SELECIONAVEIS = TIPOS.filter((t) => t.value === "consolidada");
 
 // Itens da command palette (Ctrl/Cmd+K) — só telas reais.
 const CMD_ITEMS: PaletteItem[] = [
@@ -198,7 +202,7 @@ export default function Home() {
   const [scope, setScope] = useState<PropostaScope | null>(null);
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
 
-  const [tipoProposta, setTipoProposta] = useState<TipoProposta>("orcamento");
+  const [tipoProposta, setTipoProposta] = useState<TipoProposta>("consolidada");
   const [catFilter, setCatFilter] = useState("Todos");
   const [catalogo, setCatalogo] = useState<Produto[] | null>(null);
   const [catalogoErro, setCatalogoErro] = useState<string | null>(null);
@@ -335,6 +339,46 @@ export default function Home() {
   // Edição manual do texto pelo funcionário (constituição §6: a IA é sempre revisável).
   function editarTexto(novo: string) {
     setScope((s) => (s ? { ...s, textoApresentacao: { conteudo: novo, procedencia: "MANUAL" } } : s));
+  }
+
+  // Aplicação determinística do chat de correção (EdicaoChat): a IA já classificou a
+  // ação e resolveu o item/campo alvo (rota /api/comando-edicao); aqui só chamamos os
+  // MESMOS setters que os controles manuais da Revisão usam. Preço/quantidade sempre
+  // do `numero` extraído por regex da mensagem original — nunca de um campo da IA.
+  function aplicarComandoChat(r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null }) {
+    const { comando, numero, itemResolvido } = r;
+    switch (comando.acao) {
+      case "alterar_razao_social":
+        if (comando.valorTexto) setScope((s) => (s ? setClienteCampo(s, "razaoSocial", comando.valorTexto!) : s));
+        break;
+      case "alterar_cnpj":
+        if (comando.valorTexto) setScope((s) => (s ? setClienteCampo(s, "cnpj", comando.valorTexto!) : s));
+        break;
+      case "alterar_segmento":
+        if (comando.valorTexto) setScope((s) => (s ? setClienteCampo(s, "segmento", comando.valorTexto!) : s));
+        break;
+      case "alterar_responsavel_cliente":
+        if (comando.valorTexto) setScope((s) => (s ? setClienteCampo(s, "responsavel", comando.valorTexto!) : s));
+        break;
+      case "alterar_quantidade_item":
+        if (comando.codigoItem && numero) setScope((s) => (s ? setQuantidadeAbsoluta(s, comando.codigoItem!, Number(numero.replace(",", "."))) : s));
+        break;
+      case "remover_item":
+        if (comando.codigoItem) toggleProduct(comando.codigoItem);
+        break;
+      case "adicionar_item_catalogo":
+        if (itemResolvido) setScope((s) => (s ? { ...s, itens: [...s.itens, itemResolvido] } : s));
+        break;
+      case "alterar_preco_item":
+        if (comando.codigoItem && numero) editarPreco(comando.codigoItem, 0, numero);
+        break;
+      case "alterar_condicao_comercial":
+        if (comando.campoCondicao && comando.valorTexto) setScope((s) => (s ? setCondicaoComercial(s, comando.campoCondicao!, comando.valorTexto!) : s));
+        break;
+      case "nao_entendi":
+      default:
+        break;
+    }
   }
 
   // Refino por prompt: anexa o ajuste ao briefing e reprocessa pelo MESMO /api/montar
@@ -608,6 +652,7 @@ export default function Home() {
             {...{ reviewVariant, setReviewVariant, scope, excluded, includedItems, total, toggleProduct, changeQty, editarPreco }}
             onRefinar={refinarProposta}
             onEditarTexto={editarTexto}
+            onComandoChat={aplicarComandoChat}
             refining={refining}
             goToBriefing={novaProposta}
             goToPDF={() => setScreen("pdf")}
@@ -940,25 +985,27 @@ function BriefingScreen({
       <div style={{ position: "sticky", bottom: 0, padding: "16px 28px 28px", background: "linear-gradient(to top,var(--gray-50) 65%,transparent)", flex: "none" }}>
         <div style={{ maxWidth: "680px", margin: "0 auto" }}>
           {/* Tipo de proposta → define a estrutura do PDF */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "12px", color: "var(--gray-400)", fontWeight: 500 }}>Tipo de proposta:</span>
-            <div style={{ display: "flex", background: "white", border: "1px solid var(--gray-200)", borderRadius: "999px", padding: "3px", gap: "2px", boxShadow: "var(--shadow-sm)" }}>
-              {TIPOS.map((t) => {
-                const ativo = tipoProposta === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    onClick={() => setTipoProposta(t.value)}
-                    title={t.hint}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "5px 14px", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontFamily: "var(--font-sans), sans-serif", lineHeight: 1.1 }}
-                  >
-                    <span style={{ fontSize: "13px", fontWeight: ativo ? 700 : 500 }}>{t.label}</span>
-                    <span style={{ fontSize: "10px", color: ativo ? "var(--blue-500)" : "var(--gray-400)", marginTop: "1px" }}>{t.hint}</span>
-                  </button>
-                );
-              })}
+          {TIPOS_SELECIONAVEIS.length > 1 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "12px", color: "var(--gray-400)", fontWeight: 500 }}>Tipo de proposta:</span>
+              <div style={{ display: "flex", background: "white", border: "1px solid var(--gray-200)", borderRadius: "999px", padding: "3px", gap: "2px", boxShadow: "var(--shadow-sm)" }}>
+                {TIPOS_SELECIONAVEIS.map((t) => {
+                  const ativo = tipoProposta === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      onClick={() => setTipoProposta(t.value)}
+                      title={t.hint}
+                      style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "5px 14px", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontFamily: "var(--font-sans), sans-serif", lineHeight: 1.1 }}
+                    >
+                      <span style={{ fontSize: "13px", fontWeight: ativo ? 700 : 500 }}>{t.label}</span>
+                      <span style={{ fontSize: "10px", color: ativo ? "var(--blue-500)" : "var(--gray-400)", marginTop: "1px" }}>{t.hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
           <div style={{ background: "white", border: "1.5px solid var(--gray-200)", borderRadius: "16px", boxShadow: "var(--shadow-md)", display: "flex", alignItems: "flex-end", padding: "10px 10px 10px 16px", gap: "8px" }}>
             <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", padding: "6px", flex: "none", display: "flex" }} title="Anexar (em breve)">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -1024,9 +1071,10 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
   const [erroCat, setErroCat] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [razaoSocial, setRazaoSocial] = useState("");
+  const [cnpj, setCnpj] = useState("");
   const [segmento, setSegmento] = useState("");
   const [responsavel, setResponsavel] = useState("");
-  const [tipo, setTipo] = useState<TipoProposta>("orcamento");
+  const [tipo, setTipo] = useState<TipoProposta>("consolidada");
   const [itens, setItens] = useState<Record<string, number>>({}); // codigo → quantidade
   // Itens próprios (fora do catálogo): preço digitado por humano → procedência MANUAL.
   const [custom, setCustom] = useState<{ id: number; nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; qtd: number }[]>([]);
@@ -1106,7 +1154,7 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
     try {
       const body = {
         tipo,
-        cliente: { razaoSocial: razaoSocial.trim(), cnpj: null, segmento: segmento.trim() || null, responsavel: responsavel.trim() || null },
+        cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmento.trim() || null, responsavel: responsavel.trim() || null },
         itens: [
           ...selCat.map((x) => ({ codigo: x.produto.codigo, quantidade: x.qtd })),
           ...custom.map((c) => ({ nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: null, custoDiluido: null }], quantidade: c.qtd })),
@@ -1143,6 +1191,10 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
             <div style={campoLabel}>Razão social *</div>
             <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Ex.: Laticínio São João Ltda" style={campoInput} />
           </label>
+          <label style={{ flex: "1 1 180px", minWidth: 0 }}>
+            <div style={campoLabel}>CNPJ</div>
+            <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0001-00" style={campoInput} />
+          </label>
           <label style={{ flex: "1 1 200px", minWidth: 0 }}>
             <div style={campoLabel}>Segmento</div>
             <input value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="Ex.: Laticínio" style={campoInput} />
@@ -1151,19 +1203,21 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
             <div style={campoLabel}>Responsável</div>
             <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Quem recebe a proposta" style={campoInput} />
           </label>
-          <div>
-            <div style={campoLabel}>Tipo</div>
-            <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
-              {TIPOS.map((t) => {
-                const at = tipo === t.value;
-                return (
-                  <button key={t.value} onClick={() => setTipo(t.value)} title={t.hint} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: at ? 600 : 500, background: at ? "var(--primary)" : "transparent", color: at ? "#fff" : "var(--text-muted)", fontFamily: "inherit" }}>
-                    {t.label}
-                  </button>
-                );
-              })}
+          {TIPOS_SELECIONAVEIS.length > 1 && (
+            <div>
+              <div style={campoLabel}>Tipo</div>
+              <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
+                {TIPOS_SELECIONAVEIS.map((t) => {
+                  const at = tipo === t.value;
+                  return (
+                    <button key={t.value} onClick={() => setTipo(t.value)} title={t.hint} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: at ? 600 : 500, background: at ? "var(--primary)" : "transparent", color: at ? "#fff" : "var(--text-muted)", fontFamily: "inherit" }}>
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {erro && <div style={{ padding: "11px 14px", background: "var(--danger-soft)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
@@ -1263,10 +1317,6 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
 // a montagem converge no MESMO /api/montar-estruturado da Proposta manual.
 type ItemImportado = { nome: string; quantidade: number; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; codigoCatalogo: string | null; nomeCatalogo: string | null };
 
-// O input já É um orçamento — o documento gerado só faz sentido como
-// Implantação (Express) ou Comercial (fabricante).
-const TIPOS_IMPORT = TIPOS.filter((t) => t.value !== "orcamento");
-
 function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [importando, setImportando] = useState(false);
@@ -1277,7 +1327,7 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
   const [cnpj, setCnpj] = useState("");
   const [segmento, setSegmento] = useState("");
   const [responsavel, setResponsavel] = useState("");
-  const [tipo, setTipo] = useState<TipoProposta>("implantacao");
+  const [tipo, setTipo] = useState<TipoProposta>("consolidada");
   const [itens, setItens] = useState<ItemImportado[]>([]);
   const [montando, setMontando] = useState(false);
 
@@ -1400,19 +1450,21 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
                 <div style={campoLabel}>Responsável</div>
                 <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Quem recebe a proposta" style={campoInput} />
               </label>
-              <div>
-                <div style={campoLabel}>Tipo</div>
-                <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
-                  {TIPOS_IMPORT.map((t) => {
-                    const at = tipo === t.value;
-                    return (
-                      <button key={t.value} onClick={() => setTipo(t.value)} title={t.hint} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: at ? 600 : 500, background: at ? "var(--primary)" : "transparent", color: at ? "#fff" : "var(--text-muted)", fontFamily: "inherit" }}>
-                        {t.label}
-                      </button>
-                    );
-                  })}
+              {TIPOS_SELECIONAVEIS.length > 1 && (
+                <div>
+                  <div style={campoLabel}>Tipo</div>
+                  <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
+                    {TIPOS_SELECIONAVEIS.map((t) => {
+                      const at = tipo === t.value;
+                      return (
+                        <button key={t.value} onClick={() => setTipo(t.value)} title={t.hint} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: at ? 600 : 500, background: at ? "var(--primary)" : "transparent", color: at ? "#fff" : "var(--text-muted)", fontFamily: "inherit" }}>
+                          {t.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Itens extraídos (conferência) */}
@@ -1530,6 +1582,7 @@ function ReviewScreen({
   editarPreco,
   onRefinar,
   onEditarTexto,
+  onComandoChat,
   refining,
   goToBriefing,
   goToPDF,
@@ -1545,6 +1598,7 @@ function ReviewScreen({
   editarPreco: (codigo: string, idx: number, valor: string) => void;
   onRefinar: (texto: string) => void;
   onEditarTexto: (texto: string) => void;
+  onComandoChat: (r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null }) => void;
   refining: boolean;
   goToBriefing: () => void;
   goToPDF: () => void;
@@ -1661,6 +1715,9 @@ function ReviewScreen({
             )}
           </button>
         </form>
+
+        {/* Chat de correção pontual — adicional ao Refinar com IA acima */}
+        <EdicaoChat scope={scope} onComando={onComandoChat} />
       </div>
 
       <div className="ies-scroll" style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
@@ -1827,21 +1884,23 @@ function PdfScreen({
             Voltar e editar
           </button>
           {/* Toggle de tipo de proposta — troca o modelo do PDF (render roteia por tipo). */}
-          <div style={{ display: "flex", gap: "2px", background: "#EEF3F8", padding: "3px", borderRadius: "9px", border: "1px solid var(--gray-200)" }} title="Tipo de proposta">
-            {TIPOS.map((t) => {
-              const ativo = scope.tipo === t.value;
-              return (
-                <button
-                  key={t.value}
-                  onClick={() => onTipoChange(t.value)}
-                  title={t.hint}
-                  style={{ padding: "6px 13px", borderRadius: "7px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: ativo ? 600 : 500, background: ativo ? "var(--blue-800)" : "transparent", color: ativo ? "white" : "var(--gray-500)", fontFamily: "inherit", transition: "background .15s ease, color .15s ease" }}
-                >
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
+          {TIPOS_SELECIONAVEIS.length > 1 && (
+            <div style={{ display: "flex", gap: "2px", background: "#EEF3F8", padding: "3px", borderRadius: "9px", border: "1px solid var(--gray-200)" }} title="Tipo de proposta">
+              {TIPOS_SELECIONAVEIS.map((t) => {
+                const ativo = scope.tipo === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    onClick={() => onTipoChange(t.value)}
+                    title={t.hint}
+                    style={{ padding: "6px 13px", borderRadius: "7px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: ativo ? 600 : 500, background: ativo ? "var(--blue-800)" : "transparent", color: ativo ? "white" : "var(--gray-500)", fontFamily: "inherit", transition: "background .15s ease, color .15s ease" }}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           {error && <span style={{ fontSize: "12px", color: "#DC2626" }}>{error}</span>}
