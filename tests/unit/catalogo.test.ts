@@ -8,8 +8,11 @@ import { porPalavraChave } from "@/lib/llm/extrair-pedido";
 describe("catálogo — fonte da verdade dos preços", () => {
   const catalogo = carregarCatalogo();
 
-  it("valida contra o Zod e traz os 9 produtos da Proposta GVA", () => {
-    expect(catalogo.produtos.length).toBe(9);
+  it("valida contra o Zod e traz os 9 produtos ativos da Proposta GVA", () => {
+    // Catálogo cresceu com a base técnica INDEBA/PRATT (fichas técnicas + fotos),
+    // mas os produtos novos entram ativo:false até alguém definir preço real —
+    // preço nunca nasce da IA (constituição §1.2). Os 9 originais continuam ativos.
+    expect(catalogo.produtos.filter((p) => p.ativo).length).toBe(9);
     const plus = catalogo.produtos.find((p) => p.codigo === "PRIMMAX-PLUS");
     expect(plus?.embalagens[0].preco).toBe("130.00"); // valor real do PDF
   });

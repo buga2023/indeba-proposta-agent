@@ -3,7 +3,8 @@ import { carregarCatalogo } from "@/lib/catalogo";
 
 describe("catálogo — fichas dos produtos-piloto", () => {
   const cat = carregarCatalogo();
-  it("mantém 9 produtos", () => expect(cat.produtos.length).toBe(9));
+  it("mantém os 9 produtos-piloto ativos (catálogo maior cresce arquivado)", () =>
+    expect(cat.produtos.filter((p) => p.ativo).length).toBe(9));
   it("PRIMMAX-PLUS tem ficha rica", () => {
     const p = cat.produtos.find((x) => x.codigo === "PRIMMAX-PLUS");
     expect(p?.ficha?.titulo).toBeTruthy();
