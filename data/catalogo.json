@@ -407,7 +407,7 @@
         "circulacao_cip",
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-cip-dtx.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -2076,7 +2076,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/sabonete-dermol-classic.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -2244,7 +2244,7 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/alvaclor-180-alvejante.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -2833,7 +2833,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/soft-s-concentrado.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -2880,7 +2880,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/soft-s.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -3210,7 +3210,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/texspar-dtc.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -4106,7 +4106,7 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/texspar-soft-s-concentrado.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -4236,7 +4236,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/iguatemi.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -4396,7 +4396,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-ht-1-decapante.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -4472,7 +4472,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-ht-2.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -4550,7 +4550,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-ht-4.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -4745,7 +4745,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-ht-9-clor.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -5314,7 +5314,7 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/pratt-clor-2-1.jpg",
+      "imagemPath": "/produtos/pratt-clor-2.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
