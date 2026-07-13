@@ -13,9 +13,10 @@
  */
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo } from "@/lib/contracts";
-import { setPrecoEmbalagem } from "@/lib/proposta-edit";
+import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
+import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, cortarParaOrcamento } from "@/lib/proposta-edit";
 import { AjudaChat } from "@/components/ajuda-chat";
+import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
 import { AdminScreen } from "@/components/admin-screen";
 import { useToast } from "./_app/toast";
@@ -156,7 +157,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
 const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
 const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
 
-type Screen = "dashboard" | "briefing" | "manual" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config";
+type Screen = "dashboard" | "briefing" | "manual" | "importar" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config";
 type TipoProposta = "orcamento" | "implantacao" | "comercial" | "consolidada";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -164,27 +165,21 @@ const TIPOS: { value: TipoProposta; label: string; hint: string }[] = [
   { value: "orcamento", label: "Orçamento", hint: "Tabela ERP enxuta" },
   { value: "implantacao", label: "Implantação", hint: "Express, 1 produto/página" },
   { value: "comercial", label: "Comercial", hint: "Fabricante, institucional" },
-  { value: "consolidada", label: "Consolidada", hint: "IES, 1 página rica/produto" },
+  { value: "consolidada", label: "Proposta de Solução", hint: "IES, 1 página rica/produto" },
 ];
 const tipoLabel = (t: string) => TIPOS.find((x) => x.value === t)?.label ?? "Orçamento";
+// Só "consolidada" é oferecida na criação (pedido do Gustavo, jul/2026) — os outros tipos
+// continuam no código intactos (propostas antigas com esses tipos abrem/exportam normal).
+const TIPOS_SELECIONAVEIS = TIPOS.filter((t) => t.value === "consolidada");
 
 // Itens da command palette (Ctrl/Cmd+K) — só telas reais.
 const CMD_ITEMS: PaletteItem[] = [
   { key: "dashboard", label: "Dashboard" },
   { key: "briefing", label: "Nova proposta" },
   { key: "manual", label: "Proposta manual" },
+  { key: "importar", label: "Importar orçamento" },
   { key: "history", label: "Propostas" },
   { key: "catalog", label: "Catálogo" },
-  { key: "prospeccao", label: "Prospecção" },
-  { key: "instagram", label: "Posts Instagram" },
-  { key: "financeiro", label: "Financeiro" },
-  { key: "cobranca", label: "Cobrança" },
-  { key: "compras", label: "Compras" },
-  { key: "fiscal", label: "Fiscal / NF-e" },
-  { key: "contabil", label: "Contábil" },
-  { key: "contrato", label: "Contrato" },
-  { key: "atendimento", label: "Atendimento" },
-  { key: "chamados", label: "Chamados" },
   { key: "config", label: "Configurações" },
 ];
 
@@ -207,7 +202,7 @@ export default function Home() {
   const [scope, setScope] = useState<PropostaScope | null>(null);
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
 
-  const [tipoProposta, setTipoProposta] = useState<TipoProposta>("orcamento");
+  const [tipoProposta, setTipoProposta] = useState<TipoProposta>("consolidada");
   const [catFilter, setCatFilter] = useState("Todos");
   const [catalogo, setCatalogo] = useState<Produto[] | null>(null);
   const [catalogoErro, setCatalogoErro] = useState<string | null>(null);
@@ -346,6 +341,67 @@ export default function Home() {
     setScope((s) => (s ? { ...s, textoApresentacao: { conteudo: novo, procedencia: "MANUAL" } } : s));
   }
 
+  // Aplicação determinística do chat de correção (EdicaoChat): a IA já classificou a
+  // ação e resolveu o item/campo alvo (rota /api/comando-edicao); aqui só chamamos os
+  // MESMOS setters que os controles manuais da Revisão usam. Preço/quantidade sempre
+  // do `numero` extraído por regex da mensagem original — nunca de um campo da IA.
+  function aplicarComandoChat(r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null }): string | void {
+    const { comando, numero, itemResolvido, itensSelecionados } = r;
+    switch (comando.acao) {
+      case "alterar_razao_social":
+        if (comando.valorTexto) setScope((s) => (s ? setClienteCampo(s, "razaoSocial", comando.valorTexto!) : s));
+        break;
+      case "alterar_cnpj":
+        if (comando.valorTexto) setScope((s) => (s ? setClienteCampo(s, "cnpj", comando.valorTexto!) : s));
+        break;
+      case "alterar_segmento":
+        if (comando.valorTexto) setScope((s) => (s ? setClienteCampo(s, "segmento", comando.valorTexto!) : s));
+        break;
+      case "alterar_responsavel_cliente":
+        if (comando.valorTexto) setScope((s) => (s ? setClienteCampo(s, "responsavel", comando.valorTexto!) : s));
+        break;
+      case "alterar_quantidade_item":
+        if (comando.codigoItem && numero) setScope((s) => (s ? setQuantidadeAbsoluta(s, comando.codigoItem!, Number(numero.replace(",", "."))) : s));
+        break;
+      case "remover_item":
+        if (comando.codigoItem) toggleProduct(comando.codigoItem);
+        break;
+      case "adicionar_item_catalogo":
+        if (itemResolvido) setScope((s) => (s ? { ...s, itens: [...s.itens, itemResolvido] } : s));
+        break;
+      case "alterar_preco_item":
+        if (comando.codigoItem && numero) editarPreco(comando.codigoItem, 0, numero);
+        break;
+      case "alterar_condicao_comercial":
+        if (comando.campoCondicao && comando.valorTexto) setScope((s) => (s ? setCondicaoComercial(s, comando.campoCondicao!, comando.valorTexto!) : s));
+        break;
+      case "limitar_orcamento": {
+        if (!numero) break;
+        const teto = Number(numero.replace(",", "."));
+        const { codigosRemover, totalFinal } = cortarParaOrcamento(
+          includedItems.map((it) => ({ codigo: it.codigo, precoUnit: precoUnit(it), quantidade: it.quantidade })),
+          total,
+          teto,
+        );
+        if (codigosRemover.length === 0) {
+          return total <= teto ? `Já está dentro do teto de R$ ${numero} (total ${fmt(total)}).` : `Não dá pra cortar mais sem esvaziar a proposta — total atual ${fmt(total)}.`;
+        }
+        const nomes = codigosRemover.map((c) => includedItems.find((it) => it.codigo === c)?.nome ?? c);
+        codigosRemover.forEach(toggleProduct);
+        return `Removi ${nomes.map((n) => `"${n}"`).join(", ")} pra caber no teto — total agora ${fmt(totalFinal)}.`;
+      }
+      case "selecionar_por_necessidade":
+        if (itensSelecionados && itensSelecionados.length > 0) {
+          setScope((s) => (s ? { ...s, itens: itensSelecionados } : s));
+          setExcluded(new Set());
+        }
+        break;
+      case "nao_entendi":
+      default:
+        break;
+    }
+  }
+
   // Refino por prompt: anexa o ajuste ao briefing e reprocessa pelo MESMO /api/montar
   // (mesmo cliente/tipo). Backbone determinístico intacto — preço continua do catálogo.
   async function refinarProposta(ajuste: string) {
@@ -358,7 +414,7 @@ export default function Home() {
       const r = await fetch("/api/montar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ briefing: novoBriefing, razaoSocial: scope.cliente.razaoSocial, cnpj: scope.cliente.cnpj, segmento: scope.cliente.segmento, tipo: scope.tipo }),
+        body: JSON.stringify({ briefing: novoBriefing, razaoSocial: scope.cliente.razaoSocial, cnpj: scope.cliente.cnpj, segmento: scope.cliente.segmento, responsavel: scope.cliente.responsavel, tipo: scope.tipo }),
       });
       if (!r.ok) throw new Error(`Falha ao refinar (${r.status}).`);
       const data = await r.json();
@@ -415,20 +471,6 @@ export default function Home() {
     persistirProposta(novo);
   }
 
-  // Gerar contrato a partir de uma proposta que já existe: carrega o scope e abre o agente
-  // de contrato (que gera a partir desse scope — preço/itens vêm do registro, não do modelo).
-  async function contratoDeProposta(id: string) {
-    try {
-      const r = await fetch(`/api/propostas/${id}`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const reg = await r.json();
-      setScope(reg.scope as PropostaScope);
-      setScreen("contrato");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao abrir o contrato.");
-    }
-  }
-
   // Muda o status comercial. Otimista: atualiza a lista local; se falhar, recarrega do servidor.
   async function mudarStatus(id: string, status: StatusProposta) {
     setPropostas((ps) => (ps ? ps.map((p) => (p.id === id ? { ...p, status } : p)) : ps));
@@ -446,6 +488,10 @@ export default function Home() {
 
   const includedItems = scope ? scope.itens.filter((it) => !excluded.has(it.codigo)) : [];
   const total = includedItems.reduce((sum, it) => sum + precoUnit(it) * it.quantidade, 0);
+  // Contato ausente: só aviso visível (banners abaixo/na Revisão) — NÃO bloqueia mais a
+  // geração (pedido explícito). `contatoAusente` continua calculado só pra alimentar os avisos.
+  const contatoAusente =
+    !!scope && scope.tipo === "consolidada" && !scope.consolidada?.contato?.whatsapp && !scope.consolidada?.contato?.emailConsultor;
 
   async function baixarPdf() {
     if (!scope || downloading) return;
@@ -462,7 +508,10 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(efetivo),
       });
-      if (!r.ok) throw new Error(`Falha ao gerar o PDF (${r.status}).`);
+      if (!r.ok) {
+        const corpo = await r.json().catch(() => null);
+        throw new Error(corpo?.erro ?? `Falha ao gerar o PDF (${r.status}).`);
+      }
       const blob = await r.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -564,6 +613,13 @@ export default function Home() {
             </svg>
             Proposta manual
           </Hoverable>
+          <Hoverable base={navItemStyle(["importar"])} hover={navHover} onClick={() => setScreen("importar")}>
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8.5 10.5V3M5.5 6l3-3 3 3" />
+              <path d="M3 11v2a1 1 0 001 1h9a1 1 0 001-1v-2" />
+            </svg>
+            Importar orçamento
+          </Hoverable>
           <Hoverable base={navItemStyle(["history"])} hover={navHover} onClick={() => setScreen("history")}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
               <path d="M3 4.5h11M3 8.5h11M3 12.5h7" />
@@ -578,82 +634,6 @@ export default function Home() {
               <rect x="9.5" y="9.5" width="5" height="5" rx="1" />
             </svg>
             Catálogo
-          </Hoverable>
-          <Hoverable base={navItemStyle(["prospeccao"])} hover={navHover} onClick={() => setScreen("prospeccao")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="7" cy="7" r="4.25" />
-              <path d="M10.2 10.2l4 4" />
-            </svg>
-            Prospecção
-          </Hoverable>
-          <Hoverable base={navItemStyle(["instagram"])} hover={navHover} onClick={() => setScreen("instagram")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2.5" y="2.5" width="12" height="12" rx="3.5" />
-              <circle cx="8.5" cy="8.5" r="3" />
-              <circle cx="12" cy="5" r="0.6" fill="currentColor" stroke="none" />
-            </svg>
-            Posts Instagram
-          </Hoverable>
-          <div className="ies-side-text" style={navSection}>Operações</div>
-          <Hoverable base={navItemStyle(["financeiro"])} hover={navHover} onClick={() => setScreen("financeiro")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2.5 14.5h12" />
-              <rect x="3.5" y="8" width="2.5" height="5" rx="0.5" />
-              <rect x="7.5" y="5" width="2.5" height="8" rx="0.5" />
-              <rect x="11.5" y="2.5" width="2.5" height="10.5" rx="0.5" />
-            </svg>
-            Financeiro
-          </Hoverable>
-          <Hoverable base={navItemStyle(["cobranca"])} hover={navHover} onClick={() => setScreen("cobranca")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="8.5" cy="8.5" r="6" />
-              <path d="M8.5 5v3.5l2.2 1.3" />
-            </svg>
-            Cobrança
-          </Hoverable>
-          <Hoverable base={navItemStyle(["compras"])} hover={navHover} onClick={() => setScreen("compras")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2.5 3h2l1.5 8h6l1.5-5.5h-9" />
-              <circle cx="7" cy="14" r="1" />
-              <circle cx="12" cy="14" r="1" />
-            </svg>
-            Compras
-          </Hoverable>
-          <Hoverable base={navItemStyle(["fiscal"])} hover={navHover} onClick={() => setScreen("fiscal")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 2.5h6l3 3v9H4z" />
-              <path d="M6 8h5M6 10.5h5M6 5.5h2" />
-            </svg>
-            Fiscal
-          </Hoverable>
-          <Hoverable base={navItemStyle(["contabil"])} hover={navHover} onClick={() => setScreen("contabil")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 3.5h11v10H3z" />
-              <path d="M8.5 3.5v10M3 8.5h11" />
-            </svg>
-            Contábil
-          </Hoverable>
-          <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => setScreen("contrato")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 2.5h6l3 3v9H4z" />
-              <path d="M10 2.5v3h3" />
-              <path d="M6 9h5M6 11.5h5" />
-            </svg>
-            Contrato
-          </Hoverable>
-          <Hoverable base={navItemStyle(["atendimento"])} hover={navHover} onClick={() => setScreen("atendimento")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 4.5h11v7H8l-3 2.5V11.5H3z" />
-              <path d="M5.5 7h6M5.5 9h4" />
-            </svg>
-            Atendimento
-          </Hoverable>
-          <Hoverable base={navItemStyle(["chamados"])} hover={navHover} onClick={() => setScreen("chamados")}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8.5 2.5a3.5 3.5 0 0 0-3.5 3.5c0 3-1.5 4-1.5 4h10s-1.5-1-1.5-4a3.5 3.5 0 0 0-3.5-3.5z" />
-              <path d="M7.3 14a1.3 1.3 0 0 0 2.4 0" />
-            </svg>
-            Chamados
           </Hoverable>
 
           <div className="ies-side-text" style={navSection}>Sistema</div>
@@ -693,12 +673,14 @@ export default function Home() {
           <BriefingScreen {...{ quickLoading, briefingText, setBriefingText, startGeneration, textareaRef, error, tipoProposta, setTipoProposta }} />
         )}
         {screen === "manual" && <ManualScreen onMontar={aplicarScopeManual} />}
+        {screen === "importar" && <ImportarOrcamentoScreen onMontar={aplicarScopeManual} />}
         {screen === "loading" && <LoadingScreen loadingStep={loadingStep} />}
         {screen === "review" && scope && (
           <ReviewScreen
             {...{ reviewVariant, setReviewVariant, scope, excluded, includedItems, total, toggleProduct, changeQty, editarPreco }}
             onRefinar={refinarProposta}
             onEditarTexto={editarTexto}
+            onComandoChat={aplicarComandoChat}
             refining={refining}
             goToBriefing={novaProposta}
             goToPDF={() => setScreen("pdf")}
@@ -711,6 +693,7 @@ export default function Home() {
             total={total}
             downloading={downloading}
             baixarPdf={baixarPdf}
+            contatoAusente={contatoAusente}
             goToReview={() => setScreen("review")}
             error={error}
             onTipoChange={(t) =>
@@ -725,7 +708,6 @@ export default function Home() {
             erro={propostasErro}
             goToBriefing={novaProposta}
             onReabrir={reabrirProposta}
-            onContrato={contratoDeProposta}
             onStatus={mudarStatus}
           />
         )}
@@ -833,11 +815,8 @@ function DashboardScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
               <Hoverable onClick={() => setScreen("briefing")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 18px", borderRadius: "12px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600, boxShadow: "var(--shadow-accent)" }} hover={{ background: "var(--accent-hover)" }}>
                 <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.8} strokeLinecap="round"><path d="M8.5 3v11M3 8.5h11" /></svg>Nova proposta
               </Hoverable>
-              <Hoverable onClick={() => setScreen("prospeccao")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 17px", borderRadius: "12px", border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600 }} hover={{ background: "rgba(255,255,255,.16)" }}>
-                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="7" r="4.25" /><path d="M10.2 10.2l4 4" /></svg>Prospectar
-              </Hoverable>
-              <Hoverable onClick={() => setScreen("instagram")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 17px", borderRadius: "12px", border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600 }} hover={{ background: "rgba(255,255,255,.16)" }}>
-                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="3.5" /><circle cx="8.5" cy="8.5" r="3" /></svg>Gerar posts
+              <Hoverable onClick={() => setScreen("manual")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 17px", borderRadius: "12px", border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600 }} hover={{ background: "rgba(255,255,255,.16)" }}>
+                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="2" /><path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" /></svg>Proposta manual
               </Hoverable>
             </div>
           </div>
@@ -945,7 +924,6 @@ function DashboardScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
               </span>
             </div>
             <div style={{ fontSize: "21px", fontWeight: 800, color: "var(--info)", fontFamily: "var(--font-mono)" }}>{fmt(valorEmNegociacao)}</div>
-            <Hoverable onClick={() => setScreen("cobranca")} base={{ marginTop: "12px", width: "100%", height: "36px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", color: "var(--text-body)", fontWeight: 600, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center" }} hover={{ background: "var(--surface-muted)" }}>Abrir régua de cobrança</Hoverable>
           </div>
         </div>
       </div>
@@ -1036,25 +1014,27 @@ function BriefingScreen({
       <div style={{ position: "sticky", bottom: 0, padding: "16px 28px 28px", background: "linear-gradient(to top,var(--gray-50) 65%,transparent)", flex: "none" }}>
         <div style={{ maxWidth: "680px", margin: "0 auto" }}>
           {/* Tipo de proposta → define a estrutura do PDF */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "12px", color: "var(--gray-400)", fontWeight: 500 }}>Tipo de proposta:</span>
-            <div style={{ display: "flex", background: "white", border: "1px solid var(--gray-200)", borderRadius: "999px", padding: "3px", gap: "2px", boxShadow: "var(--shadow-sm)" }}>
-              {TIPOS.map((t) => {
-                const ativo = tipoProposta === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    onClick={() => setTipoProposta(t.value)}
-                    title={t.hint}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "5px 14px", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontFamily: "var(--font-sans), sans-serif", lineHeight: 1.1 }}
-                  >
-                    <span style={{ fontSize: "13px", fontWeight: ativo ? 700 : 500 }}>{t.label}</span>
-                    <span style={{ fontSize: "10px", color: ativo ? "var(--blue-500)" : "var(--gray-400)", marginTop: "1px" }}>{t.hint}</span>
-                  </button>
-                );
-              })}
+          {TIPOS_SELECIONAVEIS.length > 1 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "12px", color: "var(--gray-400)", fontWeight: 500 }}>Tipo de proposta:</span>
+              <div style={{ display: "flex", background: "white", border: "1px solid var(--gray-200)", borderRadius: "999px", padding: "3px", gap: "2px", boxShadow: "var(--shadow-sm)" }}>
+                {TIPOS_SELECIONAVEIS.map((t) => {
+                  const ativo = tipoProposta === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      onClick={() => setTipoProposta(t.value)}
+                      title={t.hint}
+                      style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "5px 14px", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontFamily: "var(--font-sans), sans-serif", lineHeight: 1.1 }}
+                    >
+                      <span style={{ fontSize: "13px", fontWeight: ativo ? 700 : 500 }}>{t.label}</span>
+                      <span style={{ fontSize: "10px", color: ativo ? "var(--blue-500)" : "var(--gray-400)", marginTop: "1px" }}>{t.hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
           <div style={{ background: "white", border: "1.5px solid var(--gray-200)", borderRadius: "16px", boxShadow: "var(--shadow-md)", display: "flex", alignItems: "flex-end", padding: "10px 10px 10px 16px", gap: "8px" }}>
             <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", padding: "6px", flex: "none", display: "flex" }} title="Anexar (em breve)">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -1120,8 +1100,10 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
   const [erroCat, setErroCat] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [razaoSocial, setRazaoSocial] = useState("");
+  const [cnpj, setCnpj] = useState("");
   const [segmento, setSegmento] = useState("");
-  const [tipo, setTipo] = useState<TipoProposta>("orcamento");
+  const [responsavel, setResponsavel] = useState("");
+  const [tipo, setTipo] = useState<TipoProposta>("consolidada");
   const [itens, setItens] = useState<Record<string, number>>({}); // codigo → quantidade
   // Itens próprios (fora do catálogo): preço digitado por humano → procedência MANUAL.
   const [custom, setCustom] = useState<{ id: number; nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; qtd: number }[]>([]);
@@ -1201,7 +1183,7 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
     try {
       const body = {
         tipo,
-        cliente: { razaoSocial: razaoSocial.trim(), cnpj: null, segmento: segmento.trim() || null },
+        cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmento.trim() || null, responsavel: responsavel.trim() || null },
         itens: [
           ...selCat.map((x) => ({ codigo: x.produto.codigo, quantidade: x.qtd })),
           ...custom.map((c) => ({ nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: null, custoDiluido: null }], quantidade: c.qtd })),
@@ -1238,23 +1220,33 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
             <div style={campoLabel}>Razão social *</div>
             <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Ex.: Laticínio São João Ltda" style={campoInput} />
           </label>
+          <label style={{ flex: "1 1 180px", minWidth: 0 }}>
+            <div style={campoLabel}>CNPJ</div>
+            <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0001-00" style={campoInput} />
+          </label>
           <label style={{ flex: "1 1 200px", minWidth: 0 }}>
             <div style={campoLabel}>Segmento</div>
             <input value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="Ex.: Laticínio" style={campoInput} />
           </label>
-          <div>
-            <div style={campoLabel}>Tipo</div>
-            <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
-              {TIPOS.map((t) => {
-                const at = tipo === t.value;
-                return (
-                  <button key={t.value} onClick={() => setTipo(t.value)} title={t.hint} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: at ? 600 : 500, background: at ? "var(--primary)" : "transparent", color: at ? "#fff" : "var(--text-muted)", fontFamily: "inherit" }}>
-                    {t.label}
-                  </button>
-                );
-              })}
+          <label style={{ flex: "1 1 200px", minWidth: 0 }}>
+            <div style={campoLabel}>Responsável</div>
+            <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Quem recebe a proposta" style={campoInput} />
+          </label>
+          {TIPOS_SELECIONAVEIS.length > 1 && (
+            <div>
+              <div style={campoLabel}>Tipo</div>
+              <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
+                {TIPOS_SELECIONAVEIS.map((t) => {
+                  const at = tipo === t.value;
+                  return (
+                    <button key={t.value} onClick={() => setTipo(t.value)} title={t.hint} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: at ? 600 : 500, background: at ? "var(--primary)" : "transparent", color: at ? "#fff" : "var(--text-muted)", fontFamily: "inherit" }}>
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {erro && <div style={{ padding: "11px 14px", background: "var(--danger-soft)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
@@ -1346,6 +1338,198 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
   );
 }
 
+/* ═══════════════════════ TELA: IMPORTAR ORÇAMENTO ═══════════════════════ */
+
+// Importa um orçamento pronto (PDF do ERP): extração de texto determinística +
+// IA estruturando com GUARDA de preço (só entra preço que consta no documento;
+// o que falha aparece em "rejeitados"). O vendedor confere e edita tudo aqui e
+// a montagem converge no MESMO /api/montar-estruturado da Proposta manual.
+type ItemImportado = { nome: string; quantidade: number; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; codigoCatalogo: string | null; nomeCatalogo: string | null };
+
+function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [importando, setImportando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [conferindo, setConferindo] = useState(false);
+  const [rejeitados, setRejeitados] = useState<ItemRejeitado[]>([]);
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [segmento, setSegmento] = useState("");
+  const [responsavel, setResponsavel] = useState("");
+  const [tipo, setTipo] = useState<TipoProposta>("consolidada");
+  const [itens, setItens] = useState<ItemImportado[]>([]);
+  const [montando, setMontando] = useState(false);
+
+  const campoLabel: CSSProperties = { fontSize: "11.5px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "5px" };
+  const campoInput: CSSProperties = { width: "100%", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", fontSize: "13.5px", color: "var(--text-strong)", fontFamily: "var(--font-sans)", outline: "none" };
+
+  async function importar() {
+    if (!arquivo || importando) return;
+    setImportando(true);
+    setErro(null);
+    try {
+      const form = new FormData();
+      form.append("arquivo", arquivo);
+      const r = await fetch("/api/orcamento/importar", { method: "POST", body: form });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d?.erro || `Falha ao importar (${r.status}).`);
+      const res = d as OrcamentoImportResponse;
+      setRazaoSocial(res.extraido.cliente.razaoSocial ?? "");
+      setCnpj(res.extraido.cliente.cnpj ?? "");
+      setSegmento(res.extraido.cliente.segmento ?? "");
+      setResponsavel(res.extraido.cliente.responsavel ?? "");
+      setItens(res.extraido.itens.map((it) => ({ nome: it.nome, quantidade: it.quantidade, tamanho: it.tamanho == null ? "" : String(it.tamanho), unidade: it.unidade ?? "un", preco: it.preco, codigoCatalogo: it.codigoCatalogo, nomeCatalogo: it.nomeCatalogo })));
+      setRejeitados(res.rejeitados);
+      setConferindo(true);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao importar o orçamento.");
+    } finally {
+      setImportando(false);
+    }
+  }
+
+  async function montar() {
+    if (montando) return;
+    if (!razaoSocial.trim()) { setErro("Informe a razão social do cliente."); return; }
+    if (itens.length === 0) { setErro("Nenhum item para montar — confira o orçamento."); return; }
+    const invalido = itens.find((it) => !it.nome.trim() || !/^\d+([.,]\d{1,2})?$/.test(it.preco.trim()));
+    if (invalido) { setErro(`Item "${invalido.nome || "sem nome"}": preço inválido (use ex.: 130,00).`); return; }
+    setMontando(true);
+    setErro(null);
+    try {
+      const body = {
+        tipo,
+        cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmento.trim() || null, responsavel: responsavel.trim() || null },
+        itens: itens.map((it) => ({
+          // codigo (quando casou com o catálogo) → foto/descrição do catálogo no PDF;
+          // as embalagens SEMPRE vão junto: o preço autoritativo é o do orçamento.
+          ...(it.codigoCatalogo ? { codigo: it.codigoCatalogo } : {}),
+          nome: it.nome.trim(),
+          embalagens: [{ tamanho: Number(it.tamanho) > 0 ? Number(it.tamanho) : 1, unidade: it.unidade, preco: Number(it.preco.replace(",", ".")).toFixed(2), diluicaoMax: null, custoDiluido: null }],
+          quantidade: it.quantidade,
+        })),
+      };
+      const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (!r.ok) throw new Error(`Falha ao montar a proposta (${r.status}).`);
+      const scope = await r.json();
+      if (!scope || !Array.isArray(scope.itens)) throw new Error("Resposta inesperada do servidor.");
+      onMontar(scope as PropostaScope);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao montar a proposta.");
+    } finally {
+      setMontando(false);
+    }
+  }
+
+  const setItem = (i: number, patch: Partial<ItemImportado>) => setItens((xs) => xs.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+
+  return (
+    <div style={{ background: "var(--background)", minHeight: "100vh" }}>
+      <ScreenHead
+        title="Importar orçamento"
+        sub="PDF do orçamento → proposta no padrão Indeba — preço sai do documento"
+        right={
+          conferindo ? (
+            <Hoverable onClick={montar} base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 18px", borderRadius: "10px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: 600, boxShadow: "var(--shadow-accent)", opacity: montando ? 0.7 : 1 }} hover={{ background: "var(--accent-hover)" }}>
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M8 3l5 5-5 5" /></svg>
+              {montando ? "Montando…" : "Montar proposta"}
+            </Hoverable>
+          ) : undefined
+        }
+      />
+      <div style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "980px" }}>
+        {/* Upload */}
+        <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", display: "flex", flexWrap: "wrap", gap: "14px", alignItems: "center" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", borderRadius: "10px", border: "1px dashed var(--border-strong)", background: "var(--surface-muted)", cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "var(--text-body)" }}>
+            <svg width="16" height="16" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 11V3.5M5.5 6.5l3-3 3 3" /><path d="M3 11.5v2a1 1 0 001 1h9a1 1 0 001-1v-2" /></svg>
+            {arquivo ? arquivo.name : "Escolher arquivo (PDF, DOCX ou TXT)"}
+            <input type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }} onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} />
+          </label>
+          <Hoverable onClick={importar} base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 18px", borderRadius: "10px", border: "none", background: arquivo ? "var(--primary)" : "var(--surface-muted)", color: arquivo ? "#fff" : "var(--text-subtle)", cursor: arquivo ? "pointer" : "default", fontSize: "13px", fontWeight: 600, opacity: importando ? 0.7 : 1 }} hover={arquivo ? { background: "var(--primary-hover)" } : {}}>
+            {importando ? "Extraindo…" : "Extrair dados"}
+          </Hoverable>
+          <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>A IA estrutura o documento; preços só entram se constarem no texto. Você confere tudo antes de montar.</span>
+        </div>
+
+        {erro && <div style={{ background: "var(--danger-soft, #FEE2E2)", border: "1px solid #fca5a5", color: "#b91c1c", borderRadius: "10px", padding: "10px 14px", fontSize: "13px" }}>{erro}</div>}
+
+        {conferindo && rejeitados.length > 0 && (
+          <div style={{ background: "#FFF7ED", border: "1px solid #fdba74", color: "#9a3412", borderRadius: "10px", padding: "10px 14px", fontSize: "13px" }}>
+            <b>{rejeitados.length} {rejeitados.length === 1 ? "item ficou de fora" : "itens ficaram de fora"}</b> — preço não confere com o documento: {rejeitados.map((r) => `${r.nome} (${r.preco})`).join(", ")}. Confira o PDF e adicione manualmente se precisar.
+          </div>
+        )}
+
+        {conferindo && (
+          <>
+            {/* Cliente + tipo */}
+            <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "flex-end" }}>
+              <label style={{ flex: "1 1 220px", minWidth: 0 }}>
+                <div style={campoLabel}>Razão social *</div>
+                <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Ex.: Laticínio São João Ltda" style={campoInput} />
+              </label>
+              <label style={{ flex: "1 1 160px", minWidth: 0 }}>
+                <div style={campoLabel}>CNPJ</div>
+                <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" style={campoInput} />
+              </label>
+              <label style={{ flex: "1 1 150px", minWidth: 0 }}>
+                <div style={campoLabel}>Segmento</div>
+                <input value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="Ex.: Laticínio" style={campoInput} />
+              </label>
+              <label style={{ flex: "1 1 170px", minWidth: 0 }}>
+                <div style={campoLabel}>Responsável</div>
+                <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Quem recebe a proposta" style={campoInput} />
+              </label>
+              {TIPOS_SELECIONAVEIS.length > 1 && (
+                <div>
+                  <div style={campoLabel}>Tipo</div>
+                  <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
+                    {TIPOS_SELECIONAVEIS.map((t) => {
+                      const at = tipo === t.value;
+                      return (
+                        <button key={t.value} onClick={() => setTipo(t.value)} title={t.hint} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: at ? 600 : 500, background: at ? "var(--primary)" : "transparent", color: at ? "#fff" : "var(--text-muted)", fontFamily: "inherit" }}>
+                          {t.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Itens extraídos (conferência) */}
+            <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)" }}>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)", marginBottom: "12px" }}>Itens do orçamento <span style={{ fontWeight: 500, color: "var(--text-subtle)", fontSize: "12px" }}>— confira nome, embalagem e preço</span></div>
+              <div style={{ display: "grid", gridTemplateColumns: "2.2fr 70px 90px 80px 120px 34px", gap: "8px", fontSize: "11px", fontWeight: 700, color: "var(--text-subtle)", textTransform: "uppercase", letterSpacing: ".04em", padding: "0 2px 6px" }}>
+                <span>Item</span><span>Qtd</span><span>Tamanho</span><span>Unid.</span><span>Preço (R$)</span><span />
+              </div>
+              {itens.map((it, i) => (
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "2.2fr 70px 90px 80px 120px 34px", gap: "8px", alignItems: "center", padding: "5px 0" }}>
+                  <div style={{ minWidth: 0 }}>
+                    <input value={it.nome} onChange={(e) => setItem(i, { nome: e.target.value })} style={campoInput} />
+                    {it.nomeCatalogo && (
+                      <div style={{ marginTop: "3px", display: "inline-flex", alignItems: "center", gap: "5px", padding: "1px 8px", borderRadius: "999px", background: "var(--info-soft)", color: "var(--primary)", fontSize: "10px", fontWeight: 700, letterSpacing: ".04em" }} title="Foto e descrição virão do catálogo; o preço segue o do orçamento">
+                        CATÁLOGO · {it.nomeCatalogo}
+                      </div>
+                    )}
+                  </div>
+                  <input value={String(it.quantidade)} onChange={(e) => setItem(i, { quantidade: Math.max(1, Math.floor(Number(e.target.value) || 1)) })} style={{ ...campoInput, textAlign: "center", padding: "0 6px" }} />
+                  <input value={it.tamanho} onChange={(e) => setItem(i, { tamanho: e.target.value })} placeholder="ex.: 5" style={{ ...campoInput, textAlign: "center", padding: "0 6px" }} />
+                  <select value={it.unidade} onChange={(e) => setItem(i, { unidade: e.target.value as ItemImportado["unidade"] })} style={{ ...campoInput, padding: "0 6px" }}>
+                    {(["L", "kg", "un", "ml"] as const).map((u) => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                  <input value={it.preco} onChange={(e) => setItem(i, { preco: e.target.value })} style={{ ...campoInput, textAlign: "right", fontFamily: "var(--font-mono)" }} />
+                  <button onClick={() => setItens((xs) => xs.filter((_, j) => j !== i))} title="Remover" style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--surface)", color: "var(--text-subtle)", cursor: "pointer", fontSize: "15px", lineHeight: 1 }}>×</button>
+                </div>
+              ))}
+              {itens.length === 0 && <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "8px 0" }}>Nenhum item aprovado pela guarda de preço — confira o documento.</div>}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ═══════════════════════ TELA: LOADING ═══════════════════════ */
 
 function LoadingScreen({ loadingStep }: { loadingStep: number }) {
@@ -1427,6 +1611,7 @@ function ReviewScreen({
   editarPreco,
   onRefinar,
   onEditarTexto,
+  onComandoChat,
   refining,
   goToBriefing,
   goToPDF,
@@ -1442,6 +1627,7 @@ function ReviewScreen({
   editarPreco: (codigo: string, idx: number, valor: string) => void;
   onRefinar: (texto: string) => void;
   onEditarTexto: (texto: string) => void;
+  onComandoChat: (r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null }) => string | void;
   refining: boolean;
   goToBriefing: () => void;
   goToPDF: () => void;
@@ -1511,6 +1697,14 @@ function ReviewScreen({
         }
       />
 
+      {/* Aviso: Proposta de Solução sem WhatsApp/e-mail configurado — o cliente não teria
+          como responder. Só aviso, NÃO bloqueia a geração (pedido explícito). */}
+      {scope.tipo === "consolidada" && !scope.consolidada?.contato?.whatsapp && !scope.consolidada?.contato?.emailConsultor && (
+        <div style={{ margin: "14px 28px 0", padding: "11px 14px", background: "var(--danger-soft, #FEF2F2)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>
+          Esta proposta vai sair sem WhatsApp nem e-mail de contato — o cliente não vai ter como responder. Configure <code>INDEBA_WHATSAPP</code>/<code>INDEBA_CONSULTOR_EMAIL</code> no ambiente quando puder.
+        </div>
+      )}
+
       {/* Edição e refino pelo funcionário (antes do PDF final): texto editável + refino por IA */}
       <div style={{ flex: "none", padding: "14px 28px 0", display: "flex", flexDirection: "column", gap: "10px" }}>
         <div style={{ background: "white", border: "1px solid var(--gray-200)", borderLeft: "3px solid var(--blue-500)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
@@ -1558,6 +1752,9 @@ function ReviewScreen({
             )}
           </button>
         </form>
+
+        {/* Chat de correção pontual — adicional ao Refinar com IA acima */}
+        <EdicaoChat scope={scope} onComando={onComandoChat} />
       </div>
 
       <div className="ies-scroll" style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
@@ -1697,6 +1894,7 @@ function PdfScreen({
   total,
   downloading,
   baixarPdf,
+  contatoAusente,
   goToReview,
   error,
   onTipoChange,
@@ -1706,6 +1904,7 @@ function PdfScreen({
   total: number;
   downloading: boolean;
   baixarPdf: () => void;
+  contatoAusente: boolean;
   goToReview: () => void;
   error: string | null;
   onTipoChange: (t: TipoProposta) => void;
@@ -1724,24 +1923,26 @@ function PdfScreen({
             Voltar e editar
           </button>
           {/* Toggle de tipo de proposta — troca o modelo do PDF (render roteia por tipo). */}
-          <div style={{ display: "flex", gap: "2px", background: "#EEF3F8", padding: "3px", borderRadius: "9px", border: "1px solid var(--gray-200)" }} title="Tipo de proposta">
-            {TIPOS.map((t) => {
-              const ativo = scope.tipo === t.value;
-              return (
-                <button
-                  key={t.value}
-                  onClick={() => onTipoChange(t.value)}
-                  title={t.hint}
-                  style={{ padding: "6px 13px", borderRadius: "7px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: ativo ? 600 : 500, background: ativo ? "var(--blue-800)" : "transparent", color: ativo ? "white" : "var(--gray-500)", fontFamily: "inherit", transition: "background .15s ease, color .15s ease" }}
-                >
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
+          {TIPOS_SELECIONAVEIS.length > 1 && (
+            <div style={{ display: "flex", gap: "2px", background: "#EEF3F8", padding: "3px", borderRadius: "9px", border: "1px solid var(--gray-200)" }} title="Tipo de proposta">
+              {TIPOS_SELECIONAVEIS.map((t) => {
+                const ativo = scope.tipo === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    onClick={() => onTipoChange(t.value)}
+                    title={t.hint}
+                    style={{ padding: "6px 13px", borderRadius: "7px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: ativo ? 600 : 500, background: ativo ? "var(--blue-800)" : "transparent", color: ativo ? "white" : "var(--gray-500)", fontFamily: "inherit", transition: "background .15s ease, color .15s ease" }}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          {error && <span style={{ fontSize: "12px", color: "#DC2626" }}>{error}</span>}
+          {error && <span style={{ fontSize: "12px", color: "#DC2626", maxWidth: "260px" }}>{error}</span>}
           <Hoverable
             base={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", borderWidth: "1px", borderStyle: "solid", borderColor: "var(--gray-200)", background: "white", cursor: downloading ? "wait" : "pointer", fontSize: "14px", fontWeight: 500, color: "var(--gray-900)", opacity: downloading ? 0.7 : 1 }}
             hover={downloading ? {} : { borderColor: "var(--blue-500)", color: "var(--blue-500)" }}
@@ -1770,6 +1971,12 @@ function PdfScreen({
           </Hoverable>
         </div>
       </div>
+
+      {contatoAusente && (
+        <div style={{ maxWidth: "820px", margin: "0 auto 16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>
+          Esta Proposta de Solução não tem WhatsApp nem e-mail de contato configurado — o cliente não teria como responder. Configure <code>INDEBA_WHATSAPP</code>/<code>INDEBA_CONSULTOR_EMAIL</code> no ambiente quando puder (não bloqueia a geração).
+        </div>
+      )}
 
       {/* Documento A4 — espelha o template do servidor por tipo (§4: o que vê = o que sai) */}
       {scope.tipo === "orcamento" && (
@@ -1803,6 +2010,7 @@ function PdfScreen({
             <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--blue-800)" }}>{scope.cliente.razaoSocial}</div>
             {scope.cliente.cnpj && <div style={{ fontSize: "10.5px", color: "var(--gray-500)", marginTop: "3px" }}>CNPJ: {scope.cliente.cnpj}</div>}
             {scope.cliente.segmento && <div style={{ fontSize: "10.5px", color: "var(--gray-500)", marginTop: "3px", textTransform: "capitalize" }}>{scope.cliente.segmento.replace(/_/g, " ")}</div>}
+            {scope.cliente.responsavel && <div style={{ fontSize: "10.5px", color: "var(--gray-500)", marginTop: "3px" }}>A/C: {scope.cliente.responsavel}</div>}
           </div>
           <div style={{ width: "210px", flex: "none", borderLeft: "1px solid var(--gray-200)", paddingLeft: "16px" }}>
             <div style={{ marginBottom: "8px" }}>
@@ -1870,6 +2078,7 @@ function PdfScreen({
 
       {scope.tipo === "implantacao" && <ImplantacaoPreview scope={scope} itens={includedItems} />}
       {scope.tipo === "comercial" && <ComercialPreview scope={scope} itens={includedItems} />}
+      {scope.tipo === "consolidada" && <ConsolidadaPreview scope={scope} itens={includedItems} />}
 
       <p style={{ textAlign: "center", fontSize: "11.5px", color: "var(--gray-500)", marginTop: "16px" }}>
         {scope.tipo === "orcamento"
@@ -2010,6 +2219,90 @@ function ComercialPreview({ scope, itens }: { scope: PropostaScope; itens: Propo
   );
 }
 
+// Preview do modelo Proposta de Solução (IES) — espelha template-consolidada.ts (resumo,
+// não paginado: a ficha rica por produto e as seções institucionais completas só saem no PDF).
+function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: PropostaItem[] }) {
+  const c = scope.consolidada;
+  const cli = scope.cliente;
+  const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR");
+  const navy = "#0b2a4a";
+  const orange = "#e8622a";
+  const info = (label: string, value: string) => (
+    <div style={{ flex: 1, background: "#f2f5f9", border: "1px solid #e5ebf2", borderRadius: "8px", padding: "8px 10px", textAlign: "center" }}>
+      <div style={{ fontSize: "8.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".03em", color: navy, marginBottom: "4px" }}>{label}</div>
+      <div style={{ fontSize: "12px", fontWeight: 700, color: "#1f3a52" }}>{value || "—"}</div>
+    </div>
+  );
+  const box = (label: string, value: string, sub?: string) => (
+    <div style={{ flex: 1, background: "#f2f5f9", border: "1px solid #e5ebf2", borderRadius: "8px", padding: "8px 10px", textAlign: "center" }}>
+      <div style={{ fontSize: "8.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".03em", color: navy, marginBottom: "4px" }}>{label}</div>
+      <div style={{ fontSize: "13px", fontWeight: 700, color: navy }}>{value}{sub && <span style={{ fontSize: "9px", fontWeight: 400, color: "#7a8696" }}> {sub}</span>}</div>
+    </div>
+  );
+  return (
+    <div style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", padding: "36px 44px", color: "#25303f" }}>
+      {/* capa compacta */}
+      <div style={{ textAlign: "center", paddingBottom: "18px", borderBottom: "2px solid #e5ebf2", marginBottom: "18px" }}>
+        <div style={{ fontSize: "20px", fontWeight: 800, color: navy, letterSpacing: "3px" }}>PROPOSTA DE SOLUÇÃO</div>
+        <div style={{ fontSize: "11px", color: orange, fontWeight: 700, marginTop: "4px" }}>{c?.capa.subtitulo ?? "Soluções em Higienização Profissional"}</div>
+      </div>
+      <div style={{ display: "flex", gap: "10px", marginBottom: "14px" }}>
+        {info("Cliente", cli.razaoSocial)}
+        {info("CNPJ", cli.cnpj ?? "—")}
+        {info("Segmento", cli.segmento ?? "—")}
+        {info("Responsável", cli.responsavel ?? "—")}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", color: "#5a6878", marginBottom: "22px" }}>
+        <span>Consultor responsável: <b style={{ color: navy }}>{c?.capa.consultor ?? "—"}</b></span>
+        <span>{c?.capa.cidade ?? ""} · {data}</span>
+      </div>
+
+      <h2 style={{ fontSize: "14px", fontWeight: 800, color: navy, borderBottom: "2px solid #e5ebf2", paddingBottom: "5px", marginBottom: "14px" }}>Soluções Indicadas para o {cli.razaoSocial}</h2>
+      {itens.map((p) => {
+        const e = p.embalagens[0];
+        return (
+          <div key={p.codigo} style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
+            <div style={{ flex: "0 0 90px", height: "100px", display: "flex", alignItems: "center", justifyContent: "center", background: "#fbfcfe", border: "1px solid #eef2f7", borderRadius: "8px", overflow: "hidden" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "82px", maxHeight: "92px", objectFit: "contain" }} onError={(ev) => (ev.currentTarget.style.display = "none")} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: navy, fontSize: "13.5px", fontWeight: 800 }}>{p.ficha?.titulo ?? p.nome}</div>
+              <div style={{ fontSize: "11px", color: "#5a6878", lineHeight: 1.45, margin: "4px 0 10px" }}>{p.ficha?.descricao ?? p.descricaoUso}</div>
+              <div style={{ display: "flex", gap: "10px" }}>
+                {box("Embalagem", e ? `${e.tamanho} ${e.unidade}` : "—")}
+                {box("Preço", fmt(precoUnit(p)))}
+                {box("Custo final por litro diluído", e?.custoDiluido ? fmt(Number(e.custoDiluido)) : "—", e?.diluicaoMax ? `até ${e.diluicaoMax}` : undefined)}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      <div style={{ marginTop: "8px", padding: "12px 14px", background: "var(--gray-50)", border: "1px dashed var(--gray-300)", borderRadius: "8px", fontSize: "11.5px", color: "var(--gray-500)" }}>
+        Fechamento no PDF: capa + apresentação institucional + <b>comodatos oferecidos</b> + <b>1 ficha rica por produto</b> + condições comerciais. Aqui é o resumo — o documento final é multi-página.
+      </div>
+
+      <h2 style={{ fontSize: "14px", fontWeight: 800, color: navy, borderBottom: "2px solid #e5ebf2", paddingBottom: "5px", margin: "18px 0 12px" }}>Condições Comerciais</h2>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+        <tbody>
+          {[
+            ["Validade da proposta", scope.condicoesComerciais.validade],
+            ["Prazo de implantação", scope.condicoesComerciais.prazoEntrega],
+            ["Forma de pagamento", scope.condicoesComerciais.pagamento],
+            ["Frete e entrega", scope.condicoesComerciais.frete],
+          ].map(([l, v]) => (
+            <tr key={l}>
+              <td style={{ border: "1px solid #e5ebf2", padding: "7px 10px", background: "#f2f5f9", color: navy, fontWeight: 700, width: "42%" }}>{l}</td>
+              <td style={{ border: "1px solid #e5ebf2", padding: "7px 10px" }}>{v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /* ═══════════════════════ TELA: HISTORY ═══════════════════════ */
 
 function HistoryScreen({
@@ -2017,14 +2310,12 @@ function HistoryScreen({
   erro,
   goToBriefing,
   onReabrir,
-  onContrato,
   onStatus,
 }: {
   propostas: PropostaLog[] | null;
   erro: string | null;
   goToBriefing: () => void;
   onReabrir: (id: string) => void;
-  onContrato: (id: string) => void;
   onStatus: (id: string, status: StatusProposta) => void;
 }) {
   const cols = "1.7fr 1fr 80px 130px 80px 110px 150px";
@@ -2131,12 +2422,6 @@ function HistoryScreen({
                     style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", background: "white", border: "1px solid var(--gray-200)", borderRadius: "7px", cursor: "pointer" }}
                   >
                     Abrir
-                  </button>
-                  <button
-                    onClick={() => onContrato(p.id)}
-                    style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "var(--orange-500)", background: "white", border: "1px solid var(--orange-500)", borderRadius: "7px", cursor: "pointer" }}
-                  >
-                    Contrato
                   </button>
                 </div>
               </Hoverable>
@@ -2254,7 +2539,7 @@ function CatalogScreen({
                   <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--gray-900)", marginBottom: "2px", lineHeight: 1.3 }}>{item.nome}</div>
                   <div style={{ fontSize: "11.5px", color: "var(--gray-400)", flex: 1, marginBottom: "10px" }}>SKU: {item.codigo}</div>
                   <div style={{ paddingTop: "10px", borderTop: "1px solid var(--gray-100)", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-                    <div style={{ fontSize: "17px", fontWeight: 700, color: "var(--blue-500)" }}>{e ? fmt(Number(e.preco)) : "—"}</div>
+                    <div style={{ fontSize: "17px", fontWeight: 700, color: "var(--blue-500)" }}>{e?.preco ? fmt(Number(e.preco)) : "—"}</div>
                     <div style={{ fontSize: "11px", color: "var(--gray-400)" }}>/ {e ? `${e.tamanho} ${e.unidade}` : "un"}</div>
                   </div>
                 </div>

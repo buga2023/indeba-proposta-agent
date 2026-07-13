@@ -26,7 +26,7 @@ async function abrirNavegador(): Promise<Browser> {
 }
 
 const PUBLIC_DIR = join(process.cwd(), "public");
-const EXT_PERMITIDAS = /\.(png|jpe?g|svg|webp)$/i;
+const EXT_PERMITIDAS = /\.(png|jpe?g|svg|webp|woff2)$/i;
 
 // Resolve um caminho DENTRO de public/ e rejeita path traversal. `imagemPath`
 // chega do cliente (o PropostaScope é postado em /api/pdf), então é dado não
@@ -50,7 +50,9 @@ function dataUri(relPath: string): string {
       ? "image/svg+xml"
       : lower.endsWith(".png")
         ? "image/png"
-        : "image/jpeg";
+        : lower.endsWith(".woff2")
+          ? "font/woff2"
+          : "image/jpeg";
     return `data:${mime};base64,` + buf.toString("base64");
   } catch {
     return "";
@@ -81,8 +83,16 @@ export function montarDocumento(
     case "orcamento":
       return { html: orcamentoHtml(scope), footer: FOOTER_PAG, marginTop: "12mm" };
     case "consolidada":
+      // Logo Indeba Express (IES) — é a marca do modelo consolidado refinado.
+      // Tipografia da marca (Geist/Geist Mono, mesma do app) embutida como data-URI —
+      // o render bloqueia requisição externa (route abort acima), então não dá pra
+      // carregar de CDN: tem que vir embutida, igual às imagens.
       return {
-        html: consolidadaHtml(scope, imagens, { logo: asset("/marca/indeba-logo.png") }),
+        html: consolidadaHtml(scope, imagens, {
+          logo: asset("/marca/indeba-express-logo.png"),
+          fontSans: asset("/fonts/geist-sans-variable.woff2"),
+          fontMono: asset("/fonts/geist-mono-variable.woff2"),
+        }),
         footer: FOOTER_PAG,
         marginTop: "0mm",
       };
@@ -103,6 +113,8 @@ export function montarDocumento(
         html: documentoHtml(scope, imagens, banner, {
           seko: asset("/marca/seko-promax.png"),
           painelEpi: asset("/marca/painel-epi.png"),
+          logoExpress: asset("/marca/indeba-express-logo.png"),
+          simboloExpress: asset("/marca/indeba-express-simbolo.png"),
         }),
         footer: FOOTER,
         marginTop: "6mm",

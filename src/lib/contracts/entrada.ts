@@ -25,6 +25,7 @@ export const EntradaEstruturada = z.object({
     razaoSocial: z.string().min(1),
     cnpj: z.string().nullable().default(null),
     segmento: z.string().nullable().default(null),
+    responsavel: z.string().nullable().default(null),
   }),
   itens: z.array(ItemEntrada).min(1),
   textoApresentacao: z.string().optional(), // se vier, procedência MANUAL

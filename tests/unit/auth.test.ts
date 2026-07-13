@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { validarCredenciais, criarSessao, validarSessao, authAtiva, gerarCredencial } from "@/lib/auth";
+import { validarCredenciais, criarSessao, validarSessao, authAtiva, gerarCredencial, nomeExibicao } from "@/lib/auth";
 
 beforeAll(async () => {
   // AUTH_USERS agora guarda hash (salt.hash), não a senha — gera com a mesma função do app.
@@ -12,6 +12,11 @@ beforeAll(async () => {
 describe("auth — sessão assinada", () => {
   it("auth fica ativa quando há usuários", () => {
     expect(authAtiva()).toBe(true);
+  });
+
+  it("nomeExibicao title-case o login (consultor automático da consolidada)", () => {
+    expect(nomeExibicao("gustavo")).toBe("Gustavo");
+    expect(nomeExibicao("mateus")).toBe("Mateus");
   });
 
   it("aceita credenciais corretas e rejeita erradas (senha via hash)", async () => {

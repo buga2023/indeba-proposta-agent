@@ -66,6 +66,14 @@ export const FichaProduto = z.object({
 });
 export type FichaProduto = z.infer<typeof FichaProduto>;
 
+// No CATÁLOGO o preço pode ficar vazio: o catálogo é fonte de produto (foto,
+// descrição, facetas); o valor autoritativo chega pelo orçamento importado.
+// A PROPOSTA continua exigindo Embalagem com preço — documento sem preço não sai.
+export const EmbalagemCatalogo = Embalagem.extend({
+  preco: Embalagem.shape.preco.nullable(),
+});
+export type EmbalagemCatalogo = z.infer<typeof EmbalagemCatalogo>;
+
 export const Produto = z.object({
   codigo: z.string().min(1),
   nome: z.string().min(1),
@@ -78,7 +86,7 @@ export const Produto = z.object({
   imagemPath: z.string(),
   fichaTecnicaPath: z.string().nullable(),
   ativo: z.boolean(),
-  embalagens: z.array(Embalagem).min(1),
+  embalagens: z.array(EmbalagemCatalogo).min(1),
   ficha: FichaProduto.nullable().optional(),
 });
 export type Produto = z.infer<typeof Produto>;

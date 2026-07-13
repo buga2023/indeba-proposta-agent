@@ -10,7 +10,7 @@ const PROPOSTA: PropostaScope = {
   status: "finalizada",
   tipo: "comercial",
   template: "indeba",
-  cliente: { razaoSocial: "Hospital Aurora LTDA", cnpj: "12.345.678/0001-90", segmento: "Saúde" },
+  cliente: { razaoSocial: "Hospital Aurora LTDA", cnpj: "12.345.678/0001-90", segmento: "Saúde", responsavel: null },
   textoApresentacao: { conteudo: "Apresentação...", procedencia: "IA-TEXTO" },
   itens: [
     {

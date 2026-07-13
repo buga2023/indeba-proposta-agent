@@ -25,23 +25,44 @@ const ICONES: Record<string, string> = {
   toalheiro: '<rect x="4" y="6" width="16" height="6" rx="2"/><path d="M8 12v6M16 12v6"/>',
   aromatizador: '<rect x="8" y="6" width="8" height="16" rx="2"/><path d="M12 2v4M10 4h4"/>',
   lixeira: '<path d="M4 7h16M6 7l1 14h10l1-14M9 7V4h6v3"/>',
+  diluidor: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M9 14a3 3 0 0 0 3 3"/>',
+  dosador: '<path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l3.5-3.5"/><circle cx="12" cy="16" r="1"/><path d="M2 20h20"/>',
+  limpeza: '<path d="M8 10h7l1 11H7z"/><path d="M10 10V6h5"/><path d="M15 4v4"/><path d="M18 3v1M20.5 6h1M18 9v1"/>',
+  contrato: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 14l2 2 3.5-4"/>',
+  zap: '<path d="M21 11.5a8.4 8.4 0 0 1-12.6 7.3L3 21l2.3-5.3A8.5 8.5 0 1 1 21 11.5Z"/><path d="M9 9.5c.4 2.6 2.4 4.6 5 5"/>',
+  email: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7.5l9 6 9-6"/>',
   validade: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 12l2 2 4-4"/>',
   prazo: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/>',
   pagamento: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
   frete: '<path d="M1 7h13v10H1zM14 10h5l3 3v4h-8"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/>',
   check: '<circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/>',
+  "check-simples": '<path d="M6.5 12.5l3.5 3.5L17.5 8"/>',
+  caixa: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
 };
 export const iconeSvg = (nome: string, cor = NAVY): string =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="${cor}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONES[nome] ?? '<circle cx="12" cy="12" r="3"/>'}</svg>`;
 
+// Contatos do rodapé da ficha e das condições (payload — ver ConsolidadaBloco.contato).
+export type ContatoConsolidada = { whatsapp: string | null; emailConsultor: string | null };
+
 // Uma página A4 rica por produto. Cada bloco só aparece se o dado existir.
-export function paginaProduto(item: PropostaItem, dataUri: string, pageNum: number): string {
+// `headerHtml` (a mesma `.pg-head` das outras seções) e `simples` (produto sem
+// indicado/benefícios/diluição/características/rendimento → layout compacto,
+// centralizado verticalmente, em vez do rígido de sempre deixando meia página vazia).
+export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, headerHtml = ""): string {
   const f = item.ficha ?? null;
   const titulo = f?.titulo ? esc(f.titulo) : esc(item.nome);
   const subtitulo = f?.subtitulo ? `<div class="p-sub">${esc(f.subtitulo)}</div>` : "";
   const badge = f?.linhaLabel ? `<span class="p-badge">LINHA <b>${esc(f.linhaLabel)}</b></span>` : "";
-  const numero = `<span class="p-num">Proposta de Solução <b>${String(pageNum).padStart(2, "0")}</b></span>`;
+  const headBar = badge ? `<div class="p-head">${badge}</div>` : ""; // sem linha → sem barra vazia
   const descricao = esc(f?.descricao || item.descricaoUso || "");
+  // Diluição: a ficha rica (indicadoPara/benefícios/características/rendimento) é dado de
+  // catálogo que só existe pra alguns produtos (Primmax Plus/DGClor) — não inventamos pros
+  // outros. Mas a EMBALAGEM já carrega diluicaoMax/custoDiluido pra vários produtos "simples"
+  // (ex.: Primmax LDF, Primmax Hort) e o template não lia isso — dado real, só não estava sendo
+  // usado aqui (é lido em template.ts pro modelo Express).
+  const diluicaoEmbalagem = item.embalagens.find((e) => e.diluicaoMax);
+  const simples = !f?.indicadoPara?.length && !f?.beneficios?.length && !f?.diluicoes?.length && !diluicaoEmbalagem && !f?.caracteristicas && !f?.rendimento;
 
   const indicado = f?.indicadoPara?.length
     ? `<div class="p-block"><div class="p-bt">Indicado para</div><div class="p-ind">${f.indicadoPara
@@ -59,10 +80,17 @@ export function paginaProduto(item: PropostaItem, dataUri: string, pageNum: numb
     ? `<div class="p-mini"><div class="p-mt">Modo de diluição</div>${f.diluicoes
         .map((d) => `<div class="p-row"><span>${esc(d.uso)}</span><b>${esc(d.razao)}</b></div>`)
         .join("")}</div>`
-    : "";
+    : diluicaoEmbalagem
+      ? `<div class="p-mini"><div class="p-mt">Modo de diluição</div>
+          <div class="p-row"><span>Diluição máxima</span><b>${esc(diluicaoEmbalagem.diluicaoMax!)}</b></div>
+          ${diluicaoEmbalagem.custoDiluido ? `<div class="p-row"><span>Custo/litro diluído</span><b>${brl(diluicaoEmbalagem.custoDiluido)}</b></div>` : ""}
+        </div>`
+      : "";
   const rendimento = f?.rendimento
     ? `<div class="p-mini"><div class="p-mt">Rendimento aproximado</div><div class="p-big">${esc(f.rendimento)}</div></div>`
     : "";
+  // Sempre presente quando o item tem embalagem (todo item tem) — a rodada anterior escondia
+  // isso no layout simples achando redundante com a barra de valor; foi regressão, voltou.
   const embalagens = item.embalagens.length
     ? `<div class="p-mini"><div class="p-mt">Embalagens disponíveis</div>${item.embalagens
         .map((e) => `<div class="p-row"><span>${e.tamanho} ${esc(e.unidade)}</span></div>`)
@@ -79,8 +107,22 @@ export function paginaProduto(item: PropostaItem, dataUri: string, pageNum: numb
     .map((e) => `<div class="p-val"><div class="p-vl">${e.tamanho} ${esc(e.unidade)}</div><div class="p-vp">${brl(e.preco)}</div></div>`)
     .join("");
 
-  return `<section class="prodpg">
-    <div class="p-head">${numero}${badge}</div>
+  // Rodapé navy da ficha (modelo refinado): slogan fixo + WhatsApp/e-mail do
+  // payload (só renderiza contato que existir — nunca número fictício).
+  const contatos = [
+    contato?.whatsapp ? `<span class="p-ct"><span class="ic">${iconeSvg("zap", "#fff")}</span>WhatsApp ${esc(contato.whatsapp)}</span>` : "",
+    contato?.emailConsultor ? `<span class="p-ct"><span class="ic">${iconeSvg("email", "#fff")}</span>${esc(contato.emailConsultor)}</span>` : "",
+  ].filter(Boolean).join("");
+  const rodape = `<div class="p-rodape">
+    <div class="p-rq"><span class="p-rq-t">Qualidade Profissional</span><span class="p-rq-s">Resultados que transformam</span></div>
+    ${contatos}
+  </div>`;
+
+  const grid = diluicoes || rendimento || embalagens || carac ? `<div class="p-grid">${diluicoes}${rendimento}${embalagens}${carac}</div>` : "";
+
+  return `<section class="prodpg${simples ? " prodpg-simples" : ""}">
+    ${headerHtml}
+    ${headBar}
     <div class="p-top">
       <div class="p-foto"><img src="${dataUri}" alt="${titulo}"/></div>
       <div class="p-main">
@@ -90,17 +132,43 @@ export function paginaProduto(item: PropostaItem, dataUri: string, pageNum: numb
         ${beneficios}
       </div>
     </div>
-    <div class="p-grid">${diluicoes}${rendimento}${embalagens}${carac}</div>
+    ${grid}
     <div class="p-valores"><span class="p-vtag">Valor</span>${valores}</div>
+    <div class="p-vnota">Consulte condições especiais para compras de maiores volumes.</div>
+    ${rodape}
   </section>`;
 }
 
-const wave = `<svg class="wave" viewBox="0 0 400 120" preserveAspectRatio="none"><path d="M0 60 Q120 10 260 50 T400 40 L400 120 L0 120 Z" fill="${NAVY}"/><path d="M0 78 Q120 30 260 68 T400 58" fill="none" stroke="${ORANGE}" stroke-width="3"/></svg>`;
+// Ondas orgânicas confinadas ao canto inferior direito, SEMPRE atrás do
+// conteúdo (mesma arte da capa Express; pedido do Matheus: nunca invadir texto).
+// `cls` escolhe o tamanho via CSS: "wave" (capa, 96mm) ou "wave wave-sec" (páginas
+// internas, 60mm — menor pra não cruzar texto, com faixa de segurança no rodapé).
+const wave = (cls: string) => `<svg class="${cls}" viewBox="0 0 360 300" fill="none">
+  <path d="M30 250 C 90 215, 140 220, 195 168" stroke="#ccd3dc" stroke-width="1.4"/>
+  <path d="M55 278 C 125 250, 170 252, 232 200" stroke="#dde2e8" stroke-width="1.2"/>
+  <path d="M186 162 l 9 -1 -4 8 Z" fill="#ccd3dc"/>
+  <path d="M212 226 C 252 196, 286 160, 316 106" stroke="${NAVY}" stroke-width="2.2"/>
+  <path d="M310 116 l 8 -12 2 14 Z" fill="${NAVY}"/>
+  <circle cx="222" cy="219" r="4" fill="${NAVY}"/>
+  <circle cx="268" cy="172" r="3" fill="${NAVY}" opacity=".55"/>
+  <path d="M360 128 C 302 158, 262 208, 252 300 L 360 300 Z" fill="${NAVY}"/>
+  <path d="M360 114 C 296 146, 256 198, 245 300" stroke="${ORANGE}" stroke-width="3"/>
+  <circle cx="236" cy="252" r="3" fill="${ORANGE}"/>
+  <g fill="#fff" opacity=".85">
+    <circle cx="300" cy="262" r="2"/><circle cx="313" cy="262" r="2"/><circle cx="326" cy="262" r="2"/><circle cx="339" cy="262" r="2"/>
+    <circle cx="300" cy="274" r="2"/><circle cx="313" cy="274" r="2"/><circle cx="326" cy="274" r="2"/><circle cx="339" cy="274" r="2"/>
+    <circle cx="300" cy="286" r="2"/><circle cx="313" cy="286" r="2"/><circle cx="326" cy="286" r="2"/><circle cx="339" cy="286" r="2"/>
+  </g>
+</svg>`;
+
+// Divisor decorativo (fio + badge laranja de pessoa) usado entre blocos —
+// elemento EM FLUXO, nunca posicionado por cima do conteúdo.
+const divisor = `<div class="div-badge"><span class="db-fio"></span><span class="db-ic">${iconeSvg("pessoa", ORANGE)}</span><span class="db-fio"></span></div>`;
 
 export function consolidadaHtml(
   scope: PropostaScope,
   imagens: Record<string, string>,
-  assets: { logo: string },
+  assets: { logo: string; fontSans: string; fontMono: string },
 ): string {
   const c = scope.consolidada ?? consolidadaDefaults();
   const cli = scope.cliente;
@@ -111,7 +179,7 @@ export function consolidadaHtml(
     `<div class="cc-row"><span class="cc-ic">${iconeSvg(icone)}</span><div><div class="cc-r">${esc(rot)}</div><div class="cc-v">${esc(val)}</div></div></div>`;
 
   const capa = `<section class="capa">
-    ${wave}
+    ${wave("wave")}
     <img class="capa-logo" src="${assets.logo}" alt="Indeba Express"/>
     <div class="capa-tit">PROPOSTA DE SOLUÇÃO</div>
     <div class="capa-sub">${esc(c.capa.subtitulo)}</div>
@@ -121,11 +189,15 @@ export function consolidadaHtml(
       ${cardCliente("prazo", "Segmento", cli.segmento || "—")}
       ${cardCliente("pessoa", "Responsável", cli.responsavel || "—")}
     </div>
-    <div class="capa-cons"><div class="cc-lab">Consultor Responsável</div><div class="cc-nome">${esc(c.capa.consultor)}</div>
+    <div class="capa-cons">
+      <div class="capa-badge">${iconeSvg("pessoa", ORANGE)}</div>
+      <div class="cc-lab">Consultor Responsável</div><div class="cc-nome">${esc(c.capa.consultor)}</div>
+      <div class="capa-cal">${iconeSvg("prazo")}</div>
       <div class="cc-cidade">${esc(c.capa.cidade)}<br/>${esc(data)}</div></div>
   </section>`;
 
   const apres = `<section class="pg sec">
+    ${wave("wave wave-sec")}
     ${header("02")}
     <h1 class="sec-tit">APRESENTAÇÃO</h1><div class="sec-sub">${esc(c.capa.subtitulo)}</div>
     <p class="sd"><b>${esc(c.apresentacao.saudacao)}</b></p>
@@ -133,29 +205,40 @@ export function consolidadaHtml(
     <div class="cards">${c.apresentacao.cards
       .map((cd) => `<div class="card"><span class="card-ic">${iconeSvg(cd.icone)}</span><div class="card-t">${esc(cd.titulo)}</div><div class="card-x">${esc(cd.texto)}</div></div>`)
       .join("")}</div>
+    ${divisor}
+    <div class="apres-ass">
+      <div class="aa-col"><div class="aa-nome">${esc(c.condicoes.consultor)}</div><div class="aa-sub">${esc(c.condicoes.cargo)}</div></div>
+      <div class="aa-col"><div class="aa-nome">Indeba Express</div><div class="aa-sub">${esc(c.capa.subtitulo)}</div></div>
+    </div>
   </section>`;
 
   const comod = `<section class="pg sec">
+    ${wave("wave wave-sec")}
     ${header("03")}
     <h1 class="sec-tit">COMODATOS OFERECIDOS</h1><div class="sec-sub">Equipamentos em Comodato</div>
     <p class="pt">${esc(c.comodatos.intro)}</p>
     <div class="cards">${c.comodatos.equipamentos
-      .map((e) => `<div class="card"><span class="card-ic">${iconeSvg(e.icone)}</span><div class="card-t">${esc(e.titulo)}</div><div class="card-x">${esc(e.descricao)}</div></div>`)
+      .map((e) => `<div class="card"><span class="card-ic">${iconeSvg(e.icone)}</span><div class="card-t">${esc(e.titulo)}</div>${e.descricao ? `<div class="card-x">${esc(e.descricao)}</div>` : ""}</div>`)
       .join("")}</div>
+    ${divisor}
     <div class="vant-tit">VANTAGENS DO COMODATO</div>
     <div class="vant">${c.comodatos.vantagens
-      .map((v) => `<div class="vant-i"><span class="ic ic-ok">${iconeSvg("check", ORANGE)}</span>${esc(v)}</div>`)
+      .map((v) => `<div class="vant-i"><span class="vant-badge">${iconeSvg("check-simples", "#fff")}</span><div>${esc(v)}</div></div>`)
       .join("")}</div>
   </section>`;
 
-  // 02 apresentação, 03 comodatos, 04..(04+N-1) páginas de produto, condições fecha a sequência —
-  // antes "04" vinha hardcoded pra condições e não contava as páginas de produto (rótulo errado
-  // quando havia mais de um item; ver docs/superpowers/plans/2026-07-10-proposta-consolidada.md).
-  const produtos = scope.itens.map((it, i) => paginaProduto(it, imagens[it.codigo] ?? "", 4 + i)).join("");
-  const numCondicoes = String(4 + scope.itens.length).padStart(2, "0");
+  const contato = c.contato ?? { whatsapp: null, emailConsultor: null };
+  // Numeração do header deriva do índice real (capa=01 sem header, apresentação=02,
+  // comodatos=03, 1 página por produto a partir de 04) — bate com "Página X/Y" do
+  // rodapé (contador nativo do Chromium), já que cada seção é garantidamente 1 página.
+  const PRIMEIRO_PRODUTO = 4;
+  const produtos = scope.itens
+    .map((it, idx) => paginaProduto(it, imagens[it.codigo] ?? "", contato, header(String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"))))
+    .join("");
 
   const cond = `<section class="pg sec">
-    ${header(numCondicoes)}
+    ${wave("wave wave-sec")}
+    ${header(String(PRIMEIRO_PRODUTO + scope.itens.length).padStart(2, "0"))}
     <h1 class="sec-tit">CONDIÇÕES COMERCIAIS</h1><div class="sec-sub">Informações Gerais da Proposta</div>
     <div class="cond-wrap">
       <div class="cond-list">${c.condicoes.itens
@@ -163,14 +246,36 @@ export function consolidadaHtml(
         .join("")}</div>
       <div class="cond-close"><p>${esc(c.condicoes.mensagemFechamento)}</p><div class="cc-sep"></div>
         <div class="cc-at">Atenciosamente,</div><div class="cc-nome">${esc(c.condicoes.consultor)}</div>
-        <div class="cc-cargo">${esc(c.condicoes.cargo)}</div><div class="cc-emp">Indeba Express</div></div>
+        <div class="cc-cargo">${esc(c.condicoes.cargo)}</div>
+        ${contato.emailConsultor ? `<div class="cc-contato"><span class="ic">${iconeSvg("email")}</span>${esc(contato.emailConsultor)}</div>` : ""}
+        ${contato.whatsapp ? `<div class="cc-contato"><span class="ic">${iconeSvg("zap")}</span>${esc(contato.whatsapp)}</div>` : ""}
+        <div class="cc-emp">Indeba Express</div>
+        <div class="cc-emp-sub">${esc(c.capa.subtitulo)}</div></div>
     </div>
   </section>`;
 
   return `<html lang="pt-BR"><head><meta charset="utf-8"/><style>
+/* Tipografia da marca (Geist/Geist Mono — mesma da plataforma, tokens/typography.css
+   do skill indeba-design). Fonte de arquivo (variável), embutida como data-URI: o
+   render bloqueia requisição externa, então CDN não funciona aqui. */
+@font-face { font-family: "Geist"; src: url("${assets.fontSans}") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("${assets.fontMono}") format("woff2"); font-weight: 100 900; font-display: swap; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11.5px; }
+body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11.5px; }
 .pg { padding: 14px 16mm 0; position: relative; }
+/* Cada seção é UMA página — altura FIXA (não auto): sem isso, se o conteúdo de uma seção
+   passar de 1 página impressa (ex.: comodatos com mais itens), o box CSS cresce além da
+   página física e a onda (position:absolute;bottom:0, ancorada nesse box) passa a flutuar
+   no meio/cortar — porque "bottom" nesse caso não é mais o rodapé da página real, é o fim
+   de um box que já vazou pra página seguinte. 278mm ≈ A4 (297mm) menos a margem inferior do
+   PDF (15mm, render.ts) menos folga de segurança; overflow:hidden é o cinto-e-suspensório
+   se algum conteúdo ainda assim passar do previsto (fica invisível, não mancha a página seguinte). */
+.sec { page-break-after: always; overflow: hidden; padding-bottom: 28mm; height: 278mm; }
+.sec:last-of-type { page-break-after: auto; }
+/* Onda decorativa das páginas internas: SEMPRE atrás do conteúdo (mesma regra da capa) —
+   28mm de faixa de segurança acima (padding-bottom do .sec) garante que texto nunca encoste. */
+.sec > *:not(.wave-sec) { position: relative; z-index: 1; }
+.wave.wave-sec { width: 30mm; } /* especificidade > .wave sozinho — .wave define 96mm mais abaixo (capa) */
 .pg-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5ebf2; padding-bottom: 8px; margin-bottom: 18px; }
 .hlogo { height: 34px; } .hpg { color: #7a8696; font-size: 11px; } .hpg b { color: ${NAVY}; }
 .sec-tit { color: ${NAVY}; font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
@@ -182,12 +287,27 @@ body { font-family: "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11
 .card-ic { display: inline-flex; width: 46px; height: 46px; border-radius: 50%; background: ${NAVY}; align-items: center; justify-content: center; margin-bottom: 10px; }
 .card-ic svg { width: 22px; height: 22px; stroke: #fff; } .card-t { color: ${NAVY}; font-weight: 800; font-size: 11.5px; text-transform: uppercase; }
 .card-x { color: #6b7787; font-size: 10px; line-height: 1.4; margin-top: 6px; }
-.vant-tit { text-align: center; color: ${NAVY}; font-weight: 800; letter-spacing: 1px; margin: 26px 0 14px; }
-.vant { display: flex; gap: 10px; } .vant-i { flex: 1; text-align: center; color: #6b7787; font-size: 10px; }
+.vant-tit { text-align: center; color: ${NAVY}; font-weight: 800; letter-spacing: 1px; margin: 20px 0 14px; }
+.vant { display: flex; gap: 10px; } .vant-i { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; color: #6b7787; font-size: 10px; }
+.vant-badge { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: ${ORANGE}; align-items: center; justify-content: center; margin-bottom: 8px; }
+.vant-badge svg { width: 15px; height: 15px; }
 .ic-ok svg { width: 18px; height: 18px; } .ic { display: inline-flex; vertical-align: middle; }
-/* Capa */
-.capa { height: 275mm; position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 60px; page-break-after: always; overflow: hidden; }
-.wave { position: absolute; bottom: 0; left: 0; width: 100%; height: 130px; }
+/* Divisor decorativo em fluxo (fio + badge laranja) */
+.div-badge { display: flex; align-items: center; gap: 14px; margin-top: 26px; }
+.db-fio { flex: 1; height: 1px; background: #e5ebf2; }
+.db-ic { flex: none; width: 36px; height: 36px; border: 1.5px solid ${ORANGE}; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+.db-ic svg { width: 17px; height: 17px; }
+/* Assinatura da Apresentação — ABAIXO dos cards, com folga (nunca colide) */
+.apres-ass { display: flex; justify-content: space-around; margin-top: 20px; text-align: center; }
+.aa-nome { color: ${NAVY}; font-weight: 800; font-size: 13px; }
+.aa-sub { color: #8a95a3; font-size: 11px; margin-top: 2px; }
+/* Capa — decorativos SEMPRE atrás do conteúdo (z-index) e confinados ao canto */
+.capa { height: 275mm; position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 60px; padding-bottom: 110px; page-break-after: always; overflow: hidden; }
+.capa > * { position: relative; z-index: 1; }
+.wave { position: absolute; z-index: 0; right: 0; bottom: 0; width: 96mm; height: auto; }
+.capa-badge { width: 36px; height: 36px; border: 1.5px solid ${ORANGE}; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+.capa-badge svg { width: 17px; height: 17px; }
+.capa-cal { margin-top: 22px; } .capa-cal svg { width: 20px; height: 20px; }
 .capa-logo { width: 200px; margin-bottom: 40px; }
 .capa-tit { color: ${NAVY}; font-size: 26px; font-weight: 800; letter-spacing: 4px; }
 .capa-sub { color: #6b7787; font-size: 13px; margin-top: 6px; }
@@ -206,29 +326,60 @@ body { font-family: "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11
 .cond-close { flex: 1; background: #f7f9fc; border-radius: 14px; padding: 20px; text-align: center; color: #5a6878; font-size: 11px; }
 .cc-sep { width: 40px; height: 4px; background: ${ORANGE}; border-radius: 2px; margin: 14px auto; } .cc-at { margin-bottom: 8px; }
 .cc-cargo { color: #8a95a3; font-size: 10px; } .cc-emp { color: ${NAVY}; font-weight: 800; margin-top: 8px; }
-/* Página de produto */
-.prodpg { padding: 0 0 0; position: relative; page-break-after: always; min-height: 272mm; }
-.p-head { background: ${NAVY}; height: 46px; display: flex; align-items: center; justify-content: space-between; padding: 0 16mm; }
+.cc-contato { display: flex; align-items: center; justify-content: center; gap: 6px; color: #5a6878; font-size: 10.5px; margin-top: 6px; }
+.cc-contato .ic svg { width: 13px; height: 13px; }
+.cc-emp-sub { color: #8a95a3; font-size: 10px; margin-top: 2px; }
+/* Página de produto — min-height abaixo da área útil (282mm) para a barra de
+   valores + contato nunca estourarem sobre o rodapé da página. */
+.prodpg { padding: 0 0 6mm; position: relative; page-break-after: always; min-height: 258mm; }
+.prodpg > .pg-head { padding: 14px 16mm 0; } /* mesma .pg-head das outras seções — aqui sem o padding herdado de .pg */
+.p-head { background: ${NAVY}; height: 46px; display: flex; align-items: center; justify-content: flex-end; padding: 0 16mm; }
 .p-badge { color: #fff; font-size: 12px; letter-spacing: 2px; } .p-badge b { color: ${ORANGE}; }
-.p-num { color: #b9c6d6; font-size: 11px; } .p-num b { color: #fff; }
 .p-top { display: flex; gap: 18px; padding: 20px 16mm 0; }
 .p-foto { flex: 0 0 210px; height: 300px; background: #f2f6fa; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
 .p-foto img { max-width: 180px; max-height: 280px; object-fit: contain; }
+/* Produto simples (sem ficha rica): centraliza o pouco conteúdo na página em vez de
+   empilhar tudo no topo e deixar a metade de baixo vazia; foto bem maior, texto mais
+   respirado — em vez de encolher a página, ocupa mais dela com o que já existe. */
+.prodpg-simples { display: flex; flex-direction: column; justify-content: center; }
+.prodpg-simples .p-top { align-items: center; gap: 32px; }
+.prodpg-simples .p-foto { flex: 0 0 340px; height: 440px; }
+.prodpg-simples .p-foto img { max-width: 290px; max-height: 420px; }
+.prodpg-simples .p-tit { font-size: 30px; }
+.prodpg-simples .p-desc { font-size: 15px; line-height: 1.9; margin: 20px 0; }
+.prodpg-simples .p-valores { margin-top: 40px; }
+.prodpg-simples .p-valores .p-vtag { padding: 20px 26px; }
+.prodpg-simples .p-vp { font-size: 26px; }
 .p-main { flex: 1; } .p-tit { color: ${NAVY}; font-size: 24px; font-weight: 800; line-height: 1.1; }
 .p-sub { color: ${ORANGE}; font-weight: 700; font-size: 15px; margin-top: 2px; }
 .p-desc { color: #4a5768; line-height: 1.5; margin: 12px 0; }
 .p-block { margin-top: 12px; } .p-bt { color: #fff; background: ${NAVY}; display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-.p-ind { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; } .p-ic { text-align: center; font-size: 9px; color: #6b7787; width: 64px; }
-.p-ic .ic svg { width: 26px; height: 26px; } .p-ben { list-style: none; margin-top: 10px; }
+.p-ind { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; } .p-ic { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-size: 9px; color: #6b7787; width: 64px; }
+/* Caixa fixa e centralizada por ícone (não o SVG esticado 1:1 no espaço) — o desenho de
+   cada glifo ocupa uma área diferente dentro do viewBox 24×24 (ex.: "restaurante" usa quase
+   o quadro inteiro, "padaria" fica mais recolhido); sem essa margem uniforme, o ícone com
+   glifo maior encosta na borda enquanto os outros sobram folga. Nunca fica com folga zero. */
+.p-ic .ic { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
+.p-ic .ic svg { width: 22px; height: 22px; } .p-ben { list-style: none; margin-top: 10px; }
 .p-ben li { display: flex; align-items: center; gap: 8px; color: #3a4757; font-size: 11px; padding: 3px 0; }
 .p-grid { display: flex; gap: 12px; padding: 18px 16mm 0; }
 .p-mini { flex: 1; border: 1px solid #e5ebf2; border-radius: 10px; padding: 10px; }
 .p-mt { color: ${NAVY}; font-weight: 800; font-size: 9.5px; text-transform: uppercase; text-align: center; margin-bottom: 8px; }
 .p-row { display: flex; justify-content: space-between; font-size: 10px; color: #4a5768; padding: 3px 0; } .p-row b { color: ${NAVY}; }
 .p-big { text-align: center; color: ${ORANGE}; font-weight: 800; font-size: 13px; }
-.p-valores { display: flex; align-items: center; gap: 20px; margin: 20px 16mm 0; background: ${NAVY}; border-radius: 12px; padding: 14px 20px; }
-.p-vtag { background: ${ORANGE}; color: #fff; font-weight: 800; padding: 6px 16px; border-radius: 8px; text-transform: uppercase; }
-.p-val { text-align: center; color: #fff; } .p-vl { font-size: 10px; opacity: .8; } .p-vp { font-size: 20px; font-weight: 800; }
+/* Barra VALOR (modelo refinado): bloco laranja + faixa clara com preços navy */
+.p-valores { display: flex; align-items: stretch; margin: 18px 16mm 0; background: #f2f5f9; border-radius: 12px; overflow: hidden; page-break-inside: avoid; }
+.p-vtag { background: ${ORANGE}; color: #fff; font-weight: 800; display: flex; align-items: center; padding: 14px 22px; text-transform: uppercase; letter-spacing: 1px; }
+.p-val { flex: 1; text-align: center; padding: 10px 6px; border-left: 1px solid #e2e8f0; }
+.p-vl { font-size: 10px; color: #7a8696; text-transform: uppercase; letter-spacing: 1px; }
+.p-vp { font-family: "Geist Mono", monospace; font-size: 20px; font-weight: 700; color: ${NAVY}; }
+.p-vnota { text-align: center; color: #8a95a3; font-size: 9.5px; margin: 6px 16mm 0; }
+/* Rodapé navy da ficha — reservado no fim da página, nunca sobrepõe a barra */
+.p-rodape { display: flex; align-items: center; justify-content: space-between; gap: 18px; background: ${NAVY}; color: #fff; margin: 10px 16mm 0; border-radius: 10px; padding: 10px 16px; page-break-inside: avoid; }
+.p-rq { display: flex; flex-direction: column; }
+.p-rq-t { font-weight: 800; font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; }
+.p-rq-s { font-size: 9px; opacity: .75; text-transform: uppercase; letter-spacing: .5px; }
+.p-ct { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; } .p-ct .ic svg { width: 14px; height: 14px; }
 </style></head><body>
 ${capa}
 ${apres}

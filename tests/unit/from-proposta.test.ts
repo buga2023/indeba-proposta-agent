@@ -32,7 +32,7 @@ function scopeDe(itens: PropostaItem[]): PropostaScope {
     status: "rascunho",
     tipo: "orcamento",
     template: "indeba_express",
-    cliente: { razaoSocial: "Cliente X", cnpj: null, segmento: null },
+    cliente: { razaoSocial: "Cliente X", cnpj: null, segmento: null, responsavel: null },
     textoApresentacao: { conteudo: "olá", procedencia: "IA-TEXTO" },
     itens,
     condicoesComerciais: { validade: "10 dias", prazoEntrega: "5 dias", pagamento: "à vista", frete: "CIF" },

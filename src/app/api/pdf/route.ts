@@ -15,6 +15,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }
 
+  // Contato ausente (WhatsApp/e-mail) NÃO bloqueia mais a geração — a Revisão e a tela de
+  // PDF mostram um aviso visível, mas o vendedor pode seguir gerando mesmo sem configurar
+  // INDEBA_WHATSAPP/INDEBA_CONSULTOR_EMAIL (pedido explícito: tirar o bloqueio).
+
   // Render isolado em try/catch: falha de Chromium/bundle (ex.: asset do serverless
   // ausente) vira erro CLARO e logado, em vez de 500 opaco que só se vê nos logs da
   // plataforma. O cliente recebe uma mensagem acionável.

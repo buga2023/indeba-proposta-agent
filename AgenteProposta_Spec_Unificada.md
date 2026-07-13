@@ -187,7 +187,7 @@ F3+F4, semântico como desempate.
 ```jsonc
 {
   "id": "uuid",
-  "cliente": { /* snapshot do Cliente */ },
+  "cliente": { /* snapshot do Cliente + responsavel|null (quem recebe a proposta — capa Express) */ },
   "criado_em": "iso", "status": "rascunho|finalizada",
   "template": "indeba | indeba_express",       // identidade param.
   "texto_apresentacao": {

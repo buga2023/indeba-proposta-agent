@@ -3,6 +3,7 @@ import { z } from "zod";
 import { montarProposta } from "@/lib/montar";
 import { Tipo } from "@/lib/contracts";
 import { detectarTipo, TIPOS_LABEL } from "@/lib/tipo-proposta";
+import { validarSessao, nomeExibicao } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // IA pode levar alguns segundos (Vercel)
@@ -14,6 +15,7 @@ const Body = z.object({
   razaoSocial: z.string().min(1).max(200),
   cnpj: z.string().max(40).nullable().default(null),
   segmento: z.string().max(100).nullable().default(null),
+  responsavel: z.string().max(120).nullable().default(null),
   tipo: Tipo.optional(), // se o usuário já escolheu o tipo (após perguntar)
   // Contexto opcional vindo da prospecção: a "dor" do prospect personaliza o
   // texto de apresentação. Tempero do texto — não influencia preço nem item.
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }
-  const { briefing, razaoSocial, cnpj, segmento, tipo, contextoProspeccao } = parsed.data;
+  const { briefing, razaoSocial, cnpj, segmento, responsavel, tipo, contextoProspeccao } = parsed.data;
 
   const tipoFinal = tipo ?? detectarTipo(briefing).tipo;
   if (!tipoFinal) {
@@ -49,7 +51,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const scope = await montarProposta(briefing, { razaoSocial, cnpj, segmento }, tipoFinal, contextoProspeccao);
+  const login = (await validarSessao(req.cookies.get("sessao")?.value))?.login;
+  const scope = await montarProposta(
+    briefing,
+    { razaoSocial, cnpj, segmento, responsavel },
+    tipoFinal,
+    contextoProspeccao,
+    login ? nomeExibicao(login) : null,
+  );
 
   // Seleção vazia = o briefing não casou com nada do catálogo. Não emite proposta
   // muda: sinaliza pro vendedor refinar (melhor avisar do que entregar PDF vazio).

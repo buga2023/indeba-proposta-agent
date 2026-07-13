@@ -4,7 +4,7 @@ import { montarPropostaEstruturada } from "@/lib/montar";
 describe("montarPropostaEstruturada — consolidada", () => {
   it("injeta bloco consolidada e copia ficha do catálogo por item", async () => {
     const scope = await montarPropostaEstruturada({
-      cliente: { razaoSocial: "Sua Empresa", cnpj: null, segmento: null },
+      cliente: { razaoSocial: "Sua Empresa", cnpj: null, segmento: null, responsavel: null },
       tipo: "consolidada",
       textoApresentacao: "texto manual (sem IA)",
       itens: [{ codigo: "PRIMMAX-PLUS", quantidade: 1 }],
@@ -18,7 +18,7 @@ describe("montarPropostaEstruturada — consolidada", () => {
 
   it("NÃO injeta consolidada para outros tipos", async () => {
     const scope = await montarPropostaEstruturada({
-      cliente: { razaoSocial: "X", cnpj: null, segmento: null },
+      cliente: { razaoSocial: "X", cnpj: null, segmento: null, responsavel: null },
       tipo: "orcamento",
       textoApresentacao: "t",
       itens: [{ codigo: "PRIMMAX-PLUS", quantidade: 1 }],

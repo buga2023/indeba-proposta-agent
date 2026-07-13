@@ -62,8 +62,9 @@ export const NAO_SEI = "Sobre isso eu não sei te responder — e prefiro não i
 export function norm(s: string): string {
   return s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
 }
-export function preco(p: string): string {
-  return "R$ " + p.replace(".", ",");
+// Catálogo pode estar sem preço (valor vem do orçamento importado) — não inventa.
+export function preco(p: string | null): string {
+  return p ? "R$ " + p.replace(".", ",") : "sob consulta";
 }
 function fichaCurta(p: Produto): string {
   const e = p.embalagens[0];
