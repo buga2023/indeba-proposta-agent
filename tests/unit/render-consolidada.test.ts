@@ -21,4 +21,13 @@ describe("montarDocumento — consolidada", () => {
     expect(doc.html).toContain("PROPOSTA DE SOLUÇÃO");
     expect(doc.html).toContain("ACME");
   });
+
+  it("numera Condições Comerciais contando as páginas de produto (não fica hardcoded em 04)", () => {
+    // 2 itens -> páginas de produto usam 04 e 05; Condições deve ser 06, não 04.
+    const doisItens: PropostaScope = { ...scope, itens: [scope.itens[0], { ...scope.itens[0], codigo: "B" }] };
+    const doc = montarDocumento(doisItens, { A: "data:,x", B: "data:,x" }, "", () => "data:,logo");
+    expect(doc.html).toContain("Proposta de Solução <b>04</b>");
+    expect(doc.html).toContain("Proposta de Solução <b>05</b>");
+    expect(doc.html).toContain("Proposta de Solução <b>06</b>");
+  });
 });

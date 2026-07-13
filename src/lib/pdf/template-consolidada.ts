@@ -35,11 +35,12 @@ export const iconeSvg = (nome: string, cor = NAVY): string =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="${cor}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONES[nome] ?? '<circle cx="12" cy="12" r="3"/>'}</svg>`;
 
 // Uma página A4 rica por produto. Cada bloco só aparece se o dado existir.
-export function paginaProduto(item: PropostaItem, dataUri: string): string {
+export function paginaProduto(item: PropostaItem, dataUri: string, pageNum: number): string {
   const f = item.ficha ?? null;
   const titulo = f?.titulo ? esc(f.titulo) : esc(item.nome);
   const subtitulo = f?.subtitulo ? `<div class="p-sub">${esc(f.subtitulo)}</div>` : "";
   const badge = f?.linhaLabel ? `<span class="p-badge">LINHA <b>${esc(f.linhaLabel)}</b></span>` : "";
+  const numero = `<span class="p-num">Proposta de Solução <b>${String(pageNum).padStart(2, "0")}</b></span>`;
   const descricao = esc(f?.descricao || item.descricaoUso || "");
 
   const indicado = f?.indicadoPara?.length
@@ -79,7 +80,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string): string {
     .join("");
 
   return `<section class="prodpg">
-    <div class="p-head">${badge}</div>
+    <div class="p-head">${numero}${badge}</div>
     <div class="p-top">
       <div class="p-foto"><img src="${dataUri}" alt="${titulo}"/></div>
       <div class="p-main">
@@ -147,10 +148,14 @@ export function consolidadaHtml(
       .join("")}</div>
   </section>`;
 
-  const produtos = scope.itens.map((it) => paginaProduto(it, imagens[it.codigo] ?? "")).join("");
+  // 02 apresentação, 03 comodatos, 04..(04+N-1) páginas de produto, condições fecha a sequência —
+  // antes "04" vinha hardcoded pra condições e não contava as páginas de produto (rótulo errado
+  // quando havia mais de um item; ver docs/superpowers/plans/2026-07-10-proposta-consolidada.md).
+  const produtos = scope.itens.map((it, i) => paginaProduto(it, imagens[it.codigo] ?? "", 4 + i)).join("");
+  const numCondicoes = String(4 + scope.itens.length).padStart(2, "0");
 
   const cond = `<section class="pg sec">
-    ${header("04")}
+    ${header(numCondicoes)}
     <h1 class="sec-tit">CONDIÇÕES COMERCIAIS</h1><div class="sec-sub">Informações Gerais da Proposta</div>
     <div class="cond-wrap">
       <div class="cond-list">${c.condicoes.itens
@@ -203,8 +208,9 @@ body { font-family: "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11
 .cc-cargo { color: #8a95a3; font-size: 10px; } .cc-emp { color: ${NAVY}; font-weight: 800; margin-top: 8px; }
 /* Página de produto */
 .prodpg { padding: 0 0 0; position: relative; page-break-after: always; min-height: 272mm; }
-.p-head { background: ${NAVY}; height: 46px; display: flex; align-items: center; justify-content: flex-end; padding: 0 16mm; }
+.p-head { background: ${NAVY}; height: 46px; display: flex; align-items: center; justify-content: space-between; padding: 0 16mm; }
 .p-badge { color: #fff; font-size: 12px; letter-spacing: 2px; } .p-badge b { color: ${ORANGE}; }
+.p-num { color: #b9c6d6; font-size: 11px; } .p-num b { color: #fff; }
 .p-top { display: flex; gap: 18px; padding: 20px 16mm 0; }
 .p-foto { flex: 0 0 210px; height: 300px; background: #f2f6fa; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
 .p-foto img { max-width: 180px; max-height: 280px; object-fit: contain; }
