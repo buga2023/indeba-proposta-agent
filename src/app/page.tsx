@@ -1107,6 +1107,9 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
   const [itens, setItens] = useState<Record<string, number>>({}); // codigo → quantidade
   // Itens próprios (fora do catálogo): preço digitado por humano → procedência MANUAL.
   const [custom, setCustom] = useState<{ id: number; nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; qtd: number }[]>([]);
+  // Produto do catálogo SEM preço (arquivado, aguardando precificação) → preço digitado
+  // por humano na hora de adicionar (codigo → texto digitado). Nunca vem da IA.
+  const [precoManual, setPrecoManual] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState<{ nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string }>({ nome: "", tamanho: "", unidade: "L", preco: "" });
   const [showCustom, setShowCustom] = useState(false);
   const nextId = useRef(1);
@@ -1124,21 +1127,36 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
   const campoInput: CSSProperties = { width: "100%", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", fontSize: "13.5px", color: "var(--text-strong)", fontFamily: "var(--font-sans)", outline: "none" };
   const qtdBtn: CSSProperties = { width: "26px", height: "26px", borderRadius: "7px", border: "1px solid var(--border-strong)", background: "var(--surface)", cursor: "pointer", color: "var(--text-muted)", fontSize: "15px", lineHeight: 1, flex: "none" };
 
-  const ativos = (catalogo ?? []).filter((p) => p.ativo);
+  // Todo o catálogo entra na busca — inclusive produtos arquivados (sem preço), que
+  // ganham preço digitado na hora (ver precoDe/precoManual). A IA nunca vê isso: é
+  // só a tela manual, sem seleção automática.
+  const disponiveis = catalogo ?? [];
   const q = busca.trim().toLowerCase();
-  const filtrados = q ? ativos.filter((p) => `${p.nome} ${p.codigo} ${p.descricaoCurta}`.toLowerCase().includes(q)) : ativos;
-  const precoDe = (p: Produto) => Number(p.embalagens[0]?.preco ?? 0);
+  const filtrados = q ? disponiveis.filter((p) => `${p.nome} ${p.codigo} ${p.descricaoCurta}`.toLowerCase().includes(q)) : disponiveis;
+  // null = catálogo sem preço E ainda sem valor digitado nessa sessão.
+  const precoDe = (p: Produto): number | null => {
+    const doCatalogo = p.embalagens[0]?.preco;
+    if (doCatalogo != null) return Number(doCatalogo);
+    const digitado = Number((precoManual[p.codigo] ?? "").replace(",", "."));
+    return digitado > 0 ? digitado : null;
+  };
   const selCat = Object.entries(itens)
-    .map(([codigo, qtd]) => ({ produto: ativos.find((p) => p.codigo === codigo), qtd }))
+    .map(([codigo, qtd]) => ({ produto: disponiveis.find((p) => p.codigo === codigo), qtd }))
     .filter((x): x is { produto: Produto; qtd: number } => Boolean(x.produto));
   // Linhas unificadas (catálogo + próprias) para render e total.
   const rows: { key: string; nome: string; sub: string; preco: number; qtd: number; onQtd: (q: number) => void }[] = [
-    ...selCat.map((x) => ({ key: x.produto.codigo, nome: x.produto.nome, sub: `${fmt(precoDe(x.produto))} un. · catálogo`, preco: precoDe(x.produto), qtd: x.qtd, onQtd: (q: number) => setQtd(x.produto.codigo, q) })),
+    ...selCat.map((x) => {
+      const preco = precoDe(x.produto) ?? 0;
+      const semPreco = x.produto.embalagens[0]?.preco == null;
+      return { key: x.produto.codigo, nome: x.produto.nome, sub: semPreco ? `${fmt(preco)} un. · preço digitado` : `${fmt(preco)} un. · catálogo`, preco, qtd: x.qtd, onQtd: (q: number) => setQtd(x.produto.codigo, q) };
+    }),
     ...custom.map((c) => ({ key: `c${c.id}`, nome: c.nome, sub: `${fmt(Number(c.preco) || 0)} un. · ${c.tamanho}${c.unidade} · manual`, preco: Number(c.preco) || 0, qtd: c.qtd, onQtd: (q: number) => setCustomQtd(c.id, q) })),
   ];
   const total = rows.reduce((s, r) => s + r.preco * r.qtd, 0);
 
   function add(codigo: string) {
+    const p = disponiveis.find((x) => x.codigo === codigo);
+    if (p && precoDe(p) == null) return; // arquivado sem preço digitado ainda — botão fica desabilitado
     setItens((m) => (m[codigo] ? m : { ...m, [codigo]: 1 }));
   }
   function setQtd(codigo: string, q: number) {
@@ -1178,6 +1196,11 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
       setErro("Adicione ao menos um produto (catálogo ou item próprio).");
       return;
     }
+    const semPreco = selCat.filter((x) => precoDe(x.produto) == null);
+    if (semPreco.length > 0) {
+      setErro(`Defina o preço de: ${semPreco.map((x) => x.produto.nome).join(", ")}.`);
+      return;
+    }
     setMontando(true);
     setErro(null);
     try {
@@ -1185,7 +1208,21 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
         tipo,
         cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmento.trim() || null, responsavel: responsavel.trim() || null },
         itens: [
-          ...selCat.map((x) => ({ codigo: x.produto.codigo, quantidade: x.qtd })),
+          ...selCat.map((x) => {
+            const embCatalogo = x.produto.embalagens[0];
+            // Catálogo sem preço (produto arquivado): manda a embalagem com o preço
+            // digitado pelo vendedor — nunca inventado pela IA. Com preço no
+            // catálogo, manda só o código (preço vem de lá, como sempre).
+            if (embCatalogo?.preco == null) {
+              const preco = precoDe(x.produto);
+              return {
+                codigo: x.produto.codigo,
+                quantidade: x.qtd,
+                embalagens: [{ tamanho: embCatalogo?.tamanho ?? 1, unidade: embCatalogo?.unidade ?? "un", preco: (preco ?? 0).toFixed(2), diluicaoMax: embCatalogo?.diluicaoMax ?? null, custoDiluido: null }],
+              };
+            }
+            return { codigo: x.produto.codigo, quantidade: x.qtd };
+          }),
           ...custom.map((c) => ({ nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: null, custoDiluido: null }], quantidade: c.qtd })),
         ],
       };
@@ -1260,15 +1297,29 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
             <div className="ies-scroll" style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "440px", overflowY: "auto" }}>
               {filtrados.map((p) => {
                 const incluido = Boolean(itens[p.codigo]);
+                const semPrecoCatalogo = p.embalagens[0]?.preco == null;
+                const preco = precoDe(p);
+                const podeAdicionar = preco != null;
                 return (
                   <div key={p.codigo} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "10px", border: "1px solid var(--border)", background: incluido ? "var(--info-soft)" : "var(--surface)" }}>
                     <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: linhaCor(p.linha), flex: "none" }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nome}</div>
-                      <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{p.codigo} · {humaniza(p.linha)}</div>
+                      <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{p.codigo} · {humaniza(p.linha)}{!p.ativo && " · arquivado"}</div>
                     </div>
-                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--primary)", fontSize: "13px", whiteSpace: "nowrap" }}>{fmt(precoDe(p))}</span>
-                    <button onClick={() => add(p.codigo)} disabled={incluido} title={incluido ? "Já incluído" : "Adicionar"} style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--border-strong)", background: incluido ? "var(--surface-muted)" : "var(--surface)", cursor: incluido ? "default" : "pointer", color: incluido ? "var(--text-subtle)" : "var(--primary)", fontSize: "18px", lineHeight: 1, flex: "none" }}>+</button>
+                    {semPrecoCatalogo ? (
+                      <input
+                        value={precoManual[p.codigo] ?? ""}
+                        onChange={(e) => setPrecoManual((m) => ({ ...m, [p.codigo]: e.target.value }))}
+                        placeholder="Preço R$"
+                        inputMode="decimal"
+                        disabled={incluido}
+                        style={{ ...campoInput, width: "92px", height: "32px", flex: "none", fontSize: "12.5px", padding: "0 8px" }}
+                      />
+                    ) : (
+                      <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--primary)", fontSize: "13px", whiteSpace: "nowrap" }}>{fmt(preco ?? 0)}</span>
+                    )}
+                    <button onClick={() => add(p.codigo)} disabled={incluido || !podeAdicionar} title={incluido ? "Já incluído" : podeAdicionar ? "Adicionar" : "Digite o preço primeiro"} style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--border-strong)", background: incluido || !podeAdicionar ? "var(--surface-muted)" : "var(--surface)", cursor: incluido || !podeAdicionar ? "default" : "pointer", color: incluido || !podeAdicionar ? "var(--text-subtle)" : "var(--primary)", fontSize: "18px", lineHeight: 1, flex: "none" }}>+</button>
                   </div>
                 );
               })}
