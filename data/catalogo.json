@@ -23,14 +23,14 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 200,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -68,14 +68,14 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 200,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -112,7 +112,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -151,21 +151,21 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 22,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 220,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -204,7 +204,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -242,7 +242,7 @@
         {
           "tamanho": 500,
           "unidade": "ml",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -283,14 +283,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 22,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -327,7 +327,7 @@
         {
           "tamanho": 23,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -367,14 +367,14 @@
         {
           "tamanho": 75,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 7.5,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -414,21 +414,21 @@
         {
           "tamanho": 1240,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 6.2,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 62,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -467,14 +467,14 @@
         {
           "tamanho": 66,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 6.6,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -512,7 +512,7 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -550,14 +550,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -596,7 +596,7 @@
         {
           "tamanho": 6.5,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -636,21 +636,21 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -762,14 +762,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -807,7 +807,7 @@
         {
           "tamanho": 5.3,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -882,7 +882,7 @@
         {
           "tamanho": 500,
           "unidade": "ml",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -919,7 +919,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "25:100",
           "custoDiluido": null
         }
@@ -996,7 +996,7 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1034,7 +1034,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1070,7 +1070,7 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1108,7 +1108,7 @@
         {
           "tamanho": 4,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:100",
           "custoDiluido": null
         }
@@ -1233,7 +1233,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "10:100",
           "custoDiluido": null
         }
@@ -1275,14 +1275,14 @@
         {
           "tamanho": 5,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1322,7 +1322,7 @@
         {
           "tamanho": 60,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1361,7 +1361,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1401,7 +1401,7 @@
         {
           "tamanho": 65,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1440,7 +1440,7 @@
         {
           "tamanho": 35,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1517,14 +1517,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1563,14 +1563,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:140",
           "custoDiluido": null
         },
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:140",
           "custoDiluido": null
         }
@@ -1609,7 +1609,7 @@
         {
           "tamanho": 4,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:100",
           "custoDiluido": null
         }
@@ -1648,7 +1648,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:200",
           "custoDiluido": null
         }
@@ -1686,7 +1686,7 @@
         {
           "tamanho": 4,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1724,14 +1724,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 800,
           "unidade": "ml",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1769,7 +1769,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1808,7 +1808,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1847,7 +1847,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1886,7 +1886,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1924,7 +1924,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -1961,7 +1961,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2001,7 +2001,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2083,14 +2083,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 800,
           "unidade": "ml",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2136,7 +2136,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2175,7 +2175,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "10%",
           "custoDiluido": null
         }
@@ -2213,7 +2213,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2251,7 +2251,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2292,7 +2292,7 @@
         {
           "tamanho": 5,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2329,7 +2329,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2367,7 +2367,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2405,7 +2405,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2443,7 +2443,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2480,7 +2480,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2518,7 +2518,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2555,7 +2555,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2594,7 +2594,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2632,7 +2632,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2672,7 +2672,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2710,7 +2710,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2752,7 +2752,7 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2793,14 +2793,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2840,14 +2840,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2887,7 +2887,7 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2926,7 +2926,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2964,7 +2964,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3004,7 +3004,7 @@
         {
           "tamanho": 20,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3043,7 +3043,7 @@
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3082,14 +3082,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3128,14 +3128,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3172,14 +3172,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3217,14 +3217,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3260,14 +3260,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3306,14 +3306,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3350,14 +3350,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3394,14 +3394,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3439,14 +3439,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3484,14 +3484,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3527,14 +3527,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3573,14 +3573,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3620,14 +3620,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3668,14 +3668,14 @@
         {
           "tamanho": 35,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 65,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3714,7 +3714,7 @@
         {
           "tamanho": 32,
           "unidade": "kg",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3754,7 +3754,7 @@
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3794,7 +3794,7 @@
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3833,7 +3833,7 @@
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3876,7 +3876,7 @@
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3917,7 +3917,7 @@
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3954,7 +3954,7 @@
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -3990,7 +3990,7 @@
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -4030,7 +4030,7 @@
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -4071,7 +4071,7 @@
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -4113,7 +4113,7 @@
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -4153,14 +4153,14 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:10",
           "custoDiluido": null
         },
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:10",
           "custoDiluido": null
         }
@@ -4198,14 +4198,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:100",
           "custoDiluido": null
         },
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:100",
           "custoDiluido": null
         }
@@ -4243,7 +4243,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:50",
           "custoDiluido": null
         }
@@ -4284,7 +4284,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:100",
           "custoDiluido": null
         }
@@ -4326,7 +4326,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:1000",
           "custoDiluido": null
         }
@@ -4365,7 +4365,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:300",
           "custoDiluido": null
         }
@@ -4403,7 +4403,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:1",
           "custoDiluido": null
         }
@@ -4442,7 +4442,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:100",
           "custoDiluido": null
         }
@@ -4479,7 +4479,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:50",
           "custoDiluido": null
         }
@@ -4518,7 +4518,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:5",
           "custoDiluido": null
         }
@@ -4557,7 +4557,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:130",
           "custoDiluido": null
         }
@@ -4597,7 +4597,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:10",
           "custoDiluido": null
         }
@@ -4635,7 +4635,7 @@
         {
           "tamanho": 500,
           "unidade": "ml",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -4672,7 +4672,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:100",
           "custoDiluido": null
         }
@@ -4712,7 +4712,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:200",
           "custoDiluido": null
         }
@@ -4752,7 +4752,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:100",
           "custoDiluido": null
         }
@@ -4791,14 +4791,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:150",
           "custoDiluido": null
         },
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:150",
           "custoDiluido": null
         }
@@ -4837,7 +4837,7 @@
         {
           "tamanho": 20,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:500",
           "custoDiluido": null
         }
@@ -4876,7 +4876,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:80",
           "custoDiluido": null
         }
@@ -4919,7 +4919,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:10",
           "custoDiluido": null
         }
@@ -4962,7 +4962,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:10",
           "custoDiluido": null
         }
@@ -5000,7 +5000,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -5037,7 +5037,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:3 (uso como spray buff)",
           "custoDiluido": null
         }
@@ -5075,7 +5075,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:3 (uso como spray buff)",
           "custoDiluido": null
         }
@@ -5113,7 +5113,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -5154,7 +5154,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -5194,14 +5194,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 800,
           "unidade": "ml",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -5240,7 +5240,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -5280,7 +5280,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -5321,7 +5321,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:100",
           "custoDiluido": null
         }
@@ -5360,7 +5360,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:100",
           "custoDiluido": null
         }
@@ -5397,7 +5397,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:40",
           "custoDiluido": null
         }
@@ -5435,7 +5435,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:40",
           "custoDiluido": null
         }
@@ -5473,14 +5473,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:40",
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:40",
           "custoDiluido": null
         }
@@ -5518,14 +5518,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:40",
           "custoDiluido": null
         },
         {
           "tamanho": 50,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:40",
           "custoDiluido": null
         }
@@ -5563,7 +5563,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:40",
           "custoDiluido": null
         }
@@ -5604,7 +5604,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:50",
           "custoDiluido": null
         }
@@ -5644,7 +5644,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:20",
           "custoDiluido": null
         }
@@ -5684,7 +5684,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:20",
           "custoDiluido": null
         }
@@ -5723,7 +5723,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -5761,7 +5761,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -5802,7 +5802,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:1",
           "custoDiluido": null
         }
@@ -5843,7 +5843,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:20",
           "custoDiluido": null
         }
@@ -5881,7 +5881,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:9",
           "custoDiluido": null
         }
@@ -5921,7 +5921,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -5959,14 +5959,14 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
         {
           "tamanho": 800,
           "unidade": "ml",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -6006,7 +6006,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -6044,7 +6044,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:2",
           "custoDiluido": null
         }
@@ -6083,7 +6083,7 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "0.00",
+          "preco": null,
           "diluicaoMax": "1:10",
           "custoDiluido": null
         }

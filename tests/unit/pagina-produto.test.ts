@@ -29,9 +29,8 @@ const item: PropostaItem = {
 
 describe("paginaProduto", () => {
   it("renderiza título, benefícios, diluição, características e preço por embalagem", () => {
-    const html = paginaProduto(item, "data:image/png;base64,AAAA", 4);
+    const html = paginaProduto(item, "data:image/png;base64,AAAA");
     expect(html).toContain("Detergente Desengordurante");
-    expect(html).toContain("Proposta de Solução <b>04</b>");
     expect(html).toContain("Alcalino Concentrado");
     expect(html).toContain("KITCHEN");
     expect(html).toContain("Remove gordura pesada");
@@ -45,7 +44,7 @@ describe("paginaProduto", () => {
 
   it("degrada com elegância quando não há ficha (usa nome + descricaoUso + preço)", () => {
     const semFicha = { ...item, ficha: null };
-    const html = paginaProduto(semFicha, "data:image/png;base64,AAAA", 5);
+    const html = paginaProduto(semFicha, "data:image/png;base64,AAAA");
     expect(html).toContain("Primmax Plus");
     expect(html).toContain("R$ 130,00");
     expect(html).not.toContain("undefined");

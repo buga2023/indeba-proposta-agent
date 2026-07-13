@@ -17,9 +17,10 @@ describe("catálogo — fonte da verdade dos preços", () => {
     expect(plus?.embalagens[0].preco).toBe("130.00"); // valor real do PDF
   });
 
-  it("todo preço do catálogo é decimal string (nunca float)", () => {
+  it("todo preço do catálogo é decimal string (nunca float) ou null (produto ainda sem preço)", () => {
     for (const p of catalogo.produtos) {
       for (const e of p.embalagens) {
+        if (e.preco === null) continue; // produto novo (ativo:false) aguardando preço real
         expect(e.preco).toMatch(/^\d+\.\d{2}$/);
       }
     }
