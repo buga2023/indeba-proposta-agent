@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   const parsed = ChamadoCreate.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   try {
-    const chamado = await criarChamado(usuario.login, parsed.data);
+    const chamado = await criarChamado(usuario.email, parsed.data);
     return NextResponse.json(chamado, { status: 201 });
   } catch (e) {
     return respostaErro(e, "Falha ao abrir o chamado.", 500);

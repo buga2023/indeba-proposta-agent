@@ -3,7 +3,7 @@ import { z } from "zod";
 import { montarProposta } from "@/lib/montar";
 import { Tipo } from "@/lib/contracts";
 import { detectarTipo, TIPOS_LABEL } from "@/lib/tipo-proposta";
-import { validarSessao, nomeExibicao } from "@/lib/auth";
+import { validarSessao } from "@/lib/auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // IA pode levar alguns segundos (Vercel)
@@ -51,13 +51,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const login = (await validarSessao(req.cookies.get("sessao")?.value))?.login;
+  const usuario = await validarSessao(req.cookies.get("sessao")?.value);
   const scope = await montarProposta(
     briefing,
     { razaoSocial, cnpj, segmento, responsavel },
     tipoFinal,
     contextoProspeccao,
-    login ? nomeExibicao(login) : null,
+    usuario ? { nome: usuario.nome, email: usuario.email } : null,
   );
 
   // Seleção vazia = o briefing não casou com nada do catálogo. Não emite proposta

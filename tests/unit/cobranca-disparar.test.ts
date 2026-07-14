@@ -36,14 +36,14 @@ describe("POST /api/cobranca/disparar — hardening do open-relay", () => {
   });
 
   it("403 quando autenticado mas NÃO admin (envia e-mail em nome da empresa)", async () => {
-    usuarioAtual.mockResolvedValue({ login: "mateus", papel: "user" });
+    usuarioAtual.mockResolvedValue({ email: "mateus@indeba.com", papel: "user" });
     const r = await POST(req({ inadimplentes: [inadimplente] }));
     expect(r.status).toBe(403);
     expect(dispararCobranca).not.toHaveBeenCalled();
   });
 
   it("400 quando o body não bate com o schema (corpo/destinatário arbitrário barrado)", async () => {
-    usuarioAtual.mockResolvedValue({ login: "gustavo", papel: "admin" });
+    usuarioAtual.mockResolvedValue({ email: "gustavo@indeba.com", papel: "admin" });
     // payload de open-relay: destinatário/corpo crus, sem a estrutura do motor
     const r = await POST(req({ inadimplentes: [{ to: "vitima@x.com", corpo: "spam" }] }));
     expect(r.status).toBe(400);
@@ -51,13 +51,13 @@ describe("POST /api/cobranca/disparar — hardening do open-relay", () => {
   });
 
   it("400 quando a lista está vazia", async () => {
-    usuarioAtual.mockResolvedValue({ login: "gustavo", papel: "admin" });
+    usuarioAtual.mockResolvedValue({ email: "gustavo@indeba.com", papel: "admin" });
     const r = await POST(req({ inadimplentes: [] }));
     expect(r.status).toBe(400);
   });
 
   it("admin + body válido → dispara", async () => {
-    usuarioAtual.mockResolvedValue({ login: "gustavo", papel: "admin" });
+    usuarioAtual.mockResolvedValue({ email: "gustavo@indeba.com", papel: "admin" });
     dispararCobranca.mockResolvedValue({ enviados: 1 });
     const r = await POST(req({ inadimplentes: [inadimplente], totalDevido: "100.00" }));
     expect(r.status).toBe(200);

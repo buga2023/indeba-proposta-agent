@@ -9,7 +9,7 @@ padrão**; no deploy Vercel, a segurança passa a depender de auth + rate limit 
 
 | Categoria | Status | Como é tratado |
 |---|---|---|
-| **A01 – Broken Access Control** | ✅ | Auth por sessão assinada (HMAC, cookie httpOnly) no `proxy.ts`; rotas `/api/*` exigem login quando `AUTH_USERS` está setado. Path traversal no render de PDF bloqueado (`dentroDePublic`). |
+| **A01 – Broken Access Control** | ✅ | Auth por sessão assinada (HMAC, cookie httpOnly) no `middleware.ts`; rotas `/api/*` exigem login (cadastro próprio, e-mail/senha) exceto se `AUTH_ENABLED=false`. Path traversal no render de PDF bloqueado (`dentroDePublic`). |
 | **A02 – Cryptographic Failures** | ✅ | Sem segredos no código (só em `.env.local`/env da Vercel). Sessão assinada com HMAC-SHA256. HTTPS na Vercel + HSTS. Preço como `Decimal`/string (sem float). |
 | **A03 – Injection** | ✅ | Zod valida toda entrada. HTML do PDF escapa `& < > " '` (anti-injeção de atributo). Path do asset restrito a `public/`. Prompt da IA trata o briefing como **dado, não comando** (anti prompt-injection). Sem SQL (catálogo em arquivo); Prisma parametrizado quando entrar. |
 | **A04 – Insecure Design** | ✅ | Design seguro por princípio: **backbone determinístico, a IA nunca emite preço** (teste-guardião). Render = view do objeto canônico. |

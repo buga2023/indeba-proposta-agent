@@ -4,30 +4,35 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 
-export default function Login() {
+export default function Cadastro() {
   const router = useRouter();
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
 
-  async function entrar(e: React.FormEvent) {
+  async function criarConta(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !senha) {
-      setErro("Preencha e-mail e senha.");
+    if (!nome || !email || !senha) {
+      setErro("Preencha nome, e-mail e senha.");
+      return;
+    }
+    if (senha.length < 8) {
+      setErro("A senha precisa ter pelo menos 8 caracteres.");
       return;
     }
     setCarregando(true);
     setErro(null);
     try {
-      const r = await fetch("/api/login", {
+      const r = await fetch("/api/cadastro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, senha }),
+        body: JSON.stringify({ nome, email, senha }),
       });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
-        throw new Error(d.erro || "Credenciais inválidas — use sua conta Indeba.");
+        throw new Error(d.erro || "Não foi possível criar a conta.");
       }
       router.push("/");
       router.refresh();
@@ -77,10 +82,20 @@ export default function Login() {
             <div className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
               indeba <span className="text-accent">express</span>
             </div>
-            <div className="mt-1 text-[12.5px] text-[var(--text-muted)]">Plataforma de IA · acesso restrito</div>
+            <div className="mt-1 text-[12.5px] text-[var(--text-muted)]">Criar conta de colaborador</div>
           </div>
 
-          <form onSubmit={entrar} className="flex flex-col gap-4">
+          <form onSubmit={criarConta} className="flex flex-col gap-4">
+            <div>
+              <label className="mb-1.5 block text-[13px] font-semibold text-[var(--text-body)]">Nome</label>
+              <Input
+                placeholder="Seu nome completo"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                autoComplete="name"
+                autoFocus
+              />
+            </div>
             <div>
               <label className="mb-1.5 block text-[13px] font-semibold text-[var(--text-body)]">E-mail</label>
               <Input
@@ -89,17 +104,16 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
-                autoFocus
               />
             </div>
             <div>
               <label className="mb-1.5 block text-[13px] font-semibold text-[var(--text-body)]">Senha</label>
               <Input
                 type="password"
-                placeholder="••••••••"
+                placeholder="Mínimo 8 caracteres"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                autoComplete="current-password"
+                autoComplete="new-password"
               />
             </div>
             {erro && (
@@ -125,18 +139,18 @@ export default function Login() {
                     className="inline-block h-4 w-4 rounded-full border-2 border-white/40"
                     style={{ borderTopColor: "#fff", animation: "spin .7s linear infinite" }}
                   />
-                  Entrando…
+                  Criando…
                 </>
               ) : (
-                "Entrar"
+                "Criar conta"
               )}
             </button>
           </form>
 
           <p className="mt-5 text-center text-[11.5px] text-[var(--text-subtle)]">
-            Ainda não tem conta?{" "}
-            <a href="/cadastro" className="font-semibold text-[var(--primary)] hover:underline">
-              Criar conta
+            Já tem conta?{" "}
+            <a href="/login" className="font-semibold text-[var(--primary)] hover:underline">
+              Entrar
             </a>
           </p>
         </div>

@@ -3,14 +3,14 @@ import { prisma } from "@/lib/db";
 import { authAtiva, validarSessao } from "@/lib/auth";
 import { Chamado, type ChamadoCreate, type ChamadoUpdate } from "@/lib/contracts";
 
-// Quem está pedindo: login + papel (gestor = admin). Em dev local sem auth, vira admin
+// Quem está pedindo: e-mail + papel (gestor = admin). Em dev local sem auth, vira admin
 // "local" pra não travar o uso. Com auth ativa e sem sessão válida → null (401 na rota).
-export type SessaoUsuario = { login: string; papel: "admin" | "user" };
+export type SessaoUsuario = { email: string; papel: "admin" | "user" };
 
 export async function usuarioAtual(req: NextRequest): Promise<SessaoUsuario | null> {
   const u = await validarSessao(req.cookies.get("sessao")?.value);
-  if (u) return { login: u.login, papel: u.papel };
-  if (!authAtiva()) return { login: "local", papel: "admin" };
+  if (u) return { email: u.email, papel: u.papel };
+  if (!authAtiva()) return { email: "local", papel: "admin" };
   return null;
 }
 
@@ -44,7 +44,7 @@ export async function criarChamado(autor: string, dados: ChamadoCreate): Promise
 
 // Gestor vê TODOS; colaborador vê só os seus. Mais recentes primeiro.
 export async function listarChamados(usuario: SessaoUsuario): Promise<Chamado[]> {
-  const where = usuario.papel === "admin" ? {} : { autor: usuario.login };
+  const where = usuario.papel === "admin" ? {} : { autor: usuario.email };
   const rows = await prisma.chamado.findMany({ where, orderBy: { criadoEm: "desc" } });
   return rows.map(mapear);
 }

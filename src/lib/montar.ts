@@ -17,6 +17,10 @@ export type DadosCliente = {
 // apresentação. É só tempero do texto (IA-TEXTO, revisável) — não toca preço/item.
 export type ContextoProspeccao = { problema: string; comoAjudar: string };
 
+// Quem está logado (nome/e-mail do cadastro) — vira "consultor"/"emailConsultor" na
+// Consolidada. Sem sessão (dev local), cai nos defaults de consolidadaDefaults/env.
+export type ConsultorInfo = { nome: string; email?: string | null };
+
 // Comercial = identidade fabricante (Indeba); Orçamento/Implantação = Express.
 const marcaPorTipo = (tipo: Tipo, padrao: "indeba" | "indeba_express") =>
   tipo === "comercial" ? "indeba" : padrao;
@@ -30,16 +34,18 @@ const CONDICOES_PADRAO = {
 
 // Quando tipo === "consolidada", anexa os textos institucionais default (editáveis
 // depois na revisão). Para os demais tipos, retorna undefined (campo omitido).
-// `consultor` vem da sessão (quem está logado) — cai no default do consolidadaDefaults
-// (Matheus Maristane Resende) quando não há sessão ativa (auth desligada localmente).
-// Contato (WhatsApp/e-mail) vem de env — nunca chumbado no código; vazio = PDF não exibe
-// contato nenhum (a Revisão avisa visivelmente quando os dois estão vazios).
-const blocoConsolidada = (tipo: Tipo, consultor?: string | null) =>
+// `consultor` vem da sessão (nome/e-mail do cadastro) — cai no default do
+// consolidadaDefaults (Matheus Maristane Resende) quando não há sessão ativa (auth
+// desligada localmente). WhatsApp segue vindo de env (não há telefone por usuário);
+// o e-mail do consultor prioriza o do usuário logado, com INDEBA_CONSULTOR_EMAIL como
+// fallback (dev local sem sessão). Vazio = PDF não exibe contato nenhum (a Revisão
+// avisa visivelmente quando os dois estão vazios).
+const blocoConsolidada = (tipo: Tipo, consultor?: ConsultorInfo | null) =>
   tipo === "consolidada"
     ? consolidadaDefaults({
-        consultor: consultor ?? undefined,
+        consultor: consultor?.nome ?? undefined,
         whatsapp: process.env.INDEBA_WHATSAPP || null,
-        emailConsultor: process.env.INDEBA_CONSULTOR_EMAIL || null,
+        emailConsultor: consultor?.email || process.env.INDEBA_CONSULTOR_EMAIL || null,
       })
     : undefined;
 
@@ -49,7 +55,7 @@ export async function montarProposta(
   cliente: DadosCliente,
   tipo: Tipo = "implantacao",
   contexto?: ContextoProspeccao | null,
-  consultor?: string | null,
+  consultor?: ConsultorInfo | null,
 ): Promise<PropostaScope> {
   const catalogo = carregarCatalogo();
 
@@ -106,7 +112,7 @@ export async function montarProposta(
 // prontas. Converge no MESMO PropostaScope → mesmo PDF. Sem IA de seleção.
 export async function montarPropostaEstruturada(
   entrada: EntradaEstruturada,
-  consultor?: string | null,
+  consultor?: ConsultorInfo | null,
 ): Promise<PropostaScope> {
   const catalogo = carregarCatalogo();
 

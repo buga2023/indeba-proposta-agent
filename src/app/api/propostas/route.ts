@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }
   try {
-    const autor = (await validarSessao(req.cookies.get("sessao")?.value))?.login ?? "local";
+    const autor = (await validarSessao(req.cookies.get("sessao")?.value))?.email ?? "local";
     const registro = await salvarProposta(parsed.data, autor);
     return NextResponse.json(registro, { status: 201 });
   } catch (e) {

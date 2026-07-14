@@ -1,36 +1,19 @@
-// Autenticação simples multiusuário por sessão assinada (HMAC). Edge-safe (Web Crypto).
-// Os usuários vêm de AUTH_USERS (env) — nunca hardcoded no repositório. A senha é
-// guardada com HASH (PBKDF2), nunca em texto puro:
-//   AUTH_USERS="mateus:SALThex.HASHhex:user,gustavo:SALThex.HASHhex:admin"
-// Gere os hashes com: npx tsx scripts/gerar-auth-users.mts "mateus:senha:user,..."
-// Se AUTH_USERS for vazio, a autenticação fica DESLIGADA (uso local em 127.0.0.1).
+// Autenticação simples multiusuário por sessão assinada (HMAC). Edge-safe (Web Crypto,
+// sem Buffer/Prisma) — importado pelo middleware (Edge Runtime).
+// Os usuários vivem no banco (model Usuario — nome/e-mail/senha via cadastro próprio em
+// /api/cadastro, ver src/lib/auth-db.ts, que roda em Node.js e por isso não pode ser
+// importado aqui). A sessão é AUTOCONTIDA: o cookie carrega {email,nome,papel,exp}
+// assinado, então validarSessao nunca consulta o banco — só valida a assinatura.
 
 export type Papel = "admin" | "user";
-// `credencial` = "salt.hash" (PBKDF2). Mantém a senha real fora do env.
-export type Usuario = { login: string; credencial: string; papel: Papel };
+export type Usuario = { email: string; nome: string; papel: Papel };
 
 const secret = () => process.env.AUTH_SESSION_SECRET ?? "dev-secret-trocar-em-producao";
 
-export function usuarios(): Usuario[] {
-  const raw = process.env.AUTH_USERS?.trim();
-  if (!raw) return [];
-  return raw
-    .split(",")
-    .map((entrada) => {
-      const [login, credencial, papel] = entrada.split(":");
-      return { login: login?.trim(), credencial, papel: (papel?.trim() as Papel) || "user" };
-    })
-    .filter((u): u is Usuario => Boolean(u.login && u.credencial));
-}
-
+// Liga por padrão. Só desliga com AUTH_ENABLED=false explícito (uso local em 127.0.0.1
+// sem quem logar ainda) — nunca desliga sozinha em produção.
 export function authAtiva(): boolean {
-  return usuarios().length > 0;
-}
-
-// Nome de exibição a partir do login — não há campo de nome próprio hoje (só
-// login/credencial/papel). Title-case simples ("gustavo" → "Gustavo").
-export function nomeExibicao(login: string): string {
-  return login.charAt(0).toUpperCase() + login.slice(1);
+  return process.env.AUTH_ENABLED !== "false";
 }
 
 // ── Hash de senha (PBKDF2-SHA256, Web Crypto — edge-safe) ──────────────
@@ -57,21 +40,20 @@ async function derivar(senha: string, salt: BufferSource): Promise<string> {
   return hex(bits);
 }
 
-// Gera "salt.hash" para uma senha — usado pelo script gerador do AUTH_USERS.
+// Gera "salt.hash" para uma senha — usado no cadastro (src/lib/auth-db.ts).
 export async function gerarCredencial(senha: string): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   return `${hex(salt.buffer)}.${await derivar(senha, salt)}`;
 }
 
-export async function validarCredenciais(login: string, senha: string): Promise<Usuario | null> {
-  const u = usuarios().find((x) => x.login === login);
-  if (!u) return null;
-  const ponto = u.credencial.indexOf(".");
-  if (ponto < 1) return null; // formato antigo (texto puro) → inválido; regenere o AUTH_USERS
-  const esperado = u.credencial.slice(ponto + 1);
-  const recebido = await derivar(senha, bytesDeHex(u.credencial.slice(0, ponto)));
-  if (recebido.length !== esperado.length || recebido !== esperado) return null; // tempo ~constante
-  return u;
+// Confere uma senha contra "salt.hash" — comparação de tamanho fixo (evita vazar por
+// timing trivial). Usado por validarCredenciais (auth-db.ts).
+export async function validarHash(senha: string, credencial: string): Promise<boolean> {
+  const ponto = credencial.indexOf(".");
+  if (ponto < 1) return false; // formato inesperado
+  const esperado = credencial.slice(ponto + 1);
+  const recebido = await derivar(senha, bytesDeHex(credencial.slice(0, ponto)));
+  return recebido.length === esperado.length && recebido === esperado;
 }
 
 async function assinar(msg: string): Promise<string> {
@@ -88,13 +70,33 @@ async function assinar(msg: string): Promise<string> {
     .join("");
 }
 
-// Validade da sessão — casa com o maxAge do cookie (login/route.ts). A expiração vai
+// base64url manual (sem Buffer — Edge Runtime não garante o polyfill). btoa/atob só
+// trabalham em Latin1, por isso passa pelos bytes UTF-8 explicitamente (nome tem acento).
+function base64url(bytes: Uint8Array): string {
+  let binario = "";
+  for (const b of bytes) binario += String.fromCharCode(b);
+  return btoa(binario).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function base64urlParaBytes(s: string): Uint8Array {
+  const pad = (4 - (s.length % 4)) % 4;
+  const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat(pad);
+  const binario = atob(b64);
+  const bytes = new Uint8Array(binario.length);
+  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+  return bytes;
+}
+
+// Validade da sessão — casa com o maxAge do cookie (login/cadastro). A expiração vai
 // ASSINADA no token: um cookie capturado deixa de ser replayável pra sempre.
 const TTL_MS = 8 * 60 * 60 * 1000; // 8h
 
-// Cookie de sessão = "login.exp.hmac(login.exp)". Opaco, httpOnly, validável no edge.
-export async function criarSessao(login: string, agora = Date.now()): Promise<string> {
-  const payload = `${login}.${agora + TTL_MS}`;
+type SessaoPayload = { email: string; nome: string; papel: Papel; exp: number };
+
+// Cookie de sessão = "base64url(json {email,nome,papel,exp}).hmac(payload)". Opaco,
+// httpOnly, validável no edge sem tocar banco.
+export async function criarSessao(usuario: Usuario, agora = Date.now()): Promise<string> {
+  const dados: SessaoPayload = { email: usuario.email, nome: usuario.nome, papel: usuario.papel, exp: agora + TTL_MS };
+  const payload = base64url(new TextEncoder().encode(JSON.stringify(dados)));
   return `${payload}.${await assinar(payload)}`;
 }
 
@@ -102,16 +104,19 @@ export async function validarSessao(cookie: string | undefined, agora = Date.now
   if (!cookie) return null;
   const i = cookie.lastIndexOf(".");
   if (i < 1) return null;
-  const payload = cookie.slice(0, i); // "login.exp"
+  const payload = cookie.slice(0, i);
   const sig = cookie.slice(i + 1);
   const esperado = await assinar(payload);
   // comparação de tamanho fixo evita vazar por timing trivial
   if (sig.length !== esperado.length || sig !== esperado) return null;
-  // exp é o último segmento (numérico) — separa do login mesmo que o login tenha ponto.
-  const j = payload.lastIndexOf(".");
-  if (j < 1) return null;
-  const exp = Number(payload.slice(j + 1));
-  if (!Number.isFinite(exp) || exp < agora) return null; // expirada
-  const login = payload.slice(0, j);
-  return usuarios().find((u) => u.login === login) ?? null;
+
+  let dados: SessaoPayload;
+  try {
+    dados = JSON.parse(new TextDecoder().decode(base64urlParaBytes(payload)));
+  } catch {
+    return null; // payload corrompido/adulterado
+  }
+  if (!dados?.email || !dados.papel || !Number.isFinite(dados.exp)) return null;
+  if (dados.exp < agora) return null; // expirada
+  return { email: dados.email, nome: dados.nome ?? "", papel: dados.papel };
 }

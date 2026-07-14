@@ -4,7 +4,7 @@ import { authAtiva, validarSessao } from "@/lib/auth";
 import { rateLimitOk } from "@/lib/ratelimit";
 
 // Rotas de API públicas: a própria autenticação. Tudo o mais exige sessão.
-const API_PUBLICAS = ["/api/login", "/api/logout"];
+const API_PUBLICAS = ["/api/login", "/api/logout", "/api/cadastro"];
 
 function ipDe(req: NextRequest): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";

@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Registrar é a prioridade (o dataset). Best-effort, nunca derruba a resposta ao usuário.
-  const usuario = (await validarSessao(req.cookies.get("sessao")?.value))?.login ?? "local";
+  const usuario = (await validarSessao(req.cookies.get("sessao")?.value))?.email ?? "local";
   try {
     await registrarFeedback({ ...parsed.data, ts: new Date().toISOString(), usuario });
   } catch (e) {

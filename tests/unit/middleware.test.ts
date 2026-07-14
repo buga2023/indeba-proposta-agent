@@ -47,7 +47,7 @@ describe("middleware — gate de auth abrangente (fecha o matcher gap)", () => {
 
   it("com sessão válida → passa", async () => {
     authAtiva.mockReturnValue(true);
-    validarSessao.mockResolvedValue({ login: "gustavo", papel: "admin" });
+    validarSessao.mockResolvedValue({ email: "gustavo@indeba.com", papel: "admin" });
     expect((await middleware(reqDe("/api/instagram"))).status).toBe(200);
   });
 

@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   // Log append-only (§1.8): quem gerou, cliente, itens e preços. Best-effort —
   // falha de log nunca derruba a entrega do PDF.
   try {
-    const usuario = (await validarSessao(req.cookies.get("sessao")?.value))?.login ?? "local";
+    const usuario = (await validarSessao(req.cookies.get("sessao")?.value))?.email ?? "local";
     await registrarProposta(eventoDe(parsed.data, usuario));
   } catch (e) {
     console.error("falha ao registrar log da proposta:", e);

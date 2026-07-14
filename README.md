@@ -149,7 +149,7 @@ O arquivo de exemplo comenta cada uma; o resumo:
 | `TAVILY_API_KEY` | prospecção web | enriquece os prospects com busca web |
 | `SMTP_HOST` / `_PORT` / `_USER` / `_PASS` / `_FROM` | cobrança | envio de e-mail |
 | `GESTOR_EMAIL` | cobrança | destinatário do resumo (editável no painel) |
-| `AUTH_USERS` / `AUTH_SESSION_SECRET` | com auth | usuários (senha em hash) e assinatura do cookie |
+| `ADMIN_EMAILS` / `AUTH_SESSION_SECRET` | com auth | e-mails que nascem admin e assinatura do cookie |
 | `UPSTASH_REDIS_REST_URL` / `_TOKEN` | prod | rate limit e log durável |
 
 Sem `TAVILY_API_KEY` a prospecção roda só com o conhecimento do modelo. Sem Ollama, a

@@ -35,7 +35,7 @@ Em *Settings → Environment Variables* (Production):
 | `OLLAMA_MODEL` | `qwen2.5:7b-instruct` |
 | `MARCA_PADRAO` | `indeba_express` |
 | `NEXT_TELEMETRY_DISABLED` | `1` |
-| `AUTH_USERS` | `login:senha:papel,...` (defina seus usuários e senhas) |
+| `ADMIN_EMAILS` | e-mails que nascem admin ao se cadastrar, separados por vírgula |
 | `AUTH_SESSION_SECRET` | um valor **longo e aleatório** (ex.: `openssl rand -hex 32`) |
 | `UPSTASH_REDIS_REST_URL` | do painel do Upstash |
 | `UPSTASH_REDIS_REST_TOKEN` | do painel do Upstash |
@@ -43,7 +43,7 @@ Em *Settings → Environment Variables* (Production):
 > As **senhas ficam só na Vercel** (e no seu `.env.local`), nunca no git.
 
 ## 4. Segurança aplicada (resumo)
-- **Auth** por sessão assinada (HMAC, cookie httpOnly) — ativa quando `AUTH_USERS` existe.
+- **Auth** por sessão assinada (HMAC, cookie httpOnly) — cadastro próprio (nome/e-mail/senha), papel via `ADMIN_EMAILS`.
 - **Rate limit** por IP (Upstash, 30/min) — permite 10–20 prompts seguidos, barra abuso.
 - **Headers** OWASP (CSP, HSTS, X-Frame-Options DENY, nosniff, etc.) — `next.config.ts`.
 - **PDF**: caminho de imagem restrito a `public/` (anti-LFI), HTML escapado, rede bloqueada no render.
@@ -58,6 +58,6 @@ pnpm build          # valida o build de produção (inclui middleware/edge)
 > configurações do projeto na Vercel (o `@sparticuz/chromium` precisa disso).
 
 ## 6. Pós-deploy (teste)
-1. Acesse a URL → tela de **login** (use um usuário de `AUTH_USERS`).
+1. Acesse a URL → tela de **login** (crie sua conta pelo link "Criar conta").
 2. Envie 10–20 briefings seguidos → propostas montadas, sem bloqueio (dentro do rate limit).
 3. Baixe um PDF → confira preços do catálogo.
