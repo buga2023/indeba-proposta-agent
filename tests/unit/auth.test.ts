@@ -6,7 +6,7 @@ beforeAll(() => {
 });
 
 const mateus: Usuario = { email: "mateus@indeba.com", nome: "Mateus Résende", papel: "user" };
-const gustavo: Usuario = { email: "gustavossantos2905@gmail.com", nome: "Gustavo Santos", papel: "admin" };
+const admin: Usuario = { email: "admin@indeba.example", nome: "Admin Exemplo", papel: "admin" };
 
 describe("auth — sessão assinada (edge-safe, sem banco)", () => {
   it("auth fica ativa por padrão (AUTH_ENABLED ausente)", () => {
@@ -52,10 +52,10 @@ describe("auth — sessão assinada (edge-safe, sem banco)", () => {
 
   it("rejeita payload de um usuário com a assinatura de outro (HMAC cobre o payload inteiro)", async () => {
     const cookieMateus = await criarSessao(mateus);
-    const cookieGustavo = await criarSessao(gustavo);
+    const cookieAdmin = await criarSessao(admin);
     const payloadMateus = cookieMateus.slice(0, cookieMateus.lastIndexOf("."));
-    const sigGustavo = cookieGustavo.slice(cookieGustavo.lastIndexOf(".") + 1);
-    expect(await validarSessao(`${payloadMateus}.${sigGustavo}`)).toBeNull();
+    const sigAdmin = cookieAdmin.slice(cookieAdmin.lastIndexOf(".") + 1);
+    expect(await validarSessao(`${payloadMateus}.${sigAdmin}`)).toBeNull();
   });
 
   it("rejeita sessão expirada (cookie não é replayável pra sempre)", async () => {

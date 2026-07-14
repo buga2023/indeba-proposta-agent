@@ -18,23 +18,23 @@ beforeEach(() => {
 
 describe("auth-db — cadastro próprio e login (banco)", () => {
   it("criarUsuario: e-mail em ADMIN_EMAILS nasce admin", async () => {
-    process.env.ADMIN_EMAILS = "gustavossantos2905@gmail.com";
+    process.env.ADMIN_EMAILS = "admin@indeba.example";
     findUnique.mockResolvedValue(null);
-    const u = await criarUsuario("Gustavo Santos", "gustavossantos2905@gmail.com", "senha12345");
+    const u = await criarUsuario("Admin Exemplo", "admin@indeba.example", "senha12345");
     expect(u.papel).toBe("admin");
     expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ email: "gustavossantos2905@gmail.com", papel: "admin" }) }),
+      expect.objectContaining({ data: expect.objectContaining({ email: "admin@indeba.example", papel: "admin" }) }),
     );
   });
 
   it("criarUsuario: e-mail fora de ADMIN_EMAILS nasce user (comparação sem diferenciar maiúsculas)", async () => {
-    process.env.ADMIN_EMAILS = "Gustavo@Gmail.com";
+    process.env.ADMIN_EMAILS = "Admin@Indeba.example";
     findUnique.mockResolvedValue(null);
-    const admin = await criarUsuario("Gustavo", "gustavo@gmail.com", "senha12345");
+    const admin = await criarUsuario("Admin Exemplo", "admin@indeba.example", "senha12345");
     expect(admin.papel).toBe("admin");
 
     findUnique.mockResolvedValue(null);
-    const user = await criarUsuario("Mateus", "mateus@indeba.com", "senha12345");
+    const user = await criarUsuario("Mateus", "mateus@indeba.example", "senha12345");
     expect(user.papel).toBe("user");
   });
 

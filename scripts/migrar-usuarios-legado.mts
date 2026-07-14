@@ -6,7 +6,7 @@
  *
  * Uso:
  *   npx tsx --env-file=.env.local scripts/migrar-usuarios-legado.mts \
- *     "Gustavo Santos:gustavossantos2905@gmail.com:SALTHEX.HASHHEX,Mateus Nome:mateus@email.com:SALTHEX.HASHHEX"
+ *     "Fulano de Tal:fulano@indeba.example:SALTHEX.HASHHEX,Ciclano Nome:ciclano@indeba.example:SALTHEX.HASHHEX"
  *
  * papel é decidido por ADMIN_EMAILS (env) — mesma regra do cadastro novo
  * (src/lib/auth-db.ts), não o papel antigo do AUTH_USERS.
