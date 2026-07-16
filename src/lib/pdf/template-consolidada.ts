@@ -62,6 +62,13 @@ const ICONES: Record<string, string> = {
   piso: '<path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/>',
   etiqueta: '<path d="M20.5 12.5l-8 8L3 11V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
   frasco: '<path d="M9 2h6M10 2v3.2L8 8v11a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-2.8V2"/><path d="M8 12.5h8"/>',
+  saude: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M12 11v5M9.5 13.5h5"/>',
+  predio: '<path d="M4 21V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v17"/><path d="M15 9h4a1 1 0 0 1 1 1v11"/><path d="M8 7h2M8 11h2M8 15h2"/><path d="M3 21h18"/>',
+  industria: '<path d="M3 21V11l5 3V11l5 3V7l6 4v10H3z"/><path d="M3 21h18M7 18v-1M11 18v-1M15 18v-1"/>',
+  carrinho: '<circle cx="9" cy="20" r="1.4"/><circle cx="17.5" cy="20" r="1.4"/><path d="M2.5 4H5l2.2 10.5a1 1 0 0 0 1 .8h8.6a1 1 0 0 0 1-.78L20.5 8H6"/>',
+  escola: '<path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10.5V15c0 1.4 2.7 2.8 6 2.8s6-1.4 6-2.8v-4.5"/><path d="M22 8.2v4.3"/>',
+  lavanderia: '<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="13.5" r="4"/><path d="M8 6h.5M11 6h.5"/><path d="M9.7 13.5a2.3 2.3 0 0 1 2.3-2.3"/>',
+  hortifruti: '<path d="M12 21c0-5 2-8 7-9-1 5-3 8-7 9z"/><path d="M12 21c0-4-1.5-6.5-6-7.5 1 4 2.5 6.5 6 7.5z"/><path d="M12 21v-7"/>',
 };
 export const iconeSvg = (nome: string, cor = NAVY): string =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="${cor}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONES[nome] ?? '<circle cx="12" cy="12" r="3"/>'}</svg>`;
