@@ -15,8 +15,8 @@ export const brl = (v: string) =>
 export const fmtRendimento = (raw: string): string => {
   const r = String(raw ?? "").trim();
   const partes = r.split(/;\s*/).map((s) => s.trim()).filter(Boolean);
-  if (partes.length === 1 && r.length <= 46) return `<div class="p-big">${esc(r)}</div>`;
-  return `<ul class="p-rlist">${partes
+  if (partes.length === 1 && r.length <= 46) return `<div class="pp-big">${esc(r)}</div>`;
+  return `<ul class="pp-rlist">${partes
     .map((p) => {
       const m = p.match(/^(.+?)\s*\((.+)\)\.?$/); // "valor (contexto)" → separa dose e contexto
       return m
@@ -76,16 +76,17 @@ export const iconeSvg = (nome: string, cor = NAVY): string =>
 // Contatos do rodapé da ficha e das condições (payload — ver ConsolidadaBloco.contato).
 export type ContatoConsolidada = { whatsapp: string | null; emailConsultor: string | null };
 
-// Uma página A4 rica por produto. Cada bloco só aparece se o dado existir.
-// `headerHtml` (a mesma `.pg-head` das outras seções) e `simples` (produto sem
-// indicado/benefícios/diluição/características/rendimento → layout compacto,
-// centralizado verticalmente, em vez do rígido de sempre deixando meia página vazia).
-export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, headerHtml = ""): string {
+// Uma página A4 rica por produto — rail navy (marca/foto/preço) + coluna de conteúdo
+// (texto/specs). `numero` é só o número de página ("06"), nunca HTML pronto — o
+// runmark "Proposta de Solução NN" é montado aqui, igual às outras seções (mesmo
+// texto, só reposicionado). `simples`/`semVenda`: sinalizam o quão rica é a ficha
+// (nenhum dado técnico/venda vs. só técnico) — o layout em rail já centraliza o
+// conteúdo disponível sozinho, então essas classes hoje são só um sinal semântico.
+export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, numero?: string): string {
   const f = item.ficha ?? null;
   const titulo = f?.titulo ? esc(f.titulo) : esc(item.nome);
-  const subtitulo = f?.subtitulo ? `<div class="p-sub">${esc(f.subtitulo)}</div>` : "";
-  const badge = f?.linhaLabel ? `<span class="p-badge">LINHA <b>${esc(f.linhaLabel)}</b></span>` : "";
-  const headBar = badge ? `<div class="p-head">${badge}</div>` : ""; // sem linha → sem barra vazia
+  const subtitulo = f?.subtitulo ? `<div class="pp-sub">${esc(f.subtitulo)}</div>` : "";
+  const eyebrow = f?.linhaLabel ? `<div class="pp-eyebrow">LINHA<b>${esc(f.linhaLabel)}</b></div>` : ""; // sem linha → sem eyebrow vazio
   const descricao = esc(f?.descricao || item.descricaoUso || "");
   // Diluição: a ficha rica (indicadoPara/benefícios/características/rendimento) é dado de
   // catálogo que só existe pra alguns produtos (Primmax Plus/DGClor) — não inventamos pros
@@ -94,96 +95,94 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   // usado aqui (é lido em template.ts pro modelo Express).
   const diluicaoEmbalagem = item.embalagens.find((e) => e.diluicaoMax);
   const simples = !f?.indicadoPara?.length && !f?.beneficios?.length && !f?.diluicoes?.length && !diluicaoEmbalagem && !f?.caracteristicas && !f?.rendimento;
-  // Meio-termo: tem dado técnico (características/rendimento/diluição) mas falta a parte
-  // "de venda" (indicado para/benefícios) — maioria do catálogo hoje (só 2 produtos têm
-  // ficha de marketing completa). Sem isso, o bloco ao lado da foto sobra vazio; aqui a
-  // foto cresce um pouco para preencher melhor, sem virar o layout ultra-compacto (`simples`).
   const semVenda = !simples && !f?.indicadoPara?.length && !f?.beneficios?.length;
 
   const indicado = f?.indicadoPara?.length
-    ? `<div class="p-block"><div class="p-bt">Indicado para</div><div class="p-ind">${f.indicadoPara
-        .map((i) => `<div class="p-ic"><span class="ic">${iconeSvg(i.icone)}</span><span>${esc(i.label)}</span></div>`)
+    ? `<div><div class="pp-label"><span>Indicado para</span></div><div class="pp-icons">${f.indicadoPara
+        .map((i) => `<div class="pp-ic"><span class="ic">${iconeSvg(i.icone)}</span><span>${esc(i.label)}</span></div>`)
         .join("")}</div></div>`
     : "";
 
   const beneficios = f?.beneficios?.length
-    ? `<div class="p-block"><div class="p-bt">Principais benefícios</div><ul class="p-ben">${f.beneficios
-        .map((b) => `<li><span class="ic ic-ok">${iconeSvg("check", ORANGE)}</span>${esc(b)}</li>`)
-        .join("")}</ul></div>`
+    ? `<div><div class="pp-label"><span>Principais benefícios</span></div><div class="pp-benes">${f.beneficios
+        .map((b) => `<div class="pp-be"><span class="ic">${iconeSvg("check-simples", ORANGE)}</span><p>${esc(b)}</p></div>`)
+        .join("")}</div></div>`
     : "";
 
   const diluicoes = f?.diluicoes?.length
-    ? `<div class="p-mini"><div class="p-mt">Modo de diluição</div>${f.diluicoes
-        .map((d) => `<div class="p-row"><span>${esc(d.uso)}</span><b>${esc(d.razao)}</b></div>`)
-        .join("")}</div>`
+    ? `<div class="pp-panel"><h4>Modo de diluição</h4><div class="pp-rows">${f.diluicoes
+        .map((d) => `<div class="pp-row"><span class="k">${esc(d.uso)}</span><span class="v">${esc(d.razao)}</span></div>`)
+        .join("")}</div></div>`
     : diluicaoEmbalagem
-      ? `<div class="p-mini"><div class="p-mt">Modo de diluição</div>
-          <div class="p-row"><span>Diluição máxima</span><b>${esc(diluicaoEmbalagem.diluicaoMax!)}</b></div>
-          ${diluicaoEmbalagem.custoDiluido ? `<div class="p-row"><span>Custo/litro diluído</span><b>${brl(diluicaoEmbalagem.custoDiluido)}</b></div>` : ""}
-        </div>`
+      ? `<div class="pp-panel"><h4>Modo de diluição</h4><div class="pp-rows">
+          <div class="pp-row"><span class="k">Diluição máxima</span><span class="v">${esc(diluicaoEmbalagem.diluicaoMax!)}</span></div>
+          ${diluicaoEmbalagem.custoDiluido ? `<div class="pp-row"><span class="k">Custo/litro diluído</span><span class="v">${brl(diluicaoEmbalagem.custoDiluido)}</span></div>` : ""}
+        </div></div>`
       : "";
   const rendimento = f?.rendimento
-    ? `<div class="p-mini"><div class="p-mt">Rendimento aproximado</div>${fmtRendimento(f.rendimento)}</div>`
+    ? `<div class="pp-panel"><h4>Rendimento aproximado</h4>${fmtRendimento(f.rendimento)}</div>`
     : "";
   // Embalagem cotada = SEMPRE embalagens[0] (mesma convenção do resto do app —
   // preço/subtotal na revisão/dashboard também usam a primeira). "Disponíveis" lista
   // TODOS os tamanhos do produto (ficha técnica), incluindo a cotada, sem preço — spec
   // §8, decisão final do cliente (áudio 16:24): repetir não é problema, pois a lista vem
   // da ficha técnica; o único valor que aparece em qualquer lugar do card é o da cotada,
-  // na barra de Valor abaixo. Ordenada por volume crescente (L convertido pra ml
+  // no bloco de Valor da rail. Ordenada por volume crescente (L convertido pra ml
   // equivalente, já que alguns produtos misturam L/ml nas embalagens — ex.: Letah Gel).
   const volumeOrdenacao = (e: (typeof item.embalagens)[number]) => (e.unidade === "L" ? e.tamanho * 1000 : e.tamanho);
   const disponiveis = item.embalagens.length > 1 ? [...item.embalagens].sort((a, b) => volumeOrdenacao(a) - volumeOrdenacao(b)) : [];
   const embalagens = disponiveis.length
-    ? `<div class="p-mini"><div class="p-mt">Embalagens disponíveis</div>${disponiveis
-        .map((e) => `<div class="p-row"><span>${e.tamanho} ${esc(e.unidade)}</span></div>`)
-        .join("")}</div>`
+    ? `<div class="pp-panel"><h4>Embalagens disponíveis</h4><ul class="pp-emb">${disponiveis
+        .map((e) => `<li>${e.tamanho} ${esc(e.unidade)}</li>`)
+        .join("")}</ul></div>`
     : "";
   const carac = f?.caracteristicas
-    ? `<div class="p-mini"><div class="p-mt">Características</div>${Object.entries(f.caracteristicas)
+    ? `<div class="pp-panel"><h4>Características</h4><div class="pp-rows">${Object.entries(f.caracteristicas)
         .filter(([, v]) => v)
-        .map(([k, v]) => `<div class="p-row"><span>${k === "pH" ? "pH" : k[0].toUpperCase() + k.slice(1)}</span><b>${esc(String(v))}</b></div>`)
-        .join("")}</div>`
+        .map(([k, v]) => `<div class="pp-row"><span class="k">${k === "pH" ? "pH" : k[0].toUpperCase() + k.slice(1)}</span><span class="v">${esc(String(v))}</span></div>`)
+        .join("")}</div></div>`
     : "";
 
   // Zona de preço: só a embalagem cotada (embalagens[0]) — nunca lista os demais
   // tamanhos com valor aqui (isso é o bloco "disponíveis" acima, sem preço).
   const cotada = item.embalagens[0];
   const valores = cotada
-    ? `<div class="p-val p-val-cotada"><span class="p-vic">${iconeSvg("frasco", "#fff")}</span><div class="p-vinfo"><div class="p-vl">${cotada.tamanho} ${esc(cotada.unidade)}</div><div class="p-vp">${brl(cotada.preco)}</div></div></div>`
+    ? `<div class="pp-price"><div class="pp-v-label">Valor</div><div class="pp-v-row"><span class="pp-v-size">${cotada.tamanho} ${esc(cotada.unidade)}</span><span class="pp-v-price">${brl(cotada.preco)}</span></div><p class="pp-v-note">Consulte condições especiais para compras de maiores volumes.</p></div>`
     : "";
 
-  // Rodapé navy da ficha (modelo refinado): slogan fixo + WhatsApp/e-mail do
-  // payload (só renderiza contato que existir — nunca número fictício).
+  // Rodapé da ficha: slogan fixo + WhatsApp/e-mail do payload (só renderiza contato
+  // que existir — nunca número fictício).
   const contatos = [
-    contato?.whatsapp ? `<span class="p-ct"><span class="ic">${iconeSvg("zap", "#fff")}</span>WhatsApp ${esc(contato.whatsapp)}</span>` : "",
-    contato?.emailConsultor ? `<span class="p-ct"><span class="ic">${iconeSvg("email", "#fff")}</span>${esc(contato.emailConsultor)}</span>` : "",
+    contato?.whatsapp ? `<span class="pp-c-item"><span class="ic">${iconeSvg("zap", ORANGE)}</span>WhatsApp ${esc(contato.whatsapp)}</span>` : "",
+    contato?.emailConsultor ? `<span class="pp-c-item"><span class="ic">${iconeSvg("email", ORANGE)}</span>${esc(contato.emailConsultor)}</span>` : "",
   ].filter(Boolean).join("");
-  const rodape = `<div class="p-rodape">
-    <div class="p-rq"><span class="p-rq-t">Qualidade Profissional</span><span class="p-rq-s">Resultados que transformam</span></div>
-    ${contatos}
-  </div>`;
 
-  const grid = diluicoes || rendimento || embalagens || carac ? `<div class="p-grid">${diluicoes}${rendimento}${embalagens}${carac}</div>` : "";
+  const specs = diluicoes || rendimento || embalagens || carac ? `<div class="pp-specs">${diluicoes}${rendimento}${embalagens}${carac}</div>` : "";
+  const runmark = numero ? `<div class="pp-runmark">Proposta de Solução <b>${esc(numero)}</b></div>` : "";
 
   return `<section class="prodpg${simples ? " prodpg-simples" : semVenda ? " prodpg-sem-venda" : ""}">
-    ${headerHtml}
-    ${headBar}
-    <div class="p-body">
-      <div class="p-top">
-        <div class="p-foto"><img src="${dataUri}" alt="${titulo}"/></div>
-        <div class="p-main">
-          <h2 class="p-tit">${titulo}</h2>${subtitulo}
-          ${descricao ? `<p class="p-desc">${descricao}</p>` : ""}
-          ${indicado}
-          ${beneficios}
+    <aside class="pp-rail">
+      <div class="pp-wm"><b>indeba</b><span>express</span><i>.</i></div>
+      ${eyebrow}
+      <div class="pp-figure"><div class="pp-imgcard"><img src="${dataUri}" alt="${titulo}"/></div></div>
+      ${valores}
+    </aside>
+    <div class="pp-content">
+      ${runmark}
+      <div class="pp-main">
+        <div>
+          <h2 class="pp-tit">${titulo}</h2>${subtitulo}
+          ${descricao ? `<p class="pp-desc">${descricao}</p>` : ""}
         </div>
+        ${indicado}
+        ${beneficios}
+        ${specs}
       </div>
-      ${grid}
+      <div class="pp-contact">
+        <div class="pp-c-left"><b>Qualidade Profissional</b><span>Resultados que transformam</span></div>
+        <div class="pp-c-right">${contatos}</div>
+      </div>
     </div>
-    <div class="p-valores"><span class="p-vtag"><span class="ic">${iconeSvg("etiqueta", "#fff")}</span>Valor</span>${valores}</div>
-    <div class="p-vnota">Consulte condições especiais para compras de maiores volumes.</div>
-    ${rodape}
   </section>`;
 }
 
@@ -281,7 +280,7 @@ export function consolidadaHtml(
   // rodapé (contador nativo do Chromium), já que cada seção é garantidamente 1 página.
   const PRIMEIRO_PRODUTO = 4;
   const produtos = scope.itens
-    .map((it, idx) => paginaProduto(it, imagens[it.codigo] ?? "", contato, header(String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"))))
+    .map((it, idx) => paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0")))
     .join("");
 
   const cond = `<section class="pg sec">
@@ -339,7 +338,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .vant { display: flex; gap: 10px; } .vant-i { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; color: #6b7787; font-size: 10px; }
 .vant-badge { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: ${ORANGE}; align-items: center; justify-content: center; margin-bottom: 8px; }
 .vant-badge svg { width: 15px; height: 15px; }
-.ic-ok svg { width: 18px; height: 18px; } .ic { display: inline-flex; vertical-align: middle; }
+.ic { display: inline-flex; vertical-align: middle; }
 /* Divisor decorativo em fluxo (fio + badge laranja) */
 .div-badge { display: flex; align-items: center; gap: 14px; margin-top: 26px; }
 .db-fio { flex: 1; height: 1px; background: #e5ebf2; }
@@ -377,87 +376,73 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .cc-contato { display: flex; align-items: center; justify-content: center; gap: 6px; color: #5a6878; font-size: 10.5px; margin-top: 6px; }
 .cc-contato .ic svg { width: 13px; height: 13px; }
 .cc-emp-sub { color: #8a95a3; font-size: 10px; margin-top: 2px; }
-/* Página de produto — min-height abaixo da área útil (282mm) para a barra de
-   valores + contato nunca estourarem sobre o rodapé da página. */
-.prodpg { padding: 0 0 6mm; position: relative; page-break-after: always; min-height: 272mm; display: flex; flex-direction: column; }
-.prodpg > .pg-head { padding: 14px 16mm 0; } /* mesma .pg-head das outras seções — aqui sem o padding herdado de .pg */
-/* Corpo (foto+info+grid) cresce para ocupar a página e centraliza verticalmente — sem isso,
-   produtos com pouca ficha (sem indicado-para/benefícios) deixavam a metade de baixo vazia.
-   VALOR e rodapé ficam ancorados no fim da página. */
-.p-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-.p-head { background: ${NAVY}; height: 46px; display: flex; align-items: center; justify-content: flex-end; padding: 0 16mm; }
-.p-badge { color: #fff; font-size: 12px; letter-spacing: 2px; } .p-badge b { color: ${ORANGE}; }
-.p-top { display: flex; gap: 18px; padding: 20px 16mm 0; }
-.p-foto { flex: 0 0 165px; height: 235px; background: #f2f6fa; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-.p-foto img { max-width: 140px; max-height: 215px; object-fit: contain; }
-/* Produto simples (sem ficha rica): centraliza o pouco conteúdo na página em vez de
-   empilhar tudo no topo e deixar a metade de baixo vazia; foto bem maior, texto mais
-   respirado — em vez de encolher a página, ocupa mais dela com o que já existe. */
-.prodpg-simples { display: flex; flex-direction: column; justify-content: center; }
-.prodpg-simples .p-top { align-items: center; gap: 32px; }
-.prodpg-simples .p-foto { flex: 0 0 340px; height: 440px; }
-.prodpg-simples .p-foto img { max-width: 290px; max-height: 420px; }
-.prodpg-simples .p-tit { font-size: 30px; }
-.prodpg-simples .p-desc { font-size: 15px; line-height: 1.9; margin: 20px 0; }
-.prodpg-simples .p-valores { margin-top: 40px; }
-.prodpg-simples .p-valores .p-vtag { padding: 20px 26px; }
-.prodpg-simples .p-vp { font-size: 26px; }
-/* Meio-termo: tem grid técnico (características/rendimento/diluição) mas falta
-   indicado-para/benefícios — foto um pouco maior para não sobrar vazio ao lado do
-   texto curto, mas mantém o grid técnico completo abaixo (diferente do "simples"). */
-.prodpg-sem-venda .p-top { align-items: center; gap: 28px; }
-.prodpg-sem-venda .p-foto { flex: 0 0 260px; height: 340px; }
-.prodpg-sem-venda .p-foto img { max-width: 220px; max-height: 320px; }
-.prodpg-sem-venda .p-desc { font-size: 13px; line-height: 1.7; }
-.p-main { flex: 1; } .p-tit { color: ${NAVY}; font-size: 24px; font-weight: 800; line-height: 1.1; }
-.p-sub { color: ${ORANGE}; font-weight: 700; font-size: 15px; margin-top: 2px; }
-.p-desc { color: #4a5768; line-height: 1.5; margin: 12px 0; }
-.p-block { margin-top: 12px; } .p-bt { color: #fff; background: ${NAVY}; display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-.p-ind { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; } .p-ic { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-size: 9px; color: #6b7787; width: 64px; }
-/* Caixa fixa e centralizada por ícone (não o SVG esticado 1:1 no espaço) — o desenho de
-   cada glifo ocupa uma área diferente dentro do viewBox 24×24 (ex.: "restaurante" usa quase
-   o quadro inteiro, "padaria" fica mais recolhido); sem essa margem uniforme, o ícone com
-   glifo maior encosta na borda enquanto os outros sobram folga. Nunca fica com folga zero. */
-.p-ic .ic { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
-.p-ic .ic svg { width: 22px; height: 22px; } .p-ben { list-style: none; margin-top: 10px; }
-.p-ben li { display: flex; align-items: center; gap: 8px; color: #3a4757; font-size: 11px; padding: 3px 0; }
-/* Grid técnico: centralizado e com largura de card limitada — assim 1-2 cards ficam
-   com tamanho natural (não esticam a página inteira com o valor jogado na borda),
-   e 3-4 cards preenchem a largura como no mockup de referência. */
-.p-grid { display: flex; flex-wrap: wrap; gap: 12px; padding: 18px 16mm 0; justify-content: center; }
-.p-mini { flex: 1 1 190px; max-width: 320px; border: 1px solid #e5ebf2; border-radius: 10px; padding: 12px 14px; }
-.p-mt { color: ${NAVY}; font-weight: 800; font-size: 9.5px; text-transform: uppercase; text-align: center; margin-bottom: 8px; }
-.p-row { display: flex; justify-content: space-between; font-size: 10px; color: #4a5768; padding: 3px 0; } .p-row b { color: ${NAVY}; }
-.p-big { text-align: center; color: ${ORANGE}; font-weight: 800; font-size: 13px; }
+/* Página de produto — layout "rail": faixa navy à esquerda (marca/foto/preço) +
+   coluna de conteúdo à direita (texto/specs). Altura fixa (mesmo raciocínio do
+   .sec acima — impede que a página estoure e vaze layout pra página seguinte). */
+.prodpg { height: 278mm; overflow: hidden; page-break-after: always; display: flex; }
+.pp-rail { width: 79mm; flex: none; color: #fff; background: linear-gradient(165deg, ${NAVY} 0%, #06203f 100%);
+  display: flex; flex-direction: column; padding: 32px 26px 26px; }
+.pp-wm { font-size: 17px; letter-spacing: .2px; }
+.pp-wm b { font-weight: 800; } .pp-wm span { font-weight: 400; opacity: .8; margin-left: 3px; }
+.pp-wm i { color: ${ORANGE}; font-style: normal; }
+.pp-eyebrow { margin-top: 12px; font-size: 10px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
+.pp-eyebrow b { color: ${ORANGE}; font-weight: 700; margin-left: 6px; }
+.pp-figure { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px 0; }
+.pp-imgcard { width: 190px; height: 190px; background: rgba(255,255,255,.07); border-radius: 16px; display: flex; align-items: center; justify-content: center; }
+.pp-imgcard img { max-width: 150px; max-height: 170px; object-fit: contain; }
+.pp-price { border-top: 1px solid rgba(255,255,255,.16); padding-top: 16px; }
+.pp-v-label { font-size: 9.5px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
+.pp-v-row { display: flex; align-items: baseline; gap: 10px; margin-top: 7px; }
+.pp-v-size { font-size: 12px; font-weight: 700; color: ${ORANGE}; letter-spacing: .5px; }
+.pp-v-price { font-family: "Geist Mono", monospace; font-size: 27px; font-weight: 700; letter-spacing: .3px; }
+.pp-v-note { font-size: 9px; line-height: 1.4; color: rgba(255,255,255,.5); margin-top: 8px; max-width: 200px; }
+/* Coluna de conteúdo: centraliza o bloco principal verticalmente — sem isso,
+   produtos com pouca ficha (sem indicado-para/benefícios) deixavam a metade de
+   baixo vazia. Contato fica ancorado no fim da página. */
+.pp-content { flex: 1; padding: 30px 34px 24px; display: flex; flex-direction: column; }
+.pp-runmark { align-self: flex-end; font-size: 9.5px; letter-spacing: 1px; color: #9aa3ae; text-transform: uppercase; }
+.pp-runmark b { color: ${NAVY}; }
+.pp-main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+.pp-tit { color: ${NAVY}; font-size: 25px; font-weight: 800; line-height: 1.08; letter-spacing: -.3px; }
+.pp-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin-top: 4px; }
+.pp-desc { color: #5a6878; font-size: 11.5px; line-height: 1.55; max-width: 400px; }
+.pp-label { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.pp-label::before { content: ""; width: 14px; height: 3px; background: ${ORANGE}; border-radius: 2px; }
+.pp-label span { font-size: 10px; font-weight: 700; letter-spacing: 1.4px; color: ${NAVY}; text-transform: uppercase; }
+.pp-icons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.pp-ic { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.pp-ic .ic { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+.pp-ic .ic svg { width: 20px; height: 20px; } .pp-ic span { font-size: 8.5px; line-height: 1.2; color: #6b7787; }
+.pp-benes { display: flex; flex-direction: column; gap: 7px; }
+.pp-be { display: flex; gap: 8px; align-items: flex-start; }
+.pp-be .ic { width: 14px; height: 14px; flex: none; margin-top: 2px; } .pp-be .ic svg { width: 14px; height: 14px; }
+.pp-be p { font-size: 11px; line-height: 1.4; color: #2a3746; }
+/* Specs: grid 2 colunas — 1-4 painéis conforme o que a ficha tiver (diluição,
+   rendimento, embalagens, características); nenhum é inventado. */
+.pp-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pp-panel { background: #eef2f7; border-radius: 12px; padding: 13px 14px; }
+.pp-panel h4 { color: ${NAVY}; font-size: 9px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase;
+  text-align: center; padding-bottom: 8px; margin-bottom: 9px; border-bottom: 1px solid #e0e6ee; }
+.pp-emb { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.pp-emb li { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; color: ${NAVY}; }
+.pp-emb li::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: ${ORANGE}; flex: none; }
+.pp-rows { display: flex; flex-direction: column; gap: 6px; }
+.pp-row { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; }
+.pp-row .k { color: #6b7787; } .pp-row .v { font-weight: 700; color: ${NAVY}; text-align: right; }
+.pp-big { text-align: center; color: ${ORANGE}; font-weight: 800; font-size: 12px; }
 /* Rendimento multi-dosagem (Sanquat, Sanclor, Sanap…): lista legível em vez de paredão
    laranja centralizado. Dose em destaque, contexto (entre parênteses) em cinza abaixo. */
-.p-rlist { list-style: none; }
-.p-rlist li { padding: 4px 0; border-top: 1px solid #f0f3f7; }
-.p-rlist li:first-child { border-top: none; padding-top: 0; }
-.p-rlist li b { display: block; color: ${ORANGE}; font-weight: 800; font-size: 10px; }
-.p-rlist li span { display: block; color: #6b7787; font-size: 9px; line-height: 1.35; margin-top: 1px; }
-/* Barra VALOR (modelo refinado, ref. ficha-mockup): tag laranja + painel NAVY com
-   ícone de frasco, tamanho em laranja e preço em branco — premium, não faixa clara. */
-.p-valores { display: flex; align-items: stretch; margin: 18px 16mm 0; background: ${NAVY}; border-radius: 12px; overflow: hidden; page-break-inside: avoid; }
-.p-vtag { background: ${ORANGE}; color: #fff; font-weight: 800; display: flex; align-items: center; gap: 9px; padding: 16px 26px; text-transform: uppercase; letter-spacing: 1px; }
-.p-vtag .ic svg { width: 18px; height: 18px; stroke: #fff; }
-.p-val { flex: 1; text-align: center; padding: 12px 6px; }
-.p-vl { font-size: 10px; color: #9fb2c8; text-transform: uppercase; letter-spacing: 1px; }
-.p-vp { font-family: "Geist Mono", monospace; font-size: 20px; font-weight: 700; color: #fff; }
-/* Única embalagem cotada (spec §3/§8): ícone de frasco + tamanho (laranja) e preço (branco),
-   alinhados como no mockup de referência. */
-.p-val-cotada { flex: 1; display: flex; align-items: center; justify-content: center; gap: 14px; padding: 14px 6px; }
-.p-vic { display: inline-flex; } .p-vic svg { width: 34px; height: 34px; stroke: #fff; }
-.p-vinfo { text-align: left; }
-.p-val-cotada .p-vl { color: ${ORANGE}; font-weight: 700; }
-.p-val-cotada .p-vp { font-size: 26px; color: #fff; }
-.p-vnota { text-align: center; color: #8a95a3; font-size: 9.5px; margin: 6px 16mm 0; }
-/* Rodapé navy da ficha — reservado no fim da página, nunca sobrepõe a barra */
-.p-rodape { display: flex; align-items: center; justify-content: space-between; gap: 18px; background: ${NAVY}; color: #fff; margin: 10px 16mm 0; border-radius: 10px; padding: 10px 16px; page-break-inside: avoid; }
-.p-rq { display: flex; flex-direction: column; }
-.p-rq-t { font-weight: 800; font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; }
-.p-rq-s { font-size: 9px; opacity: .75; text-transform: uppercase; letter-spacing: .5px; }
-.p-ct { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; } .p-ct .ic svg { width: 14px; height: 14px; }
+.pp-rlist { list-style: none; }
+.pp-rlist li { padding: 3px 0; border-top: 1px solid #e0e6ee; }
+.pp-rlist li:first-child { border-top: none; padding-top: 0; }
+.pp-rlist li b { display: block; color: ${ORANGE}; font-weight: 800; font-size: 9.5px; }
+.pp-rlist li span { display: block; color: #6b7787; font-size: 8.5px; line-height: 1.3; margin-top: 1px; }
+.pp-contact { border-top: 1px solid #e5ebf2; padding-top: 13px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.pp-c-left b { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 1px; color: ${NAVY}; text-transform: uppercase; }
+.pp-c-left span { font-size: 8.5px; letter-spacing: .5px; color: #9aa3ae; text-transform: uppercase; }
+.pp-c-right { display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+.pp-c-item { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; color: #2a3746; }
+.pp-c-item .ic svg { width: 13px; height: 13px; }
 </style></head><body>
 ${capa}
 ${apres}

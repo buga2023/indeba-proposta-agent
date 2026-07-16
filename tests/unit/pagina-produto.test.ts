@@ -50,8 +50,8 @@ describe("paginaProduto", () => {
   it("'Embalagens disponíveis' lista TODOS os tamanhos, incluindo a cotada, sempre sem preço (spec §8, decisão final: repetição permitida)", () => {
     const html = paginaProduto(item, "data:,x");
     expect(html).toContain("Embalagens disponíveis");
-    expect(html).toContain("5 L</span></div>"); // a cotada (5L) TAMBÉM aparece ali, sem preço
-    expect(html).toContain("20 L</span></div>");
+    expect(html).toContain("<li>5 L</li>"); // a cotada (5L) TAMBÉM aparece ali, sem preço
+    expect(html).toContain("<li>20 L</li>");
   });
 
   it("ordena 'Embalagens disponíveis' por volume crescente, independente da ordem no payload", () => {
@@ -65,8 +65,8 @@ describe("paginaProduto", () => {
     };
     const html = paginaProduto(foraDeOrdem, "data:,x");
     const posMl = html.indexOf("500 ml");
-    const pos5L = html.indexOf("5 L</span></div>");
-    const pos20L = html.indexOf("20 L</span></div>");
+    const pos5L = html.indexOf("<li>5 L</li>");
+    const pos20L = html.indexOf("<li>20 L</li>");
     expect(posMl).toBeLessThan(pos5L); // 500 ml < 5 L
     expect(pos5L).toBeLessThan(pos20L);
   });
@@ -122,15 +122,15 @@ describe("paginaProduto", () => {
     expect(html).not.toContain("prodpg-simples");
   });
 
-  it("sem linha definida na ficha, não renderiza barra navy vazia (.p-head)", () => {
+  it("sem linha definida na ficha, não renderiza eyebrow vazio (.pp-eyebrow)", () => {
     const semLinha = { ...item, ficha: { ...item.ficha, linhaLabel: undefined } };
     const html = paginaProduto(semLinha, "data:,x");
-    expect(html).not.toContain('class="p-head"');
+    expect(html).not.toContain('class="pp-eyebrow"');
   });
 
-  it("com linha definida, renderiza a barra navy com o badge", () => {
+  it("com linha definida, renderiza o eyebrow da rail com o badge", () => {
     const html = paginaProduto(item, "data:,x");
-    expect(html).toContain('class="p-head"');
+    expect(html).toContain('class="pp-eyebrow"');
     expect(html).toContain("KITCHEN");
   });
 
@@ -143,8 +143,8 @@ describe("paginaProduto", () => {
     expect(html).toContain("Rendimento aproximado");
   });
 
-  it("header (logo + numeração) só aparece quando passado — nunca inventado aqui", () => {
-    expect(paginaProduto(item, "data:,x")).not.toContain("pg-head");
-    expect(paginaProduto(item, "data:,x", undefined, '<div class="pg-head">X</div>')).toContain('<div class="pg-head">X</div>');
+  it("numeração (runmark 'Proposta de Solução NN') só aparece quando passada — nunca inventada aqui", () => {
+    expect(paginaProduto(item, "data:,x")).not.toContain("pp-runmark");
+    expect(paginaProduto(item, "data:,x", undefined, "07")).toContain("Proposta de Solução <b>07</b>");
   });
 });
