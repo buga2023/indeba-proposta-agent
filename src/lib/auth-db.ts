@@ -34,3 +34,23 @@ export async function validarCredenciais(email: string, senha: string): Promise<
   if (!(await validarHash(senha, u.credencial))) return null;
   return { email: u.email, nome: u.nome, papel: u.papel as Papel };
 }
+
+export type Colaborador = { nome: string; email: string; papel: Papel; telefone: string | null };
+
+// ── Perfil (nome/telefone) — o próprio colaborador edita o seu; o gestor edita o de
+// qualquer um (ver /api/perfil e /api/colaboradores). Nunca mexe em e-mail/senha/papel.
+export async function buscarColaborador(email: string): Promise<Colaborador | null> {
+  const u = await prisma.usuario.findUnique({ where: { email } });
+  if (!u) return null;
+  return { nome: u.nome, email: u.email, papel: u.papel as Papel, telefone: u.telefone };
+}
+
+export async function listarColaboradores(): Promise<Colaborador[]> {
+  const us = await prisma.usuario.findMany({ orderBy: { nome: "asc" } });
+  return us.map((u) => ({ nome: u.nome, email: u.email, papel: u.papel as Papel, telefone: u.telefone }));
+}
+
+export async function atualizarColaborador(email: string, dados: { nome?: string; telefone?: string | null }): Promise<Colaborador> {
+  const u = await prisma.usuario.update({ where: { email }, data: dados });
+  return { nome: u.nome, email: u.email, papel: u.papel as Papel, telefone: u.telefone };
+}

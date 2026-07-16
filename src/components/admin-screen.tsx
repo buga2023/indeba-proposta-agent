@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 type Contato = { cliente: string; email: string; atualizadoEm: string };
+type Colaborador = { nome: string; email: string; papel: "admin" | "user"; telefone: string | null };
 
 const inputStyle = {
   padding: "9px 12px",
@@ -31,6 +32,7 @@ const btn = (cor: string, on = true) =>
 export function AdminScreen() {
   const [gestorEmail, setGestorEmail] = useState("");
   const [contatos, setContatos] = useState<Contato[]>([]);
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [semAcesso, setSemAcesso] = useState(false);
@@ -41,15 +43,17 @@ export function AdminScreen() {
   async function carregar() {
     setErro(null);
     try {
-      const [cfg, ct] = await Promise.all([fetch("/api/admin-config"), fetch("/api/contatos")]);
-      if (cfg.status === 403 || ct.status === 403) {
+      const [cfg, ct, cl] = await Promise.all([fetch("/api/admin-config"), fetch("/api/contatos"), fetch("/api/colaboradores")]);
+      if (cfg.status === 403 || ct.status === 403 || cl.status === 403) {
         setSemAcesso(true);
         return;
       }
       const c = await cfg.json();
       const l = await ct.json();
+      const co = await cl.json();
       setGestorEmail(c.gestorEmail ?? "");
       setContatos(l.contatos ?? []);
+      setColaboradores(co.colaboradores ?? []);
     } catch {
       setErro("Falha ao carregar o painel.");
     }
@@ -88,6 +92,20 @@ export function AdminScreen() {
 
   async function remover(cliente: string) {
     await fetch(`/api/contatos?cliente=${encodeURIComponent(cliente)}`, { method: "DELETE" });
+    await carregar();
+  }
+
+  async function salvarTelefoneColaborador(email: string, telefone: string) {
+    setErro(null);
+    const r = await fetch("/api/colaboradores", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, telefone: telefone || null }),
+    });
+    if (!r.ok) {
+      setErro((await r.json()).erro ?? "Falha ao salvar telefone.");
+      return;
+    }
     await carregar();
   }
 
@@ -142,6 +160,20 @@ export function AdminScreen() {
           ))}
         </div>
       </section>
+
+      {/* Colaboradores (telefone) */}
+      <section style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", marginTop: "22px" }}>
+        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>Colaboradores · {colaboradores.length}</h3>
+        <div style={{ fontSize: "12.5px", color: "var(--gray-500)", marginBottom: "12px" }}>
+          Telefone de cada colaborador. Cada um também pode editar o próprio em &quot;Meu perfil&quot;.
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          {colaboradores.length === 0 && <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Nenhum colaborador cadastrado ainda.</div>}
+          {colaboradores.map((c) => (
+            <LinhaColaborador key={c.email} colaborador={c} onSalvar={salvarTelefoneColaborador} />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
@@ -163,6 +195,27 @@ function LinhaContato({
       <input style={{ ...inputStyle, flex: 1.4, minWidth: "140px", padding: "6px 10px", fontSize: "13px" }} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       <button style={btn("var(--blue-600)", mudou)} onClick={() => mudou && onSalvar(contato.cliente, email.trim())}>Salvar</button>
       <button style={{ ...btn("#dc2626"), padding: "9px 11px" }} onClick={() => onRemover(contato.cliente)} title="Remover">✕</button>
+    </div>
+  );
+}
+
+function LinhaColaborador({
+  colaborador,
+  onSalvar,
+}: {
+  colaborador: Colaborador;
+  onSalvar: (email: string, telefone: string) => void;
+}) {
+  const [telefone, setTelefone] = useState(colaborador.telefone ?? "");
+  const mudou = telefone.trim() !== (colaborador.telefone ?? "");
+  return (
+    <div style={{ display: "flex", gap: "8px", alignItems: "center", padding: "8px 10px", borderRadius: "9px", background: "var(--gray-50)" }}>
+      <div style={{ flex: 1.4, minWidth: 0 }}>
+        <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--gray-900)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{colaborador.nome}</div>
+        <div style={{ fontSize: "11.5px", color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{colaborador.email} · {colaborador.papel === "admin" ? "Administrador" : "Vendedor"}</div>
+      </div>
+      <input style={{ ...inputStyle, flex: 1, minWidth: "140px", padding: "6px 10px", fontSize: "13px" }} placeholder="Telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+      <button style={btn("var(--blue-600)", mudou)} onClick={() => mudou && onSalvar(colaborador.email, telefone.trim())}>Salvar</button>
     </div>
   );
 }

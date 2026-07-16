@@ -39,6 +39,10 @@ export const Embalagem = z.object({
   preco: z.string().regex(/^\d+\.\d{2}$/, "preço deve ser decimal string, ex '130.00'"),
   diluicaoMax: z.string().nullable(),
   custoDiluido: z.string().nullable(),
+  // Alguns produtos mudam de embalagem física por tamanho (garrafa/galão/tambor) —
+  // foto diferente por tamanho. Opcional: ausente cai no imagemPath do produto (1 foto
+  // só, comportamento de sempre). Nenhum tamanho tem essa foto cadastrada ainda.
+  imagemPath: z.string().nullable().optional(),
 });
 export type Embalagem = z.infer<typeof Embalagem>;
 

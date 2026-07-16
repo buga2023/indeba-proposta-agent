@@ -12,7 +12,7 @@
  * Constituição: preço/embalagem vêm SEMPRE do catálogo; a IA só seleciona e escreve.
  */
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
 import type { Usuario } from "@/lib/auth";
 import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, cortarParaOrcamento } from "@/lib/proposta-edit";
@@ -53,11 +53,6 @@ const LINHA_COR: Record<string, string> = {
 const linhaCor = (l: string) => LINHA_COR[l] ?? "#5B6E7D";
 const humaniza = (l: string) =>
   l.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-
-function parseCliente(briefing: string): string {
-  const h = briefing.split(":")[0].trim();
-  return h && h.length <= 80 ? h : "Cliente";
-}
 
 /** Elemento com estados :hover / :active (o design usa style-hover/style-active). */
 function Hoverable({
@@ -155,10 +150,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
   recusada: { label: "Recusada", bg: "#FEE2E2", fg: "#DC2626" },
 };
 
-const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];
-const LOADING_LABELS = ["Briefing analisado", "Catálogo consultado", "Produtos selecionados", "Proposta montada"];
-
-type Screen = "dashboard" | "briefing" | "manual" | "importar" | "loading" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config";
+type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config" | "perfil";
 type TipoProposta = "orcamento" | "implantacao" | "comercial" | "consolidada";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -176,12 +168,12 @@ const TIPOS_SELECIONAVEIS = TIPOS.filter((t) => t.value === "consolidada");
 // Itens da command palette (Ctrl/Cmd+K) — só telas reais.
 const CMD_ITEMS: PaletteItem[] = [
   { key: "dashboard", label: "Dashboard" },
-  { key: "briefing", label: "Nova proposta" },
   { key: "manual", label: "Proposta manual" },
   { key: "importar", label: "Importar orçamento" },
   { key: "history", label: "Propostas" },
   { key: "catalog", label: "Catálogo" },
   { key: "config", label: "Configurações" },
+  { key: "perfil", label: "Meu perfil" },
 ];
 
 /* ───────────────────────── componente principal ───────────────────────── */
@@ -191,11 +183,10 @@ export default function Home() {
   const toast = useToast();
   const [palette, setPalette] = useState(false);
   const [reviewVariant, setReviewVariant] = useState<"A" | "B">("A");
+  // Acumulador de contexto do "Refinar com IA" (Revisão) — cada refino anexa o
+  // pedido a esta string e reprocessa (ver refinarProposta). Começa vazio: a
+  // proposta nasce sempre da Manual/Importar, não de um briefing digitado.
   const [briefingText, setBriefingText] = useState("");
-  const [loadingStep, setLoadingStep] = useState(0);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const [quickLoading, setQuickLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [refining, setRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -203,25 +194,14 @@ export default function Home() {
   const [scope, setScope] = useState<PropostaScope | null>(null);
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
 
-  const [tipoProposta, setTipoProposta] = useState<TipoProposta>("consolidada");
+  // Handoff Prospecção → Manual: dados do lead pra pré-preencher o cliente.
+  const [manualPrefill, setManualPrefill] = useState<{ razaoSocial: string; segmento: string | null } | null>(null);
   const [catFilter, setCatFilter] = useState("Todos");
   const [catalogo, setCatalogo] = useState<Produto[] | null>(null);
   const [catalogoErro, setCatalogoErro] = useState<string | null>(null);
   const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
   const [propostasErro, setPropostasErro] = useState<string | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-
-  const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const stopStepTimer = useCallback(() => {
-    if (stepTimer.current) {
-      clearInterval(stepTimer.current);
-      stepTimer.current = null;
-    }
-  }, []);
-
-  useEffect(() => () => stopStepTimer(), [stopStepTimer]);
 
   // Usuário da sessão atual — personaliza saudação e sidebar.
   useEffect(() => {
@@ -258,74 +238,6 @@ export default function Home() {
         .catch((e) => setPropostasErro(e instanceof Error ? e.message : "Erro"));
     }
   }, [screen, catalogo, propostas]);
-
-  async function startGeneration(textoOverride?: string, prospect?: ProspectParaProposta) {
-    // textoOverride: gerar a partir de um texto explícito (ex.: vindo da prospecção),
-    // sem depender do setState assíncrono de briefingText. Guard porque a UI também
-    // chama startGeneration direto no onClick (passando o evento como argumento).
-    // prospect: quando vem da prospecção, os dados do cliente já estão estruturados
-    // (não re-extrai por heurística) e a "dor" personaliza o texto da proposta.
-    const texto = (typeof textoOverride === "string" ? textoOverride : briefingText).trim();
-    if (!texto || generating) return;
-    setError(null);
-    setGenerating(true);
-    const primeira = !hasLoadedOnce;
-    if (primeira) {
-      setScreen("loading");
-      setLoadingStep(0);
-      let s = 0;
-      stopStepTimer();
-      stepTimer.current = setInterval(() => {
-        s++;
-        if (s >= 3) {
-          setLoadingStep(3);
-          stopStepTimer();
-        } else {
-          setLoadingStep(s);
-        }
-      }, 700);
-    } else {
-      setQuickLoading(true);
-    }
-
-    try {
-      const body = prospect
-        ? {
-            briefing: texto,
-            razaoSocial: prospect.razaoSocial,
-            cnpj: null,
-            segmento: prospect.segmento,
-            tipo: "comercial" as const, // prospecção = abordagem fria → apresentação institucional
-            contextoProspeccao: prospect.contexto,
-          }
-        : { briefing: texto, razaoSocial: parseCliente(texto), cnpj: null, segmento: null, tipo: tipoProposta };
-      const r = await fetch("/api/montar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!r.ok) throw new Error(`Falha ao montar a proposta (${r.status}).`);
-      const data = await r.json();
-      if (data?.precisaTipo) throw new Error("Não consegui identificar o tipo de proposta a partir do briefing.");
-      if (!data || !Array.isArray(data.itens)) throw new Error("Resposta inesperada do servidor.");
-      const novo = data as PropostaScope;
-      stopStepTimer();
-      setLoadingStep(4);
-      setScope(novo);
-      setExcluded(new Set());
-      setHasLoadedOnce(true);
-      setScreen("review");
-      toast("Proposta montada — revise os produtos", "success");
-      persistirProposta(novo); // auto-save: proposta gerada já vira registro (rascunho)
-    } catch (e) {
-      stopStepTimer();
-      setError(e instanceof Error ? e.message : "Erro ao montar a proposta.");
-      setScreen("briefing");
-    } finally {
-      setGenerating(false);
-      setQuickLoading(false);
-    }
-  }
 
   function changeQty(codigo: string, d: number) {
     setScope((s) =>
@@ -463,19 +375,17 @@ export default function Home() {
       const reg = await r.json();
       setScope(reg.scope as PropostaScope);
       setExcluded(new Set());
-      setHasLoadedOnce(true);
       setScreen("review");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao abrir a proposta.");
     }
   }
 
-  // Proposta manual (sem IA): a tela monta o scope via /api/montar-estruturado e entrega
-  // aqui; cai no MESMO fluxo de revisão/PDF e vira registro (rascunho), igual à via IA.
+  // Proposta manual: a tela monta o scope via /api/montar-estruturado e entrega aqui;
+  // cai no MESMO fluxo de revisão/PDF usado por qualquer forma de criar proposta.
   function aplicarScopeManual(novo: PropostaScope) {
     setScope(novo);
     setExcluded(new Set());
-    setHasLoadedOnce(true);
     setScreen("review");
     toast("Proposta montada — revise os produtos", "success");
     persistirProposta(novo);
@@ -565,10 +475,9 @@ export default function Home() {
   const navSection: CSSProperties = { fontSize: "10px", fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: "rgba(255,255,255,.34)", padding: "14px 12px 5px" };
 
   function novaProposta() {
-    setScreen("briefing");
-    setBriefingText("");
-    setQuickLoading(false);
+    setManualPrefill(null);
     setError(null);
+    setScreen("manual");
   }
 
   const chrome = {
@@ -607,16 +516,8 @@ export default function Home() {
             </svg>
             Dashboard
           </Hoverable>
-          <div className="ies-side-text" style={navSection}>IA &amp; Vendas</div>
-          <Hoverable base={navItemStyle(["briefing", "loading", "review", "pdf"])} hover={navHover} onClick={novaProposta}>
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9.5 2H4.5A1 1 0 003.5 3v11a1 1 0 001 1h8a1 1 0 001-1V6.5L9.5 2z" />
-              <path d="M9.5 2v4.5h4.5" />
-              <path d="M6 9.5h5M6 12h3.5" />
-            </svg>
-            Nova proposta
-          </Hoverable>
-          <Hoverable base={navItemStyle(["manual"])} hover={navHover} onClick={() => setScreen("manual")}>
+          <div className="ies-side-text" style={navSection}>Criar proposta</div>
+          <Hoverable base={navItemStyle(["manual", "review", "pdf"])} hover={navHover} onClick={novaProposta}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="2.5" width="12" height="12" rx="2" />
               <path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" />
@@ -657,13 +558,20 @@ export default function Home() {
         </nav>
 
         <div className="ies-side-foot" style={{ padding: "14px 14px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontWeight: 700, fontSize: "13px", color: "white" }}>
-            {(usuario?.nome || "?").trim().charAt(0).toUpperCase()}
-          </div>
-          <div className="ies-side-text" style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: "white", fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{usuario?.nome || "…"}</div>
-            <div style={{ color: "rgba(255,255,255,.42)", fontSize: "11px" }}>{usuario?.papel === "admin" ? "Administrador" : "Vendedor"}</div>
-          </div>
+          <Hoverable
+            onClick={() => setScreen("perfil")}
+            title="Meu perfil"
+            base={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px", borderRadius: "10px", textAlign: "left" }}
+            hover={{ background: "rgba(255,255,255,.06)" }}
+          >
+            <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontWeight: 700, fontSize: "13px", color: "white" }}>
+              {(usuario?.nome || "?").trim().charAt(0).toUpperCase()}
+            </div>
+            <div className="ies-side-text" style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ color: "white", fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{usuario?.nome || "…"}</div>
+              <div style={{ color: "rgba(255,255,255,.42)", fontSize: "11px" }}>{usuario?.papel === "admin" ? "Administrador" : "Vendedor"}</div>
+            </div>
+          </Hoverable>
           <button
             onClick={() => {
               fetch("/api/logout", { method: "POST" }).finally(() => (window.location.href = "/login"));
@@ -681,12 +589,8 @@ export default function Home() {
       {/* ============ MAIN ============ */}
       <main className="ies-scroll" style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden", position: "relative" }}>
         {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} />}
-        {screen === "briefing" && (
-          <BriefingScreen {...{ quickLoading, briefingText, setBriefingText, startGeneration, textareaRef, error, tipoProposta, setTipoProposta }} />
-        )}
-        {screen === "manual" && <ManualScreen onMontar={aplicarScopeManual} />}
+        {screen === "manual" && <ManualScreen onMontar={aplicarScopeManual} prefill={manualPrefill} />}
         {screen === "importar" && <ImportarOrcamentoScreen onMontar={aplicarScopeManual} />}
-        {screen === "loading" && <LoadingScreen loadingStep={loadingStep} />}
         {screen === "review" && scope && (
           <ReviewScreen
             {...{ reviewVariant, setReviewVariant, scope, excluded, includedItems, total, toggleProduct, changeQty, editarPreco }}
@@ -694,7 +598,7 @@ export default function Home() {
             onEditarTexto={editarTexto}
             onComandoChat={aplicarComandoChat}
             refining={refining}
-            goToBriefing={novaProposta}
+            goToManual={novaProposta}
             goToPDF={() => setScreen("pdf")}
           />
         )}
@@ -718,23 +622,31 @@ export default function Home() {
           <HistoryScreen
             propostas={propostas}
             erro={propostasErro}
-            goToBriefing={novaProposta}
+            goToManual={novaProposta}
             onReabrir={reabrirProposta}
             onStatus={mudarStatus}
           />
         )}
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
-        {screen === "prospeccao" && <ProspeccaoScreen onGerarProposta={(d) => { setBriefingText(d.briefing); setScreen("briefing"); startGeneration(d.briefing, d); }} />}
+        {screen === "prospeccao" && (
+          <ProspeccaoScreen
+            onGerarProposta={(d) => {
+              setManualPrefill({ razaoSocial: d.razaoSocial, segmento: d.segmento });
+              setScreen("manual");
+            }}
+          />
+        )}
         {screen === "instagram" && <InstagramScreen />}
         {screen === "financeiro" && <FinanceiroScreen />}
         {screen === "cobranca" && <CobrancaScreen />}
         {screen === "compras" && <ComprasScreen />}
         {screen === "fiscal" && <FiscalScreen />}
         {screen === "contabil" && <ContabilScreen />}
-        {screen === "contrato" && <ContratoScreen scope={scope} onVerProposta={() => setScreen(scope ? "review" : "briefing")} />}
+        {screen === "contrato" && <ContratoScreen scope={scope} onVerProposta={() => setScreen(scope ? "review" : "manual")} />}
         {screen === "atendimento" && <AtendimentoScreen />}
         {screen === "chamados" && <ChamadosScreen />}
         {screen === "config" && <AdminScreen />}
+        {screen === "perfil" && <MeuPerfilScreen />}
       </main>
 
       {/* Command palette (Ctrl/Cmd+K) */}
@@ -823,13 +735,10 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
           <div style={{ position: "relative", zIndex: 1, maxWidth: "560px" }}>
             <div style={{ fontSize: "12.5px", color: "rgba(255,255,255,.66)", fontWeight: 600, letterSpacing: ".02em", minHeight: "16px" }}>{hoje}</div>
             <div style={{ fontSize: "27px", fontWeight: 800, letterSpacing: "-.02em", marginTop: "5px" }}>{primeiroNome ? `${saudacao}, ${primeiroNome}` : saudacao}</div>
-            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.74)", marginTop: "7px", lineHeight: 1.55 }}>Descreva um cliente em linguagem natural — a IA seleciona produtos do catálogo, redige o texto e gera o PDF. Você revisa antes de exportar.</div>
+            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.74)", marginTop: "7px", lineHeight: 1.55 }}>Monte a proposta direto do catálogo — escolha os produtos, defina as quantidades e gere o PDF no padrão Indeba. Preço e ficha sempre do catálogo.</div>
             <div style={{ display: "flex", gap: "10px", marginTop: "20px", flexWrap: "wrap" }}>
-              <Hoverable onClick={() => setScreen("briefing")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 18px", borderRadius: "12px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600, boxShadow: "var(--shadow-accent)" }} hover={{ background: "var(--accent-hover)" }}>
-                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.8} strokeLinecap="round"><path d="M8.5 3v11M3 8.5h11" /></svg>Nova proposta
-              </Hoverable>
-              <Hoverable onClick={() => setScreen("manual")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 17px", borderRadius: "12px", border: "1px solid rgba(255,255,255,.28)", background: "rgba(255,255,255,.08)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600 }} hover={{ background: "rgba(255,255,255,.16)" }}>
-                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="2" /><path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" /></svg>Proposta manual
+              <Hoverable onClick={() => setScreen("manual")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 18px", borderRadius: "12px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600, boxShadow: "var(--shadow-accent)" }} hover={{ background: "var(--accent-hover)" }}>
+                <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="2" /><path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" /></svg>Nova proposta
               </Hoverable>
             </div>
           </div>
@@ -948,7 +857,7 @@ function SemProposta({ onNova }: { onNova: () => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", gap: "16px", padding: "48px" }}>
       <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--gray-900)" }}>Nenhuma proposta em edição</div>
-      <p style={{ fontSize: "14px", color: "var(--gray-500)" }}>Comece um briefing para montar uma proposta.</p>
+      <p style={{ fontSize: "14px", color: "var(--gray-500)" }}>Monte uma proposta a partir do catálogo pra começar.</p>
       <button onClick={onNova} style={{ padding: "10px 20px", background: "var(--orange-500)", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px", fontWeight: 600, color: "white" }}>
         Nova proposta
       </button>
@@ -956,148 +865,92 @@ function SemProposta({ onNova }: { onNova: () => void }) {
   );
 }
 
-/* ═══════════════════════ TELA: BRIEFING ═══════════════════════ */
+/* ═══════════════════════ TELA: MEU PERFIL ═══════════════════════ */
 
-function BriefingScreen({
-  quickLoading,
-  briefingText,
-  setBriefingText,
-  startGeneration,
-  textareaRef,
-  error,
-  tipoProposta,
-  setTipoProposta,
-}: {
-  quickLoading: boolean;
-  briefingText: string;
-  setBriefingText: (v: string) => void;
-  startGeneration: () => void;
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  error: string | null;
-  tipoProposta: TipoProposta;
-  setTipoProposta: (t: TipoProposta) => void;
-}) {
-  const chipBase: CSSProperties = { padding: "10px 16px", background: "white", borderWidth: "1px", borderStyle: "solid", borderColor: "var(--gray-200)", borderRadius: "12px", fontSize: "13px", color: "var(--gray-500)", cursor: "pointer", textAlign: "left", flex: 1, lineHeight: 1.45, boxShadow: "var(--shadow-sm)", transition: "border-color .18s ease,transform .15s ease,box-shadow .18s ease,color .18s ease" };
-  const chipHover: CSSProperties = { borderColor: "var(--blue-200)", color: "var(--gray-900)", transform: "translateY(-2px)", boxShadow: "0 6px 16px rgba(15,26,36,.09)" };
+type PerfilData = { nome: string; email: string; papel: "admin" | "user"; telefone: string | null };
 
-  const chips = [
-    { text: "Laticínio, limpeza CIP das linhas e sabonete para colaboradores.", prompt: "Laticínio São João: limpeza CIP das linhas de produção e sabonete bactericida para os colaboradores." },
-    { text: "Cozinha industrial: desengordurante e álcool gel para as mãos.", prompt: "Cozinha industrial: desengordurante para louças no diluidor automático e álcool gel para as mãos." },
-    { text: "Hortifruti: câmaras frias e multiuso para limpeza geral.", prompt: "Hortifruti Verde Vida: desinfecção das câmaras frias e multiuso para limpeza geral das bancadas." },
-  ];
+// Cada colaborador edita o próprio nome/telefone aqui (/api/perfil). E-mail e papel
+// vêm do login/cadastro e não são editáveis nesta tela.
+function MeuPerfilScreen() {
+  const [perfil, setPerfil] = useState<PerfilData | null>(null);
+  const [nome, setNome] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/perfil")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((d: PerfilData) => {
+        setPerfil(d);
+        setNome(d.nome);
+        setTelefone(d.telefone ?? "");
+      })
+      .catch(() => setErro("Falha ao carregar o perfil."))
+      .finally(() => setCarregando(false));
+  }, []);
+
+  const campoLabel: CSSProperties = { fontSize: "11.5px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "5px" };
+  const campoInput: CSSProperties = { width: "100%", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", fontSize: "13.5px", color: "var(--text-strong)", fontFamily: "var(--font-sans)", outline: "none" };
+  const campoInputDesabilitado: CSSProperties = { ...campoInput, background: "var(--surface-muted)", color: "var(--text-subtle)" };
+
+  async function salvar() {
+    if (salvando || !nome.trim()) return;
+    setSalvando(true);
+    setErro(null);
+    setAviso(null);
+    try {
+      const r = await fetch("/api/perfil", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome: nome.trim(), telefone: telefone.trim() || null }),
+      });
+      if (!r.ok) throw new Error((await r.json())?.erro ?? "Falha ao salvar.");
+      const d = (await r.json()) as PerfilData;
+      setPerfil(d);
+      setAviso("Perfil salvo.");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Erro ao salvar o perfil.");
+    } finally {
+      setSalvando(false);
+    }
+  }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "var(--gray-50)", position: "relative" }}>
-      {quickLoading && (
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "3px", background: "var(--blue-50)", overflow: "hidden", zIndex: 10 }}>
-          <div style={{ position: "absolute", top: 0, height: "100%", width: "30%", background: "linear-gradient(to right,transparent,var(--blue-500),var(--orange-500))", animation: "indeterminate 1.1s cubic-bezier(.4,0,.2,1) infinite" }} />
-        </div>
-      )}
-
-      <ScreenHead
-        title="Nova proposta"
-        sub="IA seleciona os produtos e redige o texto"
-        right={
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "5px 12px", background: "var(--success-soft)", borderRadius: "999px" }}>
-            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--success)", animation: "pulse 2s infinite" }} />
-            <span style={{ fontSize: "12px", color: "var(--success)", fontWeight: 500 }}>IA disponível</span>
-          </div>
-        }
-      />
-
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 32px 210px" }}>
-        <div style={{ textAlign: "center", maxWidth: "640px" }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: "24px" }}>
-            <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "linear-gradient(135deg,var(--blue-500),var(--blue-800))", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 28px rgba(30,107,184,.3)" }}>
-              <span style={{ color: "white", fontWeight: 700, fontSize: "16px", letterSpacing: "-.5px" }}>ies</span>
-            </div>
-          </div>
-          <h1 style={{ fontSize: "30px", fontWeight: 800, color: "var(--gray-900)", letterSpacing: "-.6px", marginBottom: "12px", fontFamily: "var(--font-sans)" }}>Vamos montar uma proposta?</h1>
-          <p style={{ fontSize: "15px", color: "var(--gray-500)", lineHeight: 1.65 }}>Descreva o cliente e a necessidade em linguagem natural. A IA seleciona os produtos do catálogo, redige o texto e gera o PDF no padrão Indeba Express.</p>
-          <div style={{ display: "flex", gap: "10px", marginTop: "28px", flexWrap: "wrap", justifyContent: "center" }}>
-            {chips.map((c) => (
-              <Hoverable key={c.text} base={chipBase} hover={chipHover} onClick={() => setBriefingText(c.prompt)}>
-                {c.text}
-              </Hoverable>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ position: "sticky", bottom: 0, padding: "16px 28px 28px", background: "linear-gradient(to top,var(--gray-50) 65%,transparent)", flex: "none" }}>
-        <div style={{ maxWidth: "680px", margin: "0 auto" }}>
-          {/* Tipo de proposta → define a estrutura do PDF */}
-          {TIPOS_SELECIONAVEIS.length > 1 && (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "12px", color: "var(--gray-400)", fontWeight: 500 }}>Tipo de proposta:</span>
-              <div style={{ display: "flex", background: "white", border: "1px solid var(--gray-200)", borderRadius: "999px", padding: "3px", gap: "2px", boxShadow: "var(--shadow-sm)" }}>
-                {TIPOS_SELECIONAVEIS.map((t) => {
-                  const ativo = tipoProposta === t.value;
-                  return (
-                    <button
-                      key={t.value}
-                      onClick={() => setTipoProposta(t.value)}
-                      title={t.hint}
-                      style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "5px 14px", borderRadius: "999px", border: "none", cursor: "pointer", background: ativo ? "var(--blue-50)" : "transparent", color: ativo ? "var(--blue-600)" : "var(--gray-500)", fontFamily: "var(--font-sans), sans-serif", lineHeight: 1.1 }}
-                    >
-                      <span style={{ fontSize: "13px", fontWeight: ativo ? 700 : 500 }}>{t.label}</span>
-                      <span style={{ fontSize: "10px", color: ativo ? "var(--blue-500)" : "var(--gray-400)", marginTop: "1px" }}>{t.hint}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          <div style={{ background: "white", border: "1.5px solid var(--gray-200)", borderRadius: "16px", boxShadow: "var(--shadow-md)", display: "flex", alignItems: "flex-end", padding: "10px 10px 10px 16px", gap: "8px" }}>
-            <button style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-400)", padding: "6px", flex: "none", display: "flex" }} title="Anexar (em breve)">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16.5 10.5l-7.5 7.5-6-6" />
-                <path d="M1.5 1.5h6v6" />
-                <path d="M7.5 1.5H3a1.5 1.5 0 00-1.5 1.5v12A1.5 1.5 0 003 16.5h12a1.5 1.5 0 001.5-1.5v-4.5" />
-              </svg>
-            </button>
-            <textarea
-              ref={textareaRef}
-              value={briefingText}
-              onChange={(e) => {
-                const el = e.target;
-                el.style.height = "auto";
-                el.style.height = Math.min(el.scrollHeight, 120) + "px";
-                setBriefingText(el.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  startGeneration();
-                }
-              }}
-              placeholder="Descreva o cliente e a necessidade — ex.: Padaria em Lauro de Freitas. Precisa de detergente, desengordurante e álcool 70 para limpeza pesada da cozinha."
-              style={{ flex: 1, border: "none", background: "transparent", resize: "none", fontSize: "14px", color: "var(--gray-900)", lineHeight: 1.55, padding: "4px 0", minHeight: "26px", maxHeight: "120px", overflow: "hidden", fontFamily: "var(--font-sans), sans-serif" }}
-              rows={1}
-            />
-            <Hoverable
-              base={{ width: "40px", height: "40px", borderRadius: "12px", background: "var(--orange-500)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", boxShadow: "0 2px 8px rgba(236,122,28,.4)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease" }}
-              hover={{ background: "#D2680F", boxShadow: "0 4px 14px rgba(236,122,28,.55)", transform: "translateY(-1px)" }}
-              active={{ transform: "translateY(0)", background: "#A8530C" }}
-              onClick={startGeneration}
-            >
-              {quickLoading ? (
-                <div style={{ width: "16px", height: "16px", border: "2px solid rgba(255,255,255,.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 8h10M8 3l5 5-5 5" />
-                </svg>
-              )}
+    <div style={{ background: "var(--background)", minHeight: "100vh" }}>
+      <ScreenHead title="Meu perfil" sub="Seus dados de contato como colaborador" />
+      <div style={{ padding: "24px 28px 44px", maxWidth: "520px" }}>
+        {carregando ? (
+          <div style={{ fontSize: "13px", color: "var(--text-subtle)" }}>Carregando…</div>
+        ) : !perfil ? (
+          <div style={{ padding: "11px 14px", background: "var(--danger-soft)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro ?? "Não foi possível carregar o perfil."}</div>
+        ) : (
+          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", gap: "14px" }}>
+            {erro && <div style={{ padding: "11px 14px", background: "var(--danger-soft)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+            {aviso && <div style={{ padding: "11px 14px", background: "var(--success-soft)", border: "1px solid #A7F3D0", borderRadius: "10px", color: "#047857", fontSize: "13px" }}>{aviso}</div>}
+            <label>
+              <div style={campoLabel}>Nome</div>
+              <input value={nome} onChange={(e) => setNome(e.target.value)} style={campoInput} />
+            </label>
+            <label>
+              <div style={campoLabel}>E-mail (login)</div>
+              <input value={perfil.email} disabled style={campoInputDesabilitado} />
+            </label>
+            <label>
+              <div style={campoLabel}>Telefone</div>
+              <input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="Ex.: (71) 99999-0000" style={campoInput} />
+            </label>
+            <label>
+              <div style={campoLabel}>Papel</div>
+              <input value={perfil.papel === "admin" ? "Administrador" : "Vendedor"} disabled style={campoInputDesabilitado} />
+            </label>
+            <Hoverable onClick={salvar} base={{ alignSelf: "flex-start", height: "38px", padding: "0 20px", borderRadius: "10px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: 600, boxShadow: "var(--shadow-accent)", opacity: salvando || !nome.trim() ? 0.7 : 1 }} hover={{ background: "var(--accent-hover)" }}>
+              {salvando ? "Salvando…" : "Salvar"}
             </Hoverable>
           </div>
-          {error ? (
-            <p style={{ textAlign: "center", fontSize: "12px", color: "#DC2626", marginTop: "10px" }}>{error}</p>
-          ) : (
-            <p style={{ textAlign: "center", fontSize: "11.5px", color: "var(--gray-400)", marginTop: "10px" }}>
-              {quickLoading ? "Analisando o briefing e selecionando os produtos do catálogo…" : "O preço, a imagem e a ficha vêm sempre do catálogo — a IA só seleciona e escreve."}
-            </p>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
@@ -1108,13 +961,14 @@ function BriefingScreen({
 // Monta proposta SEM IA: o vendedor escolhe direto do catálogo e define quantidades.
 // Preço vem SEMPRE do catálogo (constituição §1.1). POST /api/montar-estruturado devolve
 // o MESMO PropostaScope da via IA → cai no fluxo de revisão/PDF existente.
-function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
+function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => void; prefill?: { razaoSocial: string; segmento: string | null } | null }) {
   const [catalogo, setCatalogo] = useState<Produto[] | null>(null);
   const [erroCat, setErroCat] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
-  const [razaoSocial, setRazaoSocial] = useState("");
+  const [linhaFiltro, setLinhaFiltro] = useState<string>("todas");
+  const [razaoSocial, setRazaoSocial] = useState(prefill?.razaoSocial ?? "");
   const [cnpj, setCnpj] = useState("");
-  const [segmento, setSegmento] = useState("");
+  const [segmento, setSegmento] = useState(prefill?.segmento ?? "");
   const [responsavel, setResponsavel] = useState("");
   const [tipo, setTipo] = useState<TipoProposta>("consolidada");
   const [itens, setItens] = useState<Record<string, number>>({}); // codigo → quantidade
@@ -1144,8 +998,10 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
   // ganham preço digitado na hora (ver precoDe/precoManual). A IA nunca vê isso: é
   // só a tela manual, sem seleção automática.
   const disponiveis = catalogo ?? [];
+  const linhas = Array.from(new Set(disponiveis.map((p) => p.linha))).sort((a, b) => humaniza(a).localeCompare(humaniza(b)));
   const q = busca.trim().toLowerCase();
-  const filtrados = q ? disponiveis.filter((p) => `${p.nome} ${p.codigo} ${p.descricaoCurta}`.toLowerCase().includes(q)) : disponiveis;
+  const porBusca = q ? disponiveis.filter((p) => `${p.nome} ${p.codigo} ${p.descricaoCurta}`.toLowerCase().includes(q)) : disponiveis;
+  const filtrados = linhaFiltro === "todas" ? porBusca : porBusca.filter((p) => p.linha === linhaFiltro);
   // null = catálogo sem preço E ainda sem valor digitado nessa sessão.
   const precoDe = (p: Produto): number | null => {
     const doCatalogo = p.embalagens[0]?.preco;
@@ -1223,15 +1079,24 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
         itens: [
           ...selCat.map((x) => {
             const embCatalogo = x.produto.embalagens[0];
-            // Catálogo sem preço (produto arquivado): manda a embalagem com o preço
-            // digitado pelo vendedor — nunca inventado pela IA. Com preço no
-            // catálogo, manda só o código (preço vem de lá, como sempre).
+            // Catálogo sem preço (produto arquivado): manda TODOS os tamanhos do
+            // catálogo (não só o primeiro — produto pode vir em 5/20/50L, cada um
+            // com foto/preço próprio no fornecedor) com o preço digitado pelo
+            // vendedor (nunca inventado pela IA) — mesmo preço unitário aplicado a
+            // todos por ora (preço por tamanho fica pra uma tela dedicada depois).
+            // Com preço no catálogo, manda só o código (preço/tamanhos vêm de lá).
             if (embCatalogo?.preco == null) {
               const preco = precoDe(x.produto);
               return {
                 codigo: x.produto.codigo,
                 quantidade: x.qtd,
-                embalagens: [{ tamanho: embCatalogo?.tamanho ?? 1, unidade: embCatalogo?.unidade ?? "un", preco: (preco ?? 0).toFixed(2), diluicaoMax: embCatalogo?.diluicaoMax ?? null, custoDiluido: null }],
+                embalagens: x.produto.embalagens.map((e) => ({
+                  tamanho: e.tamanho,
+                  unidade: e.unidade,
+                  preco: (preco ?? 0).toFixed(2),
+                  diluicaoMax: e.diluicaoMax,
+                  custoDiluido: null,
+                })),
               };
             }
             return { codigo: x.produto.codigo, quantidade: x.qtd };
@@ -1255,56 +1120,112 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
     <div style={{ background: "var(--background)", minHeight: "100vh" }}>
       <ScreenHead
         title="Proposta manual"
-        sub="Monte direto do catálogo — sem IA, preço do catálogo"
+        sub="Monte direto do catálogo — preço sempre do catálogo"
         right={
-          <Hoverable onClick={montar} base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 18px", borderRadius: "10px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: 600, boxShadow: "var(--shadow-accent)", opacity: montando ? 0.7 : 1 }} hover={{ background: "var(--accent-hover)" }}>
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M8 3l5 5-5 5" /></svg>
-            {montando ? "Montando…" : "Montar proposta"}
-          </Hoverable>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            {rows.length > 0 && (
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: "10.5px", fontWeight: 600, color: "var(--text-subtle)", textTransform: "uppercase", letterSpacing: ".04em" }}>{rows.length} {rows.length === 1 ? "item" : "itens"}</div>
+                <div style={{ fontSize: "15px", fontWeight: 800, color: "var(--primary)", fontFamily: "var(--font-mono)", lineHeight: 1.1 }}>{fmt(total)}</div>
+              </div>
+            )}
+            <Hoverable onClick={montar} base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 18px", borderRadius: "10px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: 600, boxShadow: "var(--shadow-accent)", opacity: montando ? 0.7 : 1 }} hover={{ background: "var(--accent-hover)" }}>
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M8 3l5 5-5 5" /></svg>
+              {montando ? "Montando…" : "Montar proposta"}
+            </Hoverable>
+          </div>
         }
       />
-      <div style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "18px" }}>
         {/* Cliente + tipo */}
-        <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "flex-end" }}>
-          <label style={{ flex: "1 1 240px", minWidth: 0 }}>
-            <div style={campoLabel}>Razão social *</div>
-            <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Ex.: Laticínio São João Ltda" style={campoInput} />
-          </label>
-          <label style={{ flex: "1 1 180px", minWidth: 0 }}>
-            <div style={campoLabel}>CNPJ</div>
-            <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0001-00" style={campoInput} />
-          </label>
-          <label style={{ flex: "1 1 200px", minWidth: 0 }}>
-            <div style={campoLabel}>Segmento</div>
-            <input value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="Ex.: Laticínio" style={campoInput} />
-          </label>
-          <label style={{ flex: "1 1 200px", minWidth: 0 }}>
-            <div style={campoLabel}>Responsável</div>
-            <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Quem recebe a proposta" style={campoInput} />
-          </label>
-          {TIPOS_SELECIONAVEIS.length > 1 && (
-            <div>
-              <div style={campoLabel}>Tipo</div>
-              <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
-                {TIPOS_SELECIONAVEIS.map((t) => {
-                  const at = tipo === t.value;
-                  return (
-                    <button key={t.value} onClick={() => setTipo(t.value)} title={t.hint} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: at ? 600 : 500, background: at ? "var(--primary)" : "transparent", color: at ? "#fff" : "var(--text-muted)", fontFamily: "inherit" }}>
-                      {t.label}
-                    </button>
-                  );
-                })}
-              </div>
+        <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
+              <span style={{ width: "26px", height: "26px", borderRadius: "8px", background: "var(--info-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)", flex: "none" }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="4.5" r="2.5" /><path d="M2 12c0-2.5 2.2-4 5-4s5 1.5 5 4" /></svg>
+              </span>
+              <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)" }}>Cliente</span>
             </div>
-          )}
+            {prefill && (
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 11px", background: "var(--info-soft)", borderRadius: "999px" }}>
+                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--primary)", flex: "none" }} />
+                <span style={{ fontSize: "11.5px", color: "var(--primary)", fontWeight: 600 }}>Pré-preenchido a partir da Prospecção</span>
+              </div>
+            )}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "flex-end" }}>
+            <label style={{ flex: "1 1 240px", minWidth: 0 }}>
+              <div style={campoLabel}>Razão social *</div>
+              <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Ex.: Laticínio São João Ltda" style={campoInput} />
+            </label>
+            <label style={{ flex: "1 1 180px", minWidth: 0 }}>
+              <div style={campoLabel}>CNPJ</div>
+              <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0001-00" style={campoInput} />
+            </label>
+            <label style={{ flex: "1 1 200px", minWidth: 0 }}>
+              <div style={campoLabel}>Segmento</div>
+              <input value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="Ex.: Laticínio" style={campoInput} />
+            </label>
+            <label style={{ flex: "1 1 200px", minWidth: 0 }}>
+              <div style={campoLabel}>Responsável</div>
+              <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Quem recebe a proposta" style={campoInput} />
+            </label>
+            {TIPOS_SELECIONAVEIS.length > 1 && (
+              <div>
+                <div style={campoLabel}>Tipo</div>
+                <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
+                  {TIPOS_SELECIONAVEIS.map((t) => {
+                    const at = tipo === t.value;
+                    return (
+                      <button key={t.value} onClick={() => setTipo(t.value)} title={t.hint} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12.5px", fontWeight: at ? 600 : 500, background: at ? "var(--primary)" : "transparent", color: at ? "#fff" : "var(--text-muted)", fontFamily: "inherit" }}>
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {erro && <div style={{ padding: "11px 14px", background: "var(--danger-soft)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
 
-        <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "16px", alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "18px", alignItems: "start" }}>
           {/* Catálogo */}
-          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px 18px", boxShadow: "var(--shadow-sm)" }}>
-            <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar produto por nome ou código…" style={{ ...campoInput, marginBottom: "12px" }} />
+          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
+                <span style={{ width: "26px", height: "26px", borderRadius: "8px", background: "var(--info-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)", flex: "none" }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="4.5" height="4.5" rx="1" /><rect x="7.5" y="2" width="4.5" height="4.5" rx="1" /><rect x="2" y="7.5" width="4.5" height="4.5" rx="1" /><rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" /></svg>
+                </span>
+                <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)" }}>Catálogo</span>
+              </div>
+              {catalogo !== null && <span style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{filtrados.length} de {disponiveis.length}</span>}
+            </div>
+            <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar produto por nome ou código…" style={{ ...campoInput, marginBottom: "10px" }} />
+            {linhas.length > 1 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "12px" }}>
+                <button
+                  onClick={() => setLinhaFiltro("todas")}
+                  style={{ padding: "5px 12px", borderRadius: "999px", border: "1px solid " + (linhaFiltro === "todas" ? "var(--primary)" : "var(--border-strong)"), background: linhaFiltro === "todas" ? "var(--info-soft)" : "var(--surface)", color: linhaFiltro === "todas" ? "var(--primary)" : "var(--text-muted)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+                >
+                  Todas as linhas
+                </button>
+                {linhas.map((l) => {
+                  const ativo = linhaFiltro === l;
+                  return (
+                    <button
+                      key={l}
+                      onClick={() => setLinhaFiltro(l)}
+                      style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 12px", borderRadius: "999px", border: "1px solid " + (ativo ? linhaCor(l) : "var(--border-strong)"), background: ativo ? linhaCor(l) : "var(--surface)", color: ativo ? "#fff" : "var(--text-muted)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+                    >
+                      {!ativo && <span style={{ width: "6px", height: "6px", borderRadius: "2px", background: linhaCor(l), flex: "none" }} />}
+                      {humaniza(l)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             {erroCat && <div style={{ fontSize: "13px", color: "#B91C1C" }}>{erroCat}</div>}
             {catalogo === null && !erroCat && <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "12px 0" }}>Carregando catálogo…</div>}
             <div className="ies-scroll" style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "440px", overflowY: "auto" }}>
@@ -1319,6 +1240,11 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nome}</div>
                       <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{p.codigo} · {humaniza(p.linha)}{!p.ativo && " · arquivado"}</div>
+                      {p.embalagens.length > 1 && (
+                        <div style={{ fontSize: "10.5px", color: "var(--text-subtle)", marginTop: "2px" }}>
+                          {p.embalagens.length} tamanhos ({p.embalagens.map((e) => `${e.tamanho}${e.unidade}`).join(", ")}){semPrecoCatalogo ? " — mesmo preço p/ todos" : ""}
+                        </div>
+                      )}
                     </div>
                     {semPrecoCatalogo ? (
                       <input
@@ -1369,10 +1295,20 @@ function ManualScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
           </div>
 
           {/* Selecionados */}
-          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px 18px", boxShadow: "var(--shadow-sm)", position: "sticky", top: "78px" }}>
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)", marginBottom: "12px" }}>Selecionados ({rows.length})</div>
+          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", position: "sticky", top: "78px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "14px" }}>
+              <span style={{ width: "26px", height: "26px", borderRadius: "8px", background: "var(--success-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--success)", flex: "none" }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 7.5l3 3 6-6.5" /></svg>
+              </span>
+              <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)" }}>Selecionados ({rows.length})</span>
+            </div>
             {rows.length === 0 ? (
-              <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "20px 0", textAlign: "center" }}>Adicione produtos do catálogo (ou um item próprio) ao lado.</div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", padding: "26px 0", textAlign: "center" }}>
+                <span style={{ width: "38px", height: "38px", borderRadius: "10px", background: "var(--surface-muted)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-subtle)" }}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="12" height="12" rx="2" /><path d="M6.5 9h5M9 6.5v5" /></svg>
+                </span>
+                <div style={{ fontSize: "13px", color: "var(--text-subtle)", maxWidth: "180px" }}>Adicione produtos do catálogo (ou um item próprio) ao lado.</div>
+              </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {rows.map((r) => (
@@ -1594,73 +1530,6 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
   );
 }
 
-/* ═══════════════════════ TELA: LOADING ═══════════════════════ */
-
-function LoadingScreen({ loadingStep }: { loadingStep: number }) {
-  const progressPct = Math.min(Math.round((loadingStep / 4) * 100), 100);
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", gap: "36px", padding: "48px", background: "var(--gray-50)" }}>
-      <div style={{ display: "flex", gap: "9px", alignItems: "center", height: "32px" }}>
-        {[0, 0.2, 0.4].map((d) => (
-          <div key={d} style={{ width: "11px", height: "11px", borderRadius: "50%", background: "var(--blue-500)", animation: `wave 1.3s ease-in-out infinite ${d}s`, boxShadow: "0 0 0 3px rgba(30,107,184,.12)" }} />
-        ))}
-      </div>
-
-      <div style={{ textAlign: "center", width: "100%", maxWidth: "400px" }}>
-        <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--gray-900)", letterSpacing: "-.4px", marginBottom: "6px" }}>{LOADING_MSGS[Math.min(loadingStep, 3)]}</div>
-        <div style={{ fontSize: "14px", color: "var(--gray-400)", marginBottom: "20px" }}>Isso leva apenas alguns segundos.</div>
-        <div style={{ height: "5px", background: "var(--gray-200)", borderRadius: "999px", overflow: "hidden" }}>
-          <div style={{ height: "5px", borderRadius: "999px", background: "linear-gradient(to right, #1E6BB8, #EC7A1C)", width: progressPct + "%", transition: "width 0.7s cubic-bezier(.4,0,.2,1)" }} />
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "7px" }}>
-          <span style={{ fontSize: "11.5px", color: "var(--gray-400)" }}>Processando…</span>
-          <span style={{ fontSize: "11.5px", fontWeight: 600, color: "var(--blue-500)" }}>{progressPct}%</span>
-        </div>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "7px", width: "100%", maxWidth: "380px" }}>
-        {LOADING_LABELS.map((label, i) => {
-          const done = loadingStep > i;
-          const active = loadingStep === i;
-          return (
-            <div
-              key={label}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "12px 16px",
-                borderRadius: "10px",
-                borderWidth: "1px",
-                borderStyle: "solid",
-                borderColor: done ? "#A7F3D0" : active ? "#A8CBEA" : "#E3EBF3",
-                background: done ? "#F0FDF4" : active ? "#EAF2FA" : "white",
-                boxShadow: active ? "0 0 0 3px rgba(30,107,184,.08), 0 1px 3px rgba(15,26,36,.06)" : "0 1px 2px rgba(15,26,36,.04)",
-                transition: "all 0.35s cubic-bezier(.4,0,.2,1)",
-                animation: done && loadingStep - 1 === i ? "stepIn .3s ease both" : "none",
-              }}
-            >
-              <div style={{ width: "24px", height: "24px", borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: done ? "#DCFCE7" : active ? "#D2E4F4" : "#EEF3F8", transition: "background 0.3s ease" }}>
-                {done ? (
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#16A34A" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1.5 6.5l3.5 3.5 6.5-7" />
-                  </svg>
-                ) : active ? (
-                  <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#1E6BB8", animation: "pulse 1s ease-in-out infinite" }} />
-                ) : (
-                  <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#CBD7E3" }} />
-                )}
-              </div>
-              <span style={{ fontSize: "14px", flex: 1, color: done ? "#16A34A" : active ? "#1E6BB8" : "#94A6B8", fontWeight: done ? 600 : active ? 700 : 400, transition: "color 0.3s ease" }}>{label}</span>
-              <div style={{ fontSize: "11px", fontWeight: 600, padding: "2px 8px", borderRadius: "999px", background: done ? "#DCFCE7" : active ? "#D2E4F4" : "#EEF3F8", color: done ? "#16A34A" : active ? "#1E6BB8" : "#CBD7E3", transition: "all 0.3s ease" }}>{done ? "Concluído" : active ? "Em andamento" : "Aguardando"}</div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 /* ═══════════════════════ TELA: REVIEW ═══════════════════════ */
 
 function ReviewScreen({
@@ -1677,7 +1546,7 @@ function ReviewScreen({
   onEditarTexto,
   onComandoChat,
   refining,
-  goToBriefing,
+  goToManual,
   goToPDF,
 }: {
   reviewVariant: "A" | "B";
@@ -1693,7 +1562,7 @@ function ReviewScreen({
   onEditarTexto: (texto: string) => void;
   onComandoChat: (r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null }) => string | void;
   refining: boolean;
-  goToBriefing: () => void;
+  goToManual: () => void;
   goToPDF: () => void;
 }) {
   const vTab = (v: "A" | "B"): CSSProperties => ({
@@ -1727,7 +1596,7 @@ function ReviewScreen({
         sub={`${scope.cliente.razaoSocial} · ${includedItems.length} produtos selecionados`}
         right={
           <>
-            <button onClick={goToBriefing} title="Nova proposta" style={{ display: "flex", alignItems: "center", gap: "5px", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", cursor: "pointer", fontSize: "13px", color: "var(--text-muted)" }}>
+            <button onClick={goToManual} title="Nova proposta" style={{ display: "flex", alignItems: "center", gap: "5px", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", cursor: "pointer", fontSize: "13px", color: "var(--text-muted)" }}>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M8 2L3 6.5 8 11" />
               </svg>
@@ -2372,13 +2241,13 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
 function HistoryScreen({
   propostas,
   erro,
-  goToBriefing,
+  goToManual,
   onReabrir,
   onStatus,
 }: {
   propostas: PropostaLog[] | null;
   erro: string | null;
-  goToBriefing: () => void;
+  goToManual: () => void;
   onReabrir: (id: string) => void;
   onStatus: (id: string, status: StatusProposta) => void;
 }) {
@@ -2406,7 +2275,7 @@ function HistoryScreen({
               base={{ display: "flex", alignItems: "center", gap: "8px", height: "38px", padding: "0 18px", background: "var(--orange-500)", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(236,122,28,.35)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease" }}
               hover={{ background: "#D2680F", boxShadow: "0 4px 14px rgba(236,122,28,.5)", transform: "translateY(-1px)" }}
               active={{ transform: "translateY(0)", background: "#A8530C" }}
-              onClick={goToBriefing}
+              onClick={goToManual}
             >
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round">
                 <path d="M7.5 1.5v12M1.5 7.5h12" />

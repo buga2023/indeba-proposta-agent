@@ -93,12 +93,14 @@ model Config {
 /// Conta de colaborador (cadastro próprio: nome + e-mail + senha). `credencial` é
 /// "salt.hash" (PBKDF2 — ver src/lib/auth.ts), nunca a senha em texto puro. `papel` vem
 /// de ADMIN_EMAILS (env) no momento do cadastro. Nome/e-mail alimentam a proposta
-/// (consultor/contato — ver src/lib/montar.ts).
+/// (consultor/contato — ver src/lib/montar.ts). `telefone` é editável pelo próprio
+/// colaborador (/api/perfil) ou pelo gestor (/api/colaboradores, painel de admin).
 model Usuario {
   id         String   @id @default(cuid())
   nome       String
   email      String   @unique
   credencial String
   papel      String   @default("user") // admin | user
+  telefone   String? // dígitos: DDD + número
   criadoEm   DateTime @default(now())
 }
