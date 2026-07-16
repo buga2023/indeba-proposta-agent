@@ -8,7 +8,7 @@
 export type Papel = "admin" | "user";
 export type Usuario = { email: string; nome: string; papel: Papel };
 
-const secret = () => process.env.AUTH_SESSION_SECRET ?? "dev-secret-trocar-em-producao";
+const secret = () => process.env.AUTH_SESSION_SECRET || "dev-secret-trocar-em-producao";
 
 // Liga por padrão. Só desliga com AUTH_ENABLED=false explícito (uso local em 127.0.0.1
 // sem quem logar ainda) — nunca desliga sozinha em produção.
