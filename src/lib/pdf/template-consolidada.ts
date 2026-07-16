@@ -60,6 +60,8 @@ const ICONES: Record<string, string> = {
   caixa: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
   automotivo: '<path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><path d="M3 11h18v5a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="16" r="1.5"/><circle cx="16.5" cy="16" r="1.5"/>',
   piso: '<path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/>',
+  etiqueta: '<path d="M20.5 12.5l-8 8L3 11V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+  frasco: '<path d="M9 2h6M10 2v3.2L8 8v11a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-2.8V2"/><path d="M8 12.5h8"/>',
 };
 export const iconeSvg = (nome: string, cor = NAVY): string =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="${cor}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONES[nome] ?? '<circle cx="12" cy="12" r="3"/>'}</svg>`;
@@ -137,7 +139,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   // tamanhos com valor aqui (isso é o bloco "disponíveis" acima, sem preço).
   const cotada = item.embalagens[0];
   const valores = cotada
-    ? `<div class="p-val p-val-cotada"><div class="p-vl">${cotada.tamanho} ${esc(cotada.unidade)}</div><div class="p-vp">${brl(cotada.preco)}</div></div>`
+    ? `<div class="p-val p-val-cotada"><span class="p-vic">${iconeSvg("frasco", "#fff")}</span><div class="p-vinfo"><div class="p-vl">${cotada.tamanho} ${esc(cotada.unidade)}</div><div class="p-vp">${brl(cotada.preco)}</div></div></div>`
     : "";
 
   // Rodapé navy da ficha (modelo refinado): slogan fixo + WhatsApp/e-mail do
@@ -156,17 +158,19 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   return `<section class="prodpg${simples ? " prodpg-simples" : semVenda ? " prodpg-sem-venda" : ""}">
     ${headerHtml}
     ${headBar}
-    <div class="p-top">
-      <div class="p-foto"><img src="${dataUri}" alt="${titulo}"/></div>
-      <div class="p-main">
-        <h2 class="p-tit">${titulo}</h2>${subtitulo}
-        ${descricao ? `<p class="p-desc">${descricao}</p>` : ""}
-        ${indicado}
-        ${beneficios}
+    <div class="p-body">
+      <div class="p-top">
+        <div class="p-foto"><img src="${dataUri}" alt="${titulo}"/></div>
+        <div class="p-main">
+          <h2 class="p-tit">${titulo}</h2>${subtitulo}
+          ${descricao ? `<p class="p-desc">${descricao}</p>` : ""}
+          ${indicado}
+          ${beneficios}
+        </div>
       </div>
+      ${grid}
     </div>
-    ${grid}
-    <div class="p-valores"><span class="p-vtag">Valor</span>${valores}</div>
+    <div class="p-valores"><span class="p-vtag"><span class="ic">${iconeSvg("etiqueta", "#fff")}</span>Valor</span>${valores}</div>
     <div class="p-vnota">Consulte condições especiais para compras de maiores volumes.</div>
     ${rodape}
   </section>`;
@@ -364,8 +368,12 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .cc-emp-sub { color: #8a95a3; font-size: 10px; margin-top: 2px; }
 /* Página de produto — min-height abaixo da área útil (282mm) para a barra de
    valores + contato nunca estourarem sobre o rodapé da página. */
-.prodpg { padding: 0 0 6mm; position: relative; page-break-after: always; min-height: 258mm; }
+.prodpg { padding: 0 0 6mm; position: relative; page-break-after: always; min-height: 272mm; display: flex; flex-direction: column; }
 .prodpg > .pg-head { padding: 14px 16mm 0; } /* mesma .pg-head das outras seções — aqui sem o padding herdado de .pg */
+/* Corpo (foto+info+grid) cresce para ocupar a página e centraliza verticalmente — sem isso,
+   produtos com pouca ficha (sem indicado-para/benefícios) deixavam a metade de baixo vazia.
+   VALOR e rodapé ficam ancorados no fim da página. */
+.p-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
 .p-head { background: ${NAVY}; height: 46px; display: flex; align-items: center; justify-content: flex-end; padding: 0 16mm; }
 .p-badge { color: #fff; font-size: 12px; letter-spacing: 2px; } .p-badge b { color: ${ORANGE}; }
 .p-top { display: flex; gap: 18px; padding: 20px 16mm 0; }
@@ -402,8 +410,11 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .p-ic .ic { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
 .p-ic .ic svg { width: 22px; height: 22px; } .p-ben { list-style: none; margin-top: 10px; }
 .p-ben li { display: flex; align-items: center; gap: 8px; color: #3a4757; font-size: 11px; padding: 3px 0; }
-.p-grid { display: flex; gap: 12px; padding: 18px 16mm 0; }
-.p-mini { flex: 1; border: 1px solid #e5ebf2; border-radius: 10px; padding: 10px; }
+/* Grid técnico: centralizado e com largura de card limitada — assim 1-2 cards ficam
+   com tamanho natural (não esticam a página inteira com o valor jogado na borda),
+   e 3-4 cards preenchem a largura como no mockup de referência. */
+.p-grid { display: flex; flex-wrap: wrap; gap: 12px; padding: 18px 16mm 0; justify-content: center; }
+.p-mini { flex: 1 1 190px; max-width: 320px; border: 1px solid #e5ebf2; border-radius: 10px; padding: 12px 14px; }
 .p-mt { color: ${NAVY}; font-weight: 800; font-size: 9.5px; text-transform: uppercase; text-align: center; margin-bottom: 8px; }
 .p-row { display: flex; justify-content: space-between; font-size: 10px; color: #4a5768; padding: 3px 0; } .p-row b { color: ${NAVY}; }
 .p-big { text-align: center; color: ${ORANGE}; font-weight: 800; font-size: 13px; }
@@ -414,16 +425,21 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .p-rlist li:first-child { border-top: none; padding-top: 0; }
 .p-rlist li b { display: block; color: ${ORANGE}; font-weight: 800; font-size: 10px; }
 .p-rlist li span { display: block; color: #6b7787; font-size: 9px; line-height: 1.35; margin-top: 1px; }
-/* Barra VALOR (modelo refinado): bloco laranja + faixa clara com preços navy */
-.p-valores { display: flex; align-items: stretch; margin: 18px 16mm 0; background: #f2f5f9; border-radius: 12px; overflow: hidden; page-break-inside: avoid; }
-.p-vtag { background: ${ORANGE}; color: #fff; font-weight: 800; display: flex; align-items: center; padding: 14px 22px; text-transform: uppercase; letter-spacing: 1px; }
-.p-val { flex: 1; text-align: center; padding: 10px 6px; border-left: 1px solid #e2e8f0; }
-.p-vl { font-size: 10px; color: #7a8696; text-transform: uppercase; letter-spacing: 1px; }
-.p-vp { font-family: "Geist Mono", monospace; font-size: 20px; font-weight: 700; color: ${NAVY}; }
-/* Única embalagem cotada (spec §3/§8) — sem borda de "próxima coluna", preço em
-   destaque laranja (mais proeminente que o navy padrão, já que agora é só 1 valor). */
-.p-val-cotada { flex: 1; border-left: none; padding: 14px 6px; }
-.p-val-cotada .p-vp { font-size: 24px; color: ${ORANGE}; }
+/* Barra VALOR (modelo refinado, ref. ficha-mockup): tag laranja + painel NAVY com
+   ícone de frasco, tamanho em laranja e preço em branco — premium, não faixa clara. */
+.p-valores { display: flex; align-items: stretch; margin: 18px 16mm 0; background: ${NAVY}; border-radius: 12px; overflow: hidden; page-break-inside: avoid; }
+.p-vtag { background: ${ORANGE}; color: #fff; font-weight: 800; display: flex; align-items: center; gap: 9px; padding: 16px 26px; text-transform: uppercase; letter-spacing: 1px; }
+.p-vtag .ic svg { width: 18px; height: 18px; stroke: #fff; }
+.p-val { flex: 1; text-align: center; padding: 12px 6px; }
+.p-vl { font-size: 10px; color: #9fb2c8; text-transform: uppercase; letter-spacing: 1px; }
+.p-vp { font-family: "Geist Mono", monospace; font-size: 20px; font-weight: 700; color: #fff; }
+/* Única embalagem cotada (spec §3/§8): ícone de frasco + tamanho (laranja) e preço (branco),
+   alinhados como no mockup de referência. */
+.p-val-cotada { flex: 1; display: flex; align-items: center; justify-content: center; gap: 14px; padding: 14px 6px; }
+.p-vic { display: inline-flex; } .p-vic svg { width: 34px; height: 34px; stroke: #fff; }
+.p-vinfo { text-align: left; }
+.p-val-cotada .p-vl { color: ${ORANGE}; font-weight: 700; }
+.p-val-cotada .p-vp { font-size: 26px; color: #fff; }
 .p-vnota { text-align: center; color: #8a95a3; font-size: 9.5px; margin: 6px 16mm 0; }
 /* Rodapé navy da ficha — reservado no fim da página, nunca sobrepõe a barra */
 .p-rodape { display: flex; align-items: center; justify-content: space-between; gap: 18px; background: ${NAVY}; color: #fff; margin: 10px 16mm 0; border-radius: 10px; padding: 10px 16px; page-break-inside: avoid; }
