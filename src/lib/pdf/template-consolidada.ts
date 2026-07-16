@@ -126,10 +126,14 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
     ? `<div class="p-mini"><div class="p-mt">Rendimento aproximado</div>${fmtRendimento(f.rendimento)}</div>`
     : "";
   // Embalagem cotada = SEMPRE embalagens[0] (mesma convenção do resto do app —
-  // preço/subtotal na revisão/dashboard também usam a primeira). As demais são só
-  // informativas: "disponíveis" (spec §8, Opção A — não repete a cotada aqui, ela
-  // já aparece com preço na barra de Valor logo abaixo).
-  const disponiveis = item.embalagens.slice(1);
+  // preço/subtotal na revisão/dashboard também usam a primeira). "Disponíveis" lista
+  // TODOS os tamanhos do produto (ficha técnica), incluindo a cotada, sem preço — spec
+  // §8, decisão final do cliente (áudio 16:24): repetir não é problema, pois a lista vem
+  // da ficha técnica; o único valor que aparece em qualquer lugar do card é o da cotada,
+  // na barra de Valor abaixo. Ordenada por volume crescente (L convertido pra ml
+  // equivalente, já que alguns produtos misturam L/ml nas embalagens — ex.: Letah Gel).
+  const volumeOrdenacao = (e: (typeof item.embalagens)[number]) => (e.unidade === "L" ? e.tamanho * 1000 : e.tamanho);
+  const disponiveis = item.embalagens.length > 1 ? [...item.embalagens].sort((a, b) => volumeOrdenacao(a) - volumeOrdenacao(b)) : [];
   const embalagens = disponiveis.length
     ? `<div class="p-mini"><div class="p-mt">Embalagens disponíveis</div>${disponiveis
         .map((e) => `<div class="p-row"><span>${e.tamanho} ${esc(e.unidade)}</span></div>`)
@@ -384,8 +388,8 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .p-head { background: ${NAVY}; height: 46px; display: flex; align-items: center; justify-content: flex-end; padding: 0 16mm; }
 .p-badge { color: #fff; font-size: 12px; letter-spacing: 2px; } .p-badge b { color: ${ORANGE}; }
 .p-top { display: flex; gap: 18px; padding: 20px 16mm 0; }
-.p-foto { flex: 0 0 210px; height: 300px; background: #f2f6fa; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-.p-foto img { max-width: 180px; max-height: 280px; object-fit: contain; }
+.p-foto { flex: 0 0 165px; height: 235px; background: #f2f6fa; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+.p-foto img { max-width: 140px; max-height: 215px; object-fit: contain; }
 /* Produto simples (sem ficha rica): centraliza o pouco conteúdo na página em vez de
    empilhar tudo no topo e deixar a metade de baixo vazia; foto bem maior, texto mais
    respirado — em vez de encolher a página, ocupa mais dela com o que já existe. */

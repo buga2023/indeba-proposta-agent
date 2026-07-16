@@ -47,11 +47,28 @@ describe("paginaProduto", () => {
     expect(html).not.toContain("R$ 480,00"); // 2ª embalagem (20 L) — nunca aparece com preço
   });
 
-  it("embalagens não-cotadas aparecem em 'Embalagens disponíveis' sem preço (spec §8, Opção A: não repete a cotada)", () => {
+  it("'Embalagens disponíveis' lista TODOS os tamanhos, incluindo a cotada, sempre sem preço (spec §8, decisão final: repetição permitida)", () => {
     const html = paginaProduto(item, "data:,x");
     expect(html).toContain("Embalagens disponíveis");
-    expect(html).toContain("20 L"); // só a NÃO cotada aparece na lista de disponíveis
-    expect(html).not.toContain("5 L</span></div>"); // a cotada (5L) não se repete ali
+    expect(html).toContain("5 L</span></div>"); // a cotada (5L) TAMBÉM aparece ali, sem preço
+    expect(html).toContain("20 L</span></div>");
+  });
+
+  it("ordena 'Embalagens disponíveis' por volume crescente, independente da ordem no payload", () => {
+    const foraDeOrdem: PropostaItem = {
+      ...item,
+      embalagens: [
+        { tamanho: 20, unidade: "L", preco: "480.00", diluicaoMax: "1:100", custoDiluido: "0.24" },
+        { tamanho: 500, unidade: "ml", preco: "30.00", diluicaoMax: null, custoDiluido: null },
+        { tamanho: 5, unidade: "L", preco: "130.00", diluicaoMax: "1:100", custoDiluido: "0.26" },
+      ],
+    };
+    const html = paginaProduto(foraDeOrdem, "data:,x");
+    const posMl = html.indexOf("500 ml");
+    const pos5L = html.indexOf("5 L</span></div>");
+    const pos20L = html.indexOf("20 L</span></div>");
+    expect(posMl).toBeLessThan(pos5L); // 500 ml < 5 L
+    expect(pos5L).toBeLessThan(pos20L);
   });
 
   it("degrada com elegância quando não há ficha (usa nome + descricaoUso + preço)", () => {
