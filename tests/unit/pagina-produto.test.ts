@@ -28,7 +28,7 @@ const item: PropostaItem = {
 };
 
 describe("paginaProduto", () => {
-  it("renderiza título, benefícios, diluição, características e preço por embalagem", () => {
+  it("renderiza título, benefícios, diluição, características e preço da embalagem cotada", () => {
     const html = paginaProduto(item, "data:image/png;base64,AAAA");
     expect(html).toContain("Detergente Desengordurante");
     expect(html).toContain("Alcalino Concentrado");
@@ -38,8 +38,20 @@ describe("paginaProduto", () => {
     expect(html).toContain("1:20");
     expect(html).toContain("12,5 – 13,5"); // pH
     expect(html).toContain("R$ 130,00");
-    expect(html).toContain("R$ 480,00");
     expect(html).toContain('class="prodpg"'); // a quebra de página vem do CSS de consolidadaHtml
+  });
+
+  it("mostra só o preço da embalagem cotada (embalagens[0]) — nunca mais de um preço no card", () => {
+    const html = paginaProduto(item, "data:,x");
+    expect(html).toContain("R$ 130,00"); // 1ª embalagem (5 L, cotada) — com preço
+    expect(html).not.toContain("R$ 480,00"); // 2ª embalagem (20 L) — nunca aparece com preço
+  });
+
+  it("embalagens não-cotadas aparecem em 'Embalagens disponíveis' sem preço (spec §8, Opção A: não repete a cotada)", () => {
+    const html = paginaProduto(item, "data:,x");
+    expect(html).toContain("Embalagens disponíveis");
+    expect(html).toContain("20 L"); // só a NÃO cotada aparece na lista de disponíveis
+    expect(html).not.toContain("5 L</span></div>"); // a cotada (5L) não se repete ali
   });
 
   it("degrada com elegância quando não há ficha (usa nome + descricaoUso + preço)", () => {

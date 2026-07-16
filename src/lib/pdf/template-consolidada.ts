@@ -6,6 +6,26 @@ export const esc = (s: string) =>
 export const brl = (v: string) =>
   "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+// Rendimento vem do catálogo como texto livre: às vezes um valor curto ("Até 100 litros de
+// solução pronta"), às vezes VÁRIAS dosagens em uma linha só separadas por ";" — ex.: Sanquat:
+// "0,4% p/v (manutenção diária); 0,5-1% p/v (botas em pedilúvios); ...". O destaque grande
+// (.p-big, laranja/negrito/centralizado) só cabe no valor curto; jogado sobre o texto longo
+// vira um paredão laranja que estoura o card. Aqui: curto e único → destaque; multi-dosagem →
+// lista legível (a dose em destaque, o contexto entre parênteses em cinza abaixo).
+export const fmtRendimento = (raw: string): string => {
+  const r = String(raw ?? "").trim();
+  const partes = r.split(/;\s*/).map((s) => s.trim()).filter(Boolean);
+  if (partes.length === 1 && r.length <= 46) return `<div class="p-big">${esc(r)}</div>`;
+  return `<ul class="p-rlist">${partes
+    .map((p) => {
+      const m = p.match(/^(.+?)\s*\((.+)\)\.?$/); // "valor (contexto)" → separa dose e contexto
+      return m
+        ? `<li><b>${esc(m[1])}</b><span>${esc(m[2])}</span></li>`
+        : `<li><span>${esc(p)}</span></li>`;
+    })
+    .join("")}</ul>`;
+};
+
 const NAVY = "#0b2a4a";
 const ORANGE = "#e8622a";
 
@@ -94,12 +114,15 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
         </div>`
       : "";
   const rendimento = f?.rendimento
-    ? `<div class="p-mini"><div class="p-mt">Rendimento aproximado</div><div class="p-big">${esc(f.rendimento)}</div></div>`
+    ? `<div class="p-mini"><div class="p-mt">Rendimento aproximado</div>${fmtRendimento(f.rendimento)}</div>`
     : "";
-  // Sempre presente quando o item tem embalagem (todo item tem) — a rodada anterior escondia
-  // isso no layout simples achando redundante com a barra de valor; foi regressão, voltou.
-  const embalagens = item.embalagens.length
-    ? `<div class="p-mini"><div class="p-mt">Embalagens disponíveis</div>${item.embalagens
+  // Embalagem cotada = SEMPRE embalagens[0] (mesma convenção do resto do app —
+  // preço/subtotal na revisão/dashboard também usam a primeira). As demais são só
+  // informativas: "disponíveis" (spec §8, Opção A — não repete a cotada aqui, ela
+  // já aparece com preço na barra de Valor logo abaixo).
+  const disponiveis = item.embalagens.slice(1);
+  const embalagens = disponiveis.length
+    ? `<div class="p-mini"><div class="p-mt">Embalagens disponíveis</div>${disponiveis
         .map((e) => `<div class="p-row"><span>${e.tamanho} ${esc(e.unidade)}</span></div>`)
         .join("")}</div>`
     : "";
@@ -110,9 +133,12 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
         .join("")}</div>`
     : "";
 
-  const valores = item.embalagens
-    .map((e) => `<div class="p-val"><div class="p-vl">${e.tamanho} ${esc(e.unidade)}</div><div class="p-vp">${brl(e.preco)}</div></div>`)
-    .join("");
+  // Zona de preço: só a embalagem cotada (embalagens[0]) — nunca lista os demais
+  // tamanhos com valor aqui (isso é o bloco "disponíveis" acima, sem preço).
+  const cotada = item.embalagens[0];
+  const valores = cotada
+    ? `<div class="p-val p-val-cotada"><div class="p-vl">${cotada.tamanho} ${esc(cotada.unidade)}</div><div class="p-vp">${brl(cotada.preco)}</div></div>`
+    : "";
 
   // Rodapé navy da ficha (modelo refinado): slogan fixo + WhatsApp/e-mail do
   // payload (só renderiza contato que existir — nunca número fictício).
@@ -381,12 +407,23 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .p-mt { color: ${NAVY}; font-weight: 800; font-size: 9.5px; text-transform: uppercase; text-align: center; margin-bottom: 8px; }
 .p-row { display: flex; justify-content: space-between; font-size: 10px; color: #4a5768; padding: 3px 0; } .p-row b { color: ${NAVY}; }
 .p-big { text-align: center; color: ${ORANGE}; font-weight: 800; font-size: 13px; }
+/* Rendimento multi-dosagem (Sanquat, Sanclor, Sanap…): lista legível em vez de paredão
+   laranja centralizado. Dose em destaque, contexto (entre parênteses) em cinza abaixo. */
+.p-rlist { list-style: none; }
+.p-rlist li { padding: 4px 0; border-top: 1px solid #f0f3f7; }
+.p-rlist li:first-child { border-top: none; padding-top: 0; }
+.p-rlist li b { display: block; color: ${ORANGE}; font-weight: 800; font-size: 10px; }
+.p-rlist li span { display: block; color: #6b7787; font-size: 9px; line-height: 1.35; margin-top: 1px; }
 /* Barra VALOR (modelo refinado): bloco laranja + faixa clara com preços navy */
 .p-valores { display: flex; align-items: stretch; margin: 18px 16mm 0; background: #f2f5f9; border-radius: 12px; overflow: hidden; page-break-inside: avoid; }
 .p-vtag { background: ${ORANGE}; color: #fff; font-weight: 800; display: flex; align-items: center; padding: 14px 22px; text-transform: uppercase; letter-spacing: 1px; }
 .p-val { flex: 1; text-align: center; padding: 10px 6px; border-left: 1px solid #e2e8f0; }
 .p-vl { font-size: 10px; color: #7a8696; text-transform: uppercase; letter-spacing: 1px; }
 .p-vp { font-family: "Geist Mono", monospace; font-size: 20px; font-weight: 700; color: ${NAVY}; }
+/* Única embalagem cotada (spec §3/§8) — sem borda de "próxima coluna", preço em
+   destaque laranja (mais proeminente que o navy padrão, já que agora é só 1 valor). */
+.p-val-cotada { flex: 1; border-left: none; padding: 14px 6px; }
+.p-val-cotada .p-vp { font-size: 24px; color: ${ORANGE}; }
 .p-vnota { text-align: center; color: #8a95a3; font-size: 9.5px; margin: 6px 16mm 0; }
 /* Rodapé navy da ficha — reservado no fim da página, nunca sobrepõe a barra */
 .p-rodape { display: flex; align-items: center; justify-content: space-between; gap: 18px; background: ${NAVY}; color: #fff; margin: 10px 16mm 0; border-radius: 10px; padding: 10px 16px; page-break-inside: avoid; }
