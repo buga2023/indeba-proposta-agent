@@ -90,6 +90,7 @@ export function montarDocumento(
       return {
         html: consolidadaHtml(scope, imagens, {
           logo: asset("/marca/indeba-express-logo.png"),
+          logoWhite: asset("/marca/indeba-express-logo-white.png"),
           fontSans: asset("/fonts/geist-sans-variable.woff2"),
           fontMono: asset("/fonts/geist-mono-variable.woff2"),
         }),

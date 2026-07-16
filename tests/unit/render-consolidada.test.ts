@@ -18,7 +18,7 @@ const scope: PropostaScope = {
 describe("montarDocumento — consolidada", () => {
   it("roteia para consolidadaHtml", () => {
     const doc = montarDocumento(scope, { A: "data:,x" }, "", () => "data:,logo");
-    expect(doc.html).toContain("PROPOSTA DE SOLUÇÃO");
+    expect(doc.html).toContain('class="capa-tit"');
     expect(doc.html).toContain("ACME");
   });
 

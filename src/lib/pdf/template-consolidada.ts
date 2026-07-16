@@ -82,7 +82,7 @@ export type ContatoConsolidada = { whatsapp: string | null; emailConsultor: stri
 // texto, só reposicionado). `simples`/`semVenda`: sinalizam o quão rica é a ficha
 // (nenhum dado técnico/venda vs. só técnico) — o layout em rail já centraliza o
 // conteúdo disponível sozinho, então essas classes hoje são só um sinal semântico.
-export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, numero?: string): string {
+export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, numero?: string, logoWhite?: string): string {
   const f = item.ficha ?? null;
   const titulo = f?.titulo ? esc(f.titulo) : esc(item.nome);
   const subtitulo = f?.subtitulo ? `<div class="pp-sub">${esc(f.subtitulo)}</div>` : "";
@@ -160,9 +160,13 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   const specs = diluicoes || rendimento || embalagens || carac ? `<div class="pp-specs">${diluicoes}${rendimento}${embalagens}${carac}</div>` : "";
   const runmark = numero ? `<div class="pp-runmark">Proposta de Solução <b>${esc(numero)}</b></div>` : "";
 
+  const wm = logoWhite
+    ? `<img class="pp-wm-logo" src="${logoWhite}" alt="Indeba Express"/>`
+    : `<div class="pp-wm"><b>indeba</b><span>express</span><i>.</i></div>`;
+
   return `<section class="prodpg${simples ? " prodpg-simples" : semVenda ? " prodpg-sem-venda" : ""}">
     <aside class="pp-rail">
-      <div class="pp-wm"><b>indeba</b><span>express</span><i>.</i></div>
+      ${wm}
       ${eyebrow}
       <div class="pp-figure"><div class="pp-imgcard"><img src="${dataUri}" alt="${titulo}"/></div></div>
       ${valores}
@@ -208,70 +212,74 @@ const wave = (cls: string) => `<svg class="${cls}" viewBox="0 0 360 300" fill="n
   </g>
 </svg>`;
 
-// Divisor decorativo (fio + badge laranja de pessoa) usado entre blocos —
-// elemento EM FLUXO, nunca posicionado por cima do conteúdo.
-const divisor = `<div class="div-badge"><span class="db-fio"></span><span class="db-ic">${iconeSvg("pessoa", ORANGE)}</span><span class="db-fio"></span></div>`;
-
 export function consolidadaHtml(
   scope: PropostaScope,
   imagens: Record<string, string>,
-  assets: { logo: string; fontSans: string; fontMono: string },
+  assets: { logo: string; logoWhite: string; fontSans: string; fontMono: string },
 ): string {
   const c = scope.consolidada ?? consolidadaDefaults();
   const cli = scope.cliente;
   const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   const header = (n: string) => `<div class="pg-head"><img class="hlogo" src="${assets.logo}" alt="IES"/><div class="hpg">Proposta de Solução <b>${n}</b></div></div>`;
+  // Eyebrow (dash + rótulo em caixa alta) acima do título grande de cada seção —
+  // título passa a vir em title case (estilo atualizado); o rótulo em caixa alta
+  // preserva a convenção antiga de nomear a seção em maiúsculas.
+  const secLbl = (rotulo: string) => `<div class="lbl"><span></span><b>${esc(rotulo)}</b></div>`;
 
-  const cardCliente = (icone: string, rot: string, val: string) =>
-    `<div class="cc-row"><span class="cc-ic">${iconeSvg(icone)}</span><div><div class="cc-r">${esc(rot)}</div><div class="cc-v">${esc(val)}</div></div></div>`;
+  const capaRow = (rot: string, val: string) =>
+    `<div class="capa-row"><span class="k">${esc(rot)}</span><span class="v">${esc(val)}</span></div>`;
 
   const capa = `<section class="capa">
-    ${wave("wave")}
-    <img class="capa-logo" src="${assets.logo}" alt="Indeba Express"/>
-    <div class="capa-tit">PROPOSTA DE SOLUÇÃO</div>
-    <div class="capa-sub">${esc(c.capa.subtitulo)}</div>
-    <div class="capa-card">
-      ${cardCliente("pessoa", "Cliente", cli.razaoSocial)}
-      ${cardCliente("pagamento", "CNPJ", cli.cnpj || "—")}
-      ${cardCliente("prazo", "Segmento", cli.segmento || "—")}
-      ${cardCliente("pessoa", "Responsável", cli.responsavel || "—")}
+    <img class="capa-logo" src="${assets.logoWhite}" alt="Indeba Express"/>
+    <div class="capa-mid">
+      <div class="capa-rule"></div>
+      <h1 class="capa-tit">Proposta<br/>de Solução</h1>
+      <p class="capa-sub">${esc(c.capa.subtitulo)}</p>
     </div>
-    <div class="capa-cons">
-      <div class="capa-badge">${iconeSvg("pessoa", ORANGE)}</div>
-      <div class="cc-lab">Consultor Responsável</div><div class="cc-nome">${esc(c.capa.consultor)}</div>
-      <div class="capa-cal">${iconeSvg("prazo")}</div>
-      <div class="cc-cidade">${esc(c.capa.cidade)}<br/>${esc(data)}</div></div>
+    <div class="capa-panel">
+      ${capaRow("Cliente", cli.razaoSocial)}
+      ${capaRow("CNPJ", cli.cnpj || "—")}
+      ${capaRow("Segmento", cli.segmento || "—")}
+      ${capaRow("Responsável", cli.responsavel || "—")}
+    </div>
+    <div class="capa-bottom">
+      <div><div class="capa-k">Consultor Responsável</div><div class="capa-nome">${esc(c.capa.consultor)}</div></div>
+      <div class="capa-loc">${esc(c.capa.cidade)}<br/>${esc(data)}</div>
+    </div>
+    <div class="capa-arc"></div><div class="capa-dots"></div>
   </section>`;
 
   const apres = `<section class="pg sec">
     ${wave("wave wave-sec")}
     ${header("02")}
-    <h1 class="sec-tit">APRESENTAÇÃO</h1><div class="sec-sub">${esc(c.capa.subtitulo)}</div>
+    ${secLbl("APRESENTAÇÃO")}
+    <h1 class="sec-tit">Apresentação</h1><div class="sec-sub">${esc(c.capa.subtitulo)}</div>
     <p class="sd"><b>${esc(c.apresentacao.saudacao)}</b></p>
     ${c.apresentacao.paragrafos.map((p) => `<p class="pt">${esc(p)}</p>`).join("")}
-    <div class="cards">${c.apresentacao.cards
-      .map((cd) => `<div class="card"><span class="card-ic">${iconeSvg(cd.icone)}</span><div class="card-t">${esc(cd.titulo)}</div><div class="card-x">${esc(cd.texto)}</div></div>`)
+    <div class="pillars">${c.apresentacao.cards
+      .map((cd) => `<div class="pill"><span class="pi">${iconeSvg(cd.icone, "#fff")}</span><div><h3>${esc(cd.titulo)}</h3><p>${esc(cd.texto)}</p></div></div>`)
       .join("")}</div>
-    ${divisor}
-    <div class="apres-ass">
-      <div class="aa-col"><div class="aa-nome">${esc(c.condicoes.consultor)}</div><div class="aa-sub">${esc(c.condicoes.cargo)}</div></div>
-      <div class="aa-col"><div class="aa-nome">Indeba Express</div><div class="aa-sub">${esc(c.capa.subtitulo)}</div></div>
+    <div class="sign">
+      <div><div class="n">${esc(c.condicoes.consultor)}</div><div class="r">${esc(c.condicoes.cargo)}</div></div>
+      <div><div class="n">Indeba Express</div><div class="r">${esc(c.capa.subtitulo)}</div></div>
     </div>
   </section>`;
 
   const comod = `<section class="pg sec">
     ${wave("wave wave-sec")}
     ${header("03")}
-    <h1 class="sec-tit">COMODATOS OFERECIDOS</h1><div class="sec-sub">Equipamentos em Comodato</div>
+    ${secLbl("COMODATOS OFERECIDOS")}
+    <h1 class="sec-tit">Comodatos Oferecidos</h1><div class="sec-sub">Equipamentos em Comodato</div>
     <p class="pt">${esc(c.comodatos.intro)}</p>
-    <div class="cards">${c.comodatos.equipamentos
-      .map((e) => `<div class="card"><span class="card-ic">${iconeSvg(e.icone)}</span><div class="card-t">${esc(e.titulo)}</div>${e.descricao ? `<div class="card-x">${esc(e.descricao)}</div>` : ""}</div>`)
+    <div class="equip">${c.comodatos.equipamentos
+      .map((e) => `<div class="eq"><span class="ei">${iconeSvg(e.icone, "#fff")}</span><h3>${esc(e.titulo)}</h3>${e.descricao ? `<p>${esc(e.descricao)}</p>` : ""}</div>`)
       .join("")}</div>
-    ${divisor}
-    <div class="vant-tit">VANTAGENS DO COMODATO</div>
-    <div class="vant">${c.comodatos.vantagens
-      .map((v) => `<div class="vant-i"><span class="vant-badge">${iconeSvg("check-simples", "#fff")}</span><div>${esc(v)}</div></div>`)
-      .join("")}</div>
+    <div class="adv">
+      <h4>Vantagens do Comodato</h4>
+      <div class="adv-grid">${c.comodatos.vantagens
+        .map((v) => `<div class="av"><span class="chk">${iconeSvg("check-simples", "#fff")}</span><span>${esc(v)}</span></div>`)
+        .join("")}</div>
+    </div>
   </section>`;
 
   const contato = c.contato ?? { whatsapp: null, emailConsultor: null };
@@ -280,24 +288,26 @@ export function consolidadaHtml(
   // rodapé (contador nativo do Chromium), já que cada seção é garantidamente 1 página.
   const PRIMEIRO_PRODUTO = 4;
   const produtos = scope.itens
-    .map((it, idx) => paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0")))
+    .map((it, idx) => paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite))
     .join("");
 
   const cond = `<section class="pg sec">
     ${wave("wave wave-sec")}
     ${header(String(PRIMEIRO_PRODUTO + scope.itens.length).padStart(2, "0"))}
-    <h1 class="sec-tit">CONDIÇÕES COMERCIAIS</h1><div class="sec-sub">Informações Gerais da Proposta</div>
-    <div class="cond-wrap">
-      <div class="cond-list">${c.condicoes.itens
-        .map((i) => `<div class="cond-i"><span class="cond-ic">${iconeSvg(i.icone)}</span><div><div class="cond-t">${esc(i.titulo)}</div><div class="cond-x">${esc(i.texto)}</div></div></div>`)
-        .join("")}</div>
-      <div class="cond-close"><p>${esc(c.condicoes.mensagemFechamento)}</p><div class="cc-sep"></div>
-        <div class="cc-at">Atenciosamente,</div><div class="cc-nome">${esc(c.condicoes.consultor)}</div>
-        <div class="cc-cargo">${esc(c.condicoes.cargo)}</div>
-        ${contato.emailConsultor ? `<div class="cc-contato"><span class="ic">${iconeSvg("email")}</span>${esc(contato.emailConsultor)}</div>` : ""}
-        ${contato.whatsapp ? `<div class="cc-contato"><span class="ic">${iconeSvg("zap")}</span>${esc(contato.whatsapp)}</div>` : ""}
-        <div class="cc-emp">Indeba Express</div>
-        <div class="cc-emp-sub">${esc(c.capa.subtitulo)}</div></div>
+    ${secLbl("CONDIÇÕES COMERCIAIS")}
+    <h1 class="sec-tit">Condições Comerciais</h1><div class="sec-sub">Informações Gerais da Proposta</div>
+    <div class="conds">${c.condicoes.itens
+      .map((i) => `<div class="condi"><span class="ci">${iconeSvg(i.icone)}</span><div><h3>${esc(i.titulo)}</h3><p>${esc(i.texto)}</p></div></div>`)
+      .join("")}</div>
+    <div class="closing">
+      <div class="msg">${esc(c.condicoes.mensagemFechamento)}<em>Atenciosamente,</em></div>
+      <div class="cl-sign">
+        <div class="n">${esc(c.condicoes.consultor)}</div>
+        <div class="r">${esc(c.condicoes.cargo)}</div>
+        ${contato.emailConsultor ? `<div class="cl-contato"><span class="ic">${iconeSvg("email", "#fff")}</span>${esc(contato.emailConsultor)}</div>` : ""}
+        ${contato.whatsapp ? `<div class="cl-contato"><span class="ic">${iconeSvg("zap", "#fff")}</span>${esc(contato.whatsapp)}</div>` : ""}
+        <div class="b">Indeba Express</div>
+      </div>
     </div>
   </section>`;
 
@@ -327,55 +337,76 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .hlogo { height: 34px; } .hpg { color: #7a8696; font-size: 11px; } .hpg b { color: ${NAVY}; }
 .sec-tit { color: ${NAVY}; font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
 .sec-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin: 2px 0 14px; }
-.sec-tit::before { content: ""; display: block; width: 46px; height: 5px; background: ${ORANGE}; border-radius: 3px; margin-bottom: 12px; }
 .sd { margin: 6px 0 10px; } .pt { color: #4a5768; line-height: 1.6; margin-bottom: 10px; }
-.cards { display: flex; gap: 12px; margin-top: 18px; }
-.card { flex: 1; border: 1px solid #e5ebf2; border-radius: 12px; padding: 16px 12px; text-align: center; }
-.card-ic { display: inline-flex; width: 46px; height: 46px; border-radius: 50%; background: ${NAVY}; align-items: center; justify-content: center; margin-bottom: 10px; }
-.card-ic svg { width: 22px; height: 22px; stroke: #fff; } .card-t { color: ${NAVY}; font-weight: 800; font-size: 11.5px; text-transform: uppercase; }
-.card-x { color: #6b7787; font-size: 10px; line-height: 1.4; margin-top: 6px; }
-.vant-tit { text-align: center; color: ${NAVY}; font-weight: 800; letter-spacing: 1px; margin: 20px 0 14px; }
-.vant { display: flex; gap: 10px; } .vant-i { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; color: #6b7787; font-size: 10px; }
-.vant-badge { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: ${ORANGE}; align-items: center; justify-content: center; margin-bottom: 8px; }
-.vant-badge svg { width: 15px; height: 15px; }
 .ic { display: inline-flex; vertical-align: middle; }
-/* Divisor decorativo em fluxo (fio + badge laranja) */
-.div-badge { display: flex; align-items: center; gap: 14px; margin-top: 26px; }
-.db-fio { flex: 1; height: 1px; background: #e5ebf2; }
-.db-ic { flex: none; width: 36px; height: 36px; border: 1.5px solid ${ORANGE}; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
-.db-ic svg { width: 17px; height: 17px; }
-/* Assinatura da Apresentação — ABAIXO dos cards, com folga (nunca colide) */
-.apres-ass { display: flex; justify-content: space-around; margin-top: 20px; text-align: center; }
-.aa-nome { color: ${NAVY}; font-weight: 800; font-size: 13px; }
-.aa-sub { color: #8a95a3; font-size: 11px; margin-top: 2px; }
-/* Capa — decorativos SEMPRE atrás do conteúdo (z-index) e confinados ao canto */
-.capa { height: 275mm; position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 60px; padding-bottom: 110px; page-break-after: always; overflow: hidden; }
-.capa > * { position: relative; z-index: 1; }
-.wave { position: absolute; z-index: 0; right: 0; bottom: 0; width: 96mm; height: auto; }
-.capa-badge { width: 36px; height: 36px; border: 1.5px solid ${ORANGE}; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 8px; }
-.capa-badge svg { width: 17px; height: 17px; }
-.capa-cal { margin-top: 22px; } .capa-cal svg { width: 20px; height: 20px; }
-.capa-logo { width: 200px; margin-bottom: 40px; }
-.capa-tit { color: ${NAVY}; font-size: 26px; font-weight: 800; letter-spacing: 4px; }
-.capa-sub { color: #6b7787; font-size: 13px; margin-top: 6px; }
-.capa-card { background: #fff; border: 1px solid #eef2f7; border-radius: 16px; box-shadow: 0 8px 30px rgba(11,42,74,.08); padding: 18px 26px; margin-top: 40px; width: 340px; }
-.cc-row { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f3f7; }
-.cc-row:last-child { border-bottom: none; } .cc-ic { width: 38px; height: 38px; border-radius: 50%; background: ${NAVY}; display: inline-flex; align-items: center; justify-content: center; }
-.cc-ic svg { width: 18px; height: 18px; stroke: #fff; } .cc-r { color: #8a95a3; font-size: 9.5px; } .cc-v { color: ${NAVY}; font-weight: 800; font-size: 13px; }
-.capa-cons { text-align: center; margin-top: 40px; } .cc-lab { color: #8a95a3; font-size: 11px; }
-.cc-nome { color: ${NAVY}; font-weight: 800; font-size: 14px; margin-top: 2px; } .cc-cidade { color: #6b7787; font-size: 11px; margin-top: 28px; }
-/* Condições */
-.cond-wrap { display: flex; gap: 20px; } .cond-list { flex: 1.2; }
-.cond-i { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f3f7; }
-.cond-ic { width: 40px; height: 40px; border-radius: 10px; background: ${NAVY}; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px; }
-.cond-ic svg { width: 18px; height: 18px; stroke: #fff; } .cond-t { color: ${NAVY}; font-weight: 800; font-size: 12px; }
-.cond-x { color: #6b7787; font-size: 10px; line-height: 1.4; }
-.cond-close { flex: 1; background: #f7f9fc; border-radius: 14px; padding: 20px; text-align: center; color: #5a6878; font-size: 11px; }
-.cc-sep { width: 40px; height: 4px; background: ${ORANGE}; border-radius: 2px; margin: 14px auto; } .cc-at { margin-bottom: 8px; }
-.cc-cargo { color: #8a95a3; font-size: 10px; } .cc-emp { color: ${NAVY}; font-weight: 800; margin-top: 8px; }
-.cc-contato { display: flex; align-items: center; justify-content: center; gap: 6px; color: #5a6878; font-size: 10.5px; margin-top: 6px; }
-.cc-contato .ic svg { width: 13px; height: 13px; }
-.cc-emp-sub { color: #8a95a3; font-size: 10px; margin-top: 2px; }
+/* Eyebrow (fio + rótulo em caixa alta) acima do título grande de cada seção —
+   substitui o antigo ::before isolado na h1; título abaixo agora em title case. */
+.lbl { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+.lbl span { width: 16px; height: 3px; background: ${ORANGE}; border-radius: 2px; }
+.lbl b { font-size: 11px; font-weight: 700; letter-spacing: 1.6px; color: ${NAVY}; text-transform: uppercase; }
+/* Apresentação — cards "pill" (ícone + título + texto lado a lado) */
+.pillars { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+.pill { background: #eef2f7; border-radius: 14px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
+.pill .pi { width: 38px; height: 38px; flex: none; border-radius: 10px; background: ${NAVY}; display: flex; align-items: center; justify-content: center; }
+.pill .pi svg { width: 19px; height: 19px; }
+.pill h3 { color: ${NAVY}; font-weight: 800; font-size: 12.5px; }
+.pill p { color: #6b7787; font-size: 10.5px; line-height: 1.45; margin-top: 4px; }
+/* Assinatura da Apresentação — simples divisor superior, sem badge */
+.sign { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 1px solid #e5ebf2; padding-top: 16px; margin-top: 20px; }
+.sign .n { color: ${NAVY}; font-weight: 800; font-size: 14px; }
+.sign .r { color: #8a95a3; font-size: 11px; margin-top: 2px; }
+/* Comodatos — equipamentos em tile maior + painel navy de vantagens */
+.equip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+.eq { background: #eef2f7; border-radius: 14px; padding: 20px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.eq .ei { width: 46px; height: 46px; border-radius: 12px; background: ${NAVY}; display: flex; align-items: center; justify-content: center; }
+.eq .ei svg { width: 22px; height: 22px; }
+.eq h3 { color: ${NAVY}; font-weight: 700; font-size: 11px; line-height: 1.3; }
+.eq p { color: #6b7787; font-size: 9.5px; line-height: 1.4; }
+.adv { background: ${NAVY}; border-radius: 16px; padding: 22px 26px; color: #fff; margin-top: 20px; }
+.adv h4 { text-align: center; font-weight: 700; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: rgba(255,255,255,.85); margin-bottom: 16px; }
+.adv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.av { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.av .chk { width: 26px; height: 26px; border-radius: 50%; background: ${ORANGE}; display: flex; align-items: center; justify-content: center; flex: none; }
+.av .chk svg { width: 14px; height: 14px; }
+.av span { font-size: 9.5px; line-height: 1.4; color: rgba(255,255,255,.82); }
+/* Capa — navy, decorativos SEMPRE atrás do conteúdo (z-index) e confinados ao canto */
+.capa { height: 278mm; position: relative; display: flex; flex-direction: column; justify-content: space-between;
+  padding: 18mm 16mm; color: #fff; background: linear-gradient(158deg, ${NAVY} 0%, #06203f 100%);
+  page-break-after: always; overflow: hidden; }
+.capa > *:not(.capa-arc):not(.capa-dots) { position: relative; z-index: 1; }
+.capa-logo { height: 30px; width: auto; align-self: flex-start; display: block; }
+.capa-rule { width: 46px; height: 4px; background: ${ORANGE}; border-radius: 2px; margin-bottom: 18px; }
+.capa-tit { font-size: 44px; font-weight: 800; line-height: 1.05; letter-spacing: -1px; }
+.capa-sub { margin-top: 14px; font-size: 13px; color: rgba(255,255,255,.62); max-width: 320px; }
+.capa-panel { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 4px 22px; }
+.capa-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; }
+.capa-row + .capa-row { border-top: 1px solid rgba(255,255,255,.1); }
+.capa-row .k { font-size: 9.5px; letter-spacing: 1.8px; text-transform: uppercase; color: rgba(255,255,255,.5); }
+.capa-row .v { font-weight: 700; font-size: 14px; }
+.capa-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+.capa-k { font-size: 9.5px; letter-spacing: 1.8px; text-transform: uppercase; color: rgba(255,255,255,.5); }
+.capa-nome { font-weight: 700; font-size: 15px; margin-top: 4px; }
+.capa-loc { text-align: right; font-size: 11px; line-height: 1.6; color: rgba(255,255,255,.62); }
+.capa-arc { position: absolute; z-index: 0; right: -130px; bottom: -160px; width: 380px; height: 380px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(232,98,42,.16), rgba(232,98,42,0) 62%); }
+.capa-dots { position: absolute; z-index: 0; right: 50px; bottom: 50px; width: 100px; height: 60px;
+  background-image: radial-gradient(rgba(255,255,255,.16) 1.1px, transparent 1.1px); background-size: 10px 10px; }
+/* Condições — grid 2 colunas de itens + fechamento navy (mensagem + assinatura) */
+.conds { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-top: 18px; }
+.condi { display: flex; gap: 12px; align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid #e5ebf2; }
+.condi .ci { width: 34px; height: 34px; flex: none; border-radius: 10px; background: #eef2f7; display: flex; align-items: center; justify-content: center; }
+.condi .ci svg { width: 17px; height: 17px; }
+.condi h3 { color: ${NAVY}; font-weight: 700; font-size: 11.5px; }
+.condi p { color: #6b7787; font-size: 9.5px; line-height: 1.45; margin-top: 3px; }
+.closing { background: ${NAVY}; border-radius: 16px; padding: 22px 26px; color: #fff; display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-top: 22px; }
+.closing .msg { font-size: 11px; line-height: 1.6; color: rgba(255,255,255,.8); max-width: 290px; }
+.closing .msg em { color: #fff; font-style: normal; display: block; margin-top: 8px; font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; opacity: .7; }
+.cl-sign { text-align: right; }
+.cl-sign .n { font-weight: 800; font-size: 15px; }
+.cl-sign .r { font-size: 9.5px; color: rgba(255,255,255,.6); margin-top: 2px; }
+.cl-sign .b { margin-top: 8px; font-weight: 700; font-size: 10.5px; }
+.cl-contato { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 8px; font-size: 9.5px; color: rgba(255,255,255,.85); }
+.cl-contato .ic svg { width: 12px; height: 12px; }
 /* Página de produto — layout "rail": faixa navy à esquerda (marca/foto/preço) +
    coluna de conteúdo à direita (texto/specs). Altura fixa (mesmo raciocínio do
    .sec acima — impede que a página estoure e vaze layout pra página seguinte). */
@@ -385,6 +416,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-wm { font-size: 17px; letter-spacing: .2px; }
 .pp-wm b { font-weight: 800; } .pp-wm span { font-weight: 400; opacity: .8; margin-left: 3px; }
 .pp-wm i { color: ${ORANGE}; font-style: normal; }
+.pp-wm-logo { height: 24px; width: auto; align-self: flex-start; display: block; }
 .pp-eyebrow { margin-top: 12px; font-size: 10px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-eyebrow b { color: ${ORANGE}; font-weight: 700; margin-left: 6px; }
 .pp-figure { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px 0; }

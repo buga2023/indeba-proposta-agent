@@ -3,7 +3,7 @@ import { consolidadaHtml } from "@/lib/pdf/template-consolidada";
 import { consolidadaDefaults } from "@/lib/consolidada-defaults";
 import type { PropostaScope } from "@/lib/contracts";
 
-const assets = { logo: "data:,logo", fontSans: "data:,fonte-sans", fontMono: "data:,fonte-mono" };
+const assets = { logo: "data:,logo", logoWhite: "data:,logo-white", fontSans: "data:,fonte-sans", fontMono: "data:,fonte-mono" };
 
 const scope: PropostaScope = {
   id: "1", criadoEm: "2026-07-10T00:00:00.000Z", status: "rascunho",
@@ -80,7 +80,7 @@ describe("consolidadaHtml", () => {
     // CSS sempre define as classes; o que não pode existir é o ELEMENTO renderizado
     const semContato = consolidadaHtml(scope, { A: "d", B: "d" }, assets);
     expect(semContato).not.toContain("WhatsApp");
-    expect(semContato).not.toContain('class="cc-contato"');
+    expect(semContato).not.toContain('class="cl-contato"');
     expect(semContato).not.toContain("null");
   });
 });
