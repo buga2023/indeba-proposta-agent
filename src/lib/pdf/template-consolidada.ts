@@ -38,6 +38,8 @@ const ICONES: Record<string, string> = {
   check: '<circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/>',
   "check-simples": '<path d="M6.5 12.5l3.5 3.5L17.5 8"/>',
   caixa: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
+  automotivo: '<path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><path d="M3 11h18v5a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7.5" cy="16" r="1.5"/><circle cx="16.5" cy="16" r="1.5"/>',
+  piso: '<path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/>',
 };
 export const iconeSvg = (nome: string, cor = NAVY): string =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="${cor}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONES[nome] ?? '<circle cx="12" cy="12" r="3"/>'}</svg>`;
@@ -63,6 +65,11 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   // usado aqui (é lido em template.ts pro modelo Express).
   const diluicaoEmbalagem = item.embalagens.find((e) => e.diluicaoMax);
   const simples = !f?.indicadoPara?.length && !f?.beneficios?.length && !f?.diluicoes?.length && !diluicaoEmbalagem && !f?.caracteristicas && !f?.rendimento;
+  // Meio-termo: tem dado técnico (características/rendimento/diluição) mas falta a parte
+  // "de venda" (indicado para/benefícios) — maioria do catálogo hoje (só 2 produtos têm
+  // ficha de marketing completa). Sem isso, o bloco ao lado da foto sobra vazio; aqui a
+  // foto cresce um pouco para preencher melhor, sem virar o layout ultra-compacto (`simples`).
+  const semVenda = !simples && !f?.indicadoPara?.length && !f?.beneficios?.length;
 
   const indicado = f?.indicadoPara?.length
     ? `<div class="p-block"><div class="p-bt">Indicado para</div><div class="p-ind">${f.indicadoPara
@@ -120,7 +127,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
 
   const grid = diluicoes || rendimento || embalagens || carac ? `<div class="p-grid">${diluicoes}${rendimento}${embalagens}${carac}</div>` : "";
 
-  return `<section class="prodpg${simples ? " prodpg-simples" : ""}">
+  return `<section class="prodpg${simples ? " prodpg-simples" : semVenda ? " prodpg-sem-venda" : ""}">
     ${headerHtml}
     ${headBar}
     <div class="p-top">
@@ -350,6 +357,13 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .prodpg-simples .p-valores { margin-top: 40px; }
 .prodpg-simples .p-valores .p-vtag { padding: 20px 26px; }
 .prodpg-simples .p-vp { font-size: 26px; }
+/* Meio-termo: tem grid técnico (características/rendimento/diluição) mas falta
+   indicado-para/benefícios — foto um pouco maior para não sobrar vazio ao lado do
+   texto curto, mas mantém o grid técnico completo abaixo (diferente do "simples"). */
+.prodpg-sem-venda .p-top { align-items: center; gap: 28px; }
+.prodpg-sem-venda .p-foto { flex: 0 0 260px; height: 340px; }
+.prodpg-sem-venda .p-foto img { max-width: 220px; max-height: 320px; }
+.prodpg-sem-venda .p-desc { font-size: 13px; line-height: 1.7; }
 .p-main { flex: 1; } .p-tit { color: ${NAVY}; font-size: 24px; font-weight: 800; line-height: 1.1; }
 .p-sub { color: ${ORANGE}; font-weight: 700; font-size: 15px; margin-top: 2px; }
 .p-desc { color: #4a5768; line-height: 1.5; margin: 12px 0; }

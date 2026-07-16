@@ -1,0 +1,3832 @@
+{
+  "CITY-PAN": {
+    "titulo": "Desincrustante Automotivo",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "AUTO",
+    "indicadoPara": [
+      {
+        "label": "Automotivo",
+        "icone": "automotivo"
+      },
+      {
+        "label": "Oficinas",
+        "icone": "piso"
+      },
+      {
+        "label": "Pátios de Manobras",
+        "icone": "piso"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de incrustações e sujeiras duras em chassis e motores de veículos pesados.",
+      "Diluição flexível para atender a diferentes níveis de sujidade.",
+      "Ideal para limpeza profunda de pisos industriais e áreas de manutenção."
+    ]
+  },
+  "AUTOCAR-PLUS": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "AUTO",
+    "indicadoPara": [
+      {
+        "label": "Automotivo",
+        "icone": "automotivo"
+      },
+      {
+        "label": "Postos de Combustível",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Garagens",
+        "icone": "suporte"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras pesadas e gorduras resistentes.",
+      "Diluição flexível para diferentes tipos de superfícies e necessidades.",
+      "Concebido para uso profissional, oferecendo rendimento otimizado."
+    ]
+  },
+  "AUTOCAR-1000-PLUS": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "AUTO",
+    "indicadoPara": [
+      {
+        "label": "Automotivo",
+        "icone": "automotivo"
+      },
+      {
+        "label": "Oficina",
+        "icone": "selo"
+      },
+      {
+        "label": "Garagem",
+        "icone": "piso"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras pesadas em veículos e superfícies.",
+      "Diluição flexível para diferentes tipos de aplicação, otimizando o uso.",
+      "Formulado para atender às necessidades específicas do setor automotivo."
+    ]
+  },
+  "CANDALL-COSMETIC-WR": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "COSMETIC",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Indústria Cosmética",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de gorduras e resíduos em equipamentos.",
+      "Versátil: pode ser usado puro ou diluído para diferentes aplicações.",
+      "Ação rápida, economizando tempo no processo de limpeza.",
+      "Fácil enxágue após a aplicação.",
+      "Ideal para manter superfícies e equipamentos higienizados."
+    ]
+  },
+  "PRIMMAX-AE-FOOD-GRADE": {
+    "titulo": "Detergente CIP Alcalino",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "FOOD",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Padaria",
+        "icone": "padaria"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em soluções CIP alcalinas para limpeza profissional.",
+      "Compatível com PRIMMAX CIP DT e DTX, otimizando processos de limpeza.",
+      "Ideal para uso conjunto com PRIMMAX SUNCARE ADT em caldas agrícolas."
+    ]
+  },
+  "CITY-T-LIQUIDO": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "AUTO",
+    "indicadoPara": [
+      {
+        "label": "Automotivo",
+        "icone": "automotivo"
+      },
+      {
+        "label": "Indústria",
+        "icone": "selo"
+      },
+      {
+        "label": "Piso",
+        "icone": "piso"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na remoção de sujeiras aderidas em superfícies duras.",
+      "Diluição flexível para diferentes níveis de sujidade.",
+      "Ideal para limpeza profissional em ambientes industriais e oficinas."
+    ]
+  },
+  "PRIMMAX-ALCLOR": {
+    "titulo": "Desengordurante Alcalino",
+    "subtitulo": "Concentrado Eficaz",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotelaria",
+        "icone": "hotel"
+      },
+      {
+        "label": "Indústria Alimentícia",
+        "icone": "padaria"
+      },
+      {
+        "label": "Ambientes Hospitalares",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em remover gorduras e incrustações de superfícies.",
+      "Fácil aplicação manual ou com espuma, otimizando o tempo de limpeza.",
+      "Ação rápida que permite enxágue após apenas 10 a 15 minutos de contato."
+    ]
+  },
+  "PRIMMAX-CIP-ADT": {
+    "titulo": "Desengordurante CIP",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "CIP",
+    "indicadoPara": [
+      {
+        "label": "Indústria Alimentícia",
+        "icone": "selo"
+      },
+      {
+        "label": "Indústria de Bebidas",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em concentrações baixas para economia.",
+      "Compatível com soda cáustica e ácidos, oferecendo versatilidade na aplicação.",
+      "Fácil dosagem direta em solução de limpeza."
+    ]
+  },
+  "PRIMMAX-CIP-DT": {
+    "titulo": "Detergente CIP",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Laticínios",
+        "icone": "selo"
+      },
+      {
+        "label": "Bebidas",
+        "icone": "selo"
+      },
+      {
+        "label": "Alimentício",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em concentrações entre 0,20% e 3,0%, adaptável a diferentes necessidades industriais.",
+      "Desengordura e desincrusta eficientemente superfícies com sujeira mineral ou orgânica.",
+      "Compatível com aplicações CIP (Limpeza em Circuito Fechado) para equipamentos de cervejarias e linhas quentes."
+    ]
+  },
+  "PRIMMAX-CIP-DTX": {
+    "titulo": "Detergente CIP",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Laticínios",
+        "icone": "selo"
+      },
+      {
+        "label": "Bebidas",
+        "icone": "selo"
+      },
+      {
+        "label": "Alimentício",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficiente desincrustante para aplicações industriais.",
+      "Compatível com uma variedade de temperaturas e concentrações.",
+      "Ideal para limpeza profunda em equipamentos CIP.",
+      "Facilita a remoção de resíduos aderentes em carretilhas."
+    ]
+  },
+  "PRIMMAX-CIP-NITRO": {
+    "titulo": "Desincrustante CIP",
+    "subtitulo": "Ácido Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Indústria de Bebidas",
+        "icone": "selo"
+      },
+      {
+        "label": "Indústria Alimentícia",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Limpeza Industrial",
+        "icone": "limpeza"
+      },
+      {
+        "label": "Passivação",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em concentrações variáveis para diferentes aplicações.",
+      "Ciclo de limpeza CIP otimizado com resultados consistentes.",
+      "Facilita a desincrustação e passivação em equipamentos industriais.",
+      "Compatível com temperaturas operacionais padrão da indústria."
+    ]
+  },
+  "PRIMMAX-CITRUS": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "HORTIFRUTI",
+    "indicadoPara": [
+      {
+        "label": "packing_house",
+        "icone": "selo"
+      },
+      {
+        "label": "cozinha",
+        "icone": "dispenser"
+      },
+      {
+        "label": "hotel",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em aplicações mecânicas e por imersão.",
+      "Ideal para hortifruti e indústrias de embalagem.",
+      "Fácil aplicação através de dispositivos instalados na esteira de produção."
+    ]
+  },
+  "PRIMMAX-CL": {
+    "titulo": "Desincrustante Profissional",
+    "subtitulo": "Concentrado Alcalino",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Indústria Alimentícia",
+        "icone": "selo"
+      },
+      {
+        "label": "Limpeza CIP",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na remoção de manchas e incrustações.",
+      "Ideal para lavagem automática de ovos em equipamentos INDEBA.",
+      "Compatível com sistemas automáticos de dosagem, garantindo precisão."
+    ]
+  },
+  "PRIMMAX-DES": {
+    "titulo": "Desincrustante Profissional",
+    "subtitulo": "Eficiente e Concentrado",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Lavanderia",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Hotelaria",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Decapagem interna eficaz em máquinas de lavar louças.",
+      "Facilita a remoção de crostas externas com aplicação direta e tempo de contato curto.",
+      "Desoxida carretilhas rapidamente, mantendo o equipamento limpo e livre de oxidações.",
+      "Ideal para uso profissional em ambientes industriais de alimentação."
+    ]
+  },
+  "PRIMMAX-DGA": {
+    "titulo": "Desengordurante Alcalino",
+    "subtitulo": "Concentrado DGA",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Indústria Alimentícia",
+        "icone": "selo"
+      },
+      {
+        "label": "Packing House",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em remover gorduras e incrustações resistentes.",
+      "Ação rápida que pode ser ajustada conforme a necessidade.",
+      "Facilita o uso com equipamentos de aplicação como gerador de espuma ou venturi.",
+      "Solução versátil para diferentes áreas industriais."
+    ]
+  },
+  "PRIMMAX-DT": {
+    "titulo": "Detergente Desincrustante",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Indústria Alimentícia",
+        "icone": "selo"
+      },
+      {
+        "label": "Lavagem de Louças",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Limpeza CIP",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficiente em remoção de crostas e incrustações.",
+      "Ideal para uso em sistemas automáticos de dosagem.",
+      "Compatível com temperaturas de lavagem entre 55-65°C.",
+      "Versátil, adequado tanto para linhas quentes quanto frias."
+    ]
+  },
+  "PRIMMAX-HORT-FLV": {
+    "titulo": "Desinfetante Concentrado",
+    "subtitulo": "Hortifruti Profissional",
+    "linhaLabel": "HORTIFRUTI",
+    "indicadoPara": [
+      {
+        "label": "packing_house",
+        "icone": "selo"
+      },
+      {
+        "label": "cozinha_comercial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "restaurante",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Eficiente desinfecção de frutas, verduras e legumes.",
+      "Preparação rápida da solução com rendimento elevado.",
+      "Garantia de segurança alimentar conforme padrões profissionais."
+    ]
+  },
+  "PRIMMAX-HORT": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Concentrado Eficaz",
+    "linhaLabel": "HORTIFRUTI",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hortifruti",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz para desinfecção de hortifrutícolas.",
+      "Fácil aplicação: diluir 50g em 10L de água.",
+      "Ideal para ambientes profissionais."
+    ]
+  },
+  "PRIMMAX-INOX": {
+    "titulo": "Polidor Inox",
+    "subtitulo": "Profissional Concentrado",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Indústria Alimentícia",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Equipamentos de Inox",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Restaura o brilho e a aparência dos metais inoxidáveis.",
+      "Fácil aplicação, sem necessidade de diluição.",
+      "Promove limpeza profunda e proteção contra manchas.",
+      "Ajuda na manutenção da higiene em ambientes industriais."
+    ]
+  },
+  "PRIMMAX-LDF-PLUS": {
+    "titulo": "Desincrustante Profissional",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Indústria de Alimentos e Bebidas",
+        "icone": "selo"
+      },
+      {
+        "label": "Limpeza Profissional",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras pesadas em equipamentos metálicos sensíveis.",
+      "Solução concentrada, otimizando o uso e reduzindo custos operacionais.",
+      "Fácil aplicação em diversos tipos de superfícies industriais."
+    ]
+  },
+  "PRIMMAX-LDF": {
+    "titulo": "Desincrustante Alcalino",
+    "subtitulo": "Concentrado Potente",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Fornos e Fogões",
+        "icone": "diluidor"
+      },
+      {
+        "label": "Utensílios de Cozinha",
+        "icone": "dispenser"
+      }
+    ],
+    "beneficios": [
+      "Remove eficientemente gorduras carbonizadas em superfícies duras.",
+      "Fórmula concentrada proporciona economia na utilização.",
+      "Ideal para manutenção diária e limpeza profunda de equipamentos."
+    ]
+  },
+  "PRIMMAX-LUBRICK": {
+    "titulo": "Lubrificante Industrial",
+    "subtitulo": "Para Esteiras Transportadoras",
+    "linhaLabel": "INDUSTRIA",
+    "indicadoPara": [
+      {
+        "label": "industria_alimentos_bebidas",
+        "icone": "selo"
+      },
+      {
+        "label": "multiuso",
+        "icone": "diluidor"
+      },
+      {
+        "label": "reducao_de_consumo",
+        "icone": "suporte"
+      }
+    ],
+    "beneficios": [
+      "Reduz o coeficiente de atrito em esteiras transportadoras.",
+      "Evita oxidação, prolongando a vida útil dos equipamentos.",
+      "Adequado para diversos tipos de embalagens, como garrafas PET e botijões de gás.",
+      "Ajuda na economia de energia elétrica com sua eficiente aplicação."
+    ]
+  },
+  "PRIMMAX-MANGOWASH": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Fruticultura",
+    "linhaLabel": "HORTIFRUTI",
+    "indicadoPara": [
+      {
+        "label": "Frutas",
+        "icone": "selo"
+      },
+      {
+        "label": "Limpeza Industrial",
+        "icone": "limpeza"
+      },
+      {
+        "label": "Processamento Alimentício",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Neutraliza e remove látex de maneira eficiente.",
+      "Facilita a remoção do caulim da casca dos frutos, mantendo-os limpos.",
+      "Previne redeposição de sujidade na superfície das frutas."
+    ]
+  },
+  "PRIMMAX-OIL": {
+    "titulo": "Protetor Anti-Oxidação",
+    "subtitulo": "Para Metais",
+    "linhaLabel": "FOOD",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Padaria",
+        "icone": "padaria"
+      }
+    ],
+    "beneficios": [
+      "Protege superfícies de aço inox, carbono e ferro fundido contra oxidação.",
+      "Ideal para uso em carretilhas, gancheiras e nórias após desengraxamento alcalino e desoxidação.",
+      "Rendimento eficiente: uso puro, tempo de contato de 1 minuto."
+    ]
+  },
+  "PRIMMAX-PANCLOR": {
+    "titulo": "Desincrustante Alcalino",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Indústria de Alimentos e Bebidas",
+        "icone": "selo"
+      },
+      {
+        "label": "Utensílios de Cozinha",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de amido e incrustações em superfícies.",
+      "Promove maior brilho após a limpeza, mantendo os utensílios visivelmente mais limpos.",
+      "Rendimento otimizado com soluções ajustáveis para diferentes necessidades de limpeza."
+    ]
+  },
+  "PRIMMAX-REWAX": {
+    "titulo": "Desincrustante Profissional",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "HORTIFRUTI",
+    "indicadoPara": [
+      {
+        "label": "Packing House",
+        "icone": "selo"
+      },
+      {
+        "label": "Indústria Alimentícia",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Limpeza Industrial",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Remove eficazmente incrustações de cera de carnaúba",
+      "Ideal para sujidades pesadas em ambientes industriais",
+      "Fórmula concentrada proporciona economia na utilização"
+    ]
+  },
+  "PRIMMAX-SANAP": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Multiuso Concentrado",
+    "linhaLabel": "SANAP",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Indústria Alimentícia",
+        "icone": "selo"
+      },
+      {
+        "label": "Hortifruti",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficiente desinfecção para superfícies e equipamentos em cozinhas industriais.",
+      "Ideal para processos CIP (Clean-In-Place) em indústrias de bebidas, garantindo alta higiene nas linhas de produção.",
+      "Eficaz na desinfecção de plantas HTST e UHT em laticínios, assegurando padrões elevados de limpeza.",
+      "Promove a sanificação adequada de frutas e verduras após colheita, mantendo a integridade dos alimentos."
+    ]
+  },
+  "PRIMMAX-SANCLOR": {
+    "titulo": "Desinfetante CIP",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "FOOD",
+    "indicadoPara": [
+      {
+        "label": "Frigorífico",
+        "icone": "selo"
+      },
+      {
+        "label": "Abatedouro Avícola",
+        "icone": "selo"
+      },
+      {
+        "label": "Laticínio",
+        "icone": "selo"
+      },
+      {
+        "label": "Indústria de Pescados",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em desinfecção de superfícies e equipamentos industriais.",
+      "Compatível com o método CIP para limpeza de tanques e tubulações.",
+      "Ideal para manutenção diária, proporcionando economia de produto.",
+      "Eficiente na remoção de contaminantes em fôrmas plásticas de chocolate.",
+      "Facilmente diluível para diferentes aplicações industriais."
+    ]
+  },
+  "PRIMMAX-SANDRY": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Sem Enxágue Final",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Indústria de Alimentos e Bebidas",
+        "icone": "selo"
+      },
+      {
+        "label": "Frigoríficos",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Laticínios",
+        "icone": "padaria"
+      }
+    ],
+    "beneficios": [
+      "Eficiente desinfecção sem necessidade de enxágue final.",
+      "Adequado para uso direto em superfícies que entram em contato com alimentos.",
+      "Rendimento ótimo, podendo ser aplicado puro ou diluído conforme necessidade."
+    ]
+  },
+  "PRIMMAX-SANPER-50": {
+    "titulo": "Desinfetante CIP",
+    "subtitulo": "Eficiente e Não Corrosivo",
+    "linhaLabel": "FOOD",
+    "indicadoPara": [
+      {
+        "label": "indústria alimentícia",
+        "icone": "selo"
+      },
+      {
+        "label": "cozinha industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "linhas de produção",
+        "icone": "restaurante"
+      },
+      {
+        "label": "tratamento de vísceras",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficaz para desinfecção CIP e aspersão.",
+      "Não causa corrosão em superfícies metálicas ou plásticas.",
+      "Ideal para clareamento de buchos e vísceras.",
+      "Fácil aplicação com rendimento otimizado."
+    ]
+  },
+  "PRIMMAX-SANPER-FOOD-GRADE": {
+    "titulo": "Desinfetante CIP",
+    "subtitulo": "Ácido Concentrado",
+    "linhaLabel": "FOOD",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Indústria de Alimentos e Bebidas",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficiente para CIP (Limpeza em Circulação) e máquinas assépticas.",
+      "Compatível com diversos materiais, incluindo inox e borracha.",
+      "Ideal para tratamento de buchos e vísceras.",
+      "Não corrosivo a superfícies metálicas e plásticas."
+    ]
+  },
+  "PRIMMAX-SANQUAT": {
+    "titulo": "Desinfetante Sanitizante",
+    "subtitulo": "Concentrado Multiuso",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Administração",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Diluidor Automático",
+        "icone": "diluidor"
+      },
+      {
+        "label": "Ralos e Calhas",
+        "icone": "lixeira"
+      }
+    ],
+    "beneficios": [
+      "Elimina eficazmente maus odores em ralos, lixos e calhas.",
+      "Combate cheiros de alimentos e desinfeta ambientes por pulverização.",
+      "Ideal para uso diário no sistema de diluição automática.",
+      "Rendimento otimizado para diferentes aplicações."
+    ]
+  },
+  "PRIMMAX-SEC": {
+    "titulo": "Desengordurante Profissional",
+    "subtitulo": "Concentrado Neutro",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotelaria",
+        "icone": "hotel"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de gorduras e resíduos em utensílios de cozinha.",
+      "Ideal como aditivo para limpeza leve de máquinas e equipamentos.",
+      "Rendimento otimizado, economizando até 7 mL por cada 10 L de água."
+    ]
+  },
+  "PRIMMAX-SOL-PLUS": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Indústria de Alimentos e Bebidas",
+        "icone": "selo"
+      },
+      {
+        "label": "Lavagem de Equipamentos",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção rápida de gorduras e sujeiras",
+      "Versátil: pode ser usado em imersão ou aplicação direta",
+      "Rendimento otimizado, reduzindo custos operacionais"
+    ]
+  },
+  "PRIMMAX-SUBZERO": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "FROZEN",
+    "indicadoPara": [
+      {
+        "label": "Refrigerador",
+        "icone": "selo"
+      },
+      {
+        "label": "Túnel de Congelamento",
+        "icone": "selo"
+      },
+      {
+        "label": "Ultracongelador",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujidades orgânicas mesmo em altas diluições.",
+      "Seguro para limpeza de metais sensíveis como alumínio, cobre e zinco.",
+      "Ideal para manter a higiene em câmaras frigoríficas e reatores de produção."
+    ]
+  },
+  "PRIMMAX-SUNCARE-ADT": {
+    "titulo": "Dispersante Agrícola",
+    "subtitulo": "Multiuso Concentrado",
+    "linhaLabel": "HORTIFRUTI",
+    "indicadoPara": [
+      {
+        "label": "Lavoura",
+        "icone": "selo"
+      },
+      {
+        "label": "Hortifruti",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Pulverização",
+        "icone": "dispenser"
+      }
+    ],
+    "beneficios": [
+      "Promove maior aderência e cobertura de fungicidas em lavouras.",
+      "Facilita a remoção dos resíduos durante o processo de lavagem pós-colheita.",
+      "Ajuda na proteção de hortifruti contra danos solares, mantendo a qualidade dos produtos."
+    ]
+  },
+  "LETAH-DICLOR": {
+    "titulo": "Desinfetante Diclor",
+    "subtitulo": "Concentrado Hospitalar",
+    "linhaLabel": "HOSPITAL",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Laboratório",
+        "icone": "pessoa"
+      },
+      {
+        "label": "UTI",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na absorção e remoção de sangue e fluidos corpóreos.",
+      "Desinfecção rápida e eficaz em superfícies hospitalares.",
+      "Ação desincrustante que remove resíduos aderidos.",
+      "Fácil preparação com diluição precisa para diferentes aplicações."
+    ]
+  },
+  "LETAH-GEL": {
+    "titulo": "Gel Antisseptico",
+    "subtitulo": "Complementar Profissional",
+    "linhaLabel": "HOSPITAL",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Consultório Médico",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Laboratório Clínico",
+        "icone": "lixeira"
+      }
+    ],
+    "beneficios": [
+      "Eficaz para antissepsia complementar das mãos após lavagem.",
+      "Facilita a higienização entre procedimentos com pacientes.",
+      "Ajuda a manter ambientes hospitalares mais seguros e limpos."
+    ]
+  },
+  "LETAH-MAX": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Eficiente e Concentrado",
+    "linhaLabel": "HOSPITALAR",
+    "indicadoPara": [
+      {
+        "label": "hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "quarto de hospital",
+        "icone": "limpeza"
+      },
+      {
+        "label": "ambulatório",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficaz contra bactérias patogênicas como Pseudomonas, Salmonella e Staphylococcus.",
+      "Diluição econômica de 1:130 a 1:150 para maior rendimento.",
+      "Ação prolongada de 10 minutos sem necessidade de enxágue."
+    ]
+  },
+  "LETAH-OXY-CD": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Concentrado Eficaz",
+    "linhaLabel": "HOSPITAL",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Laboratório",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Quarto de Isolamento",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz contra Clostridium difficile em áreas colonizadas.",
+      "Diluição flexível para diferentes níveis de desinfecção necessários.",
+      "Tempo de contato curto de 10 minutos, otimizando o tempo de trabalho.",
+      "Não requer enxágue após a aplicação em superfícies fixas."
+    ]
+  },
+  "LETAH-OXY-HPC": {
+    "titulo": "Desinfetante HPC",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "HOSPITALAR",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Dispenser",
+        "icone": "dispenser"
+      }
+    ],
+    "beneficios": [
+      "Eficaz para desinfecção de nível intermediário em equipamentos médicos.",
+      "Limpeza e desinfecção de superfícies fixas em uma única etapa, otimizando o tempo de trabalho.",
+      "Rendimento flexível com diluições que atendem a diferentes necessidades de limpeza."
+    ]
+  },
+  "LETAH-PLUS": {
+    "titulo": "Desincrustante Profissional",
+    "subtitulo": "Concentrado Alcalino",
+    "linhaLabel": "HOSPITAL",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Laboratório",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Desinfecção",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Diluição eficiente em 0,5% para maior rendimento.",
+      "Ação rápida de 15 minutos para remoção de incrustações.",
+      "Compatível com procedimentos posteriores de desinfecção ou esterilização."
+    ]
+  },
+  "LETAHCLOR-PLUS": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "HOSPITAL",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Centro de Diálise",
+        "icone": "diluidor"
+      },
+      {
+        "label": "Ambientes Sensíveis",
+        "icone": "suporte"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em superfícies fixas com tempo de contato reduzido.",
+      "Desenvolvido para atender às necessidades específicas da hemodiálise.",
+      "Fácil aplicação e remoção, sem necessidade de enxágue."
+    ]
+  },
+  "LETAHCLOR": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "HOSPITAL",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Laboratório",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Unidade de Hemodiálise",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em superfícies fixas com tempo de contato de apenas 10 minutos.",
+      "Diluição precisa para tratamento de hemodiálise, garantindo segurança e eficiência.",
+      "Fácil aplicação direta ou diluído conforme necessidade."
+    ]
+  },
+  "LETAHZYME-MULTIENZIMATICO-5E": {
+    "titulo": "Enzima Multienzimática",
+    "subtitulo": "Concentrada",
+    "linhaLabel": "HOSPITAL",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Laboratório",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Limpeza",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de resíduos orgânicos complexos.",
+      "Fácil de usar em diluição manual ou automática.",
+      "Compatível com diversos materiais e equipamentos médicos."
+    ]
+  },
+  "DERMOL-BACTER-PLUS": {
+    "titulo": "Sabonete Antisséptico",
+    "subtitulo": "Profissional Bactericida",
+    "linhaLabel": "HANDWASH",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Área Administrativa",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Dispenser de Sabonete",
+        "icone": "dispenser"
+      }
+    ],
+    "beneficios": [
+      "Eficaz para higienização e antissepsia das mãos.",
+      "Fórmula neutra que respeita a pele.",
+      "Pronto para uso, facilitando a aplicação imediata."
+    ]
+  },
+  "DERMOL-CLASSIC": {
+    "titulo": "Sabonete Profissional",
+    "subtitulo": "Neutro Hipoalergênico",
+    "linhaLabel": "HANDWASH",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Escritório",
+        "icone": "contrato"
+      },
+      {
+        "label": "Instituição de Ensino",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Fácil aplicação em mãos previamente umedecidas.",
+      "Ação eficaz durante 1 minuto para higiene completa.",
+      "Formulado com pH neutro para pele sensível.",
+      "Limpante e refrescante, sem essência artificial."
+    ]
+  },
+  "DERMOL-GREASE": {
+    "titulo": "Desengordurante Dermol",
+    "subtitulo": "Neutro Eficiente",
+    "linhaLabel": "HANDWASH",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Oficina",
+        "icone": "automotivo"
+      }
+    ],
+    "beneficios": [
+      "Remove eficazmente graxa, óleo e gordura",
+      "Fácil aplicação em mãos previamente umedecidas",
+      "Ação rápida de 1 minuto para limpeza profunda"
+    ]
+  },
+  "INDEBA-C": {
+    "titulo": "Sabonete Profissional",
+    "subtitulo": "Neutro Concentrado",
+    "linhaLabel": "HANDWASH",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Lavanderia Hospitalar",
+        "icone": "entrega"
+      },
+      {
+        "label": "Clínica",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na remoção de sujeiras e impurezas, mantendo a higiene das mãos.",
+      "Diluição prática em 10%, otimizando o uso do produto.",
+      "Fácil aplicação e enxágue rápido para maior comodidade dos usuários."
+    ]
+  },
+  "ALVACLOR-165": {
+    "titulo": "Desinfetante Alvaclor",
+    "subtitulo": "Oxidante Pó",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "selo"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em desinfecção e remoção de manchas em roupas brancas e coloridas.",
+      "Adequado para sujidades leves e pesadas, otimizando a lavagem industrial.",
+      "Fácil aplicação com rendimento preciso variando conforme as necessidades."
+    ]
+  },
+  "ALVACLOR-180-ALVEJANTE": {
+    "titulo": "Alvejante Industrial",
+    "subtitulo": "Eficiente e Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "entrega"
+      },
+      {
+        "label": "Hotelaria",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Ótimo para remover manchas em roupas de algodão e poliéster.",
+      "Efetivo contra sujidades leves e pesadas.",
+      "Rendimento econômico, com uso de apenas 1 a 4 g/Kg."
+    ]
+  },
+  "CANDALL-PT": {
+    "titulo": "Removente de Manchas",
+    "subtitulo": "Concentrado Multiuso",
+    "linhaLabel": "LAUNDRY",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia Hospitalar",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Lavanderia Hoteleira",
+        "icone": "hotel"
+      },
+      {
+        "label": "Lavanderia Comercial",
+        "icone": "entrega"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "automotivo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de manchas em tecidos brancos de algodão ou poliéster.",
+      "Fórmula concentrada para maior rendimento e economia.",
+      "Facilita o tratamento de roupas sujas com até 24 horas de imersão.",
+      "Ideal para uso profissional em ambientes industriais rigorosos."
+    ]
+  },
+  "CANDALL-RF": {
+    "titulo": "Desincrustante Ferrugem",
+    "subtitulo": "Ácido Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "entrega"
+      },
+      {
+        "label": "Indústria Têxtil",
+        "icone": "selo"
+      },
+      {
+        "label": "Manutenção Predial",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de manchas de ferrugem e óxidos metálicos.",
+      "Indicado para roupas brancas e cores firmes, sem danificar a fibra.",
+      "Rendimento otimizado com tratamento em molho ou aplicação direta."
+    ]
+  },
+  "CITY-AC": {
+    "titulo": "Acidulante Multiuso",
+    "subtitulo": "Concentrado Eficiente",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Padaria",
+        "icone": "padaria"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na acidulação de roupas brancas e coloridas.",
+      "Rendimento otimizado: até 1,5 g/Kg.",
+      "Fácil aplicação em máquinas lavadoras industriais."
+    ]
+  },
+  "CITY-RH-900": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Floral",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "entrega"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em diversas temperaturas, desde frio até quente.",
+      "Adequado para roupas de algodão e poliéster, brancas ou coloridas.",
+      "Rendimento econômico: 1 a 7 g/kg."
+    ]
+  },
+  "CITY-RH-CONCENTRADO": {
+    "titulo": "Detergente Concentrado",
+    "subtitulo": "Multiuso e Desengordurante",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "hotel"
+      },
+      {
+        "label": "Limpeza de Máquinas",
+        "icone": "suporte"
+      },
+      {
+        "label": "Diluição Automática",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficiente em sujidades leves e pesadas, ideal para roupas brancas e coloridas.",
+      "Rendimento otimizado de 1 a 6 g/kg, reduzindo custos operacionais.",
+      "Facilita a limpeza e desengorduramento de equipamentos industriais."
+    ]
+  },
+  "CITY-RH": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Floral",
+    "linhaLabel": "LAUNDRY",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "selo"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em diversas temperaturas, desde fria a quente.",
+      "Ideal para roupas de algodão e poliéster, brancas ou coloridas.",
+      "Rendimento econômico: até 6 g/kg por ciclo."
+    ]
+  },
+  "CLARIT-7000": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "hotel"
+      },
+      {
+        "label": "Limpeza de Máquinas",
+        "icone": "limpeza"
+      },
+      {
+        "label": "Equipamentos Industriais",
+        "icone": "suporte"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em diversas temperaturas, desde frio até quente.",
+      "Ideal para sujidades leves e pesadas em roupas de algodão e poliéster.",
+      "Facilita a limpeza e desengorduramento de máquinas e equipamentos industriais."
+    ]
+  },
+  "CLARIT-CLOR": {
+    "titulo": "Desinfetante Oxidante",
+    "subtitulo": "Para Lavanderia Industrial",
+    "linhaLabel": "LAUNDRY",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Lavanderia",
+        "icone": "cozinha"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na remoção de manchas leves e pesadas em roupas brancas e coloridas.",
+      "Desinfecção eficaz garantida com uso adequado, promovendo ambientes limpos e seguros.",
+      "Fácil aplicação em máquinas industriais, otimizando o tempo de operação."
+    ]
+  },
+  "CLARIT-PASTA": {
+    "titulo": "Pasta Unctiva",
+    "subtitulo": "Multiuso Concentrada",
+    "linhaLabel": "LAVANDERIA",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "selo"
+      },
+      {
+        "label": "Máquina de Lavar",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Limpeza Manual",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em umectação de roupas, tanto em lavagem industrial quanto manual.",
+      "Rendimento otimizado: até 8 g/kg para uma limpeza profunda e econômica.",
+      "Fácil aplicação com pH controlado para segurança operacional."
+    ]
+  },
+  "CLARIT-SOUR": {
+    "titulo": "Acidulante Profissional",
+    "subtitulo": "Concentrado Pó",
+    "linhaLabel": "LAUNDRY",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Indústria Têxtil",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na remoção de manchas e resíduos em roupas brancas e coloridas.",
+      "Ideal para operações de acidulação em máquinas industriais.",
+      "Rendimento otimizado, com dose de 1,0 a 1,5 g/kg.",
+      "Facilita o processo de lavagem profissional, proporcionando resultados consistentes."
+    ]
+  },
+  "KARICIA": {
+    "titulo": "Condicionador Textil",
+    "subtitulo": "Para Passadoria",
+    "linhaLabel": "LAVANDERIA",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Industria",
+        "icone": "selo"
+      },
+      {
+        "label": "Comercio",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Dispenser",
+        "icone": "dispenser"
+      }
+    ],
+    "beneficios": [
+      "Melhora o acabamento dos tecidos após a passadoria.",
+      "Facilita o processo de higienização em ambientes comerciais.",
+      "Ajuda na manutenção da qualidade do serviço de limpeza profissional.",
+      "Diluição flexível até 1:10, otimizando o uso e reduzindo custos."
+    ]
+  },
+  "PRIMMA-OXY-S": {
+    "titulo": "Alvejante Profissional",
+    "subtitulo": "Multiuso Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "selo"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de manchas difíceis como sangue, fezes e gorduras.",
+      "Rendimento otimizado: até 7g/kg para alvejamento eficaz.",
+      "Versátil para uso em roupas brancas e coloridas, com sujeiras leves a pesadas."
+    ]
+  },
+  "SOFTLIN-CONCENTRADO": {
+    "titulo": "Amaciante Concentrado",
+    "subtitulo": "Profissional Multiuso",
+    "linhaLabel": "LAUNDRY",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Indústria",
+        "icone": "automotivo"
+      },
+      {
+        "label": "Comércio",
+        "icone": "contrato"
+      }
+    ],
+    "beneficios": [
+      "Amacia todos os tipos de tecidos em lavanderias profissionais.",
+      "Fácil diluição para diferentes cargas de lavagem.",
+      "Odor floral agradável, proporcionando ambiente agradável durante o uso.",
+      "Rendimento eficiente, reduzindo custos operacionais."
+    ]
+  },
+  "SOFTS-MAX-KARICIA": {
+    "titulo": "Amaciante Profissional",
+    "subtitulo": "Multiuso Karícia",
+    "linhaLabel": "LAUNDRY",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Comércio",
+        "icone": "selo"
+      },
+      {
+        "label": "Indústria",
+        "icone": "automotivo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em diversos tipos de tecidos, garantindo um amaciamento suave e duradouro.",
+      "Fácil aplicação com rendimento econômico entre 0,5 a 3,0 mL/Kg.",
+      "Odores agradáveis que proporcionam uma sensação de limpeza e higiene."
+    ]
+  },
+  "SOFTS-CONCENTRADO": {
+    "titulo": "Concentrado Amaciante",
+    "subtitulo": "Profissional Concentrado",
+    "linhaLabel": "LAVANDERIA",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Indústria",
+        "icone": "automotivo"
+      },
+      {
+        "label": "Comércio",
+        "icone": "entrega"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em todas as lavanderias profissionais.",
+      "Fácil de usar com rendimento flexível.",
+      "Odor floral agradável e suave."
+    ]
+  },
+  "SOFTS": {
+    "titulo": "Amaciante Profissional",
+    "subtitulo": "Multiuso Concentrado",
+    "linhaLabel": "LAVANDERIA",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Indústria",
+        "icone": "automotivo"
+      },
+      {
+        "label": "Comércio",
+        "icone": "suporte"
+      }
+    ],
+    "beneficios": [
+      "Amacia todos os tipos de tecidos em lavanderias profissionais.",
+      "Rendimento eficiente, variando entre 2,0 a 8,0 mL/kg de roupa.",
+      "Facilita o processo de amaciamento com apenas 3 a 5 minutos de aplicação."
+    ]
+  },
+  "SPARLAV": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Versátil",
+    "linhaLabel": "HOSPITALAR",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Roupas Delicadas",
+        "icone": "toalheiro"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujidades pesadas, como sangue e fezes.",
+      "Ideal para lavagem delicada de roupas coloridas e sensíveis.",
+      "Rendimento otimizado permite economia em ambientes industriais.",
+      "Fácil aplicação manual ou em máquinas."
+    ]
+  },
+  "SPARTEX": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Indústria Têxtil",
+        "icone": "entrega"
+      },
+      {
+        "label": "Limpeza Profissional",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na umectação de roupas em ambientes industriais.",
+      "Rendimento otimizado, com uso de apenas 1 a 5 g/kg.",
+      "Facilita o processo de limpeza profissional com pH adequado."
+    ]
+  },
+  "TEXSPAR-AP": {
+    "titulo": "Alvejante Profissional",
+    "subtitulo": "Líquido Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hotelaria",
+        "icone": "hotel"
+      },
+      {
+        "label": "Indústria",
+        "icone": "automotivo"
+      },
+      {
+        "label": "Lavanderia Comercial",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de manchas em roupas brancas e coloridas.",
+      "Rendimento máximo de até 5 mL/kg, otimizando custos operacionais.",
+      "Ação rápida que garante resultados em apenas 10 a 15 minutos.",
+      "Versátil para sujidades leves ou pesadas."
+    ]
+  },
+  "TEXSPAR-CL": {
+    "titulo": "Desinfetante Texspar",
+    "subtitulo": "Alvejante Concentrado",
+    "linhaLabel": "PROF",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "dispenser"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de manchas pesadas como sangue e gorduras.",
+      "Desinfecção eficiente em ambientes profissionais, garantindo higiene.",
+      "Versátil para uso em pisos, paredes e roupas brancas ou de cores firmes."
+    ]
+  },
+  "TEXSPAR-DEGREASE": {
+    "titulo": "Desengordurante Profissional",
+    "subtitulo": "Concentrado Eficiente",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "entrega"
+      },
+      {
+        "label": "Máquinas e Equipamentos",
+        "icone": "automotivo"
+      },
+      {
+        "label": "Caixas de Gordura",
+        "icone": "piso"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras pesadas de óleo e graxa.",
+      "Ideal para tratamentos prolongados em temperatura ambiente.",
+      "Compatível com tecidos de algodão e poliéster/algodão.",
+      "Facilita a limpeza profunda de máquinas industriais."
+    ]
+  },
+  "TEXSPAR-DSA": {
+    "titulo": "Desengordurante Profissional",
+    "subtitulo": "Concentrado Potente",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "selo"
+      },
+      {
+        "label": "Indústria Alimentícia",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotéis e Hospitais",
+        "icone": "hotel"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras pesadas em roupas brancas e coloridas.",
+      "Ideal para desengorduramento e desincrustação de superfícies e equipamentos industriais.",
+      "Rendimento otimizado, permitindo economia nos custos operacionais."
+    ]
+  },
+  "TEXSPAR-DTA": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Ambiente Hospitalar",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Limpeza de Roupas",
+        "icone": "toalheiro"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujidades leves e pesadas, como sangue e gorduras.",
+      "Ideal para roupas brancas e coloridas firmes, mantendo a cor e a textura.",
+      "Rendimento otimizado: até 5 vezes mais concentrado que detergentes comuns."
+    ]
+  },
+  "TEXSPAR-DTC": {
+    "titulo": "Desengordurante Profissional",
+    "subtitulo": "Concentrado Potente",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em diversas temperaturas, garantindo limpeza profunda.",
+      "Ideal para roupas coloridas e brancas de cores firmes.",
+      "Rendimento otimizado permite economia significativa.",
+      "Fácil aplicação com diluição flexível."
+    ]
+  },
+  "TEXSPAR-DTK": {
+    "titulo": "Desengordurante Profissional",
+    "subtitulo": "Concentrado Desincrustante",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Limpeza de Máquinas",
+        "icone": "limpeza"
+      },
+      {
+        "label": "Desagregação de Resíduos",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na remoção de sujeiras pesadas e leves.",
+      "Ideal para pré-lavagem e lavagem de roupas brancas e coloridas.",
+      "Ajuda a manter máquinas limpas e funcionando bem.",
+      "Rendimento econômico, com diluição flexível."
+    ]
+  },
+  "TEXSPAR-DTN": {
+    "titulo": "Desengordurante Profissional",
+    "subtitulo": "Concentrado Texspar DTN",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Hospitais",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hotéis e Motéis",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurantes",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Lavanderias Industriais",
+        "icone": "dispenser"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de manchas e gorduras resistentes",
+      "Compatível com roupas coloridas e brancas, mantendo a cor original",
+      "Rendimento otimizado para economia em grandes volumes"
+    ]
+  },
+  "TEXSPAR-DTS": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Versátil",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "hotel"
+      },
+      {
+        "label": "Desagregação",
+        "icone": "diluidor"
+      },
+      {
+        "label": "Pré-lavagem",
+        "icone": "diluidor"
+      },
+      {
+        "label": "Umectação",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na desagregação e pré-lavagem de roupas brancas e coloridas.",
+      "Rendimento flexível para atender diferentes necessidades operacionais.",
+      "Ideal para uso profissional em ambientes industriais."
+    ]
+  },
+  "TEXSPAR-DTT": {
+    "titulo": "Acidulante Profissional",
+    "subtitulo": "Para Tratamento de Ferro",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "selo"
+      },
+      {
+        "label": "Indústria Têxtil",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Limpeza de Roupas",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de ferro presente na água durante a lavagem.",
+      "Ideal para roupas brancas e cores firmes, independentemente da sujeira.",
+      "Facilita o processo de acidulação em máquinas industriais."
+    ]
+  },
+  "TEXSPAR-DTZ": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Lavanderia",
+        "icone": "diluidor"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Eficaz para roupas brancas e de cores firmes",
+      "Ideal para ambientes profissionais como hospitais e hotéis",
+      "Rendimento otimizado com diluição precisa",
+      "Facilita a limpeza em lavanderias industriais",
+      "Compatível com diversos tipos de tecidos"
+    ]
+  },
+  "TEXSPAR-DXA": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Ambiente Hospitalar",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Limpeza de Roupas",
+        "icone": "toalheiro"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujidades pesadas como sangue, fezes e óleos.",
+      "Ideal para roupas brancas e coloridas firmes, mantendo a cor e a textura.",
+      "Rendimento otimizado permite economia em grandes volumes de lavagem."
+    ]
+  },
+  "TEXSPAR-DXG-AMON": {
+    "titulo": "Desengordurante Profissional",
+    "subtitulo": "Concentrado Alcalino",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "hotel"
+      },
+      {
+        "label": "Máquinas de Lavagem",
+        "icone": "diluidor"
+      },
+      {
+        "label": "Limpeza Industrial",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em remover sujidades pesadas e leves.",
+      "Rendimento otimizado entre 0,8 a 5,0 mL/kg de roupa.",
+      "Fácil diluição para uso profissional."
+    ]
+  },
+  "TEXSPAR-DXG": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Cozinha Profissional",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Hotelaria",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras pesadas e leves em roupas brancas e coloridas.",
+      "Rendimento otimizado entre 0,8 a 5,0 mL/kg de roupa.",
+      "Fácil uso em máquinas lavadoras industriais."
+    ]
+  },
+  "TEXSPAR-DXZ": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Hospitais",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hotéis e Motéis",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurantes",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Lavanderias Industriais",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na lavagem de roupas brancas e coloridas, mantendo a cor e a textura.",
+      "Ideal para uso profissional em ambientes industriais exigentes.",
+      "Facilita o processo de limpeza com rendimento econômico."
+    ]
+  },
+  "TEXSPAR-PE": {
+    "titulo": "Alvejante Profissional",
+    "subtitulo": "Concentrado Potente",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Comércio",
+        "icone": "contrato"
+      }
+    ],
+    "beneficios": [
+      "Eficiente no alvejamento de roupas brancas e coloridas, mesmo com sujeiras pesadas.",
+      "Eficaz na remoção de manchas complexas como medicamentos, sucos e café.",
+      "Ideal para uso profissional em ambientes que exigem alto padrão de limpeza."
+    ]
+  },
+  "TEXSPAR-PL": {
+    "titulo": "Desincrustante Profissional",
+    "subtitulo": "Concentrado Eficiente",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "selo"
+      },
+      {
+        "label": "Hotelaria",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Indústria Têxtil",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficaz para tecidos de algodão ou poliéster tratados com Clorhexidina.",
+      "Manutenção da cor e textura dos tecidos, mesmo após o uso prolongado.",
+      "Rendimento otimizado entre 1,0 a 6,0 mL/kg de roupa, garantindo economia.",
+      "Fácil aplicação em ambientes industriais de lavanderia."
+    ]
+  },
+  "TEXSPAR-RHA": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na lavagem de roupas brancas e coloridas.",
+      "Ideal para ambientes profissionais como hospitais e hotéis.",
+      "Rendimento otimizado, economizando até 3 mL/kg de roupa."
+    ]
+  },
+  "TEXSPAR-RHC": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "diluidor"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de gorduras e sujeiras resistentes",
+      "Adequado para roupas coloridas e brancas, mantendo as cores vivas",
+      "Densidade ideal proporciona excelente rendimento em grandes volumes",
+      "Versátil para diversos tipos de tecidos"
+    ]
+  },
+  "TEXSPAR-RHE": {
+    "titulo": "Condicionador Final",
+    "subtitulo": "Para Lavanderias Profissionais",
+    "linhaLabel": "LAUNDRY",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "selo"
+      },
+      {
+        "label": "Comercial",
+        "icone": "cozinha"
+      }
+    ],
+    "beneficios": [
+      "Melhora a qualidade final das roupas após o processo de lavagem.",
+      "Ajuda na redução da formação de resíduos e manchas durante a secagem.",
+      "Promove um acabamento suave e macio nas peças de roupa.",
+      "Facilita a higienização profissional com baixo teor espumoso, permitindo maior controle no uso."
+    ]
+  },
+  "TEXSPAR-RHK": {
+    "titulo": "Desincrustante Profissional",
+    "subtitulo": "Concentrado Potente",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Hospitais",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hotéis e Motéis",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurantes",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em remoção de incrustações e sujeiras resistentes.",
+      "Adequado para roupas coloridas e brancas, mantendo suas cores vivas.",
+      "Ideal para limpeza profunda de máquinas e equipamentos."
+    ]
+  },
+  "TEXSPAR-RHN": {
+    "titulo": "Desengordurante Profissional",
+    "subtitulo": "Concentrado Desincrustante",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de gorduras e incrustações em roupas",
+      "Adequado para uso profissional, garantindo limpeza intensiva",
+      "Compatível com diversas peças de roupa, incluindo brancas e coloridas"
+    ]
+  },
+  "TEXSPAR-RHS": {
+    "titulo": "Desincrustante Profissional",
+    "subtitulo": "Concentrado Eficiente",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "hotel"
+      },
+      {
+        "label": "Limpeza de Roupas",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Acidulação de Água",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de incrustações causadas por ferro e dureza da água.",
+      "Adequado para roupas brancas e coloridas, mesmo com sujidades pesadas.",
+      "Rendimento otimizado: até 1 mL/kg para cada 25 ppm de dureza."
+    ]
+  },
+  "TEXSPAR-RHT": {
+    "titulo": "Desincrustante Profissional",
+    "subtitulo": "Concentrado Eficiente",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "hotel"
+      },
+      {
+        "label": "Limpeza Industrial",
+        "icone": "limpeza"
+      },
+      {
+        "label": "Acidulação de Água",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de incrustações causadas por ferro e dureza da água",
+      "Ideal para lavagem de roupas brancas e coloridas, mesmo em sujidades pesadas",
+      "Rendimento otimizado até 0,5 mL/kg de roupa, reduzindo custos operacionais"
+    ]
+  },
+  "TEXSPAR-RHZ": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Higiênico",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Hospitais",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hotéis e Motéis",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurantes",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Lavanderias Industriais",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na lavagem de roupas brancas e coloridas.",
+      "Ideal para ambientes profissionais que exigem alta higiene.",
+      "Fórmula concentrada reduz o consumo e os custos operacionais."
+    ]
+  },
+  "TEXSPAR-SOFTLIN-CONCENTRADO": {
+    "titulo": "Amaciante Profissional",
+    "subtitulo": "Concentrado Multiuso",
+    "linhaLabel": "LINEN",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Comercial",
+        "icone": "toalheiro"
+      }
+    ],
+    "beneficios": [
+      "Ideal para amaciamento de tecidos em diversos ambientes profissionais.",
+      "Fácil diluição, proporcionando economia e praticidade no uso diário.",
+      "Ótimo rendimento por dose, otimizando o consumo e os custos operacionais."
+    ]
+  },
+  "TEXSPAR-SOFTS-CONCENTRADO": {
+    "titulo": "Amaciante Concentrado",
+    "subtitulo": "Profissional Multiuso",
+    "linhaLabel": "TEXSPA",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Lavanderia Industrial",
+        "icone": "selo"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Comercial",
+        "icone": "contrato"
+      }
+    ],
+    "beneficios": [
+      "Ideal para amaciamento de tecidos em diversos segmentos profissionais.",
+      "Fácil diluição e aplicação, otimizando o uso na lavanderia.",
+      "Consistente pH neutro proporciona cuidado adequado com os tecidos."
+    ]
+  },
+  "CANDALL-TMI": {
+    "titulo": "Desincrustante Industrial",
+    "subtitulo": "Ácido Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "indústria",
+        "icone": "automotivo"
+      },
+      {
+        "label": "manutenção",
+        "icone": "diluidor"
+      },
+      {
+        "label": "limpeza pesada",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na remoção de óleos e graxas em equipamentos industriais.",
+      "Desoxida equipamentos, mantendo-os limpos e funcionando corretamente.",
+      "Diluição flexível para diferentes níveis de sujeira e necessidades.",
+      "Não danifica superfícies não pintadas durante a limpeza."
+    ]
+  },
+  "EMULSOIL-130": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Concentrado Industrial",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "Indústria",
+        "icone": "selo"
+      },
+      {
+        "label": "Máquinas e Equipamentos",
+        "icone": "automotivo"
+      },
+      {
+        "label": "Pisos e Paredes",
+        "icone": "piso"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras oleosas e graxosas.",
+      "Rendimento elevado: 1:100 diluição.",
+      "Ideal para limpeza profissional em ambientes industriais."
+    ]
+  },
+  "IGUATEMI": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Multifuncional Sem Enxágue",
+    "linhaLabel": "ADMINISTRATIVO",
+    "indicadoPara": [
+      {
+        "label": "Selo",
+        "icone": "selo"
+      },
+      {
+        "label": "Dispenser",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Lixeira",
+        "icone": "lixeira"
+      }
+    ],
+    "beneficios": [
+      "Eficaz para desinfecção e limpeza de superfícies diversas.",
+      "Fórmula sem necessidade de enxágue, otimizando tempo e recursos.",
+      "Disponível em três aromas agradáveis: Lavanda, Pinho e Floral."
+    ]
+  },
+  "INDEBA-T": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Versátil",
+    "linhaLabel": "PRO",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Clínica",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hospitais",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em diversas superfícies, desde pisos até estofados.",
+      "Rendimento elevado: diluição de 1:30 para estofados e tapetes.",
+      "Fácil aplicação com diluidor concentrado.",
+      "Ideal para manter ambientes higiênicos e limpos em diversos segmentos."
+    ]
+  },
+  "SPAR-24": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "CLEAN",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Escola",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hospital",
+        "icone": "selo"
+      },
+      {
+        "label": "Shopping",
+        "icone": "contrato"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de gorduras e sujeiras em diversas superfícies.",
+      "Rendimento elevado, proporcionando economia significativa.",
+      "Fácil aplicação em máquinas lavadoras/secadoras e limpeza manual.",
+      "Ideal para áreas com alto fluxo de pessoas, garantindo higiene adequada."
+    ]
+  },
+  "SPAR-FLOOR-PLUS": {
+    "titulo": "Desengordurante Industrial",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "FLOOR",
+    "indicadoPara": [
+      {
+        "label": "indústria",
+        "icone": "piso"
+      },
+      {
+        "label": "cozinha industrial",
+        "icone": "piso"
+      },
+      {
+        "label": "áreas comerciais",
+        "icone": "piso"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de graxas e gorduras pesadas.",
+      "Ideal para limpeza profunda em pisos industriais diversos.",
+      "Facilita a higienização de superfícies duras como granito e cerâmica."
+    ]
+  },
+  "SPAR-HT-1": {
+    "titulo": "Desincrustante Profissional",
+    "subtitulo": "Ácido Concentrado",
+    "linhaLabel": "CLEANING",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Instalações Públicas",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de incrustações inorgânicas, especialmente óxido de ferro.",
+      "Ação rápida em apenas 5 a 10 minutos quando diluído 1:1.",
+      "Fórmula líquida verde com aroma frutal para maior conforto durante o uso."
+    ]
+  },
+  "SPAR-HT-2-DBQ": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Concentrado Tutti-Frutti",
+    "linhaLabel": "SANITARY",
+    "indicadoPara": [
+      {
+        "label": "Banheiros Químicos",
+        "icone": "selo"
+      },
+      {
+        "label": "Sanitários de Avião",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Ônibus",
+        "icone": "automotivo"
+      },
+      {
+        "label": "Vias Públicas",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na desinfecção e limpeza de áreas públicas.",
+      "Odor agradável de tutti-frutti para ambientação.",
+      "Rendimento ótimo: diluição de 1:100.",
+      "Ideal para uso profissional em diversos segmentos."
+    ]
+  },
+  "SPAR-HT-2": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Concentrado Multiuso",
+    "linhaLabel": "ADMINISTRATIVO",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Contrato",
+        "icone": "contrato"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em desinfecção e limpeza de superfícies sem necessidade de enxágue.",
+      "Disponível em três aromas agradáveis: Lavanda, Floral e Karícia.",
+      "Rendimento otimizado com diluição de 1:50 (2%).",
+      "Ideal para uso profissional em diversos segmentos administrativos."
+    ]
+  },
+  "SPAR-HT-3": {
+    "titulo": "Desengordurante Alcalino",
+    "subtitulo": "Concentrado HT-3",
+    "linhaLabel": "CLEANING",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na remoção de gorduras e sujeiras pesadas.",
+      "Forma película protetora que previne manchas de impressões digitais.",
+      "Ideal para limpeza em superfícies diversas como vidros, espelhos e azulejos.",
+      "Rendimento econômico: 1:5 diluição (pode ser usado puro em casos extremos).",
+      "Fácil aplicação e rápida ação."
+    ]
+  },
+  "SPAR-HT-4": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Versátil",
+    "linhaLabel": "HOTEL",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Piso",
+        "icone": "piso"
+      }
+    ],
+    "beneficios": [
+      "Limpeza eficaz em diversas superfícies, incluindo porcelanato.",
+      "Fácil diluição proporcionando economia e praticidade.",
+      "Odores agradáveis que deixam o ambiente mais agradável após a limpeza.",
+      "Seguro para uso profissional em áreas sensíveis como banheiros e cozinhas."
+    ]
+  },
+  "SPAR-HT-5": {
+    "titulo": "Fungicida Aromático",
+    "subtitulo": "Concentrado Antimofo",
+    "linhaLabel": "ADMINISTRATIVO",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Aromatizador",
+        "icone": "aromatizador"
+      }
+    ],
+    "beneficios": [
+      "Elimina eficazmente o fungo trichophyton interdigitale.",
+      "Deixa um aroma suave e agradável no ambiente.",
+      "Neutraliza rapidamente maus odores, especialmente de tabaco.",
+      "Fácil diluição para diferentes usos."
+    ]
+  },
+  "SPAR-HT-6": {
+    "titulo": "Limpa Multiuso",
+    "subtitulo": "Protetor Hidrofóbico",
+    "linhaLabel": "OFFICE",
+    "indicadoPara": [
+      {
+        "label": "Móveis",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Superfícies Emborrachadas",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Fórmica",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Lacados",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Protege superfícies contra manchas d'água e poeira.",
+      "Facilita a limpeza diária de móveis e objetos decorativos.",
+      "Forma película protetora duradoura sem necessidade de diluição.",
+      "Ideal para áreas administrativas que requerem higiene constante."
+    ]
+  },
+  "SPAR-HT-7": {
+    "titulo": "Desengordurante Alcalino",
+    "subtitulo": "Concentrado HT-7",
+    "linhaLabel": "CLEANING",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Piso",
+        "icone": "piso"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras oleosas e gordurosas.",
+      "Seguro para uso em superfícies delicadas como vidros e porcelanatos.",
+      "Rendimento ótimo, proporcionando economia com diluição 1:100.",
+      "Facilita a limpeza profunda de azulejos, pisos e paredes."
+    ]
+  },
+  "SPAR-HT-8": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Concentrado Hiperpotente",
+    "linhaLabel": "HOTEL",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Consultório",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em desinfecção e limpeza profunda de diversos materiais.",
+      "Controle efetivo de odores em ambientes hospitalares e hoteleiros.",
+      "Rendimento elevado, com diluição de até 1:200 para limpezas gerais."
+    ]
+  },
+  "SPAR-HT-9": {
+    "titulo": "Desincrustante Profissional",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "CLEANING",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Instituição de Saúde",
+        "icone": "selo"
+      },
+      {
+        "label": "Shopping Center",
+        "icone": "piso"
+      },
+      {
+        "label": "Escola",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras e incrustações orgânicas em diversos tipos de superfícies.",
+      "Rendimento otimizado: até 1:100 para sujidades leves, proporcionando economia.",
+      "Fórmula concentrada que atende às necessidades de limpeza pesada em ambientes profissionais."
+    ]
+  },
+  "SPAR-LG": {
+    "titulo": "Desengordurante Profissional",
+    "subtitulo": "Concentrado Alcalino",
+    "linhaLabel": "CLEANING",
+    "indicadoPara": [
+      {
+        "label": "Pisos",
+        "icone": "piso"
+      },
+      {
+        "label": "Banheiros",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Áreas Externas",
+        "icone": "limpeza"
+      },
+      {
+        "label": "Paredes",
+        "icone": "suporte"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de gorduras e sujeiras em superfícies fixas.",
+      "Rendimento otimizado: até 150 partes de água para cada parte do produto.",
+      "Fácil aplicação com diluição adequada às necessidades de limpeza."
+    ]
+  },
+  "SPAR-P": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Versátil",
+    "linhaLabel": "PRO",
+    "indicadoPara": [
+      {
+        "label": "indústria",
+        "icone": "selo"
+      },
+      {
+        "label": "comércio",
+        "icone": "pessoa"
+      },
+      {
+        "label": "vias públicas",
+        "icone": "lixeira"
+      },
+      {
+        "label": "equipamentos",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em diversas superfícies, proporcionando limpeza profunda.",
+      "Facilita a remoção de sujeiras e gorduras resistentes.",
+      "Rendimento otimizado: até 100 vezes diluído para uso geral.",
+      "Fácil aplicação com sistema de dosagem controlado."
+    ]
+  },
+  "SPARTEC-KARICIA": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Limpador Universal",
+    "linhaLabel": "CLEANING",
+    "indicadoPara": [
+      {
+        "label": "Tapetes",
+        "icone": "piso"
+      },
+      {
+        "label": "Carpetes",
+        "icone": "piso"
+      },
+      {
+        "label": "Sofás",
+        "icone": "selo"
+      },
+      {
+        "label": "Bancos de Veículos",
+        "icone": "automotivo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em extratoras, sem danificar fibras ou cores.",
+      "Rendimento otimizado: até 1:80 diluição para carpetes e tapetes.",
+      "Fácil de usar em diversos tipos de tecidos."
+    ]
+  },
+  "METALIC-1-PLUS": {
+    "titulo": "Detergente Removente",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "FLOOR",
+    "indicadoPara": [
+      {
+        "label": "Pisos",
+        "icone": "piso"
+      },
+      {
+        "label": "Escritórios",
+        "icone": "selo"
+      },
+      {
+        "label": "Hospitais",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Supermercados",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Remoção eficiente de cera e impermeabilizantes à base de uretano ou poliuretano.",
+      "Eficaz na limpeza de superfícies com sujeira pesada ou antiga.",
+      "Diluição flexível para atender a diferentes níveis de sujidade.",
+      "Facilita o trabalho com enceradeiras industriais e discos de remoção."
+    ]
+  },
+  "METALIC-1": {
+    "titulo": "Detergente Removente",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "FLOOR",
+    "indicadoPara": [
+      {
+        "label": "Pisos",
+        "icone": "piso"
+      },
+      {
+        "label": "Indústrias",
+        "icone": "selo"
+      },
+      {
+        "label": "Hospitais",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Escolas",
+        "icone": "suporte"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de ceras e impermeabilizantes à base de água.",
+      "Limpeza profunda para sujeiras pesadas e antigas.",
+      "Diluição flexível permite ajuste conforme necessidade.",
+      "Rendimento elevado, 1L resolve até 5m².",
+      "Facilita a aplicação com equipamentos industriais."
+    ]
+  },
+  "METALIC-2-S": {
+    "titulo": "Selante Pisos Porosos",
+    "subtitulo": "Protetor Multiuso",
+    "linhaLabel": "FLOOR",
+    "indicadoPara": [
+      {
+        "label": "Piso",
+        "icone": "piso"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      }
+    ],
+    "beneficios": [
+      "Cria película protetora uniforme em pisos porosos.",
+      "Adequado para rotações de alta resistência (HS e UHS).",
+      "Fácil aplicação com rodo, pano ou mop.",
+      "Rendimento eficiente: até 80 m² por litro.",
+      "Não inflamável, seguro para uso profissional."
+    ]
+  },
+  "METALIC-3-SI": {
+    "titulo": "Selador e Acabamento",
+    "subtitulo": "Para Pisos Resistentes",
+    "linhaLabel": "FLOOR",
+    "indicadoPara": [
+      {
+        "label": "restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "churrascaria",
+        "icone": "churrascaria"
+      },
+      {
+        "label": "piso",
+        "icone": "piso"
+      }
+    ],
+    "beneficios": [
+      "Cria uma película uniforme que protege pisos porosos de alta tráfego.",
+      "Facilita a manutenção do piso com aplicações regulares e limpeza fácil.",
+      "Apoia a higiene profissional em ambientes comerciais exigentes.",
+      "Oferece excelente rendimento, cobrindo até 100 m² por litro."
+    ]
+  },
+  "METALIC-4-SI": {
+    "titulo": "Selador e Acabamento",
+    "subtitulo": "Para Pisos Resistentes",
+    "linhaLabel": "FLOOR",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Piso",
+        "icone": "piso"
+      }
+    ],
+    "beneficios": [
+      "Cria película uniforme resistente a tráfego intenso",
+      "Facilita manutenção com spray buff após polimento inicial",
+      "Resistente à umidade e chuva, ideal para ambientes internos e externos",
+      "Rendimento eficiente de 80 a 100 m² por litro"
+    ]
+  },
+  "METALIC-5-SI": {
+    "titulo": "Selador Pisos",
+    "subtitulo": "Para Baixo/Médio Tráfego",
+    "linhaLabel": "FLOOR",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      }
+    ],
+    "beneficios": [
+      "Cria uma película uniforme que protege pisos porosos.",
+      "Facilita a limpeza diária e prolonga a vida útil do piso.",
+      "Rendimento eficiente, cobertura de até 90 m² por litro.",
+      "Fácil aplicação com rodo ou mop."
+    ]
+  },
+  "PRATT-ALCOOL-70": {
+    "titulo": "Álcool Higienizante",
+    "subtitulo": "70% Puro",
+    "linhaLabel": "HAND",
+    "indicadoPara": [
+      {
+        "label": "hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "lavanderia",
+        "icone": "dispenser"
+      },
+      {
+        "label": "cozinha_industrial",
+        "icone": "restaurante"
+      },
+      {
+        "label": "administrativo",
+        "icone": "contrato"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na higienização e antissepsia das mãos.",
+      "Ideal para uso profissional em diversos ambientes, como hospitais e cozinhas industriais.",
+      "Higieniza louças e copos sem deixar gosto desagradável."
+    ]
+  },
+  "PRATT-ALCOOL-GEL-70": {
+    "titulo": "Álcool Gel 70%",
+    "subtitulo": "Profissional",
+    "linhaLabel": "HOSPITALAR",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Lavanderia Hospitalar",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Clínica",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Cozinha Profissional",
+        "icone": "cozinha"
+      }
+    ],
+    "beneficios": [
+      "Eficiente na higienização e antissepsia das mãos.",
+      "Ideal para ambientes hospitalares e de saúde.",
+      "Fácil aplicação em diversos segmentos profissionais.",
+      "Manutenção da integridade cutânea com pH neutro."
+    ]
+  },
+  "PRATT-AMACIANTE-PREMIUM": {
+    "titulo": "Amaciante Flores Nobres",
+    "subtitulo": "Premium Concentrado",
+    "linhaLabel": "LINEN",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Lavanderia Hospitalar",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Comercial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Industrial",
+        "icone": "restaurante"
+      }
+    ],
+    "beneficios": [
+      "Amacia e suaviza roupas, mantendo a cor e prolongando sua vida útil.",
+      "Facilita o processo de passagem com um aroma agradável de lirio do campo.",
+      "Versátil para uso em máquinas lavadoras ou manualmente."
+    ]
+  },
+  "PRATT-AMACIANTE": {
+    "titulo": "Amaciante Lírio do Campo",
+    "subtitulo": "Profissional Concentrado",
+    "linhaLabel": "LINEN",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Lavanderia",
+        "icone": "selo"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Amacia e suaviza roupas, mantendo a qualidade das cores.",
+      "Facilita o processo de passagem com menos vincos.",
+      "Economia por sua alta concentração e rendimento eficiente."
+    ]
+  },
+  "PRATT-CLOR-2": {
+    "titulo": "Desinfetante Clorado",
+    "subtitulo": "Concentrado Eficaz",
+    "linhaLabel": "CLEAN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Banheiros",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hortifruti",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Elimina eficazmente micro-organismos em superfícies diversas.",
+      "Previne novas sujidades e reduz odores indesejáveis.",
+      "Ideal para alvejar rejuntes e manter louças, pedras e frutas limpas."
+    ]
+  },
+  "PRATT-DESINCRUSTANTE": {
+    "titulo": "Desincrustante Industrial",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "KITCHEN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha Industrial",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Fornos e Fogões",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Chapas de Cozimento",
+        "icone": "hotel"
+      },
+      {
+        "label": "Pisos e Azulejos",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de gorduras carbonizadas",
+      "Ação rápida em superfícies difíceis",
+      "Fácil aplicação para limpezas diárias",
+      "Compatível com equipamentos industriais"
+    ]
+  },
+  "PRATT-DESINFETANTE-CITRONELA": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Citronela Concentrado",
+    "linhaLabel": "ADMINISTRATIVO",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Contrato",
+        "icone": "contrato"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na eliminação de micro-organismos em banheiros e superfícies.",
+      "Ação suave que não agride pisos e móveis.",
+      "Rendimento otimizado: até 40 partes de água para cada parte do produto."
+    ]
+  },
+  "PRATT-DESINFETANTE-CITRICO": {
+    "titulo": "Desinfetante Cítrico",
+    "subtitulo": "Profissional Concentrado",
+    "linhaLabel": "SANITARY",
+    "indicadoPara": [
+      {
+        "label": "banheiro",
+        "icone": "pessoa"
+      },
+      {
+        "label": "superfícies",
+        "icone": "limpeza"
+      },
+      {
+        "label": "diluidor",
+        "icone": "diluidor"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na eliminação de micro-organismos comprovados.",
+      "Ação suave que não agride pisos e móveis.",
+      "Rendimento otimizado para desinfecção e limpeza geral."
+    ]
+  },
+  "PRATT-DESINFETANTE-FLORAL": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Floral Concentrado",
+    "linhaLabel": "ADMINISTRATIVO",
+    "indicadoPara": [
+      {
+        "label": "Pisos",
+        "icone": "piso"
+      },
+      {
+        "label": "Móveis",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Banheiros",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na eliminação de micro-organismos comprovados",
+      "Ação suave que não agride superfícies",
+      "Rendimento otimizado para desinfecção e limpeza"
+    ]
+  },
+  "PRATT-DESINFETANTE-LAVANDA": {
+    "titulo": "Desinfetante Lavanda",
+    "subtitulo": "Profissional Concentrado",
+    "linhaLabel": "ADMINISTRATIVO",
+    "indicadoPara": [
+      {
+        "label": "Sala de Reuniões",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Banheiros",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Escritórios",
+        "icone": "contrato"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na eliminação de micro-organismos comprovados.",
+      "Atua em sujidades leves sem danificar a superfície.",
+      "Rendimento otimizado: até 40 partes de solução para limpeza geral."
+    ]
+  },
+  "PRATT-DESINFETANTE-LIMAO-DO-BOSQUE": {
+    "titulo": "Desinfetante Profissional",
+    "subtitulo": "Líquido Cítrico",
+    "linhaLabel": "OFFICE",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Banheiro",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Superfícies Gerais",
+        "icone": "limpeza"
+      },
+      {
+        "label": "Dispenser",
+        "icone": "dispenser"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na eliminação de micro-organismos em ambientes administrativos.",
+      "Ação suave que não agride pisos e móveis.",
+      "Rendimento otimizado: até 40 partes de água para cada parte do produto.",
+      "Odores cítricos agradáveis, deixando o ambiente fresco após a limpeza."
+    ]
+  },
+  "PRATT-DETERGENTE-CLORADO": {
+    "titulo": "Detergente Desengordurante",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "INDUSTRIAL",
+    "indicadoPara": [
+      {
+        "label": "indústria",
+        "icone": "selo"
+      },
+      {
+        "label": "cozinha industrial",
+        "icone": "restaurante"
+      },
+      {
+        "label": "limpeza pesada",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras orgânicas incrustadas.",
+      "Preparação econômica: solução diluída a 1:50.",
+      "Ação rápida que permite reduzir o tempo de trabalho."
+    ]
+  },
+  "PRATT-DETERGENTE-NEUTRO-FLORAL": {
+    "titulo": "Detergente Neutro",
+    "subtitulo": "Multiuso Floral",
+    "linhaLabel": "CLEAN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Automotivo",
+        "icone": "automotivo"
+      }
+    ],
+    "beneficios": [
+      "Limpeza eficaz para diversas superfícies.",
+      "Ideal para lavagem de louças e sujidades leves.",
+      "Fácil diluição, adequado para uso profissional.",
+      "Odores agradáveis que deixam o ambiente fresco."
+    ]
+  },
+  "PRATT-DETERGENTE-NEUTRO": {
+    "titulo": "Detergente Neutro",
+    "subtitulo": "Multiuso Concentrado",
+    "linhaLabel": "CLEAN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Automotivo",
+        "icone": "automotivo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz em limpezas pesadas e leves.",
+      "Versátil para diversas superfícies.",
+      "Facilidade de diluição conforme necessidade.",
+      "Ideal para manter ambientes higiênicos."
+    ]
+  },
+  "PRATT-HIPOCLORITO-1": {
+    "titulo": "Desinfetante Hipoclorito",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "CLINIC",
+    "indicadoPara": [
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Clínica",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Laboratório",
+        "icone": "lixeira"
+      },
+      {
+        "label": "Consultório",
+        "icone": "pessoa"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na desinfecção de superfícies e equipamentos hospitalares.",
+      "Facilita a higienização de mamadeiras, bicos e chupetas em solução diluída.",
+      "Rápido e eficiente para artigos não críticos com apenas 10 minutos de contato.",
+      "Fácil aplicação e rendimento otimizado."
+    ]
+  },
+  "PRATT-LAVA-ROUPAS": {
+    "titulo": "Detergente Multiuso",
+    "subtitulo": "Concentrado Alcalino",
+    "linhaLabel": "LAUNDRY",
+    "indicadoPara": [
+      {
+        "label": "Lavanderia",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      }
+    ],
+    "beneficios": [
+      "Eficiente para desagregação e pré-lavagem de roupas sujas.",
+      "Versátil, adequado para todas as etapas do processo de lavanderia profissional.",
+      "Fácil dosagem permitindo economia com base na quantidade de roupa a ser lavada."
+    ]
+  },
+  "PRATT-MULTIUSO": {
+    "titulo": "Limpa Multiuso",
+    "subtitulo": "Aromático Cítrico",
+    "linhaLabel": "CLEAN",
+    "indicadoPara": [
+      {
+        "label": "hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "condominio",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Limpa e deixa brilhante diversos tipos de superfícies.",
+      "Aroma cítrico refrescante para ambientes profissionais.",
+      "Diluição flexível para uso em diferentes áreas."
+    ]
+  },
+  "PRATT-OXY": {
+    "titulo": "Alvejante Multiuso",
+    "subtitulo": "Eficiente e Versátil",
+    "linhaLabel": "CLEANING",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Hospital",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Consultório Médico",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Ambiente Geral",
+        "icone": "limpeza"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de manchas e odores em diversos materiais.",
+      "Diluição flexível para diferentes níveis de sujeira, garantindo economia e performance.",
+      "Ideal para ambientes que exigem alta higiene e controle bacteriano."
+    ]
+  },
+  "PRATT-POS-OBRA": {
+    "titulo": "Desincrustante Pós-Obra",
+    "subtitulo": "Ácido Concentrado",
+    "linhaLabel": "POSTWORK",
+    "indicadoPara": [
+      {
+        "label": "industrial",
+        "icone": "automotivo"
+      },
+      {
+        "label": "tratamento_pisos",
+        "icone": "piso"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de oxidações e ferrugem",
+      "Facilita a desincrustação de cimento, gesso e rejunte",
+      "Ação rápida que permite decapagem leve ou pesada conforme necessidade",
+      "Recomenda-se neutralização com PRATT ULTRA após uso"
+    ]
+  },
+  "PRATT-SABONETE-ERVA-DOCE": {
+    "titulo": "Sabonete Profissional",
+    "subtitulo": "Erva Doce",
+    "linhaLabel": "HANDWASH",
+    "indicadoPara": [
+      {
+        "label": "Hospitais",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hotéis",
+        "icone": "hotel"
+      },
+      {
+        "label": "Cozinhas Profissionais",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Escritórios",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Higienização eficaz para ambientes profissionais.",
+      "Fácil aplicação e rendimento otimizado.",
+      "pH neutro, adequado para uso prolongado."
+    ]
+  },
+  "PRATT-SABONETE-ESPUMA": {
+    "titulo": "Sabonete Espuma Pratt",
+    "subtitulo": "Profissional Higiênico",
+    "linhaLabel": "HANDWASH",
+    "indicadoPara": [
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Escritório",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Shopping",
+        "icone": "dispenser"
+      },
+      {
+        "label": "Escola",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Higiene eficaz para ambientes de alta circulação",
+      "Fácil aplicação e uso conveniente em dispensers",
+      "Neutral pH, suave para a pele das mãos",
+      "Cor verde distintiva para fácil identificação",
+      "Ideal para manter padrões elevados de limpeza profissional"
+    ]
+  },
+  "PRATT-SABONETE-PEROLIZADO": {
+    "titulo": "Sabonete Líquido Profissional",
+    "subtitulo": "Perolizado Lírio do Campo",
+    "linhaLabel": "HANDWASH",
+    "indicadoPara": [
+      {
+        "label": "Hospitais",
+        "icone": "pessoa"
+      },
+      {
+        "label": "Hotéis",
+        "icone": "hotel"
+      },
+      {
+        "label": "Cozinhas Profissionais",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Escritórios",
+        "icone": "suporte"
+      }
+    ],
+    "beneficios": [
+      "Higienização eficaz para ambientes profissionais.",
+      "Fácil aplicação e rendimento otimizado.",
+      "pH balanceado para proteger a pele."
+    ]
+  },
+  "PRATT-ULTRA-GEL": {
+    "titulo": "Desengordurante Alcalino",
+    "subtitulo": "Concentrado Profissional",
+    "linhaLabel": "CLEANING",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Indústria",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras oleosas e gordurosas.",
+      "Diluição flexível para limpezas leves ou pesadas.",
+      "Fórmula alcalina que promove uma limpeza profunda.",
+      "Ideal para diversos tipos de superfícies, garantindo durabilidade e higiene."
+    ]
+  },
+  "PRATT-ULTRA": {
+    "titulo": "Desengordurante Profissional",
+    "subtitulo": "Alcalino Concentrado",
+    "linhaLabel": "CLEAN",
+    "indicadoPara": [
+      {
+        "label": "Cozinha",
+        "icone": "cozinha"
+      },
+      {
+        "label": "Restaurante",
+        "icone": "restaurante"
+      },
+      {
+        "label": "Hotel",
+        "icone": "hotel"
+      },
+      {
+        "label": "Indústria",
+        "icone": "selo"
+      }
+    ],
+    "beneficios": [
+      "Eficaz na remoção de sujeiras oleosas e gordurosas",
+      "Versátil para diversas superfícies, incluindo cerâmica e porcelanato",
+      "Diluição flexível permite economia e personalização da limpeza"
+    ]
+  }
+}

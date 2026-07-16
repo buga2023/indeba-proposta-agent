@@ -105,6 +105,15 @@ describe("paginaProduto", () => {
     expect(html).toContain("KITCHEN");
   });
 
+  it("com características/rendimento mas sem indicado-para/benefícios, usa o layout 'sem-venda' (nem simples nem padrão) e mantém o grid técnico", () => {
+    const semVenda = { ...item, ficha: { ...item.ficha, indicadoPara: undefined, beneficios: undefined } };
+    const html = paginaProduto(semVenda, "data:,x");
+    expect(html).toContain("prodpg-sem-venda");
+    expect(html).not.toContain("prodpg-simples");
+    expect(html).toContain("Características");
+    expect(html).toContain("Rendimento aproximado");
+  });
+
   it("header (logo + numeração) só aparece quando passado — nunca inventado aqui", () => {
     expect(paginaProduto(item, "data:,x")).not.toContain("pg-head");
     expect(paginaProduto(item, "data:,x", undefined, '<div class="pg-head">X</div>')).toContain('<div class="pg-head">X</div>');
