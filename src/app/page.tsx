@@ -14,6 +14,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
+import type { Usuario } from "@/lib/auth";
 import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, cortarParaOrcamento } from "@/lib/proposta-edit";
 import { AjudaChat } from "@/components/ajuda-chat";
 import { EdicaoChat } from "@/components/edicao-chat";
@@ -208,6 +209,7 @@ export default function Home() {
   const [catalogoErro, setCatalogoErro] = useState<string | null>(null);
   const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
   const [propostasErro, setPropostasErro] = useState<string | null>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
 
   const stepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -220,6 +222,14 @@ export default function Home() {
   }, []);
 
   useEffect(() => () => stopStepTimer(), [stopStepTimer]);
+
+  // Usuário da sessão atual — personaliza saudação e sidebar.
+  useEffect(() => {
+    fetch("/api/me")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then((u: Usuario) => setUsuario(u))
+      .catch(() => setUsuario(null));
+  }, []);
 
   // Command palette: Ctrl/Cmd+K alterna o overlay de navegação.
   useEffect(() => {
@@ -647,10 +657,12 @@ export default function Home() {
         </nav>
 
         <div className="ies-side-foot" style={{ padding: "14px 14px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontWeight: 700, fontSize: "13px", color: "white" }}>M</div>
+          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontWeight: 700, fontSize: "13px", color: "white" }}>
+            {(usuario?.nome || "?").trim().charAt(0).toUpperCase()}
+          </div>
           <div className="ies-side-text" style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: "white", fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Mateus Oliveira</div>
-            <div style={{ color: "rgba(255,255,255,.42)", fontSize: "11px" }}>Vendedor · Salvador/BA</div>
+            <div style={{ color: "white", fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{usuario?.nome || "…"}</div>
+            <div style={{ color: "rgba(255,255,255,.42)", fontSize: "11px" }}>{usuario?.papel === "admin" ? "Administrador" : "Vendedor"}</div>
           </div>
           <button
             onClick={() => {
@@ -668,7 +680,7 @@ export default function Home() {
 
       {/* ============ MAIN ============ */}
       <main className="ies-scroll" style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden", position: "relative" }}>
-        {screen === "dashboard" && <DashboardScreen setScreen={setScreen} />}
+        {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} />}
         {screen === "briefing" && (
           <BriefingScreen {...{ quickLoading, briefingText, setBriefingText, startGeneration, textareaRef, error, tipoProposta, setTipoProposta }} />
         )}
@@ -737,7 +749,8 @@ export default function Home() {
 
 /* ═══════════════════════ TELA: DASHBOARD ═══════════════════════ */
 
-function DashboardScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
+function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => void; usuario: Usuario | null }) {
+  const primeiroNome = usuario?.nome?.trim().split(/\s+/)[0] || "";
   const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
   const [catalogoCount, setCatalogoCount] = useState<number | null>(null);
   // Data/saudação calculadas só no cliente (evita divergência de hidratação SSR≠cliente).
@@ -801,7 +814,7 @@ function DashboardScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
 
   return (
     <div style={{ background: "var(--background)", minHeight: "100vh" }}>
-      <ScreenHead title="Dashboard" sub={`${saudacao}, Mateus — visão geral`} />
+      <ScreenHead title="Dashboard" sub={primeiroNome ? `${saudacao}, ${primeiroNome} — visão geral` : `${saudacao} — visão geral`} />
       <div style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "20px", animation: "fadeUp var(--duration-slow) var(--ease-out) both" }}>
         {/* ── Hero ── */}
         <div style={{ borderRadius: "18px", background: "var(--gradient-hero)", color: "#fff", padding: "26px 30px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "24px", position: "relative", overflow: "hidden", boxShadow: "var(--shadow-lg)" }}>
@@ -809,7 +822,7 @@ function DashboardScreen({ setScreen }: { setScreen: (s: Screen) => void }) {
           <div style={{ position: "absolute", right: "80px", bottom: "-120px", width: "260px", height: "260px", borderRadius: "50%", background: "radial-gradient(circle,rgba(30,107,184,.45),transparent 70%)" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: "560px" }}>
             <div style={{ fontSize: "12.5px", color: "rgba(255,255,255,.66)", fontWeight: 600, letterSpacing: ".02em", minHeight: "16px" }}>{hoje}</div>
-            <div style={{ fontSize: "27px", fontWeight: 800, letterSpacing: "-.02em", marginTop: "5px" }}>{saudacao}, Mateus</div>
+            <div style={{ fontSize: "27px", fontWeight: 800, letterSpacing: "-.02em", marginTop: "5px" }}>{primeiroNome ? `${saudacao}, ${primeiroNome}` : saudacao}</div>
             <div style={{ fontSize: "14px", color: "rgba(255,255,255,.74)", marginTop: "7px", lineHeight: 1.55 }}>Descreva um cliente em linguagem natural — a IA seleciona produtos do catálogo, redige o texto e gera o PDF. Você revisa antes de exportar.</div>
             <div style={{ display: "flex", gap: "10px", marginTop: "20px", flexWrap: "wrap" }}>
               <Hoverable onClick={() => setScreen("briefing")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 18px", borderRadius: "12px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600, boxShadow: "var(--shadow-accent)" }} hover={{ background: "var(--accent-hover)" }}>
