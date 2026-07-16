@@ -1,0 +1,5 @@
+# Arquivos soltos na raiz (PDFs de teste, zips de fichas/fotos, prints) não fazem
+# parte do app — sem isso, "vercel --prod" estoura o limite de 100MB por arquivo.
+/*.pdf
+/*.zip
+/*.png
