@@ -82,7 +82,7 @@ export type ContatoConsolidada = { whatsapp: string | null; emailConsultor: stri
 // texto, só reposicionado). `simples`/`semVenda`: sinalizam o quão rica é a ficha
 // (nenhum dado técnico/venda vs. só técnico) — o layout em rail já centraliza o
 // conteúdo disponível sozinho, então essas classes hoje são só um sinal semântico.
-export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, numero?: string, logoWhite?: string): string {
+export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, numero?: string, logoWhite?: string, temFundoTransparente = false): string {
   const f = item.ficha ?? null;
   const titulo = f?.titulo ? esc(f.titulo) : esc(item.nome);
   const subtitulo = f?.subtitulo ? `<div class="pp-sub">${esc(f.subtitulo)}</div>` : "";
@@ -168,7 +168,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
     <aside class="pp-rail">
       ${wm}
       ${eyebrow}
-      <div class="pp-figure"><div class="pp-imgcard"><img src="${dataUri}" alt="${titulo}"/></div></div>
+      <div class="pp-figure"><div class="pp-imgcard${temFundoTransparente ? "" : " pp-imgcard-clara"}"><img src="${dataUri}" alt="${titulo}"/></div></div>
       ${valores}
     </aside>
     <div class="pp-content">
@@ -216,6 +216,7 @@ export function consolidadaHtml(
   scope: PropostaScope,
   imagens: Record<string, string>,
   assets: { logo: string; logoWhite: string; fontSans: string; fontMono: string },
+  imagensCutout: Record<string, boolean> = {},
 ): string {
   const c = scope.consolidada ?? consolidadaDefaults();
   const cli = scope.cliente;
@@ -288,7 +289,16 @@ export function consolidadaHtml(
   // rodapé (contador nativo do Chromium), já que cada seção é garantidamente 1 página.
   const PRIMEIRO_PRODUTO = 4;
   const produtos = scope.itens
-    .map((it, idx) => paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite))
+    .map((it, idx) =>
+      paginaProduto(
+        it,
+        imagens[it.codigo] ?? "",
+        contato,
+        String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"),
+        assets.logoWhite,
+        imagensCutout[it.codigo] ?? false,
+      ),
+    )
     .join("");
 
   const cond = `<section class="pg sec">
@@ -334,7 +344,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .sec > *:not(.wave-sec) { position: relative; z-index: 1; }
 .wave.wave-sec { width: 30mm; } /* especificidade > .wave sozinho — .wave define 96mm mais abaixo (capa) */
 .pg-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5ebf2; padding-bottom: 8px; margin-bottom: 18px; }
-.hlogo { height: 34px; } .hpg { color: #7a8696; font-size: 11px; } .hpg b { color: ${NAVY}; }
+.hlogo { height: 46px; } .hpg { color: #7a8696; font-size: 11px; } .hpg b { color: ${NAVY}; }
 .sec-tit { color: ${NAVY}; font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
 .sec-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin: 2px 0 14px; }
 .sd { margin: 6px 0 10px; } .pt { color: #4a5768; line-height: 1.6; margin-bottom: 10px; }
@@ -374,7 +384,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
   padding: 18mm 16mm; color: #fff; background: linear-gradient(158deg, ${NAVY} 0%, #06203f 100%);
   page-break-after: always; overflow: hidden; }
 .capa > *:not(.capa-arc):not(.capa-dots) { position: relative; z-index: 1; }
-.capa-logo { height: 30px; width: auto; align-self: flex-start; display: block; }
+.capa-logo { height: 40px; width: auto; align-self: flex-start; display: block; }
 .capa-rule { width: 46px; height: 4px; background: ${ORANGE}; border-radius: 2px; margin-bottom: 18px; }
 .capa-tit { font-size: 44px; font-weight: 800; line-height: 1.05; letter-spacing: -1px; }
 .capa-sub { margin-top: 14px; font-size: 13px; color: rgba(255,255,255,.62); max-width: 320px; }
@@ -416,12 +426,15 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-wm { font-size: 17px; letter-spacing: .2px; }
 .pp-wm b { font-weight: 800; } .pp-wm span { font-weight: 400; opacity: .8; margin-left: 3px; }
 .pp-wm i { color: ${ORANGE}; font-style: normal; }
-.pp-wm-logo { height: 24px; width: auto; align-self: flex-start; display: block; }
+.pp-wm-logo { height: 32px; width: auto; align-self: flex-start; display: block; }
 .pp-eyebrow { margin-top: 12px; font-size: 10px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-eyebrow b { color: ${ORANGE}; font-weight: 700; margin-left: 6px; }
 .pp-figure { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px 0; }
 .pp-imgcard { width: 190px; height: 190px; background: rgba(255,255,255,.07); border-radius: 16px; display: flex; align-items: center; justify-content: center; }
 .pp-imgcard img { max-width: 150px; max-height: 170px; object-fit: contain; }
+/* Fotos sem recorte de fundo confiável (fundo de estúdio branco intacto) — card
+   claro em vez de navy, pra evitar a "caixa branca" contra o navy do card padrão. */
+.pp-imgcard-clara { background: #f3f6fa; }
 .pp-price { border-top: 1px solid rgba(255,255,255,.16); padding-top: 16px; }
 .pp-v-label { font-size: 9.5px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-v-row { display: flex; align-items: baseline; gap: 10px; margin-top: 7px; }
