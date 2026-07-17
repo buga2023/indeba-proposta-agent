@@ -20,7 +20,21 @@ export function formatoDe(nome: string): FormatoContrato | null {
   return null;
 }
 
+// pdfjs-dist (Node) tenta `require("@napi-rs/canvas")` pra polyfillar DOMMatrix; se o
+// binário nativo da plataforma não estiver disponível (ex.: serverless da Vercel — o
+// pacote é opcional e o tracing de arquivo não pega o .node), o import falha de cara com
+// "ReferenceError: DOMMatrix is not defined" (um `new DOMMatrix()` roda no topo do módulo,
+// incondicional). Não usamos renderização (só getTextContent), então um stub vazio basta —
+// evita depender do binário nativo só pra extrair texto. No-op se já existir (dev local).
+function polyfillDomMatrix() {
+  if (typeof globalThis.DOMMatrix === "undefined") {
+    // @ts-expect-error -- stub mínimo só pra satisfazer `new DOMMatrix()` no import; nunca usado (sem render).
+    globalThis.DOMMatrix = class DOMMatrix {};
+  }
+}
+
 async function extrairPdf(bytes: Uint8Array): Promise<string> {
+  polyfillDomMatrix();
   // Build legacy roda em Node; specifier por variável evita resolução estática de tipos
   // do subpath (sem .d.ts próprio) — tipamos como o pacote raiz, mesma API.
   const spec = "pdfjs-dist/legacy/build/pdf.mjs";
