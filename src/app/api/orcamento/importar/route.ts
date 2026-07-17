@@ -34,7 +34,12 @@ export async function POST(req: NextRequest) {
     const { extraido, rejeitados } = await estruturarOrcamento(texto);
     // Casamento determinístico com o catálogo: dá foto/descrição ao PDF.
     // O preço segue o do orçamento — o catálogo pode nem ter valor.
-    const produtos = carregarCatalogo().produtos.filter((p) => p.ativo);
+    // Sem filtro de `ativo` aqui de propósito (diferente do matcher de seleção por IA
+    // e do índice RAG): `ativo` marca "precificado no catálogo", mas o preço deste
+    // fluxo NUNCA vem do catálogo — vem do próprio orçamento, já validado por
+    // precoConstaNoTexto(). Filtrar por `ativo` só esconderia foto/ficha de produtos
+    // reais (a maior parte do catálogo hoje) sem nenhum ganho de segurança de preço.
+    const produtos = carregarCatalogo().produtos;
     const itens = extraido.itens.map((it) => {
       const p = matchCatalogo(it.nome, produtos);
       return { ...it, codigoCatalogo: p?.codigo ?? null, nomeCatalogo: p?.nome ?? null };
