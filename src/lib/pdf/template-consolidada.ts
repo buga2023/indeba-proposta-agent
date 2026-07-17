@@ -137,7 +137,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
         .join("")}</div></div>`
     : "";
   const carac = f?.caracteristicas
-    ? `<div class="pp-panel"><h4>Características</h4><div class="pp-rows">${Object.entries(f.caracteristicas)
+    ? `<div class="pp-panel"><h4>Características</h4><div class="pp-rows-cols">${Object.entries(f.caracteristicas)
         .filter(([, v]) => v)
         .map(([k, v]) => `<div class="pp-row"><span class="k">${k === "pH" ? "pH" : k[0].toUpperCase() + k.slice(1)}</span><span class="v">${esc(String(v))}</span></div>`)
         .join("")}</div></div>`
@@ -481,9 +481,17 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-emb { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .pp-emb-chip { display: inline-block; font-family: "Geist Mono", monospace; font-weight: 700; font-size: 12px; color: ${NAVY};
   background: #fff; border: 1px solid #d6dee8; border-radius: 8px; padding: 7px 16px; }
-.pp-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
-.pp-row { display: flex; gap: 6px; font-size: 10px; }
-.pp-row .k { color: #6b7787; flex: none; } .pp-row .v { font-weight: 700; color: ${NAVY}; }
+/* Diluição pode ter frases longas (uso e razão) — coluna única sempre, com
+   k/v nas pontas (space-between); em duas colunas estreitas o texto colide.
+   Características (valores curtos: "Líquido", "Amarelo") ganha grid 2 colunas
+   à parte (.pp-rows-cols), com k/v coladinhos — space-between ali jogaria o
+   valor pra ponta da célula, longe da chave. */
+.pp-rows { display: flex; flex-direction: column; gap: 6px; }
+.pp-rows-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+.pp-row { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; }
+.pp-row .k { color: #6b7787; } .pp-row .v { font-weight: 700; color: ${NAVY}; text-align: right; }
+.pp-rows-cols .pp-row { justify-content: flex-start; }
+.pp-rows-cols .pp-row .k { flex: none; } .pp-rows-cols .pp-row .v { text-align: left; }
 .pp-big { text-align: center; color: ${ORANGE}; font-weight: 800; font-size: 12px; }
 /* Rendimento multi-dosagem (Sanquat, Sanclor, Sanap…): lista legível em vez de paredão
    laranja centralizado. Dose em destaque, contexto (entre parênteses) em cinza abaixo. */
