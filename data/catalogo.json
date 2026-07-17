@@ -37,12 +37,43 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "9,3 ± 0,4",
+          "pH": "9,3 + 0,4",
           "aspecto": "Líquido viscoso",
           "cor": "Amarelo",
           "uso": "Profissional"
         },
-        "rendimento": "Diluição variável conforme aplicação: pisos/paredes 3 partes para 100 de água; equipamentos 2 partes para 100 de solução; lavagem manual 1 a 4 partes para 100 de solução; chassis e motor 5 a 7 partes para 100 de solução; lavagem automática de pintura 1,5 a 3 partes para 100 de água."
+        "subtitulo": "DETERGENTE DESENGRAXANTE",
+        "descricao": "Detergente desengraxante para limpeza de superfícies com sujidades pesadas e veículos pesados e leves.",
+        "beneficios": [
+          "Limpeza rápida e eficiente de lama, óleo, graxa, fuligem, entre outros",
+          "Seguro para superfície pintada",
+          "Excelente na remoção de marcas de pneu nos pisos",
+          "Não possui cheiro",
+          "Facilmente solúvel em água",
+          "Possui tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza de pisos, paredes e superfícies em geral",
+            "razao": "diluir 03 partes do produto para até 100 partes de água"
+          },
+          {
+            "uso": "limpeza de equipamentos",
+            "razao": "diluir 02 partes do produto para até 100 partes de solução"
+          },
+          {
+            "uso": "lavagem manual",
+            "razao": "diluir 1 a 4 parte do produto para até 100 partes de solução"
+          },
+          {
+            "uso": "lavagem de chassis e motor",
+            "razao": "diluir de 5 a 7 partes do produto para até 100 partes de solução"
+          },
+          {
+            "uso": "lavagem automática de pintura",
+            "razao": "diluir 1,5 a 03 partes do produto para até 100 partes de água"
+          }
+        ]
       }
     },
     {
@@ -82,12 +113,36 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "9,0 ± 0,3",
+          "pH": "9,0 + 0,3",
           "aspecto": "Líquido viscoso",
           "cor": "Amarelo",
           "uso": "Profissional"
         },
-        "rendimento": "Diluição variável conforme aplicação: pintura/carrocerias/pisos 0,5 a 2 partes para 100 de solução; superfícies gerais 2 a 3 partes para 100 de solução; chassis e motor 3,0 a 5,0 partes para 100 de solução."
+        "subtitulo": "DETERGENTE DESENGRAXANTE",
+        "descricao": "Desengraxante para limpeza de veículo, garagem, postos e superfícies em geral",
+        "beneficios": [
+          "Limpeza rápida e eficiente de óleo, graxa, lama, fuligem, entre outros",
+          "Seguro para superfícies pintadas ou sensíveis",
+          "Forma espuma abundante e consistente quando aplicada em gerador de espuma",
+          "Excelente na remoção de marcas de pneu no piso",
+          "Facilmente solúvel em água",
+          "Não possui cheiro",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza de pintura, carrocerias de veículos, caminhões tanque, baús, garagens, banheiros e vestiários",
+            "razao": "0,5 a 2 partes de Autocar Plus p/ 100 partes de solução."
+          },
+          {
+            "uso": "limpeza de pisos, paredes, azulejos e superfícies em geral",
+            "razao": "2 a 3 partes de Autocar Plus p/ 100 partes de solução."
+          },
+          {
+            "uso": "lavagem de chassis e motor",
+            "razao": "Diluir 3,0 a 5,0 partes de Autocar Plus p/ 100 partes de solução."
+          }
+        ]
       }
     },
     {
@@ -119,13 +174,25 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,5 ± 0,5 (1%)",
+          "pH": "12,5 + 0,5",
           "aspecto": "Pó",
           "cor": "Branca",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Diluir de 2 a 3 partes do produto para 200 partes de solução."
+        "subtitulo": "DESINCRUSTANTE EM PÓ",
+        "descricao": "Desincrustante alcalino para limpeza de chassis de veículos",
+        "beneficios": [
+          "Remove incrustações oleosas e graxosas",
+          "Promove limpeza pesada de óleo, graxa, asfalto e lama em chassis",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "uso geral",
+            "razao": "Diluir de 2 a 3 partes do produto para 200 partes de Solução."
+          }
+        ]
       }
     },
     {
@@ -172,13 +239,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "11,5 ± 0,5 (0,1%)",
+          "pH": "11,5 + 0,5",
           "aspecto": "Líquido viscoso",
           "cor": "Rosa",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Diluir 1 a 5 partes do produto para 100 partes de água."
+        "subtitulo": "DETERGENTE DESENGRAXANTE ALCALINO",
+        "descricao": "Desengraxante para lavagem pesada e limpeza em geral.",
+        "beneficios": [
+          "Ideal para limpeza de sujidades oleosas e graxosas",
+          "Excelente na remoção de marcas de pneu nos pisos",
+          "Facilmente solúvel em água",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "uso geral",
+            "razao": "Diluir 1 a 5 partes do produto para 100 partes de água."
+          }
+        ]
       }
     },
     {
@@ -215,7 +295,24 @@
           "aspecto": "Líquido incolor transparente",
           "cor": "Incolor",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "LIMPADOR DE RESÍDUOS EM EQUIPAMENTOS DA INDÚSTRIA DE COSMÉTICO E AFINS",
+        "beneficios": [
+          "Indicado para limpeza de reatores, moinhos, esteiras e equipamentos em geral da indústria de cosméticos e afins",
+          "Ação rápida e com baixa necessidade de ação mecânica na remoção de ceras naturais, óleos orgânicos, gorduras e pigmentos orgânicos ou inorgânicos",
+          "Excelente limpeza de superfícies fixas e equipamentos abertos na Indústria em geral",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza de equipamento",
+            "razao": "puro ou diluído em até 1 parte de produto para 1 parte de água"
+          },
+          {
+            "uso": "limpeza de superfícies fixas e equipamentos abertos",
+            "razao": "1 parte do produto para 49 partes de água"
+          }
+        ]
       }
     },
     {
@@ -249,11 +346,31 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "3,50 ± 0,50",
+          "pH": "3,50 + 0,50",
           "aspecto": "Líquido leitoso",
           "cor": "Branco",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "ANTIESPUMANTE FOOD GRADE",
+        "beneficios": [
+          "Antiespumante grau alimentício para processos de higienização na produção de alimentos e bebidas (cervejas, sucos, refrigerante, entre outros)",
+          "Antiespumante grau alimentício para caldas de defensivos agrícolas, protetores foliares, protetores solares, fertilizantes e afins",
+          "Antiespumante para processos de fermentados: produção de etanol, biodisel e afins"
+        ],
+        "diluicoes": [
+          {
+            "uso": "soluções CIP alcalina",
+            "razao": "usar 0,4mL PRIMMAX AE FOOD GRADE para cada 1Kg PRIMMAX CIP DT na solução"
+          },
+          {
+            "uso": "uso do PRIMMAX CIP DTX",
+            "razao": "usar 0,2mL PRIMMAX AE FOOD GRADE para cada 1Kg de produto"
+          },
+          {
+            "uso": "adição de caldas para aplicação em lavouras",
+            "razao": "usar em conjunto com o PRIMMAX SUNCARE ADT, para cada litro usar 0,5mL de PRIMMAX AE FOOD GRADE"
+          }
+        ]
       }
     },
     {
@@ -301,7 +418,27 @@
           "cor": "Branco",
           "odor": "Característico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "DETERGENTE DESENGORDURANTE E DESINCRUSTANTE ALCALINO CLORADO",
+        "beneficios": [
+          "Produto SMS. Indicado para limpeza de metais sensíveis (alumínio, cobre, zinco, entre outros) ou de qualquer material sensível a causticidade",
+          "Alto poder desengordurante e alvejante",
+          "Excelente performance na limpeza de sujidades e incrustações orgânicas (proteínas, gorduras, carboidratos e sangue)",
+          "Remove manchas difíceis provenientes do processamento de alimentos e bebidas",
+          "Promove brilho às superfícies após a limpeza",
+          "Aplicado pelo método de espuma, atinge locais de difícil acesso manual",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "aplicação por método manual ou espuma",
+            "razao": "2 partes de Primmax Alclor para até 100 partes de solução"
+          },
+          {
+            "uso": "limpeza de superfícies em geral",
+            "razao": "1 parte de produto para até 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -334,12 +471,29 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "3,80 ± 0,20",
+          "pH": "3,80 ± 0,20 (100%)",
           "aspecto": "Líquido",
           "cor": "Incolor a levemente amarelado",
           "odor": "Característico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "ADITIVO PARA SOLUÇÕES CÁUSTICAS E SOLUÇÕES ÁCIDAS",
+        "descricao": "Ideal para processos CIP",
+        "beneficios": [
+          "Desenvolvido para atuar sobre diversos tipos de sujidades, sobretudo em sujidades orgânicas e minerais. Indicado também para limpeza em geral das áreas das indústrias",
+          "Aplicável tanto na soda cáustica como em suas soluções e também em soluções de ácidos",
+          "Ideal para processos de circulação (CIP), evitando cavitação em bombas e perda de eficiência"
+        ],
+        "diluicoes": [
+          {
+            "uso": "soda cáustica a 50%",
+            "razao": "10 a 20% p/v"
+          },
+          {
+            "uso": "soluções de soda cáustica e ácidos",
+            "razao": "0,15 a 1,5% p/v"
+          }
+        ]
       }
     },
     {
@@ -381,12 +535,40 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,00 ± 0,50",
+          "pH": "12,00 + 0,50 (1%)",
           "aspecto": "Líquido transparente",
           "cor": "Incolor",
           "odor": "Característico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "DETERGENTE DESINCRUSTANTE ALCALINO",
+        "beneficios": [
+          "Sem formação de espuma",
+          "Ideal para desincrustação de tanques e tubulações pelo método CIP",
+          "Ideal para desincrustação de caixas e contentores plásticos",
+          "Eficiência na remoção de sujidades orgânicas, mesmo em altas diluições",
+          "Fácil remoção: quando comparado a soda caústica, o produto é removido com maior facilidade durante a etapa de enxágue",
+          "Eficiente a frio e a quente",
+          "Previne incrustações provenientes da dureza da água"
+        ],
+        "diluicoes": [
+          {
+            "uso": "cip em cervejarias",
+            "razao": "concentração entre 0,50 e 2,50%"
+          },
+          {
+            "uso": "cip em linhas quentes (pasteurizadores, esterilizadores, concentradores e evaporadores)",
+            "razao": "concentração entre 2,0 e 3,0%"
+          },
+          {
+            "uso": "cip em geral",
+            "razao": "concentração entre 0,20 a 1,00%"
+          },
+          {
+            "uso": "desengraxe de carretilhas",
+            "razao": "solução de 1 a 3%"
+          }
+        ]
       }
     },
     {
@@ -435,12 +617,40 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,70 ± 0,50",
+          "pH": "12,70 + 0,50",
           "aspecto": "Líquido transparente",
           "cor": "Incolor",
           "odor": "Característico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "DETERGENTE DESINCRUSTANTE ALCALINO",
+        "beneficios": [
+          "Ideal para desincrustação de tanques e tubulações pelo método CIP",
+          "Ideal para desincrustação de caixas e contentores plásticos",
+          "Sem formação de espuma",
+          "Eficiência na remoção de sujidades orgânicas, mesmo em altas diluições",
+          "Fácil remoção: quando comparado a soda caústica, o produto é removido com maior facilidade durante a etapa de enxágue",
+          "Eficiente a frio e a quente",
+          "Previne incrustações provenientes da dureza da água"
+        ],
+        "diluicoes": [
+          {
+            "uso": "aplicações CIP em cervejarias",
+            "razao": "circular solução de PRIMMAX CIP DTX a concentração entre 1,00 e 5,00% por 30 a 50 minutos, à temperatura até 80 °C"
+          },
+          {
+            "uso": "aplicações CIP em linhas quentes",
+            "razao": "circular a solução do PRIMMAX CIP DTX à concentração entre 4,0 e 6,0% por 20 a 30 minutos, à temperatura até 80°C"
+          },
+          {
+            "uso": "aplicações CIP em geral",
+            "razao": "circular solução de PRIMMAX CIP DTX a concentração entre 0,4 a 2,0% por 30 a 50 minutos, à temperatura até 80 °C"
+          },
+          {
+            "uso": "desengraxe de carretilhas",
+            "razao": "preparar solução de 2 a 6% preferencialmente a quente até (80°C), imergir as carretilhas"
+          }
+        ]
       }
     },
     {
@@ -485,7 +695,35 @@
           "cor": "Incolor",
           "odor": "Característico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "PRODUTO ÁCIDO PARA HIGIENIZAÇÃO CIP",
+        "descricao": "Produto à base de ácido nítrico para limpeza por circulação (CIP) em Indústrias de Alimentos e Bebidas.",
+        "beneficios": [
+          "Ideal para desincrustação de tanques e tubulações, pelo método CIP",
+          "Altamente eficiente na remoção de sujidades inorgânicas",
+          "Proteção das superfícies por ação fosfatizante",
+          "A espuma desfaz-se muito rapidamente, evitando o acúmulo em tanques, linhas e bombas",
+          "Eficaz na remoção de pedras de leite e incrustações inorgânicas em geral",
+          "Protege as partes tratadas contra ferrugem"
+        ],
+        "diluicoes": [
+          {
+            "uso": "cip em indústrias de bebidas",
+            "razao": "concentrações entre 0,20 e 1,00%"
+          },
+          {
+            "uso": "enxágue ácido",
+            "razao": "concentrações entre 0,40 e 0,80%"
+          },
+          {
+            "uso": "passivação",
+            "razao": "concentração de 10%"
+          },
+          {
+            "uso": "desincrustação cip em indústrias alimentícias em geral",
+            "razao": "solução entre 2,00 e 3,50%"
+          }
+        ]
       }
     },
     {
@@ -519,11 +757,23 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "6,00 ± 0,20",
+          "pH": "6,00 + 0,20",
           "aspecto": "Líquido viscoso",
           "cor": "Marrom escuro",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "CERA",
+        "descricao": "Emulsão levemente ácida para revestimento de frutas citricas.",
+        "beneficios": [
+          "À base de cera de carnaúba / Matéria prima especificada e aprovada para alimentos no Code of Federal Regulations ch. 1 § 184.1978 Food and Drugs Administrations, CAS Reg. N° 008-015-869 USA e Mercado Comum Europeu",
+          "Filme de maior resistência a umidade do ar",
+          "pH adequado para ação do fungicida",
+          "Ação comprovada de retardo no amadurecimento e conservação do peso do fruto",
+          "Forma um filme transparente e brilhante inalterado com o tempo",
+          "Estável em baixas temperaturas. Baixo custo, alto rendimento",
+          "Odor não irritante",
+          "Não contém Morfolina, colofônia ou polietileno"
+        ]
       }
     },
     {
@@ -564,11 +814,32 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,50 ± 0,50",
+          "pH": "12,50 + 0,50",
           "aspecto": "Líquido amarelo transparente",
           "odor": "Característico de Cloro",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "DESINCRUSTANTE ALCALINO PARA INDÚSTRIA ALIMENTÍCIA",
+        "descricao": "Produto para lavagem mecânica de louças, utensílios em geral e Limpeza CIP",
+        "beneficios": [
+          "Produto alcalino clorado concentrado",
+          "Dupla ação: limpeza e alvejamento em uma única etapa",
+          "Indicado para remoção de manchas e lavagem automática de louças, talheres, xícaras, copos, bandejas e utensílios em áreas processadoras de alimentos etc e contetores em Packing House de frutas"
+        ],
+        "diluicoes": [
+          {
+            "uso": "remoção de manchas",
+            "razao": "aplicar solução de 3% a 8% (30 a 80 mL de PRIMMAX CL por litro de solução)"
+          },
+          {
+            "uso": "lavagem de ovos",
+            "razao": "diluir até 1:750 em tanques, aplicar via equipamento de dosagem automática INDEBA; dosagem de 0,10% a 0,30% (1 a 3 mL por litro de solução) a uma temperatura de 55º a 60º"
+          },
+          {
+            "uso": "limpeza CIP",
+            "razao": "aplicar solução de 1% a 5% (de 10 a 50 mL de Primmax CL para cada litro de solução) conforme procedimento padrão de limpeza CIP"
+          }
+        ]
       }
     },
     {
@@ -607,7 +878,25 @@
           "cor": "Amarelado",
           "odor": "Característico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "DECAPANTE ÁCIDO",
+        "beneficios": [
+          "Alto poder de remoção de sujidades inorgânicas, em especial, depósitos de calcário, magnésio e outros óxidos metálicos",
+          "Indicado para desencrustação de máquinas lavadoras em cozinhas profissionais, lavanderias, entre outros",
+          "Protege as partes tratadas contra ferrugem efeito passivador",
+          "Indicado também para desoxidação de carretilhas",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "decapagem interna da máquina de lavar louças",
+            "razao": "3 partes de Primmax DES para cada 100 partes de solução"
+          },
+          {
+            "uso": "desoxidação de carretilhas",
+            "razao": "1 a 5 partes de Primmax DES para até 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -662,7 +951,23 @@
           "cor": "Amarelo translúcido",
           "odor": "Característico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "DETERGENTE DESENGORDURANTE E DESINCRUSTANTE DE ALTA FORMAÇÃO DE ESPUMA",
+        "descricao": "Detergente de alta formação de espuma",
+        "beneficios": [
+          "Alto poder desengordurante e desincrustante",
+          "Ideal para limpeza em indústria de alimentos e bebidas e cozinhas profissionais",
+          "Alta eficiência na remoção de sujidades orgânicas, mesmo em altas diluições",
+          "Alta formação de espuma",
+          "Remove com eficácia incrustações de látex de frutas em instalações de Packing House",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza de incrustações de sujidades orgânicas",
+            "razao": "Preparar solução com 1 parte de Primmax DGA para até 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -730,10 +1035,10 @@
         ],
         "rendimento": "Até 100 litros de solução pronta",
         "caracteristicas": {
-          "pH": "12,0 – 13,0",
-          "aspecto": "Líquido",
-          "cor": "Amarelado",
-          "odor": "Cloro",
+          "pH": "12,00 + 0,25 (1%)",
+          "aspecto": "Líquido Turvo",
+          "cor": "Levemente Amarelado",
+          "odor": "Característico",
           "uso": "Profissional"
         }
       }
@@ -776,12 +1081,34 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,30 ± 0,20",
+          "pH": "12,30 + 0,20",
           "aspecto": "Líquido transparente",
           "cor": "Incolor",
           "odor": "Característico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "DETERGENTE DESINCRUSTANTE ALCALINO",
+        "descricao": "Detergente alcalino para lavagem automática de louças e limpeza CIP",
+        "beneficios": [
+          "Indicado para lavagem automática de pratos, talheres, xícaras, copos, bandejas, tanques, entre outros",
+          "Indicado para limpeza CIP",
+          "Seguro para lavagem de utensílios e louças coloridas",
+          "Remove incrustações orgânicas"
+        ],
+        "diluicoes": [
+          {
+            "uso": "lavagem de louças",
+            "razao": "adicionar de 0,10% a 0,30% (de 1 a 3 mL em 1 L de água) de PRIMMAX DT na água utilizada para lavagem de louças a uma temperatura de 55º a 65º C"
+          },
+          {
+            "uso": "circulação em linhas quentes",
+            "razao": "usar na concentração de até 5,0%"
+          },
+          {
+            "uso": "linhas frias",
+            "razao": "usar de 0,5% até 3,0%"
+          }
+        ]
       }
     },
     {
@@ -814,12 +1141,27 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,25 ± 0,25",
+          "pH": "12,25 + 0,25",
           "aspecto": "Líquido transparente",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "100 mL / 10 litros de solução sanificante"
+        "subtitulo": "DESINFETANTE PARA HORTIFRUTÍCOLAS",
+        "descricao": "DESINFETANTE LÍQUIDO CLORADO",
+        "beneficios": [
+          "Ação bactericida comprovada contra: Enterococcus faecium e Escherichia coli",
+          "Facilidade na dosagem e dispersão do produto na preparação da solução sanificante",
+          "Ideal para dosagem automática no processamento de frutas, verduras e legumes",
+          "Alto rendimento (100mL / 10 Litros de solução sanificante)",
+          "Produto indicado para Sanificação de frutos em Packing House",
+          "Atende a Resolução RDC 77/2001 da ANVISA"
+        ],
+        "diluicoes": [
+          {
+            "uso": "sanificação (desinfecção) de frutas, verduras e legumes",
+            "razao": "solução de 200 ppm de cloro livre (100 mL do produto para 10 litros de água)"
+          }
+        ]
       }
     },
     {
@@ -852,11 +1194,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "5,50 ± 0,50 (sol. 1%)",
-          "aspecto": "Pó branco",
+          "pH": "5,50 ± 0,50",
+          "aspecto": "pó branco",
           "odor": "Característico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "DESINFETANTE PARA HORTIFRUTÍCULA",
+        "descricao": "Desinfetante clorado em pó para hortifrutículas",
+        "beneficios": [
+          "Ação bactericida comprovada contra: Salmonella choleraesuis; Enterococcus faecium e Escherichia coli",
+          "Atende a Resolução RDC 77/2001 da ANVISA",
+          "Evita o amarelamento das folhas devido ao pH próximo ao neutro",
+          "Por ser pó, não escorre e evita manchas na área de aplicação",
+          "Alta estabilidade de cloro ativo"
+        ],
+        "diluicoes": [
+          {
+            "uso": "sanificação de frutas e verduras",
+            "razao": "solução 200ppm de cloro livre (50g, aproximadamente 7 colheres de chá do produto e completar o volume com água em um recipiente com capacidade de 10 litros)"
+          }
+        ]
       }
     },
     {
@@ -892,7 +1249,17 @@
           "aspecto": "Líquido",
           "odor": "Característico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "POLIDOR",
+        "descricao": "Indicado para polimento em superfícies de aço inoxidável.",
+        "beneficios": [
+          "Uniformiza o brilho da superfície de inox",
+          "Evita manchas de contato",
+          "Elevado rendimento",
+          "Aprovado para contato com alimento",
+          "Inodoro",
+          "Óleo grau farmacêutico"
+        ]
       }
     },
     {
@@ -926,13 +1293,32 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "13,20 ± 0,25 (Sol. 1%)",
+          "pH": "13,20 + 0,25 (Sol.1%)",
           "aspecto": "Líquido amarelo",
           "cor": "Amarelo",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Solução com 25 partes de produto para até 100 partes de água (superfícies metálicas sensíveis); 1,5 partes para até 100 partes (limpeza de formas)"
+        "subtitulo": "DETERGENTE DESINCRUSTANTE ALCALINO COM AÇÃO DESCARBONIZANTE",
+        "descricao": "LIMPEZA PESADA DE PANELAS, ASSADEIRAS, FORNOS, FOGÕES E DEMAIS EQUIPAMENTOS DA ÁREA DE COCÇÃO EM INDÚSTRIAS DE A&B E COZINHAS INDUSTRIAIS.",
+        "beneficios": [
+          "Produto Seguro para Metais Sensíveis (SMS)",
+          "Alto poder de remoção de gordura carbonizada em superfícies em geral e de alumínio",
+          "Preserva a vida útil dos equipamentos",
+          "Odor característico e suave",
+          "Ação à frio ou à quente",
+          "Fácil remoção da solução de lavagem"
+        ],
+        "diluicoes": [
+          {
+            "uso": "superfícies metálicas sensíveis (alumínio, cobre e zinco)",
+            "razao": "25 partes de produto para até 100 partes de solução"
+          },
+          {
+            "uso": "limpeza de formas em indústrias de alimentos",
+            "razao": "1,5 partes de produto para até 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -965,13 +1351,33 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,00 ± 1,00 (Sol. 1%)",
+          "pH": "12,00 + 1,00",
           "aspecto": "Líquido viscoso amarelo",
           "cor": "Amarelo",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "5 partes de produto para até 100 partes de solução (chapas/fornos/fogões); 1 parte para até 100 partes (pisos e azulejos)"
+        "subtitulo": "DESINCRUSTANTE ALCALINO - USO INSTITUCIONAL",
+        "beneficios": [
+          "Alto poder de remoção de gordura carbonizada",
+          "Aumenta a vida útil dos equipamentos através da remoção das incrustações",
+          "Não ataca a superfícies dos equipamentos tratados",
+          "Odor característico e suave",
+          "Baixo teor de espuma. Ação a frio",
+          "Fácil remoção da solução de lavagem",
+          "Indicado para remoção profunda de incrustações de látex de manga e mamão em instalações de Packing House",
+          "Indicado também para Indústria de alimentos em geral"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza de chapas, fornos, câmara de defumação, fogões ou grelhas",
+            "razao": "aplicar o produto puro ou preparar solução com 05 partes de produto para até 100 partes de solução, deixar atuar por 5 a 10 min"
+          },
+          {
+            "uso": "limpeza diária de pisos e azulejos de cozinha",
+            "razao": "preparar solução com 1 parte de produto para até 100 partes de solução, conforme o grau de sujidade"
+          }
+        ]
       }
     },
     {
@@ -1003,13 +1409,24 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "5,50 ± 0,50",
+          "pH": "5,50 + 0,50",
           "aspecto": "Líquido",
           "cor": "Amarela",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Concentração de uso de 0,20% a 0,50%, aplicado por gotejamento ou imersão"
+        "subtitulo": "LUBRIFICANTE DE ESTEIRAS PARA EMBALAGENS CARTONADAS E GARRAFAS",
+        "beneficios": [
+          "Produto concentrado",
+          "Indicado para lubrificação de esteiras transportadoras de botijões de gás, garrafas PET, embalagens longa vida, latas, garrafas de vidro dentre outras",
+          "Promove a limpeza das esteiras"
+        ],
+        "diluicoes": [
+          {
+            "uso": "lubrificação de esteiras",
+            "razao": "aplicar por gotejamento ou imersão, na concentração de 0,20% a 0,50%, dependendo da velocidade e material (aço carbono, aço inox, etc.) da esteira"
+          }
+        ]
       }
     },
     {
@@ -1041,11 +1458,30 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "aspecto": "Pó branco",
+          "aspecto": "pó branco",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "0,05% para mamões (500 g por 1.000 L de água); 0,2% para mangas (2 kg por 1.000 L de água)"
+        "subtitulo": "PRODUTO PARA NEUTRALIZAÇÃO, REMOÇÃO DE LÁTEX E LIMPEZA DE MANGAS E MAMÕES.",
+        "beneficios": [
+          "Produto destinado para Indústria Alimentícia / Fruticultura",
+          "Indicado para neutralização de látex e limpeza da casca de mangas e mamões",
+          "Facilita a remoção da caulim da casca das mangas",
+          "Evita redeposição da sujidade na casca do fruto",
+          "Baixa formação de espuma",
+          "Não há necessidade de ação mecânica no processo de lavagem",
+          "Previne a incrustação nos tanques de lavagem, provenientes da dureza da água"
+        ],
+        "diluicoes": [
+          {
+            "uso": "lavagem de mamões",
+            "razao": "Preparar solução a 0,05% de Primmax Mangowash (ou seja, 500 g de produto para cada 1.000 L de água) em tanques de lavagem e imergir os frutos"
+          },
+          {
+            "uso": "lavagem de mangas",
+            "razao": "Preparar solução a 0,2% de Primmax Mangowash (ou seja, 2 kg de produto para cada 1.000 L de água) em tanques de lavagem e imergir os frutos depois de retirado o pedúnculo"
+          }
+        ]
       }
     },
     {
@@ -1082,7 +1518,14 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Uso puro (100%), tempo de contato de 1 minuto, à temperatura ambiente"
+        "rendimento": "Uso puro (100%), tempo de contato de 1 minuto, à temperatura ambiente",
+        "subtitulo": "ÓLEO PROTETIVO",
+        "beneficios": [
+          "Promove proteção das superfícies de aço inox, aço carbono ou ferro fundido de carretilhas, gancheiras ou nórias, através da retirada da água remanescente da superfície",
+          "Protege contra a oxidação causada pela umidade",
+          "Possui alto poder lubrificante",
+          "Fabricado com óleo de soja de grau alimentício"
+        ]
       }
     },
     {
@@ -1115,12 +1558,29 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "10,50 ± 0,50 (1%)",
+          "pH": "10,50 + 0,50",
           "aspecto": "Pó Branco",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Solução a 1% (limpeza geral); solução a 3% (higienização diária em cozinhas/indústrias e desincrustação de pratos)"
+        "subtitulo": "DESINCRUSANTE ALCALINO",
+        "descricao": "DESINCRUSTANTE ALCALINO CLORADO",
+        "beneficios": [
+          "Excelente ação desincrustante",
+          "Promove o alvejamento",
+          "Remove facilmente manchas de amido",
+          "Baixo custo"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza",
+            "razao": "Preparar uma solução a 1,00% (pesar 100 gramas de Primmax PANCLOR, transferir para um recipiente adequado e completar com água fria ou preferencialmente até 40°C até 10 litros)"
+          },
+          {
+            "uso": "higienização diária em cozinhas e indústrias alimentícias e desincrustação de pratos",
+            "razao": "Preparar uma solução a 3,00% (pesar 300 gramas de Primmax PANCLOR, transferir para um recipiente adequado e completar com água fria ou preferencialmente até 40°C até 10 litros)"
+          }
+        ]
       }
     },
     {
@@ -1202,9 +1662,9 @@
         ],
         "rendimento": "Até 100 litros de solução pronta",
         "caracteristicas": {
-          "pH": "12,5 – 13,5",
-          "aspecto": "Líquido",
-          "cor": "Esverdeado",
+          "pH": "9,00 + 0,30 (100%)",
+          "aspecto": "Líquido viscoso opaco",
+          "cor": "Verde",
           "odor": "Característico",
           "uso": "Profissional"
         }
@@ -1240,12 +1700,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "11,50 ± 0,50 (1%)",
+          "pH": "11,50 + 0,50 (1%)",
           "aspecto": "Líquido incolor transparente",
           "cor": "Incolor",
           "uso": "Profissional"
         },
-        "rendimento": "10 partes de produto para até 100 partes de solução, deixar atuar por 10 minutos"
+        "subtitulo": "REMOVEDOR",
+        "descricao": "Removedor de cera de carnaúba",
+        "beneficios": [
+          "Ação rápida, de 5 a 10 minutos",
+          "Evita a re-deposição da cera após remoção",
+          "Baixo custo",
+          "Odor não irritante. Não contém amoníaco",
+          "Indicado para limpeza em Packing Houses (Fruticultura) e Indústria Alimentícia"
+        ],
+        "diluicoes": [
+          {
+            "uso": "remoção de cera de carnaúba",
+            "razao": "10 partes de Primmax REWAX para até 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -1294,7 +1768,45 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "0,15-0,30% p/v (CIP, 20-30 min); 0,20% p/v (imersão, 10-15 min); 0,05% p/v (pulverização, 10-15 min); 0,5% (superfícies com alto nível de contaminação); 80-200 ppm (ovos e carcaças); 0,067% (frutas, verduras e mamadeiras)"
+        "subtitulo": "DESINFETANTE PARA INDÚSTRIA ALIMENTÍCIA",
+        "beneficios": [
+          "Ação bactericida comprovoda para: Listeria Monocytogenes, Pseudomonas aeruginosa, Staphylococcus aureus, Salmonella enterica subsp. enterica serovar choleraesuis e Escherichia Coli",
+          "Ação bactericida comprovada para desinfecção de hortifrutícolas: Enterococcus faecium e Escherichia Coli",
+          "Atende a resolução RDC 774/2023 da ANVISA",
+          "Promove alvejamento das superfícies removendo manchas ocasionadas por resíduos e pigmentos de alimentos",
+          "Seguro para efluentes uma vez que decompõe-se em água liberando oxigênio e ácido acético",
+          "Eficaz em temperatura ambiente"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção por circulação (cip)",
+            "razao": "concentração entre 0,15 e 0,30% (p/v), por 20 a 30 minutos em temperatura ambiente"
+          },
+          {
+            "uso": "desinfecção por imersão",
+            "razao": "concentração de 0,20% (p/v), por 10 a 15 minutos em temperatura ambiente"
+          },
+          {
+            "uso": "desinfecção por pulverização",
+            "razao": "concentração de 0,05% (p/v), por 10 a 15 minutos em temperatura ambiente"
+          },
+          {
+            "uso": "desinfecção de superfícies com alto nível de contaminação",
+            "razao": "solução 0,5% (diluir 50 mL do produto e completar o volume com água em um recipiente de capacidade de 10 litros)"
+          },
+          {
+            "uso": "controle de microrganismos na lavagem de ovos, carcaças e/ou partes de animais de açougue, peixes e crustáceos",
+            "razao": "soluções nas concentrações de 80 a 200 ppm"
+          },
+          {
+            "uso": "sanificação de frutas, verduras e legumes",
+            "razao": "solução de 0,067% (6,7 mL do produto e completar o volume com água em um recipiente com capacidade para 10 litros) por 10 minutos"
+          },
+          {
+            "uso": "mamadeiras, bicos e chupetas",
+            "razao": "solução com concentração 0,067% durante 15 minutos"
+          }
+        ]
       }
     },
     {
@@ -1329,13 +1841,43 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,50 ± 0,50 (100%)",
+          "pH": "12,50 + 0,50",
           "aspecto": "Líquido transparente",
           "cor": "Amarelo claro",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "0,12-0,25% p/v (manutenção diária, mínimo 10 min); 0,20-0,35% p/v a 45°C (fôrmas de chocolate); diluição 1:750 (limpeza de ovos, via dosagem automática); 1% p/v (superfícies contaminadas)"
+        "subtitulo": "DESINFETANTE PARA INDÚSTRIA ALIMENTÍCIA",
+        "descricao": "Desinfetante líquido clorado para indústria alimentícia.",
+        "beneficios": [
+          "Ação biocida, comprovada contra Staphylococcus aureus, Salmonella choleraesuis e Echerichia Coli",
+          "Desinfetante para Fruticultura, Cozinhas Industriais, Indústria Alimentícia e também pelo método CIP",
+          "Facilidade na dosagem e dispersão do produto na preparação da solução sanificante",
+          "O cloro ativo presente no produto, promove alvejamento das superfícies removendo manchas ocasionadas por resíduos e pigmentos de alimentos",
+          "Indicado para processos de cloração de água, exceto para tratamento de água potavél"
+        ],
+        "diluicoes": [
+          {
+            "uso": "preparo da solução a 200 ppm de cloro livre",
+            "razao": "20 mL de Primmax Sanclor para 10 litros de solução"
+          },
+          {
+            "uso": "manutenção diária da desinfecção",
+            "razao": "concentração de 0,12 - 0,25% p/v"
+          },
+          {
+            "uso": "limpeza de fôrmas de chocolate",
+            "razao": "concentração de 0,20 - 0,35% p/v"
+          },
+          {
+            "uso": "limpeza de ovos",
+            "razao": "diluir até 1:750"
+          },
+          {
+            "uso": "desinfecção de superfícies contaminadas",
+            "razao": "concentração de 1% p/v"
+          }
+        ]
       }
     },
     {
@@ -1374,7 +1916,16 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Aplicado puro, à temperatura ambiente, contato de 10 minutos, sem necessidade de enxágue final"
+        "rendimento": "Aplicado puro, à temperatura ambiente, contato de 10 minutos, sem necessidade de enxágue final",
+        "subtitulo": "DESINFETANTE A SECO PARA INDÚSTRIA ALIMENTÍCIA",
+        "descricao": "Produto para desinfecção de superfícies em geral em estabelecimentos de manipulação e produção de alimentos.",
+        "beneficios": [
+          "Desinfetante à base de quaternário de 5ª geração. Este ativo além de um excelente poder bactericida, possui a característica de ser facilmente biodegradável",
+          "Ação biocida comprovada contra: Escherichia coli, Salmonella choleraesuis, Sthaphylococcus aureus, Pseudomonas e Listeria monocytogenes",
+          "Seguro para uso em superfícies que tenham contato direto com alimentos",
+          "Produto de secagem rápida. Ideal para processos e áreas sensíveis à umidade",
+          "Produto indicado para superfícies com baixa temperatura (até -10ºC) como: geladeiras, câmaras frias, câmaras de congelados, entre outros"
+        ]
       }
     },
     {
@@ -1413,7 +1964,21 @@
           "odor": "Picante",
           "uso": "Profissional"
         },
-        "rendimento": "0,1 a 0,5% (10-30 min, até 45°C); 1% para desinfecção rápida (15 min); 0,5-1% para clareamento de buchos e vísceras (60-80°C)"
+        "descricao": "É um produto ácido indicado para limpeza CIP (por circulação) e aspersão na indústria alimentícia.",
+        "diluicoes": [
+          {
+            "uso": "desinfecção geral",
+            "razao": "concentração de 0,1 a 0,5%, tempo de contato de 10 a 30 minutos, temperatura máxima de 45°C"
+          },
+          {
+            "uso": "desinfecção rápida",
+            "razao": "concentração de 1% por 15 minutos"
+          },
+          {
+            "uso": "clareamento de buchos e vísceras",
+            "razao": "entre 0,5 e 1% de concentração no intervalo de temperatura de 60 a 80°C"
+          }
+        ]
       }
     },
     {
@@ -1452,7 +2017,13 @@
           "odor": "Picante",
           "uso": "Profissional"
         },
-        "rendimento": "Conforme manual da máquina de envase asséptico; 1-2% para clareamento de buchos e vísceras (60-80°C)"
+        "descricao": "É um produto ácido indicado para limpeza cip em diversas etapas do processamento de alimentos e nas máquinas de envase asséptico (Longa vida) além de aspersão na indústria alimentícia.",
+        "diluicoes": [
+          {
+            "uso": "clareamento de buchos e vísceras",
+            "razao": "entre 1 e 2% de concentração no intervalo de temperatura de 60 a 80°C"
+          }
+        ]
       }
     },
     {
@@ -1486,13 +2057,47 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "10,25 ± 0,25 (100%)",
+          "pH": "10,25 ± 0,25",
           "aspecto": "Líquido transparente",
           "cor": "Violeta",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "0,4% p/v (manutenção diária, 10-15 min); 0,5-1% p/v (botas em pedilúvios, 10 min); 5-10% p/v (ralos e calhas, semanal); 0,8-1% (imersão em indústrias de bebidas, 15 min); 2% (superfícies contaminadas, 10 min); 1% (carrinhos, cestinhas e caixas, 10 min)"
+        "subtitulo": "DESINFETANTE PARA INDÚSTRIA ALIMENTÍCIA",
+        "descricao": "Produto para desinfecção de superfícies em geral em estabelecimentos de manipulação e produção de alimentos.",
+        "beneficios": [
+          "Desinfetante concentrado à base de quaternário de 5ª geração. Este ativo além de um excelente poder bactericida, possui a caracteristica de ser facilmente biodegradável.",
+          "Ação bactericida comprovada contra: Escherichia coli, Salmonella choleraesuis e Sthaphylococcus aureus (1:250), Pseudomonas (1:100) e Listeria monocytogenes (1:250).",
+          "Desinfetante indicado para Indústria Alimentícia, Fruticultura e Cozinhas Industriais",
+          "Indicado para desinfecção de botas através da aplicação de sua solução em pedilúvios",
+          "Elimina odores causados por microorganismos proliferados e alimentos deteriorados em ralos, calhas e no ambiente"
+        ],
+        "diluicoes": [
+          {
+            "uso": "manutenção diária da desinfecção",
+            "razao": "solução de 0,4% p/v (1:250)"
+          },
+          {
+            "uso": "desinfecção de botas em pedilúvios",
+            "razao": "solução de 0,5 a 1,0% p/v"
+          },
+          {
+            "uso": "ralos e calhas",
+            "razao": "solução de 5 a 10% p/v"
+          },
+          {
+            "uso": "banho de imersão em indústrias de bebidas",
+            "razao": "solução de 0,8 a 1%"
+          },
+          {
+            "uso": "desinfecção de superfícies contaminadas",
+            "razao": "concentração de 2%"
+          },
+          {
+            "uso": "equipamentos como carrinhos e cestinhas de supermercados e caixas de atendimento",
+            "razao": "concentração de 1%"
+          }
+        ]
       }
     },
     {
@@ -1536,7 +2141,19 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "0,04% a 0,07% (4 a 7 mL em 10 L de água) na água de enxágue a 80-90°C"
+        "subtitulo": "SECANTE ABRILHANTADOR - USO INSTITUCIONAL",
+        "beneficios": [
+          "Proporciona secagem rápida às louças e talheres na lavagem automática",
+          "Evita a formação de gotas e manchas amarronzadas na lavagem automática",
+          "Confere maior brilho aos itens lavados automaticamente",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "água de enxágue",
+            "razao": "adicionar de 0,04% a 0,07% (de 4 a 7 mL em 10 L de água) de PRIMMAX SEC na água de enxágue a uma temperatura de 80º a 90º"
+          }
+        ]
       }
     },
     {
@@ -1577,12 +2194,34 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,00 ± 0,50 (Sol. 1%)",
+          "pH": "7,25 ± 0,25 (100%); 7,00 ± 0,50 (Sol. 1%)",
           "aspecto": "Líquido Viscoso",
           "cor": "Azul",
           "uso": "Profissional"
         },
-        "rendimento": "1 parte para até 140 partes de solução (imersão de louças e equipamentos); 1 parte para até 50 partes (aplicação direta)"
+        "subtitulo": "DETERGENTE DE USO GERAL - USO INSTITUCIONAL",
+        "beneficios": [
+          "Produto multifuncional que pode ser utilizado para lavagem manual de panelas, talheres, pratos, paredes, pisos, equipamentos, bandejas, veículos, vidrarias, entre outros",
+          "Eficiente na remoção de sujidades orgânicas, em especial gorduras",
+          "Elevada formação de espuma",
+          "pH neutro",
+          "Não agride a superfície de equipamentos tratados",
+          "Seguro para limpeza de metais sensíveis (aluminio, cobre e zinco)"
+        ],
+        "diluicoes": [
+          {
+            "uso": "lavagem por imersão das louças",
+            "razao": "1 parte de Primmax Sol Plus para até 140 partes de solução"
+          },
+          {
+            "uso": "lavagem por aplicação direta",
+            "razao": "1 parte de Primmax Sol Plus para até 50 partes de solução"
+          },
+          {
+            "uso": "lavagem de equipamentos em geral",
+            "razao": "1 parte de PRIMMAX SOL PLUS para até 140 partes"
+          }
+        ]
       }
     },
     {
@@ -1616,12 +2255,29 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "11,00 ± 0,40 (sol. 1%)",
+          "pH": "11,00 ± 0,40",
           "aspecto": "Pó",
           "cor": "Branca",
           "uso": "Profissional"
         },
-        "rendimento": "Limpeza leve: 1 parte de produto para até 100 partes de solução. Limpeza pesada: 20 partes de produto para até 100 partes de solução."
+        "subtitulo": "DETERGENTE PARA LAVAGEM DE SUPERFÍCIES FRIAS",
+        "beneficios": [
+          "Produto indicado para limpeza de superfícies frias, como câmaras frigoríficas, túneis de congelamento, ultra congeladores, reatores de produção de sorvetes, moldes de picolés, entre outros",
+          "Elimina a necessidade de aumento de temperatura das superfícies frias",
+          "Alta eficiência na remoção de sujidades orgânicas, mesmo em altas diluições",
+          "Seguro para limpeza de metais sensíveis (alumínio, cobre e zinco)",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza leve",
+            "razao": "1 parte de Primmax Subzero para até 100 partes de solução"
+          },
+          {
+            "uso": "limpeza pesada",
+            "razao": "20 partes de Primmax Subzero para até 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -1655,12 +2311,29 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,00 ± 0,25 (100%)",
+          "pH": "7,00 + 0,25",
           "aspecto": "Líquido",
           "cor": "Levemente amarelado",
           "odor": "Sem cheiro"
         },
-        "rendimento": "Como dispersante de sólidos: 1 a 2 litros de produto para 50kg de sólidos em 200L de água. Como dispersante de solução oleosa: 1 parte de produto para até 200 partes de solução."
+        "subtitulo": "DISPERSANTE DE SÓLIDOS E ÓLEOS PARA AGRICULTURA",
+        "beneficios": [
+          "Veículo espalhante usado na pulverização de sólidos utilizados para proteção de hortifruti contra a ação solar",
+          "Aditivo dispersante de sólidos, soluções oleosas e fungicidas em lavouras",
+          "Promove maior aderência, cobertura e fácil remoção no momento da lavagem dos frutos e vegetais para processo de embalagem; principalmente quando empregado detergente Primmax Mangowash",
+          "pH neutro",
+          "Incolor e sem cheiro"
+        ],
+        "diluicoes": [
+          {
+            "uso": "dispersante de sólidos",
+            "razao": "para 50kg de sólidos, fazer solução de 1 a 2 litros de Primmax Suncare ADT em 200L de água"
+          },
+          {
+            "uso": "dispersante solução oleosa",
+            "razao": "diluir 01 parte do produto para até 200 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -1693,13 +2366,24 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "11,0 ± 1,0 (solução 1%)",
-          "aspecto": "Pó",
+          "pH": "11,0 + 1,0",
+          "aspecto": "Pó Branco",
           "cor": "Branco",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Diluição 3% (300 g do produto para 10 L de água)"
+        "subtitulo": "HIGIENIZADOR HOSPITALAR PARA SUPERFÍCIES FIXAS",
+        "beneficios": [
+          "Ação 4 em 1: Limpa, desencrusta, desinfectar e alveja em uma única operação",
+          "Ação bactericida comprovada contra: Staphylococcus aureus; Escherichia coli; Pseudomonas aeruginosa; Salmonella choleraesuis",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza e desinfecção de superfícies fixas em áreas hospitalares",
+            "razao": "solução 3% (medir 300g do produto e completar o volume com água em um recipiente de capacidade de 10 litros)"
+          }
+        ]
       }
     },
     {
@@ -1738,12 +2422,19 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "6,50 ± 0,50 (100%)",
-          "aspecto": "Gel",
+          "pH": "6,50 ± 0,50",
+          "aspecto": "Gel Incolor",
           "cor": "Incolor",
           "odor": "Alcoólico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "GEL ANTISSÉPTICO PARA AS MÃOS",
+        "descricao": "Eficiência na ação antisséptica frente a Salmonella entérica e Staphylococcus aureus.",
+        "beneficios": [
+          "Eficiência comprovada na ação antisséptica frente a salmonella entérica e staphylococcus aureus",
+          "Secagem rapida no contato com as mãos",
+          "Possui pH neutro"
+        ]
       }
     },
     {
@@ -1776,13 +2467,31 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "10,50 ± 0,50 (100%)",
-          "aspecto": "Líquido Transparente",
+          "pH": "10,50 ± 0,50",
+          "aspecto": "Líquido Azul Transparente",
           "cor": "Azul",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Diluições de 1:130 a 1:150"
+        "subtitulo": "DESINFETANTE HOSPITALAR PARA SUPERFÍCIES FIXAS E ARTIGOS NÃO CRÍTICOS - ASSISTÊNCIA A SAÚDE",
+        "descricao": "DESINFETANTE CONCENTRADO - À BASE DE QUATERNÁRIO DE 5ª GERAÇÃO",
+        "beneficios": [
+          "À base de Quaternário de Amônio de 5ª Geração",
+          "Possui um perfeito equilíbrio entre agentes detergentes e germicidas que garante a limpeza da superfície e eliminação de microorganismos",
+          "Ação comprovada contra: Pseudomonas aeruginosa, Salmonella choleraesuis, Staphylococcus aureus, Escherichia coli, Acinetobacter baumanni e Klebsiella pneumoniae carbapenemase",
+          "Não irritante para os olhos e pele: possui laudos de irritabilidade dérmica e ocular",
+          "Contém tensoativos biodegrádaveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "ação comprovada contra Pseudomonas, Salmonella choleraesuis, Staphylococcus aureus, Escherichia coli e Acinetobacter baumanni",
+            "razao": "1:150"
+          },
+          {
+            "uso": "ação comprovada contra Klebsiella pneumoniae Carbapenemase",
+            "razao": "1:130"
+          }
+        ]
       }
     },
     {
@@ -1815,13 +2524,32 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "0,5 - 1,1 (100%)",
-          "aspecto": "Líquido límpido",
+          "pH": "0,5 - 1,1",
+          "aspecto": "Líquido límpido incolor",
           "cor": "Incolor",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Diluições de 1:16 a 1,5:100 conforme uso"
+        "subtitulo": "DESINFETANTE HOSPITALAR PARA SUPERFÍCIES FIXAS E ARTIGOS NÃO CRÍTICOS",
+        "beneficios": [
+          "A exclusiva tecnologia HPH (High Performance Hygiene) proporciona uma higienização 3 em 1: Excelente poder de limpeza, ação alvejante em manchas impregnadas e desinfecção de superfícies",
+          "Ação comprovada contra: Pseudomonas aeruginosa, Staphylococcus aureus, Salmonella choleraesuis, Escherichia coli, Klebsiela pneumonae carbapenemase, Listeria monocytogenes e Clostridium difficile",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção de superfícies fixas",
+            "razao": "1,5:100 (1,5 litros do produto para 98,5 litros de água)"
+          },
+          {
+            "uso": "desinfecção de áreas de isolamento colonizadas com Clostridium difficile",
+            "razao": "1:16 (ou 6,25 L para 93,75L de água)"
+          },
+          {
+            "uso": "desinfecção de artigos não críticos",
+            "razao": "1,5:100 (1,5L para 98,5 L de água)"
+          }
+        ]
       }
     },
     {
@@ -1854,13 +2582,38 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "0,5 - 1,1 (100%)",
+          "pH": "0,5 - 1,1",
           "aspecto": "Líquido Translúcido",
           "cor": "Levemente amarelado",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Diluições de 0,5% a 6,25% conforme uso"
+        "subtitulo": "DESINFETANTE DE NÍVEL INTERMEDIÁRIO COM AÇÃO DE LIMPEZA",
+        "beneficios": [
+          "Indicado para desinfecção de superfícies fixas em áreas críticas, semicríticas e não críticas da área da saúde (hospitais, laboratórios de análises clínicas, clínicas médicas, estéticas e odontológicas)",
+          "Proporciona uma higienização 3 em 1: Excelente poder de limpeza, ação alvejante em manchas impregnadas e desinfecção de superficies",
+          "Promove a higienização (limpeza e desinfecção) em uma única etapa, otimizando o processo",
+          "Na diluição de nível intermediário, o LETAH OXY HPC é indicado para artigos de inaloterapia e assistência ventilatória",
+          "Remove de maneira rápida e eficiente as manchas sensíveis à oxidação, a exemplo de sangue",
+          "Seguro para superfícies coloridas",
+          "Eficaz na remoção de maus odores",
+          "Ação bactericida comprovada contra: Staphylococcus aureus; Salmonella enterica subsp. enterica serovar choleraesuis; Escherichia coli; Pseudomonas aeruginosa; Acinetobacter baumannii; Enterococcus faecalis VRE; Candida auris; Staphylococcus aureus MRS; Trichophyton mentagrophytes (Trichophyton interdigitale priestley); Candida albicans; Mycobacterium smegmatis; Mycobacterium bovis (BCG); Clostridium difficile; Klebsiella pneumoniae; Listeria monocytogenes",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção de nível intermediário de artigos de inaloterapia e assistência ventilatória",
+            "razao": "imergir os artigos na solução 6,25%, deixando em contato por 10 minutos"
+          },
+          {
+            "uso": "limpeza e desinfecção de superfícies fixas em uma única etapa e desinfecção de artigos não críticos",
+            "razao": "aplicar solução a 1,5%, deixando em contato por 10 minutos"
+          },
+          {
+            "uso": "limpeza pesada de pisos e superfícies em geral",
+            "razao": "aplicar solução a 0,5%"
+          }
+        ]
       }
     },
     {
@@ -1893,13 +2646,25 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "11,0 - 11,4 (solução 1%)",
+          "pH": "11,0 - 11,4",
           "aspecto": "Líquido transparente",
           "cor": "Incolor",
-          "odor": "Característico",
+          "odor": "Característtico",
           "uso": "Profissional"
         },
-        "rendimento": "Diluição 0,5% (100 mL do produto para 20 L de solução)"
+        "subtitulo": "DESINCRUSTANTE PARA ARTIGOS CIRÚRGICOS",
+        "beneficios": [
+          "Promove a desagregação das sujidades e matérias orgânicas presentes em artigos cirúrgicos",
+          "Indicado também para desincrustação de artigos laboratoriais, em cozinhas profissionais e demais utencílios em geral",
+          "Isento de Fosfato",
+          "Possui tensoativo biodegradavel"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza prévia do instrumental médico-cirúrgico e odontológico, laboratorial, talheres e utensílios de aço inoxidável",
+            "razao": "diluir o produto na concentração de 0,5%, ou seja, colocar 100 mL de LETAH PLUS e completar com água para 20 litros de solução"
+          }
+        ]
       }
     },
     {
@@ -1931,12 +2696,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,5 ± 0,5 (100%)",
+          "pH": "12,5 + 0,5",
           "aspecto": "Líquido transparente",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Uso puro em superfícies fixas; diluição de 50 mL/L para hemodiálise"
+        "subtitulo": "DESINFETANTE HOSPITALAR CLORADO PARA SUPERFÍCIES FIXAS",
+        "beneficios": [
+          "Eficiente contra fungos, bactérias Gram positivas e Gram negativas, incluindo Pseudomonas",
+          "Elimina mau cheiro em área como banheiros e espaços onde há decomposição orgânica"
+        ],
+        "diluicoes": [
+          {
+            "uso": "superfícies fixas",
+            "razao": "500 mL do produto completando com água para 1 litro de solução."
+          },
+          {
+            "uso": "hemodiálise",
+            "razao": "50 mL do produto completando com água para 1 litro de solução."
+          }
+        ]
       }
     },
     {
@@ -1968,13 +2747,23 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,0 - 13,0 (100%)",
+          "pH": "12,0 - 13,0",
           "aspecto": "Líquido transparente",
           "cor": "Incolor",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Uso puro em superfícies fixas; diluição de 100 mL/L para hemodiálise"
+        "subtitulo": "DESINFETANTE HOSPITALAR CLORADO PARA SUPERFÍCIES FIXAS",
+        "beneficios": [
+          "Eficiente contra fungos, bactérias Gram positivas e Gram negativas, incluindo Pseudomonas",
+          "Elimina mau cheiro em área como banheiros e espaços onde há decomposição orgânica"
+        ],
+        "diluicoes": [
+          {
+            "uso": "hemodiálise",
+            "razao": "100 mL do produto completando com água para 1 litro de solução."
+          }
+        ]
       }
     },
     {
@@ -1994,7 +2783,7 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/letahzyme-multienzimatico-5e.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -2008,12 +2797,29 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,0 ± 1,0 (100%)",
+          "pH": "7,0 ± 1,0",
           "aspecto": "Líquido transparente",
           "cor": "Incolor",
           "uso": "Profissional"
         },
-        "rendimento": "Diluição de uso 1 mL/L de água"
+        "subtitulo": "DETERGENTE ENZIMÁTICO",
+        "beneficios": [
+          "Limpeza de artigos médicos críticos e não críticos e endoscópio",
+          "Desenvolvido para o uso em todas as lavadoras de endoscópio, lavadoras ultrassônicas e para limpeza manual",
+          "Produto super concentrado: diluição de uso de 1ml/L",
+          "Detergente contém um amplo blend enzimático que potencializa a sua eficácia",
+          "Produto não corrosivo e sem formação de espuma"
+        ],
+        "diluicoes": [
+          {
+            "uso": "uso manual",
+            "razao": "1mL do LETAHZYME MULTIENZIMÁTICO 5E por 1L de água"
+          },
+          {
+            "uso": "equipamento automático",
+            "razao": "1mL do LETAHZYME MULTIENZIMÁTICO 5E por 1L de água"
+          }
+        ]
       }
     },
     {
@@ -2047,12 +2853,21 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7 ± 0,5",
+          "pH": "7 + 0,5",
           "aspecto": "Viscoso",
           "cor": "Rosa perolado",
           "odor": "Característico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "SABONETE PEROLIZADO ANTI-SÉPTICO PARA MÃOS",
+        "beneficios": [
+          "Sabonete anti-séptico com alto poder de higienização",
+          "Ação anti-séptica comprovada contra os microorganismos Staphylococcus aureus, Salmonella choleraesuis",
+          "Contém agentes emolientes que evitam o ressecamento da pele",
+          "Forma agradável espuma cremosa durante a lavagem",
+          "Possui pH neutro",
+          "Possui tensoativos biodegradaveis"
+        ]
       }
     },
     {
@@ -2098,11 +2913,19 @@
       "ficha": {
         "caracteristicas": {
           "pH": "6,5 ± 0,5",
-          "aspecto": "Líquido viscoso perolado",
+          "aspecto": "Líquido viscoso Perolado",
           "cor": "Verde e Branco",
           "odor": "Erva-doce e sem essência",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "SABONETE PEROLIZADO PARA MÃOS",
+        "beneficios": [
+          "Sabonete perolizado com alto poder de limpeza",
+          "Possui pH neutro",
+          "Disponivel nas versões erva-doce e sem essência",
+          "Contém agentes emolientes que evitam o ressecamento da pele",
+          "Possui tensoativos biodegradaveis"
+        ]
       }
     },
     {
@@ -2148,7 +2971,15 @@
           "cor": "Amarelo transparente",
           "odor": "Neutro",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "SABONETE DESENGRAXANTE PARA MÃOS",
+        "beneficios": [
+          "Sabonete com alto poder desengraxante",
+          "Isento de solventes orgânicos",
+          "Contém agentes emolientes que evitam o ressecamento da pele",
+          "Possui aroma neutro",
+          "Contém tensoativos biodegradáveis"
+        ]
       }
     },
     {
@@ -2188,7 +3019,18 @@
           "odor": "Frutal",
           "uso": "Profissional"
         },
-        "rendimento": "Diluição de 10% (100 mL para 1 litro de solução)"
+        "subtitulo": "SABONETE SUPER CONCENTRADO",
+        "beneficios": [
+          "Sabonete super concentrado para ser utilizado em diluição 1:10",
+          "Possui agradável perfume floral",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "higienização das mãos",
+            "razao": "diluição de 10% (100 mL de Sabonete Indeba C completando com água para 1 litro de solução)"
+          }
+        ]
       }
     },
     {
@@ -2220,13 +3062,27 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "8,0 ± 1,0 (sol. aq. 1%)",
+          "pH": "8,0 ± 1,0",
           "aspecto": "Pó",
           "cor": "Branca",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Alvejamento: 1 a 4 g/Kg, nível de água baixo, temperatura ambiente até 50°C, 10' a 15'."
+        "subtitulo": "ALVEJANTE CLORADO, TAMBÉM INDICADO PARA OXIDAÇÃO DE MANCHAS EM TECIDOS.",
+        "beneficios": [
+          "Concentrado em cloro ativo",
+          "Promove alvejamento e remoção de manchas sensíveis a oxidação",
+          "Liberação gradual e controlada de cloro ativo",
+          "Pode ser estocado por tempo prolongado, devido a sua estabilidade",
+          "Age uniformemente sobre os tecidos",
+          "Alto poder de remoção de manchas"
+        ],
+        "diluicoes": [
+          {
+            "uso": "alvejamento",
+            "razao": "1 a 4 g/Kg"
+          }
+        ]
       }
     },
     {
@@ -2258,13 +3114,27 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "8,0 ± 1,0 (sol. aq. 1%)",
+          "pH": "8,0 ± 1,0",
           "aspecto": "Pó",
           "cor": "Branca",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Alvejamento: 1 a 4 g/Kg, nível de água baixo, temperatura ambiente até 50°C, 10' a 15'."
+        "subtitulo": "ALVEJANTE CLORADO, TAMBÉM INDICADO PARA OXIDAÇÃO DE MANCHAS EM TECIDOS.",
+        "beneficios": [
+          "Concentrado em cloro ativo",
+          "Promove alvejamento e remoção de manchas sensíveis a oxidação",
+          "Liberação gradual e controlada de cloro ativo",
+          "Pode ser estocado por tempo prolongado, devido a sua estabilidade",
+          "Age uniformemente sobre os tecidos",
+          "Alto poder de remoção de manchas"
+        ],
+        "diluicoes": [
+          {
+            "uso": "alvejamento",
+            "razao": "1 a 4 g/Kg"
+          }
+        ]
       }
     },
     {
@@ -2303,7 +3173,19 @@
           "aspecto": "Pó branco",
           "uso": "Profissional"
         },
-        "rendimento": "Tratamento/remoção de manchas: solução 1% a 2% v/v, ambiente até 50°C, 5 a 24 horas."
+        "subtitulo": "ALVEJANTE REDUTOR",
+        "beneficios": [
+          "Eficaz na remoção de manchas sensíveis à redução",
+          "Recuperação do grau de brancura em tecidos acinzentados",
+          "Eficaz na remoção de manchas amareladas decorrente do alto tempo do tecido guardado",
+          "Seguro para utilização em fibras naturais ou sintéticas"
+        ],
+        "diluicoes": [
+          {
+            "uso": "tratamento / remoção de manchas",
+            "razao": "Solução 1% a 2% v/v"
+          }
+        ]
       }
     },
     {
@@ -2342,7 +3224,19 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Tratamento com molho: 1 a 2% v/v, 1 a 4 horas, ambiente; Aplicação direta: puro, 5 minutos, ambiente."
+        "subtitulo": "REMOVEDOR DE MANCHAS DE FERRUGEM E DESINCRUSTANTE ÁCIDO",
+        "beneficios": [
+          "Ação rápida para remoção de manchas de ferrugem",
+          "Eficaz na remoção de manchas sensíveis à redução",
+          "Remove incrustações orgânicas dos tecidos",
+          "Não apresenta cheiro forte"
+        ],
+        "diluicoes": [
+          {
+            "uso": "tratamento com molho",
+            "razao": "1 a 2% v/v"
+          }
+        ]
       }
     },
     {
@@ -2374,13 +3268,28 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "3,5 ± 0,5 (1%)",
+          "pH": "3,5 ± 0,5",
           "aspecto": "Pó",
           "cor": "Branca",
           "odor": "Característico",
           "uso": "Institucional"
         },
-        "rendimento": "Acidulação: 0,5 a 1,5 g/Kg, nível de água baixo, temperatura ambiente, 3' a 5'."
+        "subtitulo": "ACIDULANTE NEUTRALIZADOR DE RESÍDUOS ALCALINOS",
+        "beneficios": [
+          "Devolve a neutralidade dos tecidos",
+          "Remove resíduos de agentes oxidantes evitando o amarelamento das roupas",
+          "Diminui o número de enxágues finais",
+          "Remove manchas sensíveis a redução",
+          "Preserva a vida útil dos tecidos",
+          "Evita o amarelamento das roupas",
+          "Indicado para lavanderias hospitalares, hoteleiras, comerciais e industriais"
+        ],
+        "diluicoes": [
+          {
+            "uso": "acidulação",
+            "razao": "0,5 a 1,5 g/Kg"
+          }
+        ]
       }
     },
     {
@@ -2417,7 +3326,15 @@
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Pré-lavagem e lavagem: 1 a 7 g/kg, nível de água baixo, 10' a 15'."
+        "rendimento": "Pré-lavagem e lavagem: 1 a 7 g/kg, nível de água baixo, 10' a 15'.",
+        "subtitulo": "DETERGENTE EM PÓ PARA LAVAGEM DE ROUPAS",
+        "beneficios": [
+          "Extremamente eficiente para lavagem de roupas de poliester e algodão",
+          "Alto poder dispersante, portanto, eficiente na remoção de sujidades em geral, inclusive, manchas de sangue",
+          "Contém branqueadores ópticos",
+          "Contém Tensoativos Biodegradável",
+          "Boa performance a qualquer temperatura"
+        ]
       }
     },
     {
@@ -2455,7 +3372,26 @@
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Pré-lavagem e lavagem: 1 a 6 g/kg, nível de água baixo, 5' a 10'."
+        "subtitulo": "DETERGENTE CONCENTRADO EM PÓ PARA LAVAGEM DE ROUPAS",
+        "beneficios": [
+          "Produto concentrado",
+          "Adequado para uso em roupas de algodão e poliester",
+          "Possui agentes sequestrantes evitando o amarelamento da roupa, causado pelo ferro presente na água",
+          "Rapidez e eficiência na remoção das sujidades",
+          "Realça a cor das roupas devido a presença de branqueadores ópticos",
+          "Possui tensoativo biodegradável",
+          "Pode ser usado a frio e a quente"
+        ],
+        "diluicoes": [
+          {
+            "uso": "pré-lavagem",
+            "razao": "1 a 6 g/kg"
+          },
+          {
+            "uso": "lavagem",
+            "razao": "1 a 6 g/kg"
+          }
+        ]
       }
     },
     {
@@ -2492,7 +3428,16 @@
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Pré-lavagem e lavagem: 1 a 6 g/kg, nível de água baixo, 5' a 10'."
+        "rendimento": "Pré-lavagem e lavagem: 1 a 6 g/kg, nível de água baixo, 5' a 10'.",
+        "subtitulo": "DETERGENTE CONCENTRADO EM PÓ PARA LAVAGEM DE ROUPAS",
+        "beneficios": [
+          "Adequado para uso em roupas de algodão e poliester",
+          "Possui agentes sequestrantes que evitam o amarelamento da roupa pelo ferro presente na água",
+          "Rapidez e eficiência na remoção das sujidades",
+          "Realça a cor das roupas devido a presença de branqueadores ópticos",
+          "Possui tensoativo biodegradável",
+          "Pode ser usado a frio e a quente"
+        ]
       }
     },
     {
@@ -2530,7 +3475,23 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Pré-lavagem e lavagem: 2 a 10 g/kg, nível de água baixo, 10' a 15'."
+        "subtitulo": "DETERGENTE PARA LAVAGEM DE ROUPAS",
+        "beneficios": [
+          "Mantém a durabilidade das roupas",
+          "Contém branqueadores ópticos",
+          "Contém tensoativo biodegradável",
+          "Rapidez e eficiência na remoção das sujidades"
+        ],
+        "diluicoes": [
+          {
+            "uso": "pré-lavagem",
+            "razao": "2 a 10 g/kg"
+          },
+          {
+            "uso": "lavagem",
+            "razao": "2 a 10 g/kg"
+          }
+        ]
       }
     },
     {
@@ -2562,13 +3523,20 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,25 ± 0,25 (sol. 1%)",
+          "pH": "7,25 + 0,25",
           "aspecto": "Pó",
           "cor": "Branca",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Oxidação: 2 a 9 g/kg, 10' a 15'; Desinfecção: 3,2 g/L, mínimo 10'. Nível de água baixo, ambiente até 50°C."
+        "rendimento": "Oxidação: 2 a 9 g/kg, 10' a 15'; Desinfecção: 3,2 g/L, mínimo 10'. Nível de água baixo, ambiente até 50°C.",
+        "subtitulo": "DESINFETANTE EM PÓ, TAMBÉM INDICADO PARA OXIDAÇÃO DE MANCHAS EM TECIDOS",
+        "beneficios": [
+          "Possui eficiência comprovada contra bactérias",
+          "Libera gradualmente o cloro ativo, evitando o desgaste das fibras",
+          "Promove a remoção de manchas sensíveis a oxidação",
+          "Pode ser estocado por tempo prolongado, devido a sua estabilidade"
+        ]
       }
     },
     {
@@ -2601,13 +3569,20 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "8,1 ± 0,2 (sol. 100%)",
+          "pH": "8,1 + 0,2",
           "aspecto": "Pasta",
           "cor": "Levemente amarelada",
           "odor": "Pinho",
           "uso": "Profissional"
         },
-        "rendimento": "Umectação: 1 a 8 g/kg, nível de água baixo, temperatura ambiente, 5' a 10'."
+        "rendimento": "Umectação: 1 a 8 g/kg, nível de água baixo, temperatura ambiente, 5' a 10'.",
+        "subtitulo": "DETERGENTE UMECTANTE EM PASTA",
+        "beneficios": [
+          "Diminui o número de enxágües iniciais, devido ao seu poder de umectação",
+          "Auxilia na remoção de sujidades proteicas e albuminosas",
+          "Pode ser utilizado em máquina de lavar ou manualmente",
+          "Possui tensoativo biodegradável"
+        ]
       }
     },
     {
@@ -2639,13 +3614,22 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "3,5 ± 0,5 (sol. 1%)",
+          "pH": "3,5 + 0,5",
           "aspecto": "Pó",
           "cor": "Branca",
-          "odor": "Característico",
+          "odor": "Caractéristico",
           "uso": "Profissional"
         },
-        "rendimento": "Acidulação: 1,0 a 1,5 g/kg, nível de água baixo, temperatura ambiente, 3' a 5'."
+        "rendimento": "Acidulação: 1,0 a 1,5 g/kg, nível de água baixo, temperatura ambiente, 3' a 5'.",
+        "subtitulo": "NEUTRALIZADOR",
+        "beneficios": [
+          "Devolve a neutralidade dos tecidos",
+          "Neutraliza o cloro residual evitando o amarelamento da roupa e o desgaste prematuro das fibras",
+          "Reduz o número de enxágue finais",
+          "Remove manchas sensíveis a redução",
+          "Preserva o brilho e a tonalidade das cores",
+          "Possui sequestrante de ferro"
+        ]
       }
     },
     {
@@ -2685,7 +3669,21 @@
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Acabamento: diluição até 1:10, temperatura ambiente."
+        "subtitulo": "PRODUTO PARA ACABAMENTO E PERFUMAÇÃO DE ROUPAS",
+        "beneficios": [
+          "Proporciona um agradável perfume aos tecidos",
+          "Possui essência tradicional e exclusiva Indeba",
+          "Auxilia na passadoria das roupas",
+          "Propicia mais maciez e suavidade ao toque",
+          "Indicado também para tecidos sensíveis e delicados",
+          "Previne o mau odor decorrente de fungos e bactérias"
+        ],
+        "diluicoes": [
+          {
+            "uso": "acabamento",
+            "razao": "Até 1:10"
+          }
+        ]
       }
     },
     {
@@ -2717,13 +3715,20 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "10,5 ± 0,5 (sol. 1%)",
+          "pH": "10,5 + 0,5",
           "aspecto": "Pó",
           "cor": "Branco",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Alvejamento/remoção de manchas: 1 a 7 g/kg, nível de água baixo, 50°C a 90°C, 10' a 15'."
+        "rendimento": "Alvejamento/remoção de manchas: 1 a 7 g/kg, nível de água baixo, 50°C a 90°C, 10' a 15'.",
+        "subtitulo": "ALVEJANTE À BASE OXIGÊNIO ATIVO EM PÓ",
+        "beneficios": [
+          "Remove de maneira rápida e eficiente as manchas sensíveis à oxidação",
+          "Eficaz a partir de 50°C, atingindo a eficiência máxima a 90°C",
+          "Seguro para roupas coloridas e tecidos sensíveis",
+          "Não revela manchas de clorhexidina"
+        ]
       }
     },
     {
@@ -2759,13 +3764,22 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "5,0 ± 0,5",
+          "pH": "5,0 + 0,5",
           "aspecto": "Líquido opaco",
           "cor": "Azul",
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Amaciamento: 0,5 a 3,0 mL/Kg, nível de água baixo, temperatura ambiente, 3' a 5'."
+        "rendimento": "Amaciamento: 0,5 a 3,0 mL/Kg, nível de água baixo, temperatura ambiente, 3' a 5'.",
+        "subtitulo": "AMACIANTE DE TECIDOS E ROUPAS",
+        "beneficios": [
+          "Amacia e perfuma os tecidos",
+          "Contém essência com tecnologia de microcápsulas, que ativa o cheiro através da ficção de roupa seca",
+          "Prolonga a vida útil dos tecidos",
+          "Diminui o número de enxagues finais",
+          "Facilita a centrifugação e a calandragem",
+          "Pode ser usado em máquinas lavadoras ou manualmente"
+        ]
       }
     },
     {
@@ -2807,13 +3821,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "5,00 ± 0,50",
+          "pH": "5,00 + 0,50",
           "aspecto": "Líquido opaco",
           "cor": "Azul",
           "odor": "Karícia",
           "uso": "Profissional"
         },
-        "rendimento": "Amaciamento: 0,5 a 3,0 mL/Kg, nível de água baixo, temperatura ambiente, 3' a 4'."
+        "subtitulo": "AMACIANTE DE TECIDOS E ROUPAS",
+        "beneficios": [
+          "Amacia e suaviza as roupas perfumadas agradavelmente",
+          "Altamente concentrado em perfume",
+          "Contém essência com tecnologia de microcápsulas, que ativa o cheiro através da fricção na roupa seca",
+          "Facilita a passagem de ferro",
+          "Conserva a tonalidade das cores e aumenta a vida útil das roupas"
+        ],
+        "diluicoes": [
+          {
+            "uso": "amaciamento",
+            "razao": "0,5 a 3,0 mL/Kg (nível de água baixo, temperatura ambiente, tempo 3' a 4')"
+          }
+        ]
       }
     },
     {
@@ -2860,7 +3887,21 @@
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Amaciamento: 2,0 a 8,0 mL/kg de roupa, nível baixo, temperatura ambiente, 3 a 5 minutos"
+        "subtitulo": "AMACIANTE DE TECIDOS E ROUPAS",
+        "beneficios": [
+          "Amacia e perfuma os tecidos",
+          "Contém essência com tecnologia de microcápsulas, que ativa o cheiro através da ficção de roupa seca",
+          "Prolonga a vida útil dos tecidos",
+          "Diminui o número de enxagues finais",
+          "Facilita a centrifugação e a calandragem",
+          "Pode ser usado em máquinas lavadoras ou manualmente"
+        ],
+        "diluicoes": [
+          {
+            "uso": "amaciamento",
+            "razao": "2,0 a 8,0 mL/Kg"
+          }
+        ]
       }
     },
     {
@@ -2894,13 +3935,21 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "5,0 ± 0,5",
+          "pH": "5,0 + 0,5",
           "aspecto": "Líquido opaco",
           "cor": "Azul",
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Amaciamento: 2,0 a 8,0 mL/kg de roupa, nível baixo, temperatura ambiente, 3 a 5 minutos"
+        "rendimento": "Amaciamento: 2,0 a 8,0 mL/kg de roupa, nível baixo, temperatura ambiente, 3 a 5 minutos",
+        "subtitulo": "AMACIANTE DE TECIDOS E ROUPAS",
+        "beneficios": [
+          "Amacia e perfuma os tecidos",
+          "Prolonga a vida útil dos tecidos",
+          "Diminui o número de enxagues finais",
+          "Facilita a centrifugação e a calandragem",
+          "Pode ser usado em máquinas lavadoras ou manualmente"
+        ]
       }
     },
     {
@@ -2933,13 +3982,21 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "8,25 ± 0,25 (100%)",
+          "pH": "8,25 + 0,25",
           "aspecto": "Pasta",
           "cor": "Amarelo claro",
           "odor": "Pinho",
           "uso": "Profissional"
         },
-        "rendimento": "Umectação: 1 a 5 g/kg (5 a 12 min); Lavagem: 1 a 5 g/kg (5 a 12 min), nível baixo, temperatura ambiente"
+        "rendimento": "Umectação: 1 a 5 g/kg (5 a 12 min); Lavagem: 1 a 5 g/kg (5 a 12 min), nível baixo, temperatura ambiente",
+        "subtitulo": "DETERGENTE UMECTANTE EM PASTA",
+        "beneficios": [
+          "Diminui o número de enxágües iniciais, devido ao seu alto poder de umectação",
+          "Auxilia na remoção de sujidades protéicas e albuminosas",
+          "Indicado para lavagem de tecidos delicados como seda, lã, entre outros",
+          "Pode ser usado em máquinas de lavar ou manualmente",
+          "Possui tensoativo biodegradável"
+        ]
       }
     },
     {
@@ -2977,7 +4034,19 @@
           "odor": "Pinho",
           "uso": "Profissional"
         },
-        "rendimento": "Umectação: 1 a 5 g/kg, nível baixo, temperatura ambiente, 5 a 10 minutos"
+        "subtitulo": "DETERGENTE UMECTANTE EM PASTA",
+        "beneficios": [
+          "Diminui o número de enxágües iniciais, devido ao seu poder de umectação",
+          "Auxilia na remoção de sujidades protéicas e albuminosas",
+          "Pode ser utilizado em máquina de lavar ou manualmente",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "umectação",
+            "razao": "1 a 5 g/kg"
+          }
+        ]
       }
     },
     {
@@ -3016,7 +4085,14 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Alvejamento: máximo de 5 mL/kg, nível baixo, temperatura ambiente, 10 a 15 minutos"
+        "rendimento": "Alvejamento: máximo de 5 mL/kg, nível baixo, temperatura ambiente, 10 a 15 minutos",
+        "subtitulo": "ALVEJANTE À BASE DE ÁCIDO PERACÉTICO",
+        "beneficios": [
+          "Remove de maneira rápida e eficiente as manchas sensíveis à oxidação",
+          "Seguro para alvejamento de roupas coloridas ou sintéticas",
+          "Não revela manchas de clorhexidina",
+          "Eficaz em temperatura ambiente"
+        ]
       }
     },
     {
@@ -3050,13 +4126,25 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,5 ± 0,5 (100%)",
+          "pH": "12,5 + 0,5",
           "aspecto": "Líquido transparente",
           "cor": "Amarelo claro",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Oxidação de manchas: 4 a 18 mL/kg (10 a 15 min); Desinfecção: 600ppm (10 a 15 min), nível baixo, ambiente/50°C"
+        "subtitulo": "DESINFETANTE E ALVEJANTE PARA ROUPAS HOSPITALARES",
+        "beneficios": [
+          "Ação comprovada contra pseudomonas, staphylococcus aureus e salmonella choleraesuis",
+          "Promove remoção de manchas sensíveis à oxidação",
+          "Eficaz na temperatura ambiente",
+          "Indicado para lavanderias hospitalares, hoteleiras, comerciais e industriais"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção",
+            "razao": "600ppm"
+          }
+        ]
       }
     },
     {
@@ -3096,13 +4184,29 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "5,40 ± 0,20 (1%)",
+          "pH": "5,40 ± 0,20",
           "aspecto": "Líquido",
           "cor": "Levemente amarelado",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Tratamento (molho): 1 a 2% (v/v) por 6 a 12 horas em temperatura ambiente; Lavagem/desengraxe: 0,5 a 2,0 mL/kg, nível baixo, 5 a 20 minutos"
+        "subtitulo": "DETERGENTE PARA LAVAGEM DE TECIDOS COM SUJIDADES GRAXOSAS",
+        "beneficios": [
+          "Contém solvente orgânico em sua composição",
+          "Baixo teor de espuma otimizando a ação mecânica",
+          "Odor suave",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "tratamento (molho em sujidade)",
+            "razao": "1 a 2% (v/v) por 6 a 12 horas em temperatura ambiente"
+          },
+          {
+            "uso": "lavagem / desengraxe",
+            "razao": "0,5 a 2,0 ml/kg de roupa em nível baixo por entre 5 a 20 minutos"
+          }
+        ]
       }
     },
     {
@@ -3142,11 +4246,27 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "aspecto": "Líquido viscoso",
+          "aspecto": "líquido viscoso",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Desengraxe/Umectação/Pré-Lavagem/Lavagem: 0,5 a 4,0 mL/kg, nível baixo, ambiente/80°C, 5 a 20 minutos"
+        "subtitulo": "DETERGENTE E DESINCRUSTANTE PARA LAVAGEM DE ROUPAS",
+        "beneficios": [
+          "Detergente completo alcalino",
+          "Eficiente para remoção de sujidades oleosas e graxosas de origem animal e vegetal",
+          "Remove incrustações orgânicas do tecido",
+          "Não agride às fibras dos tecidos",
+          "Pode ser usado a quente ou a frio",
+          "Concentrado em branqueador optico",
+          "Apresenta excelente performance como limpador de superfícies em geral e equipamentos",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desengraxe/umectação/pré-lavagem/lavagem",
+            "razao": "0,5 a 4,0 mL/kg"
+          }
+        ]
       }
     },
     {
@@ -3190,7 +4310,9 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Desagregação/Pré-lavagem/Lavagem: 0,5 a 5,0 mL/kg, nível baixo, ambiente/80°C, 10 a 20 minutos"
+        "rendimento": "Desagregação/Pré-lavagem/Lavagem: 0,5 a 5,0 mL/kg, nível baixo, ambiente/80°C, 10 a 20 minutos",
+        "subtitulo": "ATIVADOR ALCALINO LÍQUIDO",
+        "descricao": "Formulação equilibrada e concentrada em agentes alcalinos e agentes dispersantes, facilitando a remoção e dispersão das sujidades. Em conjunto com o detergente, promove de maneira rápida e eficiente a remoção de sujidades pesadas, mantendo o pH ideal durante as etapas de Desagregação, lavagem e pré-lavagem. Otimiza processos oxigenados. Ideal para lavagem de roupas hospitalares, pois contribui significativamente para remoção de manchas de sangue, assim como para roupas hoteleiras com sujidades de molhos, sucos, café, etc."
       }
     },
     {
@@ -3235,7 +4357,21 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Desengraxe/Umectação/Pré-Lavagem/Lavagem: 0,5 a 4,0 mL/kg, ambiente/80°C, 5 a 20 minutos"
+        "subtitulo": "DETERGENTE DESENGRAXANTE PARA LAVAGEM DE ROUPAS",
+        "beneficios": [
+          "Detergente neutro com ação desengraxante e desengordurante",
+          "Excelente poder umectante e emulsionante que combina sinergicamente tensoativos não iônicos para uma rápida penetração nas sujidades e incrustações",
+          "Remove amplo espectro de sujidades albuminosas, gordurosas, graxosas e oleosas de origem animal e vegetal",
+          "Alta concentração de branqueadores óticos de ação rápida e resistentes ao cloro que mantém roupas mais brancas e com cores mais vivas e brilhantes",
+          "Eficiente mesmo em água com dureza elevada (de até 90ppm de CaCO3)",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desengraxe/umectação/pré-lavagem/lavagem",
+            "razao": "0,5 a 4,0 mL/Kg (nível de água baixo, temperatura ambiente/80°C, tempo 5' a 20')"
+          }
+        ]
       }
     },
     {
@@ -3278,7 +4414,19 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Desengraxe/Pré-Lavagem/Lavagem: 0,5 a 4,0 mL/kg, nível baixo, ambiente/80°C, 10 a 20 minutos"
+        "subtitulo": "ADITIVO DE LAVAGEM DESINCRUSTANTE, DISPERSANTE E ANTI-REDEPOSITANTE",
+        "beneficios": [
+          "Aditivo de lavagem que confere ao processo alto poder dispersante e antiredepositante",
+          "Potencializa a performance de detergência do TEXSPAR RHC e TEXSPAR DTS",
+          "Recomendado para processo de lavagem com água dura",
+          "Auxilia na remoção de incrustações inorgânicas"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desengraxe, pré-lavagem e lavagem",
+            "razao": "0,5 a 4,0 mL/kg"
+          }
+        ]
       }
     },
     {
@@ -3325,7 +4473,16 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Desengraxe/Umectação/Pré-Lavagem/Lavagem: 0,5 a 4,0 mL/kg, nível baixo, ambiente, 5 a 20 minutos"
+        "rendimento": "Desengraxe/Umectação/Pré-Lavagem/Lavagem: 0,5 a 4,0 mL/kg, nível baixo, ambiente, 5 a 20 minutos",
+        "subtitulo": "DETERGENTE DESINCRUSTANTE E DESENGRAXANTE PARA LAVAGEM DE ROUPAS",
+        "beneficios": [
+          "Detergente ácido com ação desincrustante, desengraxante e desengordurante",
+          "Excelente poder umectante e emulsionante que combina sinergicamente tensoativos não iônicos para uma rápida penetração nas sujidades e incrustações",
+          "Remove amplo espectro de sujidades albuminosas, gordurosas, graxosas e oleosas de origem animal e vegetal",
+          "Remove incrustações inorgânica dos tecidos",
+          "Eficiente mesmo em água com dureza elevada (de até 90ppm de CaCO3)",
+          "Contém tensoativos biodegradáveis"
+        ]
       }
     },
     {
@@ -3364,12 +4521,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "8,5 ± 0,5 (100%)",
+          "pH": "8,5 ± 0,5",
           "aspecto": "Líquido opaco",
           "cor": "Amarelo",
           "uso": "Profissional"
         },
-        "rendimento": "Desagregação/Pré-lavagem/Lavagem/Umectação: 0,5 a 4,0 mL/kg, nível baixo, ambiente/80°C, 5 a 20 minutos"
+        "subtitulo": "DETERGENTE PARA LAVAGEM DE ROUPAS INSTITUCIONAIS",
+        "beneficios": [
+          "Ideal para todos tipos de lavanderia institucional",
+          "Eficiente na remoção de sujidades e manchas orgânicas",
+          "Seguro para roupas sensíveis e coloridas",
+          "Excelente poder umectante e emulsionante",
+          "Concentrado em branqueadores ópticos",
+          "Possui tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desagregação/pré-lavagem/lavagem/umectação",
+            "razao": "0,5 a 4,0 mL/Kg (nível de água baixo, temperatura ambiente/80º C, tempo 5' a 20')"
+          }
+        ]
       }
     },
     {
@@ -3412,7 +4583,21 @@
           "odor": "Inodoro",
           "uso": "Profissional"
         },
-        "rendimento": "Acidulação: máximo 1,0 mL/kg, nível baixo, temperatura ambiente, 2 minutos"
+        "subtitulo": "ACIDULANTE PARA PROCESSOS NÃO CLORADOS",
+        "beneficios": [
+          "Agente redutor de pH",
+          "Neutraliza os resíduos alcalinos",
+          "Altamente eficiente em processos não clorados, proporcionando menor custo",
+          "Sequestra o ferro presente na água evitando amarelamento das roupas",
+          "Reduz a aspereza das roupas",
+          "Sem odor"
+        ],
+        "diluicoes": [
+          {
+            "uso": "acidulação",
+            "razao": "Máximo 1,0 mL/Kg"
+          }
+        ]
       }
     },
     {
@@ -3453,12 +4638,25 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "4,0 ± 0,5 (solução 1%)",
+          "pH": "4,0 ± 0,5",
           "aspecto": "Líquido transparente",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Acidulação: 0,5 a 2,0 mL/kg, nível baixo, temperatura ambiente, 2 minutos"
+        "subtitulo": "NEUTRALIZADOR DE RESÍDUOS OXIDANTES E ALCALINOS",
+        "beneficios": [
+          "Eficiente agente neutralizador dos resíduos alcalinos e oxidantes presentes nas fibras dos tecidos",
+          "Remove manchas sensíveis à redução",
+          "Evita o amarelamento do tecido proveniente dos resíduos nos tecidos",
+          "Preserva o brilho e a tonalidade das cores dos tecidos",
+          "Reduz significativamente o número de enxagues finais"
+        ],
+        "diluicoes": [
+          {
+            "uso": "acidulação",
+            "razao": "0,5 a 2,0 mL/Kg"
+          }
+        ]
       }
     },
     {
@@ -3502,7 +4700,15 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Desagregação/Pré-lavagem/Lavagem: 1,0 a 10,0 mL/kg, nível baixo, ambiente/80°C, 10 a 20 minutos"
+        "rendimento": "Desagregação/Pré-lavagem/Lavagem: 1,0 a 10,0 mL/kg, nível baixo, ambiente/80°C, 10 a 20 minutos",
+        "subtitulo": "ATIVADOR ALCALINO LÍQUIDO",
+        "beneficios": [
+          "Formulação equilibrada e concentrada em agentes alcalinos",
+          "Em conjunto com o detergente, promove de maneira rápida e eficiente a remoção e dispersão de sujidades pesadas em geral",
+          "Mantém o pH ideal e ajusta a alcalinidade durante as operações de desagregação, pré-lavagem e lavagem",
+          "Otimiza os processos de lavagem e potencializa a ação de produtos oxigenados",
+          "Contribui significativamente para a remoção de sujidades como sangue, molhos, sucos, café, entre outros"
+        ]
       }
     },
     {
@@ -3541,14 +4747,30 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "10,30 ± 0,30 (100%)",
+          "pH": "10,30 + 0,30",
           "aspecto": "Líquido viscoso",
           "cor": "Branco",
           "densidade": "1,004 ± 0,001 g/cm³",
           "teorEspuma": "Baixo",
           "uso": "Profissional"
         },
-        "rendimento": "0,8 a 5,0 mL/kg de roupa (5' a 20', temperatura ambiente)"
+        "subtitulo": "DETERGENTE DESENGORDURANTE",
+        "beneficios": [
+          "Detergente com ação desengordurante de alta performance",
+          "Eficiente na remoção de sujidades e manchas especialmente orgânicas: proteínas, gorduras, carboidratos e sangue",
+          "Ideal para qualquer tipo de lavanderia",
+          "Concentrado em branqueador óptico",
+          "Excelente poder umectante e emulsionante",
+          "Seguro para roupas coloridas",
+          "Contém tensoativos biodegradáveis",
+          "Não deve ser usado em conjunto com alvejante clorado"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desengraxe/umectação/pré-lavagem/lavagem",
+            "razao": "0,8 a 5,0 mL/Kg (nível de água baixo, temperatura ambiente, tempo 5' a 20')"
+          }
+        ]
       }
     },
     {
@@ -3587,12 +4809,20 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "11,00 ± 0,25 (100%)",
+          "pH": "11,00 ± 0,25",
           "aspecto": "Líquido opaco",
           "densidade": "1,033 ± 0,020 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "0,8 a 5,0 mL/kg de roupa (5' a 20', ambiente/80°C)"
+        "rendimento": "0,8 a 5,0 mL/kg de roupa (5' a 20', ambiente/80°C)",
+        "subtitulo": "DETERGENTE DESENGRAXANTE PARA LAVAGEM DE ROUPAS",
+        "beneficios": [
+          "Ideal para qualquer tipo de lavanderia",
+          "Eficiente na remoção de sujidades e manchas",
+          "Excelente poder de umectante e emulsionante",
+          "Concentrado em branqueadores ópticos",
+          "Possui tensoativo biodegradável"
+        ]
       }
     },
     {
@@ -3634,13 +4864,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "3,75 ± 0,25 (sol. 1%)",
+          "pH": "3,75 ± 0,25 (sol 1%)",
           "aspecto": "Líquido transparente",
           "odor": "Característico",
           "densidade": "1,068 ± 0,002 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "1,0 a 4,0 mL/kg de roupa (2', ambiente)"
+        "subtitulo": "NEUTRALIZADOR DE RESÍDUOS OXIDANTES E ALCALINOS",
+        "beneficios": [
+          "Eficiente agente neutralizador dos resíduos alcalinos e oxidantes presentes nas fibras dos tecidos",
+          "Remove manchas sensíveis à redução",
+          "Evita o amarelamento do tecido proveniente dos resíduos nos tecidos",
+          "Preserva o brilho e a tonalidade das cores dos tecidos",
+          "Reduz significativamente o número de enxagues finais"
+        ],
+        "diluicoes": [
+          {
+            "uso": "acidulação",
+            "razao": "1,0 a 4,0 mL/Kg"
+          }
+        ]
       }
     },
     {
@@ -3682,14 +4925,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "4,0 ± 0,5 (sol. aquosa 1%)",
+          "pH": "4,0 + 0,5",
           "aspecto": "Líquido transparente",
           "cor": "Incolor",
           "odor": "Característico",
           "densidade": "1,20 ± 0,050 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "Máximo de 10 mL/kg de roupa (10' a 15', 60° a 80°C)"
+        "subtitulo": "ALVEJANTE À BASE DE PERÓXIDO DE HIDROGÊNIO",
+        "beneficios": [
+          "Remove de maneira rápida e eficiente as manchas sensíveis à oxidação",
+          "Seguro para alvejamento de roupas coloridas ou sintéticas",
+          "Não revela manchas de clorhexidina",
+          "Eficaz entre 60º e 80ºC"
+        ],
+        "diluicoes": [
+          {
+            "uso": "alvejamento",
+            "razao": "Dosagem máxima de 10 mL/Kg (nível de água baixo, temperatura 60º a 80º C, tempo 10' a 15')"
+          }
+        ]
       }
     },
     {
@@ -3726,7 +4981,16 @@
           "densidade": "1,425 ± 0,005",
           "uso": "Profissional"
         },
-        "rendimento": "1,0 a 6,0 mL/kg de roupa (10' a 20', ambiente)"
+        "rendimento": "1,0 a 6,0 mL/kg de roupa (10' a 20', ambiente)",
+        "subtitulo": "REMOVEDOR DE CLORHEXIDINA E DESINCRUSTANTE ÁCIDO",
+        "beneficios": [
+          "Reage com a Clorhexidina presente em tecidos tornando-a facilmente removível",
+          "Suprime a necessidade de umectação",
+          "Auxilia na remoção de sujidades graxosas e oleosas",
+          "Auxilia na prevenção do amarelamento dos tecidos",
+          "Remove incrustações inorgânicas nos tecidos",
+          "Contém tensoativo biodegradável"
+        ]
       }
     },
     {
@@ -3761,12 +5025,20 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "13,0 ± 1,0 (sol. aq. 1%)",
+          "pH": "13,0 + 1,0",
           "aspecto": "Líquido Incolor",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "0,5 a 3,0 mL/kg de roupa (10' a 20', ambiente/50°C)"
+        "rendimento": "0,5 a 3,0 mL/kg de roupa (10' a 20', ambiente/50°C)",
+        "subtitulo": "ATIVADOR ALCALINO LÍQUIDO",
+        "beneficios": [
+          "Formulação equilibrada e concentrada em agentes alcalinos",
+          "Em conjunto com o detergente, promove de maneira rápida e eficiente a remoção e dispersão de sujidades pesadas em geral",
+          "Mantém o pH ideal e ajusta a alcalinidade durante as operações de Desagregação, pré-lavagem e lavagem",
+          "Otimiza os processos de lavagem e potencializa a ação de produtos oxigenados",
+          "Contribui significativamente para a remoção de sujidades como sangue, molhos, sucos, café, etc."
+        ]
       }
     },
     {
@@ -3806,7 +5078,16 @@
           "densidade": "1,030 ± 0,020 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "0,5 a 2,0 mL/kg de roupa (5' a 20', ambiente/80°C)"
+        "rendimento": "0,5 a 2,0 mL/kg de roupa (5' a 20', ambiente/80°C)",
+        "subtitulo": "DETERGENTE DESENGRAXANTE PARA LAVAGEM DE ROUPAS",
+        "beneficios": [
+          "Detergente neutro com ação desengraxante e desengordurante",
+          "Excelente poder umectante e emulsionante que combina sinergicamente tensoativos não iônicos para uma rápida penetração nas sujidades e incrustações",
+          "Remove amplo espectro de sujidades albuminosas, gordurosas, graxosas e oleosas de origem animal e vegetal",
+          "Alta concentração de branqueadores óticos de ação rápida e resistentes ao cloro que mantém roupas mais brancas e com cores mais vivas e brilhantes",
+          "Eficiente mesmo em água com dureza elevada (de até 90ppm de CaCO3)",
+          "Contém tensoativos biodegradáveis"
+        ]
       }
     },
     {
@@ -3840,7 +5121,7 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "5,5 ± 0,5 (100%)",
+          "pH": "5,5 ± 0,5",
           "aspecto": "Líquido",
           "cor": "Azul",
           "odor": "Floral",
@@ -3848,7 +5129,21 @@
           "teorEspuma": "Baixo",
           "uso": "Profissional"
         },
-        "rendimento": "Máximo 0,7 mL/kg de roupa (3' a 4', ambiente)"
+        "subtitulo": "AROMATIZADOR ULTRA CONCENTRADO DE ROUPAS",
+        "beneficios": [
+          "Ultra concentrado em perfume",
+          "Indicado para túneis de lavagem e demais máquinas lavadoras",
+          "Promove uma suave e agradável perfumação para as roupas",
+          "Ideal para utilizar em conjunto com o Texspar RHT ou Texspar RHS",
+          "Não danifica os tecidos mais delicados",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "acabamento",
+            "razao": "Máximo 0,7 mL/Kg"
+          }
+        ]
       }
     },
     {
@@ -3888,7 +5183,19 @@
           "densidade": "1,220 ± 0,020 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "0,5 a 2,0 mL/kg de roupa (10' a 20', ambiente/80°C)"
+        "subtitulo": "ADITIVO DE LAVAGEM DISPERSANTE E ANTI-REDEPOSITANTE DESINCRUSTANTE",
+        "beneficios": [
+          "Aditivo de lavagem que confere ao processo alto poder dispersante e anti-redepositante",
+          "Potencializa a performance de detergência do TEXSPAR RHC e TEXSPAR DTS",
+          "Recomendado para processo de lavagem com água dura",
+          "Auxilia na remoção de incrustações inorgânicas"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desengraxe/pré-lavagem/lavagem",
+            "razao": "0,5 a 2,0 mL/Kg"
+          }
+        ]
       }
     },
     {
@@ -3929,7 +5236,16 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "0,5 a 2,0 mL/kg de roupa (5' a 20', ambiente)"
+        "rendimento": "0,5 a 2,0 mL/kg de roupa (5' a 20', ambiente)",
+        "subtitulo": "DETERGENTE DESENCRUSTANTE E DESENGRAXANTE PARA LAVAGEM DE ROUPAS",
+        "beneficios": [
+          "Detergente ácido com ação desincrustante, desengraxante e desengordurante",
+          "Excelente poder umectante e emulsionante que combina sinergicamente tensoativos não iônicos para uma rápida penetração nas sujidades e incrustações",
+          "Remove amplo espectro de sujidades albuminosas, gordurosas, graxosas e oleosas de origem animal e vegetal",
+          "Remove incrustações inorgânica dos tecidos",
+          "Eficiente mesmo em água com dureza elevada (de até 90ppm de CaCO3)",
+          "Contém tensoativos biodegradáveis"
+        ]
       }
     },
     {
@@ -3965,7 +5281,19 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "1 mL/kg para cada 25 ppm de dureza (2', ambiente)"
+        "subtitulo": "AGENTE SEQUESTRANTE DE DUREZA",
+        "beneficios": [
+          "Produto ultra concentrado",
+          "Ideal para processos de lavagem onde a água apresenta dureza extremamente elevada (acima de 100 ppm de CaCO3)",
+          "Atua como sequestrante de ferro (para águas que contenham acima de 0,1 ppm de ferro)",
+          "Indicado para operação de acabamento, podendo substituir parcialmente ou totalmente o acidulante; Em processos clorados a substituição do acidulante é parcial"
+        ],
+        "diluicoes": [
+          {
+            "uso": "acidulação",
+            "razao": "1 mL/Kg para cada 25 ppm de dureza"
+          }
+        ]
       }
     },
     {
@@ -4002,7 +5330,21 @@
           "densidade": "1,21 ± 0,020 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "Máximo 0,5 mL/kg de roupa (2', ambiente)"
+        "subtitulo": "ACIDULANTE PARA PROCESSOS NÃO CLORADOS",
+        "beneficios": [
+          "Agente redutor de pH",
+          "Neutraliza os resíduos alcalinos",
+          "Não neutraliza os resíduos oxidantes",
+          "Altamente eficiente em processos não clorados, proporcionando menor custo",
+          "Atua como complexante dos sais de cálcio e magnésio presentes na água dura, reduzindo a aspereza das roupas",
+          "Sequestra o ferro presente na água evitando amarelamento das roupas"
+        ],
+        "diluicoes": [
+          {
+            "uso": "acidulação",
+            "razao": "0,5 mL/Kg"
+          }
+        ]
       }
     },
     {
@@ -4037,13 +5379,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "3,0 ± 0,5 (sol. 1%)",
+          "pH": "3,0 + 0,5",
           "aspecto": "Líquido transparente",
           "odor": "Característico",
           "densidade": "1,150 ± 0,050 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "0,5 a 1,5 mL/kg de roupa (2', ambiente)"
+        "subtitulo": "NEUTRALIZADOR DE RESÍDUOS OXIDANTES E ALCALINOS",
+        "beneficios": [
+          "Eficiente agente neutralizador dos resíduos alcalinos e oxidantes presentes nas fibras dos tecidos",
+          "Remove manchas sensíveis à redução",
+          "Evita o amarelamento do tecido proveniente dos resíduos nos tecidos",
+          "Preserva o brilho e a tonalidade das cores dos tecidos",
+          "Reduz significativamente o número de enxagues finais"
+        ],
+        "diluicoes": [
+          {
+            "uso": "acidulação",
+            "razao": "0,5 a 1,5 mL/Kg"
+          }
+        ]
       }
     },
     {
@@ -4085,7 +5440,21 @@
           "densidade": "1,000 ± 0,020 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "0,5 a 2,0 mL/kg de roupa (3' a 4', ambiente)"
+        "subtitulo": "AMACIANTE DE TECIDOS E ROUPAS",
+        "beneficios": [
+          "Amacia e perfuma os tecido",
+          "Contém essência com tecnologia de microcápsulas, que ativa o cheiro através da ficção de roupa seca",
+          "Prolonga a vida útil dos tecidos",
+          "Diminui o número de enxagues finais",
+          "Facilita a centrifugação e calandragem",
+          "Apresenta viscosidade baixa, facilitando a dosagem automática"
+        ],
+        "diluicoes": [
+          {
+            "uso": "acabamento",
+            "razao": "0,5 a 2,0 mL/Kg"
+          }
+        ]
       }
     },
     {
@@ -4127,7 +5496,21 @@
           "densidade": "1,000 ± 0,020 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "0,5 a 3,0 mL/kg de roupa (3' a 4', ambiente)"
+        "subtitulo": "AMACIANTE DE TECIDOS E ROUPAS",
+        "beneficios": [
+          "Amacia e perfuma os tecido",
+          "Contém essência com tecnologia de microcápsulas, que ativa o cheiro através da ficção de roupa seca",
+          "Prolonga a vida útil dos tecidos",
+          "Diminui o número de enxagues finais",
+          "Facilita a centrifugação e calandragem",
+          "Apresenta viscosidade baixa, facilitando a dosagem automática"
+        ],
+        "diluicoes": [
+          {
+            "uso": "acabamento",
+            "razao": "0,5 a 3,0 mL/Kg"
+          }
+        ]
       }
     },
     {
@@ -4167,13 +5550,34 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "< 2,0 (100%)",
+          "pH": "< 2,0",
           "aspecto": "Líquido",
           "cor": "Incolor transparente",
           "odor": "Característico",
           "uso": "Profissional/Industrial"
         },
-        "rendimento": "1:1 até 5:50 (diluição para aplicação geral); 2-10 partes para 100 partes de solução (imersão de carretilhas); 10-20 partes para 100 partes de solução (desincrustação direta)"
+        "subtitulo": "DETERGENTE DESINCRUSTANTE ÁCIDO - USO PROFISSIONAL/INDUSTRIAL",
+        "beneficios": [
+          "Ação rápida contra incrustações inorgânicas (ferrugem, oxidações e similares)",
+          "Para uso em superfícies resistentes a produtos ácidos",
+          "Desincrustações de tubulações em indústria de alimentos e bebidas e indústrias em geral",
+          "Desoxidação de equipamentos (carretilhas, roldanas, ganchos, nórias, balancins, entre outros), caminhões baú, tanques, silos e similares em ambientes industriais",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza geral de ambientes e equipamentos industriais (manual ou jateamento)",
+            "razao": "diluição de 1 parte do produto para 1 parte de água ou até 5 partes do produto para 50 partes de água"
+          },
+          {
+            "uso": "desoxidação de carretilhas (indústria de alimentos)",
+            "razao": "2 a 10 partes de produto para até 100 partes de solução"
+          },
+          {
+            "uso": "desincrustações de superfícies resistentes a ácidos (indústrias em geral)",
+            "razao": "10 a 20 partes de produto para até 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -4218,7 +5622,20 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "1:100"
+        "subtitulo": "DETERGENTE FLOTADOR",
+        "beneficios": [
+          "Proporciona limpeza de superfícies fixas",
+          "Excelente ação desengordurante, desengraxante, dispersante e antiredepositante",
+          "Possui baixa formação de espuma, facilitando o processo de limpeza",
+          "Isento de corante e perfume",
+          "Possui tensoativos biodegradaveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza de superfícies",
+            "razao": "Diluir 01 parte do produto para até 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -4250,13 +5667,28 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,00 ± 0,50 (100%)",
+          "pH": "7,00 ± 0,50",
           "aspecto": "Líquido",
           "cor": "Verde, Lilás",
           "odor": "Lavanda, Pinho e Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Puro (desinfecção, agir 10 min); 1:50 (limpeza)"
+        "subtitulo": "DESINFETANTE PERFUMADO PARA USO GERAL",
+        "descricao": "Desinfecção e limpeza de superfícies em geral.",
+        "beneficios": [
+          "Desinfetante com alta concentração de essência",
+          "Ação antimicrobiana comprovada contra Staphylococcus aureus e Salmonella choleraesuis",
+          "Disponível nas essências: Lavanda, Pinho e Floral",
+          "Indicado para limpeza leve",
+          "Não é necessário enxágue",
+          "Possui tensoativo biodegradavel"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza",
+            "razao": "diluir 01 parte do produto para 50 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -4291,13 +5723,32 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,25 ± 0,25 (100%)",
-          "aspecto": "Líquido viscoso",
+          "pH": "7,25 ± 0,25",
+          "aspecto": "Líquido Viscoso",
           "cor": "Amarela",
           "densidade": "1,015 - 1,020 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "1:100 (limpeza geral); 1:30 (estofados, tapetes e carpetes)"
+        "subtitulo": "DETERGENTE NEUTRO DE USO GERAL",
+        "descricao": "Detergente líquido para lavagem manual de superfícies em geral.",
+        "beneficios": [
+          "Limpeza de superfícies em geral com ação desengordurante",
+          "Indicado para lavagem manual de louças, vidrarias e equipamentos em geral",
+          "Indicado para limpeza de estofados, tapetes, e carpetes",
+          "Não agride as superfícies tratadas",
+          "Possui pH neutro",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza geral",
+            "razao": "até no máximo 01 parte do produto para 100 partes de solução"
+          },
+          {
+            "uso": "limpeza de estofados, tapetes e carpetes",
+            "razao": "até no máximo 01 parte do produto para 30 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -4333,13 +5784,36 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "8,00 ± 0,50 (100%)",
+          "pH": "8,00 + 0,50",
           "aspecto": "Líquido viscoso",
           "cor": "Amarela e Violeta",
           "odor": "Característico e Floral",
           "uso": "Profissional"
         },
-        "rendimento": "1:300 (máquinas lavadoras/secadoras e demais superfícies); 1:1000 (vidros e vidrarias)"
+        "subtitulo": "LIMPADOR SUPER CONCENTRADO DE BAIXA ESPUMA",
+        "descricao": "Limpador super concentrado de baixa espuma",
+        "beneficios": [
+          "Indicado para limpeza de superfícies em geral",
+          "Promove baixíssima formação de espuma",
+          "Ideal para utilização em maquinas lavadoras e secadora de piso",
+          "Possui pH neutro",
+          "Disponível nas versões: Sem essência e Floral",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "máquinas lavadoras e secadoras",
+            "razao": "Adicionar 1 parte do produto para até 300 partes do volume do tanque de solução."
+          },
+          {
+            "uso": "vidros e vidrarias",
+            "razao": "diluir 1 parte do produto para até 1.000 partes de solução (0,10%)."
+          },
+          {
+            "uso": "demais superfícies",
+            "razao": "diluir 1 parte do produto para até 300 partes de solução (0,33%)."
+          }
+        ]
       }
     },
     {
@@ -4372,13 +5846,38 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "9,50 ± 0,50 (1%)",
+          "pH": "9,50 + 0,50",
           "aspecto": "Líquido",
           "cor": "Incolor",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "1:100 (máquinas); 1:50 a 1:100 (pisos tratados, contato máx. 10 min); 1:300 (vidros e vidrarias); 1:100 (demais superfícies)"
+        "subtitulo": "LIMPADOR CONCENTRADO DE BAIXÍSSIMA ESPUMA",
+        "descricao": "Limpador concentrado de baixíssima espuma",
+        "beneficios": [
+          "Ideal para utilização em máquinas lavadoras e secadora de piso",
+          "Indicado para limpeza pesada de superfícies em geral",
+          "Promove baixíssima formação de espuma",
+          "Eficaz na remoção de graxas, gorduras, grafites, fuligem e demais sujidades pesadas e incrustadas"
+        ],
+        "diluicoes": [
+          {
+            "uso": "máquinas lavadoras e secadoras",
+            "razao": "Adicionar 1 parte do produto para até 100 partes do volume do tanque de solução."
+          },
+          {
+            "uso": "pisos tratados",
+            "razao": "Diluir entre 1 parte do produto para entre 50 e 100 partes de solução."
+          },
+          {
+            "uso": "vidros e vidrarias",
+            "razao": "diluir 1 parte do produto para até 300 partes de solução."
+          },
+          {
+            "uso": "demais superfícies",
+            "razao": "diluir 1 parte do produto para até 100 partes de solução."
+          }
+        ]
       }
     },
     {
@@ -4410,14 +5909,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "1,50 ± 0,50 (1%)",
+          "pH": "1,50 ± 0,50",
           "aspecto": "Líquido",
           "cor": "Verde",
           "odor": "Frutal",
           "densidade": "1,00 ± 0,02 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "Puro ou diluído 1:1 (50%), agir 5 a 10 minutos"
+        "subtitulo": "DECAPANTE ÁCIDO",
+        "beneficios": [
+          "Eficiente na remoção de incrustações inorgânicas e manchas de ferrugem de louças sanitária, pisos, azulejos, entre outros",
+          "Apresenta viscosidade ideal para facilitar a aplicação e aderência do produto à louça",
+          "Possui perfume frutal",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "remoção de incrustações inorgânicas",
+            "razao": "puro ou diluído 1:1 (50%)"
+          }
+        ]
       }
     },
     {
@@ -4449,12 +5960,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "9,50 ± 0,50 (100%)",
+          "pH": "9,50 ± 0,50",
           "aspecto": "Líquido Azul",
           "odor": "Tutti-frutti",
           "uso": "Profissional"
         },
-        "rendimento": "1:100 (1,0%)"
+        "subtitulo": "DESINFETANTE DE USO GERAL",
+        "descricao": "Desinfetante à base de quaternário de 5ª GERAÇÃO",
+        "beneficios": [
+          "Ideal para uso em banheiros químicos, promove odorização do ambiente",
+          "Desinfetante à base de quaternário de amônio de 5ª GERAÇÃO",
+          "Ação antimicrobiana comprovada contra Staphylococcus aureus e Salmonella choleraesuis",
+          "Elevada intensidade de essência tutti-frutti na diluição de 1:100",
+          "Contém tensoativo biodegradavel"
+        ],
+        "diluicoes": [
+          {
+            "uso": "banheiros químicos e sanitários",
+            "razao": "1 parte de SPAR HT-2 DBQ para 100 partes de solução ou a 1,0% (100 mL de produto completando para 10 L de solução)"
+          }
+        ]
       }
     },
     {
@@ -4486,12 +6011,27 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "8,50 ± 0,50 (100%)",
+          "pH": "8,50 ± 0,50",
           "aspecto": "Líquido Verde, Vermelho e Azul",
           "odor": "Lavanda, Floral e Karícia",
           "uso": "Profissional"
         },
-        "rendimento": "1:50 (2%)"
+        "subtitulo": "DESINFETANTE DE USO GERAL",
+        "descricao": "Desinfetante concentrado à base de quaternário de 5ª GERAÇÃO",
+        "beneficios": [
+          "Desinfetante e limpador de uso geral à base de quaternário de amônio de 5ª GERAÇÃO",
+          "Ação antimicrobiana comprovada contra Staphylococcus aureus e Salmonella choleraesuis",
+          "Não é necessario enxágue",
+          "Elevada intensidade da essência, na diluição de 1:50",
+          "Disponível nas versões LAVANDA, FLORAL e KARÍCIA",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção e limpeza de superfícies em geral",
+            "razao": "Diluir 01 parte de SPAR HT-2 para 50 partes de solução (2%)"
+          }
+        ]
       }
     },
     {
@@ -4525,13 +6065,27 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "8,25 ± 0,25 (100%)",
+          "pH": "8,25 ± 0,25",
           "aspecto": "Líquido",
           "cor": "Incolor",
           "odor": "Cítrico",
           "uso": "Institucional"
         },
-        "rendimento": "1:5 (pode ser usado puro em sujidade pesada)"
+        "subtitulo": "LIMPADOR DESENGORDURANTE - USO INSTITUCIONAL",
+        "beneficios": [
+          "Indicado para limpezas de superfícies em geral com ação desengordurante",
+          "Atua em sujidades leves sem agredir a superfície (pisos, móveis, entre outros)",
+          "Excelente na limpeza de vidros, espelhos, entre outros",
+          "Forma uma película protetora contra manchas de impressões digitais",
+          "Promove brilho às superfícies após a limpeza",
+          "Não necessita enxágue"
+        ],
+        "diluicoes": [
+          {
+            "uso": "uso geral",
+            "razao": "Diluir 01 parte do SPAR HT-3 para até 05 partes de solução."
+          }
+        ]
       }
     },
     {
@@ -4564,14 +6118,27 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,8 - 8,3 (100%)",
+          "pH": "7,8 - 8,3",
           "aspecto": "Líquido viscoso",
           "cor": "Verde, azul ou violeta",
           "odor": "Lavanda ou Floral",
           "densidade": "1,040 - 1,045 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "1:130"
+        "subtitulo": "DETERGENTE PERFUMADO PARA USO GERAL",
+        "beneficios": [
+          "Indicado para limpeza de pisos, paredes, azulejos, entre outros",
+          "Proporciona perfume agradável após a aplicação",
+          "Disponível nas versões Floral e Lavanda",
+          "Seguro para superfícies sensíveis a exemplo de porcelanato",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza de superfícies laváveis como banheiros, pisos, paredes, azulejos, vidros",
+            "razao": "até uma parte do produto para 130 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -4590,7 +6157,7 @@
         "pulverizacao",
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-ht-5.jpg",
       "fichaTecnicaPath": null,
       "ativo": false,
       "embalagens": [
@@ -4604,13 +6171,32 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "9,0 ± 1,0 (1%)",
+          "pH": "9,0 ± 1,0",
           "aspecto": "Líquido",
           "cor": "Incolor",
           "odor": "Lavanda e Karícia",
           "uso": "Profissional"
         },
-        "rendimento": "1:10 (10%) para fungicida e aromatização; puro (100%) para redução de odor de tabaco"
+        "subtitulo": "NEUTRALIZADOR DE ODORES",
+        "beneficios": [
+          "Indicado para eliminação do fungo trichophyton interdigitale priestley (\"Mofo\")",
+          "Deixa o aroma agradável e suave no ambiente",
+          "Indicado também para redução do mau odor de tabaco e como aromatizante de ambientes"
+        ],
+        "diluicoes": [
+          {
+            "uso": "remoção de mofo (fungicida)",
+            "razao": "1 parte do produto para até 10 partes de solução (10%)"
+          },
+          {
+            "uso": "aromatização de ambientes",
+            "razao": "1 parte do produto para até 10 partes de solução (10%)"
+          },
+          {
+            "uso": "redução do mau odor de tabaco",
+            "razao": "produto puro (100%)"
+          }
+        ]
       }
     },
     {
@@ -4642,12 +6228,18 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "6,25 ± 0,25 (100%)",
+          "pH": "6,25 + 0,25",
           "aspecto": "Líquido viscoso",
           "cor": "Branco",
           "odor": "Lavanda"
         },
-        "rendimento": "Puro, aplicado com pano seco e limpo"
+        "rendimento": "Puro, aplicado com pano seco e limpo",
+        "descricao": "Produto à base de silicone para brilho e proteção de superfícies em geral.",
+        "beneficios": [
+          "Promove brilho seco e natural às superfícies, em especial à madeiras",
+          "Forma uma película sobre as superfícies, protegendo-as contra a ação do tempo, umidade, manchas d'água e poeira",
+          "Deixa leve perfume lavanda no ambiente"
+        ]
       }
     },
     {
@@ -4679,13 +6271,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "10,30 ± 0,30 (100%)",
+          "pH": "10,30 + 0,30",
           "aspecto": "Líquido viscoso",
           "cor": "Branca",
           "densidade": "1,004 ± 0,001 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "1:100"
+        "subtitulo": "LIMPADOR DESENGORDURANTE",
+        "beneficios": [
+          "Ação desengordurante 'DE ALTA PERFORMACE'",
+          "Limpeza de superfícies em geral com excelente ação desengordurante",
+          "Indicado para limpeza de pisos, paredes, azulejos, rejuntes, entre outros",
+          "Seguro para lavagem de vidros e porcelanatos",
+          "Excelente performance na limpeza poeiras incrustadas e resíduos de sola de sapatos em pisos"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza de superfícies laváveis em geral",
+            "razao": "Diluir 01 parte do produto para até no máximo 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -4719,12 +6324,31 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "0,5 - 1,1 (100%)",
+          "pH": "0,5 - 1,1",
           "aspecto": "Líquido límpido incolor",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "1:50 (desinfecção e limpeza pesada, contato 10 min); 1:200 (limpeza geral, sem necessidade de enxágue)"
+        "subtitulo": "DESINFETANTE E LIMPADOR PARA USO GERAL",
+        "beneficios": [
+          "Exclusiva tecnologia HPH (High Perfomance Hygiene)",
+          "É eficiente e seguro em superfícies coloridas",
+          "Promove desinfecção, limpeza e alvejamento em uma única etapa",
+          "Ação comprovada eficaz frente: Staphylococcus aureus, Salmonella choleraesuis",
+          "Eficaz na remoção de maus odores",
+          "Seu poder de higienização reduz a ação mecânica principalmente em superfícies com sujidades pesadas",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção e limpeza pesada",
+            "razao": "diluir até 1:50 (1 litro do produto para até 49 litros de água)"
+          },
+          {
+            "uso": "limpeza em geral",
+            "razao": "diluir até 1:200 (1 litro do produto para até 199 litros de água)"
+          }
+        ]
       }
     },
     {
@@ -4759,14 +6383,37 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,00 ± 0,25 (1%)",
+          "pH": "12,00 + 0,25",
           "aspecto": "Líquido Turvo",
           "cor": "Levemente Amarelado",
           "odor": "Característico",
           "densidade": "1,175 ± 0,025 g/mL",
           "uso": "Profissional"
         },
-        "rendimento": "1:100 (sujidades leves); 1:50 (sujidades médias); 1:10 a 1:30 (sujidades pesadas)"
+        "subtitulo": "DETERGENTE DESINCRUSTANTE CLORADO",
+        "descricao": "Cáustico clorado de alta espuma para limpeza de superfícies em geral.",
+        "beneficios": [
+          "Alto poder desengordurante e alvejante",
+          "Excelente performance na limpeza de sujidades e incrustações orgânicas (em especial gorduras)",
+          "Remove incrustações de gordura e manchas sensíveis a oxidação",
+          "Promove brilho as superfícies após a limpeza",
+          "Auxilia na remoção de mofo e fungos em geral",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "sujidades leves",
+            "razao": "1 parte do produto até 100 partes de solução"
+          },
+          {
+            "uso": "sujidades médias",
+            "razao": "1 parte do produto até 50 partes de solução"
+          },
+          {
+            "uso": "sujidades pesadas",
+            "razao": "1 parte do produto para de 10 a 30 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -4805,13 +6452,30 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "9,0 ± 1,0 (100%)",
+          "pH": "9,0 + 1,0",
           "aspecto": "Líquido viscoso",
           "cor": "Verde",
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "1:100 (limpeza pesada); 1:150 (limpeza em geral)"
+        "subtitulo": "DETERGENTE DESENGRAXANTE",
+        "beneficios": [
+          "Remove com eficiência óleo, graxa, e sujidades em geral",
+          "Excelente efeito dispersante, antiredepositante e flotador",
+          "Não agride as superfícies tratadas",
+          "Possui suave perfume Floral",
+          "Possui tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza pesada",
+            "razao": "01 parte do produto para até 100 partes de solução."
+          },
+          {
+            "uso": "limpeza em geral",
+            "razao": "01 parte do produto para até 150 partes de solução."
+          }
+        ]
       }
     },
     {
@@ -4844,14 +6508,31 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,8 - 8,3 (100%)",
+          "pH": "7,8 - 8,3",
           "aspecto": "Geléia",
           "cor": "Laranja",
           "odor": "Pinho",
           "densidade": "0,995 ± 0,025 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "1:100 (limpeza em geral); 1:500 (vias públicas e vasos de lixo)"
+        "subtitulo": "DETERGENTE EM GELEIA PARA USO GERAL",
+        "beneficios": [
+          "Remove gorduras, lodo e sujidades em geral com eficiência e rapidez",
+          "Excelente performace na limpeza de vias públicas, parques, condomínios e grandes áreas em geral",
+          "Eficaz na limpeza de caminhões de lixo, coletores de resíduos e demais locais de descarte de resíduos orgânicos",
+          "Essência 100% natural de óleo de pinho",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza em geral",
+            "razao": "diluir 01 parte do produto para até no máximo 100 partes de solução (1%)"
+          },
+          {
+            "uso": "limpeza de vias públicas e vasos de lixo",
+            "razao": "diluir 01 parte do produto para até no máximo 500 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -4883,13 +6564,38 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,0 ± 0,50",
+          "pH": "7,0 + 0,50",
           "aspecto": "Líquido transparente",
           "odor": "Karícia",
           "densidade": "1,002 ± 0,002 g/cm³",
           "uso": "Profissional"
         },
-        "rendimento": "1:20 a 1:60 (sofás, cadeiras, bancos e colchões); 1:40 a 1:80 (tapetes e carpetes)"
+        "subtitulo": "LIMPA TAPETES E CARPETES",
+        "beneficios": [
+          "Produto indicado para limpeza de estofados, tapetes, carpetes e tecidos em geral",
+          "Não agride as fibras e não altera as cores",
+          "Deixa na peça suave aroma KARÍCIA, exclusivo dos produtos INDEBA",
+          "Possui baixa formação de espuma",
+          "É indicado para o uso em extratoras, proporcionando uma rápida e eficiente remoção das sujeiras mais aderidas"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza leve de sofás, cadeiras, bancos de veículos e colchões",
+            "razao": "até 1:60"
+          },
+          {
+            "uso": "limpeza pesada de sofás, cadeiras, bancos de veículos e colchões",
+            "razao": "até 1:20"
+          },
+          {
+            "uso": "limpeza leve de tapetes e carpetes",
+            "razao": "até 1:80"
+          },
+          {
+            "uso": "limpeza pesada de tapetes e carpetes",
+            "razao": "até 1:40"
+          }
+        ]
       }
     },
     {
@@ -4931,7 +6637,18 @@
           "cor": "Incolor",
           "uso": "Profissional"
         },
-        "rendimento": "1 L de solução para cada 5 m²"
+        "subtitulo": "REMOVEDOR DE CERAS E IMPERMEABILIZANTES",
+        "beneficios": [
+          "Indicado para remoção de ceras e impermeabilizantes à base de uretano ou poliuretano e sujidade pesada ou antiga",
+          "Ação rápida e eficiente, bastando apenas 5 a 10 minutos de atuação",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "remoção de cera ou impermeabilizante à base de uretano ou poliuretano e sujidade pesada ou antiga",
+            "razao": "diluir 01 parte do produto para 04 partes de solução ou até no máximo 01 parte do produto para até 10 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -4975,7 +6692,19 @@
           "odor": "Sem cheiro",
           "uso": "Profissional"
         },
-        "rendimento": "1 L de solução para cada 5 m²"
+        "subtitulo": "REMOVEDOR DE CERAS, IMPERMEABILIZANTES E SUJIDADES PESADAS",
+        "beneficios": [
+          "Indicado para remoção de ceras e impermeabilizantes à base de água e sujidade pesada ou antiga",
+          "Sem cheiro, ideal para todos os tipos de mercado",
+          "Ação rápida e eficiente, bastando apenas 4 a 5 minutos de atuação",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "remoção de cera ou impermeabilizante à base de água e sujidade pesada ou antiga",
+            "razao": "diluir 01 parte do produto para 04 partes de solução ou até no máximo 01 parte do produto para até 10 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -5012,7 +6741,15 @@
           "cor": "Branco",
           "uso": "Profissional"
         },
-        "rendimento": "de 60 a 80 m² por litro"
+        "rendimento": "de 60 a 80 m² por litro",
+        "subtitulo": "BASE SELADORA",
+        "beneficios": [
+          "Base seladora para pisos porosos",
+          "Proporciona maior durabilidade do sistema com redução dos custos de manutenção do piso",
+          "Forma filme uniforme, transparente e antiderrapante",
+          "Adequado para rotações HS e UHS",
+          "Produto não inflamável"
+        ]
       }
     },
     {
@@ -5050,7 +6787,21 @@
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "de 80 a 100 m² por litro"
+        "subtitulo": "SELADOR E IMPERMEABILIZANTE",
+        "beneficios": [
+          "Dupla função: selador para pisos em geral",
+          "Grande facilidade de aplicação com bom espalhamento e secagem rápida",
+          "Ideal para áreas com ALTO nível de tráfego",
+          "Produto não inflamável",
+          "Proporciona maior durabilidade do sistema após polimento com máquina High Speed ou Ultra High Speed",
+          "Forma filme uniforme, com elevado brilho, anti-derrapante e resistente"
+        ],
+        "diluicoes": [
+          {
+            "uso": "aplicação como spray buff",
+            "razao": "1 parte do produto para 3 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -5083,12 +6834,25 @@
       "ficha": {
         "caracteristicas": {
           "pH": "8,75 ± 0,50",
-          "aspecto": "Líquido branco leitoso",
+          "aspecto": "Liquido branco leitoso",
           "cor": "Branco leitoso",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "de 80 a 100 m² por litro"
+        "subtitulo": "SELADOR E IMPERMEABILIZANTE PARA PISOS DE ALTÍSSIMO TRÁFEGO",
+        "beneficios": [
+          "Forma filme uniforme, de fácil aplicação, com elevado brilho e propriedades antiderrapantes",
+          "Altamente resistente à chuva e umidade em geral",
+          "Contém resina de poliuretano em sua composição",
+          "Proporciona maior durabilidade do sistema após polimento com máquina High Speed ou Ultra High Speed",
+          "Não inflamável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "aplicação como spray buff",
+            "razao": "1 parte do produto para 3 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -5120,13 +6884,23 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "8,00 + 0,30",
+          "pH": "8,00 ± 0,30",
           "aspecto": "Líquido branco",
           "cor": "Branco",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "de 70 a 90 m² por litro"
+        "rendimento": "de 70 a 90 m² por litro",
+        "subtitulo": "BASE SELADORA E IMPERMEABILIZANTE",
+        "beneficios": [
+          "Dupla função: selador e impermeabilizante para pisos em geral",
+          "Ideal para áreas com BAIXO a MÉDIO nível de tráfego",
+          "Grande facilidade de aplicação",
+          "Produto não inflamável",
+          "Proporciona maior durabilidade do sistema após polimento com máquina High Speed",
+          "Pronto para uso",
+          "Forma filme uniforme, brilhante, resistente e com propriedades anti-derrapantes"
+        ]
       }
     },
     {
@@ -5162,11 +6936,18 @@
       "ficha": {
         "caracteristicas": {
           "pH": "7,00 ± 1,00",
-          "aspecto": "Líquido incolor",
+          "aspecto": "liquido Incolor",
           "cor": "Incolor",
           "odor": "Alcoólico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "PREPARAÇÃO ALCÓOLICA ANTISSÉPTICA PARA MÃOS 70º INPM (70% p/p)",
+        "beneficios": [
+          "Secagem rápida",
+          "Evita ressecamento das mãos (contém emoliente em sua fórmula)",
+          "Indicado também para higienização de louças e copos (não deixa gosto desagradável)",
+          "Possui pH neutro"
+        ]
       }
     },
     {
@@ -5209,11 +6990,17 @@
       "ficha": {
         "caracteristicas": {
           "pH": "7,00 ± 1,00",
-          "aspecto": "Gel incolor",
+          "aspecto": "Gel Incolor",
           "cor": "Incolor",
           "odor": "Alcoólico",
           "uso": "Profissional"
-        }
+        },
+        "subtitulo": "PREPARAÇÃO ALCÓOLICA ANTISSÉPTICA PARA MÃOS 70º INPM (70% p/p)",
+        "beneficios": [
+          "Secagem rápida no contato com as mãos",
+          "Evita ressecamento das mãos (contém emoliente em sua fórmula)",
+          "Possui pH neutro"
+        ]
       }
     },
     {
@@ -5247,13 +7034,27 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "5,0 ± 0,5",
+          "pH": "5,0 + 0,5",
           "aspecto": "Líquido opaco",
           "cor": "Azul",
           "odor": "Lírio do campo",
           "uso": "Profissional"
         },
-        "rendimento": "Dosagem de 2,0 a 8,0 mL/Kg; tempo de 3 a 5 min; temperatura ambiente; nível de água baixo."
+        "subtitulo": "AMACIANTE DE TECIDOS E ROUPAS",
+        "beneficios": [
+          "Amacia e suaviza as roupas perfumando-as agradavelmente com essência exclusiva de flores nobres",
+          "Contém essência encapsulada que resulta numa liberação gradual de aromas florais",
+          "Conserva a tonalidade das cores e a vida útil das roupas",
+          "Facilita a passagem de ferro",
+          "Pode ser usado em máquinas lavadoras ou manualmente",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "amaciamento",
+            "razao": "2,0 a 8,0 mL / Kg"
+          }
+        ]
       }
     },
     {
@@ -5287,13 +7088,26 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "5,0 ± 0,5",
+          "pH": "5,0 + 0,5",
           "aspecto": "Líquido opaco",
           "cor": "Azul",
           "odor": "Lírio do campo",
           "uso": "Profissional"
         },
-        "rendimento": "Dosagem de 2,0 a 8,0 mL/Kg; tempo de 3 a 5 min; temperatura ambiente; nível de água baixo."
+        "subtitulo": "AMACIANTE DE TECIDOS E ROUPAS",
+        "beneficios": [
+          "Amacia e suaviza as roupas perfumando-as agradavelmente",
+          "Conserva a tonalidade das cores e a vida útil das roupas",
+          "Facilita a passagem de ferro",
+          "Pode ser usado em máquinas lavadoras ou manualmente",
+          "Possui tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "amaciamento",
+            "razao": "2,0 a 8,0 mL / Kg"
+          }
+        ]
       }
     },
     {
@@ -5331,10 +7145,26 @@
           "pH": "12,50 ± 0,25",
           "aspecto": "Líquido",
           "cor": "Amarela",
-          "odor": "Característico",
+          "odor": "Caraterístico",
           "uso": "Profissional"
         },
-        "rendimento": "Desinfecção: 1 parte de produto para 10 partes de solução (10 min de contato). Limpeza de superfícies em geral: 1 parte de produto para 100 partes de solução."
+        "subtitulo": "DESINFETANTE PARA USO GERAL",
+        "beneficios": [
+          "Ação comprovada na eliminação dos principais micro-organismos encontrados em banheiros, cozinhas e superfícies em geral",
+          "Indicado para alvejamento de rejuntes, louças, pedras e prevenção de formação de novas sujidades",
+          "Elimina mau cheiro em áreas como banheiros e espaços onde há decomposição orgânica",
+          "Desinfetante com cloro ativo estabilizado, resultando em prazo de validade de 12 meses"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção",
+            "razao": "01 parte de produto para 10 partes de solução"
+          },
+          {
+            "uso": "limpeza de superfícies em geral",
+            "razao": "01 parte do produto para 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -5367,12 +7197,30 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,00 ± 1,00 (solução 1%)",
+          "pH": "12,00 ± 1,00",
           "aspecto": "Líquido transparente",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Fornos/chapas/grelhas: produto puro ou solução 10%, deixar agir 5 a 10 min. Limpeza de pisos/azulejos: 1 parte de produto para até 100 partes de solução, agir 5 min. Forno combinado: produto puro pulverizado, agir 20 min."
+        "subtitulo": "DESINCRUSTANTE ALCALINO PARA USO PROFISSIONAL",
+        "beneficios": [
+          "Alto poder de remoção de gordura carbonizada",
+          "Odor característico e suave",
+          "Aumenta a vida útil dos equipamentos através da remoção das incrustações",
+          "Não ataca a superfícies dos equipamentos tratados",
+          "Baixo teor de espuma. Ação a frio",
+          "Fácil remoção da solução de lavagem"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza de chapas, fornos, câmara de defumação, fogões ou grelhas",
+            "razao": "produto puro ou solução 10% para manutenção"
+          },
+          {
+            "uso": "limpeza diária de pisos e azulejos de cozinha",
+            "razao": "1 parte de produto para até 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -5410,7 +7258,24 @@
           "odor": "Citronela",
           "uso": "Profissional"
         },
-        "rendimento": "Desinfecção: 1 parte de produto para 10 partes de solução (10 min de contato). Limpeza de superfícies em geral: 1 parte de produto para até 40 partes de solução."
+        "subtitulo": "DESINFETANTE PARA USO GERAL",
+        "beneficios": [
+          "Desinfecção comprovada na eliminação dos principais micro-organismos encontrados em banheiros e superfícies em geral",
+          "Atua em sujidades leve sem agredir a superfície (pisos, móveis, etc)",
+          "Não necessita enxágue",
+          "Fragrância exclusiva citronela",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção",
+            "razao": "01 parte de produto para 10 partes de solução"
+          },
+          {
+            "uso": "limpeza de superfícies em geral",
+            "razao": "01 parte de produto para até 40 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -5448,7 +7313,24 @@
           "odor": "Cítrico",
           "uso": "Profissional"
         },
-        "rendimento": "Desinfecção: 1 parte de produto para 10 partes de solução (10 min de contato). Limpeza de superfícies em geral: 1 parte de produto para até 40 partes de solução."
+        "subtitulo": "DESINFETANTE PARA USO GERAL",
+        "beneficios": [
+          "Desinfecção comprovada na eliminação dos principais micro-organismos encontrados em banheiros e superfícies em geral",
+          "Atua em sujidades leves sem agredir a superfície (pisos, móveis, entre outros)",
+          "Não necessita de enxágue",
+          "Fragrância exclusiva Cítrica",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção",
+            "razao": "Diluir 01 parte de produto para 10 partes de solução, deixar em contato com a superfície por 10 minutos."
+          },
+          {
+            "uso": "limpeza de superfícies em geral",
+            "razao": "Utilizar o produto na diluição de 01 parte de produto para até 40 partes de solução."
+          }
+        ]
       }
     },
     {
@@ -5493,7 +7375,24 @@
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Desinfecção: 1 parte de produto para 10 partes de solução (10 min de contato). Limpeza de superfícies em geral: 1 parte de produto para até 40 partes de solução."
+        "subtitulo": "DESINFETANTE PARA USO GERAL",
+        "beneficios": [
+          "Desinfecção comprovada na eliminação dos principais micro-organismos encontrados em banheiros e superfícies em geral",
+          "Atua em sujidades leves sem agredir a superfície (pisos, móveis, entre outros)",
+          "Não necessita enxágue",
+          "Fragrância tradicional floral",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção",
+            "razao": "Diluir 01 parte de produto para 10 partes de solução, deixar em contato com a superfície por 10 minutos."
+          },
+          {
+            "uso": "limpeza de superfícies em geral",
+            "razao": "Utilizar o produto na diluição de 01 parte de produto para até 40 partes de solução."
+          }
+        ]
       }
     },
     {
@@ -5538,7 +7437,24 @@
           "odor": "Lavanda",
           "uso": "Profissional"
         },
-        "rendimento": "Desinfecção: 1 parte de produto para 10 partes de solução (10 min de contato). Limpeza de superfícies em geral: 1 parte de produto para até 40 partes de solução."
+        "subtitulo": "DESINFETANTE PARA USO GERAL",
+        "beneficios": [
+          "Desinfecção comprovada na eliminação dos principais microrganismos encontrados em banheiros e superfícies em geral",
+          "Atua em sujidades leves sem agredir a superfície (pisos, móveis, entre outros)",
+          "Não necessita enxágue",
+          "Fragrância tradicional lavanda",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção",
+            "razao": "Diluir 01 parte de produto para 10 partes de solução, deixar em contato com a superfície por 10 minutos."
+          },
+          {
+            "uso": "limpeza de superfícies em geral",
+            "razao": "Utilizar o produto na diluição de 01 parte de produto para até 40 partes de solução."
+          }
+        ]
       }
     },
     {
@@ -5576,7 +7492,24 @@
           "odor": "Cítrico",
           "uso": "Profissional"
         },
-        "rendimento": "Desinfecção: 1 parte de produto para 10 partes de solução (10 min de contato). Limpeza de superfícies em geral: 1 parte de produto para até 40 partes de solução."
+        "subtitulo": "DESINFETANTE PARA USO GERAL",
+        "beneficios": [
+          "Desinfecção comprovada na eliminação dos principais micro-organismos encontrados em banheiros e superfícies em geral",
+          "Atua em sujidades leves sem agredir a superfície (pisos, móveis, entre outros)",
+          "Não necessita de enxágue",
+          "Fragrância exclusiva limão do bosque",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção",
+            "razao": "Diluir 01 parte de produto para 10 partes de solução, deixar em contato com a superfície por 10 minutos."
+          },
+          {
+            "uso": "limpeza de superfícies em geral",
+            "razao": "Utilizar o produto na diluição de 01 parte de produto para até 40 partes de solução."
+          }
+        ]
       }
     },
     {
@@ -5611,13 +7544,27 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,00 ± 1,00 (1%)",
+          "pH": "12,00 ± 1,00",
           "aspecto": "Líquido transparente",
           "cor": "Amarelado",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Preparar solução com 2 partes de produto para até 100 partes de solução (aprox. 1:50); pré-lavar superfície com água entre 45 a 50°C, deixar agir 10 a 15 minutos e enxaguar com água corrente"
+        "subtitulo": "DETERGENTE CLORADO PARA USO GERAL",
+        "beneficios": [
+          "Alto poder desincrustante, desengordurante e alvejante",
+          "Excelente performance na limpeza de sujidades orgânicas (proteínas, gorduras, carboidratos e sangue)",
+          "Remove manchas difíceis em cozinhas, banheiros, áreas externas e superfícies em geral",
+          "Promove brilho às superfícies após a limpeza",
+          "Aplicado pelo método de espuma, atinge locais de difícil acesso manual",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza pesada de sujidades orgânicas",
+            "razao": "2 partes de Pratt Detergente Clorado para até 100 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -5651,13 +7598,30 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,25 ± 0,25 (100%)",
+          "pH": "7,25 ± 0,25",
           "aspecto": "Líquido Viscoso",
           "cor": "Vermelho",
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Limpeza pesada: 1 parte do produto para até 20 partes de solução; Limpeza leve: 1 parte do produto para até 40 partes de solução"
+        "subtitulo": "DETERGENTE PARA USO GERAL",
+        "beneficios": [
+          "Limpeza de superficies em geral com ação desengordurante",
+          "Produto indicado também para cozinhas profissionais, inclusive para lavagem de louças, panelas e copos",
+          "Possui pH neutro",
+          "Com fragrância Floral",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza pesada",
+            "razao": "Aplicar 01 parte do produto para até 20 partes de solução."
+          },
+          {
+            "uso": "limpeza leve",
+            "razao": "aplicar 01 parte do produto para até 40 partes de solução."
+          }
+        ]
       }
     },
     {
@@ -5691,12 +7655,28 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,25 ± 0,25 (100%)",
+          "pH": "7,25 ± 0,25",
           "aspecto": "Líquido Viscoso",
           "cor": "Amarela",
           "uso": "Profissional"
         },
-        "rendimento": "Limpeza pesada: 1 parte do produto para até 20 partes de solução; Limpeza leve: 1 parte do produto para até 40 partes de solução"
+        "subtitulo": "DETERGENTE PARA USO GERAL",
+        "beneficios": [
+          "Limpeza de superficies em geral com ação desengordurante",
+          "Produto indicado também para cozinhas profissionais, inclusive para lavagem de louças, panelas e copos",
+          "Possui pH neutro",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza pesada",
+            "razao": "01 parte do produto para até 20 partes de solução"
+          },
+          {
+            "uso": "limpeza leve",
+            "razao": "01 parte do produto para até 40 partes de solução"
+          }
+        ]
       }
     },
     {
@@ -5730,13 +7710,25 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "12,25 ± 0,25 (100%)",
+          "pH": "12,25 ± 0,25",
           "aspecto": "Líquido",
           "cor": "Amarela",
-          "odor": "Característico",
+          "odor": "Caraterístico",
           "uso": "Profissional"
         },
-        "rendimento": "Superfícies fixas: aplicar e deixar em contato por 10 minutos; Artigos não críticos: friccionar e deixar umedecido por 10 minutos; Mamadeiras/bicos/chupetas: imergir em solução de 200ppm (20mL do produto para 1L) por 15 minutos"
+        "subtitulo": "DESINFETANTE HOSPITALAR PARA SUPERFÍCIES FIXAS E ARTIGOS NÃO CRÍTICOS",
+        "beneficios": [
+          "Desinfecção segura e prática: produto registrado na ANVISA e com ação comprovada contra os mais importantes micro-organismos",
+          "Ação comprovada contra Pseudomonas, Staphylococcus aureus e Salmonella choleraesuis",
+          "Respaldo de eficácia para área de saúde podendo ser utilizada em outras áreas institucionais",
+          "Produto a base de cloro estabilizado, resultando em um destacado prazo de validade de 12 meses"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção de mamadeiras, bicos e chupetas",
+            "razao": "solução de 200ppm (20ml do produto para 1L de solução)"
+          }
+        ]
       }
     },
     {
@@ -5774,7 +7766,16 @@
           "odor": "Lírio do campo",
           "uso": "Profissional"
         },
-        "rendimento": "Dosagem de 2,0 a 8,0 mL/Kg; tempo de 5 a 20 min; temperatura ambiente a 80°C; nível de água baixo"
+        "rendimento": "Dosagem de 2,0 a 8,0 mL/Kg; tempo de 5 a 20 min; temperatura ambiente a 80°C; nível de água baixo",
+        "subtitulo": "DETERGENTE PARA LAVAGEM DE ROUPAS",
+        "beneficios": [
+          "Nova tecnologia para lavagem que reduz o desgaste das roupas",
+          "Ideal para qualquer tipo de lavanderia",
+          "Eficiente na remoção de sujidades e manchas",
+          "Excelente poder umectante e emulsionante",
+          "Concentrado em branqueadores ópticos",
+          "Possui tensoativo biodegradável"
+        ]
       }
     },
     {
@@ -5809,13 +7810,32 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,50 ± 0,25 (100%)",
+          "pH": "7,50 ± 25",
           "aspecto": "Líquido",
           "cor": "Transparente",
           "odor": "Cítrico",
           "uso": "Profissional"
         },
-        "rendimento": "Espelhos e vidros: diluição 1 parte de produto para 1 parte de água; Superfícies em geral: produto puro ou diluição de até 1 parte de produto para 1 parte de água"
+        "subtitulo": "LIMPADOR PARA USO GERAL",
+        "beneficios": [
+          "Indicado para limpezas superfícies em geral com ação desengordurante",
+          "Atua em sujidades leves sem agredir a superfície (pisos, móveis, entre outros)",
+          "Excelente na limpeza de vidros, espelhos entre outros",
+          "Forma película protetora contra manchas de impressões digitais",
+          "Promove brilho às superfícies após a limpeza",
+          "Não necessita enxágue",
+          "Fragrância exclusiva de aromas cítricos"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza de espelhos e vidros",
+            "razao": "1 parte de produto para 1 parte de água"
+          },
+          {
+            "uso": "limpeza de superfícies em geral",
+            "razao": "produto puro ou diluição de até 1 parte de produto para 1 parte de água"
+          }
+        ]
       }
     },
     {
@@ -5850,12 +7870,30 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "2 ± 0,5 (100%)",
+          "pH": "2 ± 0,5",
           "aspecto": "Líquido transparente",
           "odor": "Característico",
           "uso": "Profissional"
         },
-        "rendimento": "Limpeza pesada: diluir até 1:20 (1L do produto para até 19L de água); Limpeza em geral: diluir até 1:50 (1L do produto para até 49L de água)"
+        "subtitulo": "LIMPADOR E ALVEJANTE PARA USO GERAL",
+        "beneficios": [
+          "Limpador e removedor de manchas de superfícies como porcelanato, azulejos, rejuntes, entre outros",
+          "É eficiente e seguro em superfícies coloridas",
+          "Ação do peróxido de hidrogênio ativado reduz a presença de microrganismo na superfície",
+          "Formação de oxigênio ativo reduz a necessidade de ação mecânica",
+          "Eficaz na remoção de maus odores",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza pesada",
+            "razao": "Diluir até 1:20 (1litro do produto para até 19 litros de água)."
+          },
+          {
+            "uso": "limpeza em geral",
+            "razao": "Diluir até 1:50 (1 litro do produto para até 49 litros de água)."
+          }
+        ]
       }
     },
     {
@@ -5888,12 +7926,28 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "0,5 ± 0,25 (100%)",
+          "pH": "0,5 ± 0,25",
           "aspecto": "Líquido opaco",
           "cor": "Vermelho",
           "uso": "Profissional"
         },
-        "rendimento": "Decapagem leve: diluir 1 parte de produto em 39 partes de água; Decapagem pesada: diluir 1 parte de produto em 9 partes de água. Aguardar de 3 a 5 minutos, realizar ação mecânica e enxaguar abundantemente"
+        "subtitulo": "DECAPANTE ÁCIDO PARA REMOÇÃO DE RESÍDUOS PÓS-OBRA",
+        "beneficios": [
+          "Ideal para decapagem ácida pós-obra",
+          "Excelente na remoção de oxidações e impurezas, em especial a ferrugem",
+          "Atua desegragrando e removendo os resíduos construção ou reforma",
+          "Grande poder de remoção de resíduos pós-obra incrustrados nas superfícies"
+        ],
+        "diluicoes": [
+          {
+            "uso": "decapagem leve",
+            "razao": "Diluir 1 parte de produto em 39 partes de água."
+          },
+          {
+            "uso": "decapagem pesada",
+            "razao": "Diluir 1 parte de produto em 9 partes de água."
+          }
+        ]
       }
     },
     {
@@ -5928,12 +7982,20 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,00 ± 0,25 (100%)",
+          "pH": "7,00 ± 0,25",
           "aspecto": "Líquido Viscoso",
           "cor": "Verde",
           "uso": "Profissional"
         },
-        "rendimento": "Aplicar diretamente sobre as mãos umedecidas, friccionar por cerca de 1 minuto e enxaguar com água"
+        "rendimento": "Aplicar diretamente sobre as mãos umedecidas, friccionar por cerca de 1 minuto e enxaguar com água",
+        "subtitulo": "SABONETE LÍQUIDO",
+        "beneficios": [
+          "Remove as sujidades e o excesso de oleosidade das mãos",
+          "Propicia toque macio e suave",
+          "Possui pH neutro",
+          "Essência tradicional de erva doce",
+          "Contém tensoativos biodegradáveis"
+        ]
       }
     },
     {
@@ -5973,12 +8035,19 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "7,00 ± 0,25 (100%)",
+          "pH": "7,00 ± 0,25",
           "aspecto": "Líquido",
           "cor": "Verde",
           "uso": "Profissional"
         },
-        "rendimento": "Aplicar diretamente sobre as mãos umedecidas, friccionar por cerca de 1 minuto e enxaguar com água corrente"
+        "rendimento": "Aplicar diretamente sobre as mãos umedecidas, friccionar por cerca de 1 minuto e enxaguar com água corrente",
+        "beneficios": [
+          "Remove as sujidades e o excesso de oleosidade das mãos",
+          "Propicia lavagem com espuma consistente, proporcionando toque macio e suave",
+          "Essência exclusiva de lírio do campo",
+          "Possui pH neutro",
+          "Contém tensoativos biodegradáveis"
+        ]
       }
     },
     {
@@ -6013,12 +8082,19 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "6,50 ± 0,30 (100%)",
+          "pH": "6,50 ± 0,30",
           "aspecto": "Líquido viscoso",
           "cor": "Branco perolado",
           "uso": "Profissional"
         },
-        "rendimento": "Aplicar diretamente sobre as mãos umedecidas, friccionar por cerca de 1 minuto e enxaguar com água corrente"
+        "rendimento": "Aplicar diretamente sobre as mãos umedecidas, friccionar por cerca de 1 minuto e enxaguar com água corrente",
+        "beneficios": [
+          "Remove as sujidades e o excesso de oleosidade das mãos",
+          "Propociona toque macio e suave",
+          "Possui pH neutro",
+          "Essência exclusiva de lírio do campo",
+          "Contém tensoativos biodegradáveis"
+        ]
       }
     },
     {
@@ -6051,13 +8127,34 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "10 ± 0,5 (100%)",
+          "pH": "10 ± 0,5",
           "aspecto": "Gel",
           "cor": "Verde escuro",
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Limpeza pesada: diluição 1:2 (500mL de produto em 500mL de água); Limpeza média: 1:15 (150mL em 850mL de água); Limpeza leve/manutenção: 1:30 (75mL em 925mL de água)"
+        "subtitulo": "LIMPADOR DESENGORDURANTE EM GEL",
+        "beneficios": [
+          "Limpeza de superfícies em geral com excelente ação desengordurante",
+          "Indicado para limpeza de pisos, paredes, azulejos, rejuntes, entre outros",
+          "Excelente performance na limpeza de poeiras incrustadas e resíduos de sola de sapatos em pisos",
+          "Seguro para lavagem de vidros e porcelanatos",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza pesada",
+            "razao": "1:2 (500mL de produto em 500mL de água)"
+          },
+          {
+            "uso": "limpeza média",
+            "razao": "1:15 (150mL de produto em 850mL de água)"
+          },
+          {
+            "uso": "limpeza leve ou manutenção",
+            "razao": "1:30 (75mL de produto em 925mL de água)"
+          }
+        ]
       }
     },
     {
@@ -6090,13 +8187,34 @@
       ],
       "ficha": {
         "caracteristicas": {
-          "pH": "9,75 ± 0,25 (100%)",
+          "pH": "9,75 ± 0,25",
           "aspecto": "Líquido Opaco",
           "cor": "Amarela",
           "odor": "Floral",
           "uso": "Profissional"
         },
-        "rendimento": "Puro (aplicar diretamente na superfície); diluição 1:10 (100mL de produto em 900mL de água); diluição 1:20 (50mL de produto em 950mL de água)"
+        "subtitulo": "LIMPADOR DESENGORDURANTE",
+        "beneficios": [
+          "Limpeza de superfícies em geral com excelente ação desengordurante",
+          "Indicado para limpeza de pisos, paredes, azulejos, rejuntes, entre outros",
+          "Seguro para lavagem de vidros e porcelanatos",
+          "Excelente performance na limpeza de poeiras incrustadas e resíduos de sola de sapatos em pisos",
+          "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "limpeza pesada",
+            "razao": "PURO (aplicar diretamente na superfície)"
+          },
+          {
+            "uso": "limpeza média",
+            "razao": "1:10 (100 mL de produto em 900 mL de água)"
+          },
+          {
+            "uso": "limpeza leve ou manutenção",
+            "razao": "1:20 (50 mL de produto em 950 mL de água)"
+          }
+        ]
       }
     },
     {
@@ -6155,7 +8273,30 @@
           "diluicaoMax": "1:50",
           "custoDiluido": "0.52"
         }
-      ]
+      ],
+      "ficha": {
+        "subtitulo": "DESINFETANTE DE USO GERAL",
+        "descricao": "Desinfetante concentrado à base de quaternário de 5ª GERAÇÃO",
+        "beneficios": [
+          "Desinfetante e limpador de uso geral à base de quaternário de amônio de 5ª GERAÇÃO",
+          "Ação antimicrobiana comprovada contra Staphylococcus aureus e Salmonella choleraesuis",
+          "Não é necessario enxágue",
+          "Elevada intensidade da essência, na diluição de 1:50",
+          "Disponível nas versões LAVANDA, FLORAL e KARÍCIA",
+          "Contém tensoativo biodegradável"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desinfecção e limpeza de superfícies em geral",
+            "razao": "Diluir 01 parte de SPAR HT-2 para 50 partes de solução (2%)"
+          }
+        ],
+        "caracteristicas": {
+          "pH": "8,50 ± 0,50",
+          "aspecto": "Líquido Verde, Vermelho e Azul",
+          "odor": "Lavanda, Floral e Karícia"
+        }
+      }
     },
     {
       "codigo": "SPAR-HT3",
@@ -6183,7 +8324,30 @@
           "diluicaoMax": "1:5",
           "custoDiluido": "3.20"
         }
-      ]
+      ],
+      "ficha": {
+        "subtitulo": "LIMPADOR DESENGORDURANTE - USO INSTITUCIONAL",
+        "beneficios": [
+          "Indicado para limpezas de superfícies em geral com ação desengordurante",
+          "Atua em sujidades leves sem agredir a superfície (pisos, móveis, entre outros)",
+          "Excelente na limpeza de vidros, espelhos, entre outros",
+          "Forma uma película protetora contra manchas de impressões digitais",
+          "Promove brilho às superfícies após a limpeza",
+          "Não necessita enxágue"
+        ],
+        "diluicoes": [
+          {
+            "uso": "uso geral",
+            "razao": "Diluir 01 parte do SPAR HT-3 para até 05 partes de solução."
+          }
+        ],
+        "caracteristicas": {
+          "pH": "8,25 ± 0,25",
+          "aspecto": "Líquido",
+          "cor": "Incolor",
+          "odor": "Cítrico"
+        }
+      }
     }
   ]
 }

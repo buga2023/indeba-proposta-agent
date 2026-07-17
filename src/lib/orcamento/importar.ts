@@ -33,7 +33,9 @@ const JSON_SCHEMA = {
           quantidade: { type: "integer", minimum: 1 },
           tamanho: { type: ["number", "null"] },
           unidade: { type: ["string", "null"], enum: ["L", "kg", "un", "ml", null] },
-          preco: { type: "string", pattern: "^\\d+\\.\\d{2}$" },
+          // [0-9] em vez de \d: o conversor JSON-schema→GBNF do Ollama (llama.cpp) não
+          // suporta a classe de atalho \d — falha com "failed to parse grammar" (400).
+          preco: { type: "string", pattern: "^[0-9]+\\.[0-9]{2}$" },
         },
         required: ["nome", "quantidade", "tamanho", "unidade", "preco"],
       },
