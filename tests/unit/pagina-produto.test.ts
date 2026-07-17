@@ -50,8 +50,8 @@ describe("paginaProduto", () => {
   it("'Embalagens disponíveis' lista TODOS os tamanhos, incluindo a cotada, sempre sem preço (spec §8, decisão final: repetição permitida)", () => {
     const html = paginaProduto(item, "data:,x");
     expect(html).toContain("Embalagens disponíveis");
-    expect(html).toContain("<li>5 L</li>"); // a cotada (5L) TAMBÉM aparece ali, sem preço
-    expect(html).toContain("<li>20 L</li>");
+    expect(html).toContain('<span class="pp-emb-chip">5 L</span>'); // a cotada (5L) TAMBÉM aparece ali, sem preço
+    expect(html).toContain('<span class="pp-emb-chip">20 L</span>');
   });
 
   it("ordena 'Embalagens disponíveis' por volume crescente, independente da ordem no payload", () => {
@@ -65,8 +65,8 @@ describe("paginaProduto", () => {
     };
     const html = paginaProduto(foraDeOrdem, "data:,x");
     const posMl = html.indexOf("500 ml");
-    const pos5L = html.indexOf("<li>5 L</li>");
-    const pos20L = html.indexOf("<li>20 L</li>");
+    const pos5L = html.indexOf('<span class="pp-emb-chip">5 L</span>');
+    const pos20L = html.indexOf('<span class="pp-emb-chip">20 L</span>');
     expect(posMl).toBeLessThan(pos5L); // 500 ml < 5 L
     expect(pos5L).toBeLessThan(pos20L);
   });

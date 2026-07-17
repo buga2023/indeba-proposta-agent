@@ -98,14 +98,14 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   const semVenda = !simples && !f?.indicadoPara?.length && !f?.beneficios?.length;
 
   const indicado = f?.indicadoPara?.length
-    ? `<div><div class="pp-label"><span>Indicado para</span></div><div class="pp-icons">${f.indicadoPara
+    ? `<div><div class="pp-label">Indicado para</div><div class="pp-icons">${f.indicadoPara
         .map((i) => `<div class="pp-ic"><span class="ic">${iconeSvg(i.icone)}</span><span>${esc(i.label)}</span></div>`)
         .join("")}</div></div>`
     : "";
 
   const beneficios = f?.beneficios?.length
-    ? `<div><div class="pp-label"><span>Principais benefícios</span></div><div class="pp-benes">${f.beneficios
-        .map((b) => `<div class="pp-be"><span class="ic">${iconeSvg("check-simples", ORANGE)}</span><p>${esc(b)}</p></div>`)
+    ? `<div><div class="pp-label">Principais benefícios</div><div class="pp-benes">${f.beneficios
+        .map((b) => `<div class="pp-be"><span class="pp-chk">${iconeSvg("check-simples", "#fff")}</span><p>${esc(b)}</p></div>`)
         .join("")}</div></div>`
     : "";
 
@@ -132,9 +132,9 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   const volumeOrdenacao = (e: (typeof item.embalagens)[number]) => (e.unidade === "L" ? e.tamanho * 1000 : e.tamanho);
   const disponiveis = item.embalagens.length > 1 ? [...item.embalagens].sort((a, b) => volumeOrdenacao(a) - volumeOrdenacao(b)) : [];
   const embalagens = disponiveis.length
-    ? `<div class="pp-panel"><h4>Embalagens disponíveis</h4><ul class="pp-emb">${disponiveis
-        .map((e) => `<li>${e.tamanho} ${esc(e.unidade)}</li>`)
-        .join("")}</ul></div>`
+    ? `<div class="pp-panel"><h4>Embalagens disponíveis</h4><div class="pp-emb">${disponiveis
+        .map((e) => `<span class="pp-emb-chip">${e.tamanho} ${esc(e.unidade)}</span>`)
+        .join("")}</div></div>`
     : "";
   const carac = f?.caracteristicas
     ? `<div class="pp-panel"><h4>Características</h4><div class="pp-rows">${Object.entries(f.caracteristicas)
@@ -159,6 +159,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
 
   const specs = diluicoes || rendimento || embalagens || carac ? `<div class="pp-specs">${diluicoes}${rendimento}${embalagens}${carac}</div>` : "";
   const runmark = numero ? `<div class="pp-runmark">Proposta de Solução <b>${esc(numero)}</b></div>` : "";
+  const railFoot = numero ? `<div class="pp-railfoot">Página ${esc(numero)} · Proposta de Solução</div>` : "";
 
   const wm = logoWhite
     ? `<img class="pp-wm-logo" src="${logoWhite}" alt="Indeba Express"/>`
@@ -170,6 +171,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
       ${eyebrow}
       <div class="pp-figure"><div class="pp-imgcard${temFundoTransparente ? "" : " pp-imgcard-clara"}"><img src="${dataUri}" alt="${titulo}"/></div></div>
       ${valores}
+      ${railFoot}
     </aside>
     <div class="pp-content">
       ${runmark}
@@ -227,27 +229,28 @@ export function consolidadaHtml(
   // preserva a convenção antiga de nomear a seção em maiúsculas.
   const secLbl = (rotulo: string) => `<div class="lbl"><span></span><b>${esc(rotulo)}</b></div>`;
 
-  const capaRow = (rot: string, val: string) =>
-    `<div class="capa-row"><span class="k">${esc(rot)}</span><span class="v">${esc(val)}</span></div>`;
+  const capaRow = (icone: string, rot: string, val: string) =>
+    `<div class="cc-row"><span class="cc-ic">${iconeSvg(icone)}</span><div><div class="cc-r">${esc(rot)}</div><div class="cc-v">${esc(val)}</div></div></div>`;
 
   const capa = `<section class="capa">
-    <img class="capa-logo" src="${assets.logoWhite}" alt="Indeba Express"/>
-    <div class="capa-mid">
-      <div class="capa-rule"></div>
-      <h1 class="capa-tit">Proposta<br/>de Solução</h1>
-      <p class="capa-sub">${esc(c.capa.subtitulo)}</p>
+    ${wave("wave")}
+    <div class="capa-wm">indeba express</div>
+    <img class="capa-logo" src="${assets.logo}" alt="Indeba Express"/>
+    <div class="capa-dash"></div>
+    <div class="capa-tit">PROPOSTA DE SOLUÇÃO</div>
+    <div class="capa-sub">${esc(c.capa.subtitulo)}</div>
+    <div class="capa-card">
+      ${capaRow("pessoa", "Cliente", cli.razaoSocial)}
+      ${capaRow("pagamento", "CNPJ", cli.cnpj || "—")}
+      ${capaRow("prazo", "Segmento", cli.segmento || "—")}
+      ${capaRow("pessoa", "Responsável", cli.responsavel || "—")}
     </div>
-    <div class="capa-panel">
-      ${capaRow("Cliente", cli.razaoSocial)}
-      ${capaRow("CNPJ", cli.cnpj || "—")}
-      ${capaRow("Segmento", cli.segmento || "—")}
-      ${capaRow("Responsável", cli.responsavel || "—")}
+    <div class="capa-cons">
+      <div class="capa-cons-row"><span class="capa-fio capa-fio-l"></span><span class="capa-badge">${iconeSvg("pessoa", ORANGE)}</span><span class="capa-fio capa-fio-r"></span></div>
+      <div class="cc-lab">Consultor Responsável</div><div class="cc-nome">${esc(c.capa.consultor)}</div>
+      <div class="capa-cal">${iconeSvg("prazo")}</div>
+      <div class="cc-cidade">${esc(c.capa.cidade)}<br/>${esc(data)}</div>
     </div>
-    <div class="capa-bottom">
-      <div><div class="capa-k">Consultor Responsável</div><div class="capa-nome">${esc(c.capa.consultor)}</div></div>
-      <div class="capa-loc">${esc(c.capa.cidade)}<br/>${esc(data)}</div>
-    </div>
-    <div class="capa-arc"></div><div class="capa-dots"></div>
   </section>`;
 
   const apres = `<section class="pg sec">
@@ -379,28 +382,34 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .av .chk { width: 26px; height: 26px; border-radius: 50%; background: ${ORANGE}; display: flex; align-items: center; justify-content: center; flex: none; }
 .av .chk svg { width: 14px; height: 14px; }
 .av span { font-size: 9.5px; line-height: 1.4; color: rgba(255,255,255,.82); }
-/* Capa — navy, decorativos SEMPRE atrás do conteúdo (z-index) e confinados ao canto */
-.capa { height: 278mm; position: relative; display: flex; flex-direction: column; justify-content: space-between;
-  padding: 18mm 16mm; color: #fff; background: linear-gradient(158deg, ${NAVY} 0%, #06203f 100%);
-  page-break-after: always; overflow: hidden; }
-.capa > *:not(.capa-arc):not(.capa-dots) { position: relative; z-index: 1; }
-.capa-logo { height: 40px; width: auto; align-self: flex-start; display: block; }
-.capa-rule { width: 46px; height: 4px; background: ${ORANGE}; border-radius: 2px; margin-bottom: 18px; }
-.capa-tit { font-size: 44px; font-weight: 800; line-height: 1.05; letter-spacing: -1px; }
-.capa-sub { margin-top: 14px; font-size: 13px; color: rgba(255,255,255,.62); max-width: 320px; }
-.capa-panel { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 4px 22px; }
-.capa-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; }
-.capa-row + .capa-row { border-top: 1px solid rgba(255,255,255,.1); }
-.capa-row .k { font-size: 9.5px; letter-spacing: 1.8px; text-transform: uppercase; color: rgba(255,255,255,.5); }
-.capa-row .v { font-weight: 700; font-size: 14px; }
-.capa-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
-.capa-k { font-size: 9.5px; letter-spacing: 1.8px; text-transform: uppercase; color: rgba(255,255,255,.5); }
-.capa-nome { font-weight: 700; font-size: 15px; margin-top: 4px; }
-.capa-loc { text-align: right; font-size: 11px; line-height: 1.6; color: rgba(255,255,255,.62); }
-.capa-arc { position: absolute; z-index: 0; right: -130px; bottom: -160px; width: 380px; height: 380px; border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(232,98,42,.16), rgba(232,98,42,0) 62%); }
-.capa-dots { position: absolute; z-index: 0; right: 50px; bottom: 50px; width: 100px; height: 60px;
-  background-image: radial-gradient(rgba(255,255,255,.16) 1.1px, transparent 1.1px); background-size: 10px 10px; }
+/* Capa — fundo claro (padrão validado), decorativos SEMPRE atrás do conteúdo */
+.capa { height: 275mm; position: relative; display: flex; flex-direction: column; align-items: center;
+  padding-top: 60px; padding-bottom: 110px; page-break-after: always; overflow: hidden; background: #f6f7f9; }
+.capa > *:not(.wave):not(.capa-wm) { position: relative; z-index: 1; }
+.wave { position: absolute; z-index: 0; right: 0; bottom: 0; width: 96mm; height: auto; }
+/* Marca-d'água gigante atrás do card — decorativa, nunca disputa leitura com o conteúdo */
+.capa-wm { position: absolute; z-index: 0; top: 46%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 68px; font-weight: 800; color: ${NAVY}; opacity: .045; white-space: nowrap; letter-spacing: -1px; }
+.capa-logo { width: 190px; margin-bottom: 22px; }
+.capa-dash { width: 46px; height: 2px; background: ${ORANGE}; position: relative; margin-bottom: 14px; }
+.capa-dash::before, .capa-dash::after { content: ""; position: absolute; top: -5px; width: 2px; height: 12px; background: ${ORANGE}; }
+.capa-dash::before { left: -2px; } .capa-dash::after { right: -2px; }
+.capa-tit { color: ${NAVY}; font-size: 26px; font-weight: 800; letter-spacing: 4px; }
+.capa-sub { color: #6b7787; font-size: 13px; margin-top: 6px; }
+.capa-card { background: #fff; border: 1px solid #eef2f7; border-radius: 16px; box-shadow: 0 8px 30px rgba(11,42,74,.08); padding: 18px 26px; margin-top: 40px; width: 340px; }
+.cc-row { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f3f7; }
+.cc-row:last-child { border-bottom: none; } .cc-ic { width: 38px; height: 38px; border-radius: 50%; background: ${NAVY}; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.cc-ic svg { width: 18px; height: 18px; stroke: #fff; } .cc-r { color: #8a95a3; font-size: 9.5px; } .cc-v { color: ${NAVY}; font-weight: 800; font-size: 13px; }
+.capa-cons { text-align: center; margin-top: 40px; }
+.capa-cons-row { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+.capa-fio { width: 70px; height: 1px; } .capa-fio-l { background: linear-gradient(90deg, transparent, ${ORANGE}); }
+.capa-fio-r { background: linear-gradient(90deg, ${ORANGE}, transparent); }
+.capa-badge { width: 36px; height: 36px; border: 1.5px solid ${ORANGE}; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.capa-badge svg { width: 17px; height: 17px; }
+.cc-lab { color: #8a95a3; font-size: 11px; margin-top: 10px; }
+.cc-nome { color: ${NAVY}; font-weight: 800; font-size: 14px; margin-top: 2px; }
+.capa-cal { margin-top: 22px; } .capa-cal svg { width: 20px; height: 20px; }
+.cc-cidade { color: #6b7787; font-size: 11px; margin-top: 13px; }
 /* Condições — grid 2 colunas de itens + fechamento navy (mensagem + assinatura) */
 .conds { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-top: 18px; }
 .condi { display: flex; gap: 12px; align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid #e5ebf2; }
@@ -441,6 +450,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-v-size { font-size: 12px; font-weight: 700; color: ${ORANGE}; letter-spacing: .5px; }
 .pp-v-price { font-family: "Geist Mono", monospace; font-size: 27px; font-weight: 700; letter-spacing: .3px; }
 .pp-v-note { font-size: 9px; line-height: 1.4; color: rgba(255,255,255,.5); margin-top: 8px; max-width: 200px; }
+.pp-railfoot { margin-top: 14px; font-size: 8.5px; letter-spacing: 1.2px; color: rgba(255,255,255,.4); text-transform: uppercase; }
 /* Coluna de conteúdo: centraliza o bloco principal verticalmente — sem isso,
    produtos com pouca ficha (sem indicado-para/benefícios) deixavam a metade de
    baixo vazia. Contato fica ancorado no fim da página. */
@@ -451,29 +461,29 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-tit { color: ${NAVY}; font-size: 25px; font-weight: 800; line-height: 1.08; letter-spacing: -.3px; }
 .pp-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin-top: 4px; }
 .pp-desc { color: #5a6878; font-size: 11.5px; line-height: 1.55; max-width: 400px; }
-.pp-label { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.pp-label::before { content: ""; width: 14px; height: 3px; background: ${ORANGE}; border-radius: 2px; }
-.pp-label span { font-size: 10px; font-weight: 700; letter-spacing: 1.4px; color: ${NAVY}; text-transform: uppercase; }
+.pp-label { display: inline-block; background: ${NAVY}; color: #fff; font-size: 10px; font-weight: 700;
+  letter-spacing: 1.3px; text-transform: uppercase; padding: 6px 13px; border-radius: 7px; margin-bottom: 12px; }
 .pp-icons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .pp-ic { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
 .pp-ic .ic { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
 .pp-ic .ic svg { width: 20px; height: 20px; } .pp-ic span { font-size: 8.5px; line-height: 1.2; color: #6b7787; }
 .pp-benes { display: flex; flex-direction: column; gap: 7px; }
 .pp-be { display: flex; gap: 8px; align-items: flex-start; }
-.pp-be .ic { width: 14px; height: 14px; flex: none; margin-top: 2px; } .pp-be .ic svg { width: 14px; height: 14px; }
+.pp-chk { width: 18px; height: 18px; border-radius: 50%; background: ${ORANGE}; display: flex; align-items: center; justify-content: center; flex: none; margin-top: 1px; }
+.pp-chk svg { width: 10px; height: 10px; }
 .pp-be p { font-size: 11px; line-height: 1.4; color: #2a3746; }
-/* Specs: grid 2 colunas — 1-4 painéis conforme o que a ficha tiver (diluição,
-   rendimento, embalagens, características); nenhum é inventado. */
-.pp-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Specs: painéis empilhados em largura total — 1-4 conforme o que a ficha tiver
+   (diluição, rendimento, embalagens, características); nenhum é inventado. */
+.pp-specs { display: flex; flex-direction: column; gap: 10px; }
 .pp-panel { background: #eef2f7; border-radius: 12px; padding: 13px 14px; }
 .pp-panel h4 { color: ${NAVY}; font-size: 9px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase;
   text-align: center; padding-bottom: 8px; margin-bottom: 9px; border-bottom: 1px solid #e0e6ee; }
-.pp-emb { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-.pp-emb li { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; color: ${NAVY}; }
-.pp-emb li::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: ${ORANGE}; flex: none; }
-.pp-rows { display: flex; flex-direction: column; gap: 6px; }
-.pp-row { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; }
-.pp-row .k { color: #6b7787; } .pp-row .v { font-weight: 700; color: ${NAVY}; text-align: right; }
+.pp-emb { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.pp-emb-chip { display: inline-block; font-family: "Geist Mono", monospace; font-weight: 700; font-size: 12px; color: ${NAVY};
+  background: #fff; border: 1px solid #d6dee8; border-radius: 8px; padding: 7px 16px; }
+.pp-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+.pp-row { display: flex; gap: 6px; font-size: 10px; }
+.pp-row .k { color: #6b7787; flex: none; } .pp-row .v { font-weight: 700; color: ${NAVY}; }
 .pp-big { text-align: center; color: ${ORANGE}; font-weight: 800; font-size: 12px; }
 /* Rendimento multi-dosagem (Sanquat, Sanclor, Sanap…): lista legível em vez de paredão
    laranja centralizado. Dose em destaque, contexto (entre parênteses) em cinza abaixo. */
