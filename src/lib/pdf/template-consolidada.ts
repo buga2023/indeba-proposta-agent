@@ -82,7 +82,7 @@ export type ContatoConsolidada = { whatsapp: string | null; emailConsultor: stri
 // texto, só reposicionado). `simples`/`semVenda`: sinalizam o quão rica é a ficha
 // (nenhum dado técnico/venda vs. só técnico) — o layout em rail já centraliza o
 // conteúdo disponível sozinho, então essas classes hoje são só um sinal semântico.
-export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, numero?: string, logoWhite?: string, temFundoTransparente = false): string {
+export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, numero?: string, logoWhite?: string): string {
   const f = item.ficha ?? null;
   const titulo = f?.titulo ? esc(f.titulo) : esc(item.nome);
   const subtitulo = f?.subtitulo ? `<div class="pp-sub">${esc(f.subtitulo)}</div>` : "";
@@ -169,7 +169,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
     <aside class="pp-rail">
       ${wm}
       ${eyebrow}
-      <div class="pp-figure"><div class="pp-imgcard${temFundoTransparente ? "" : " pp-imgcard-clara"}"><img src="${dataUri}" alt="${titulo}"/></div></div>
+      <div class="pp-figure"><div class="pp-imgcard"><img src="${dataUri}" alt="${titulo}"/></div></div>
       ${valores}
       ${railFoot}
     </aside>
@@ -218,7 +218,6 @@ export function consolidadaHtml(
   scope: PropostaScope,
   imagens: Record<string, string>,
   assets: { logo: string; logoWhite: string; fontSans: string; fontMono: string },
-  imagensCutout: Record<string, boolean> = {},
 ): string {
   const c = scope.consolidada ?? consolidadaDefaults();
   const cli = scope.cliente;
@@ -293,14 +292,7 @@ export function consolidadaHtml(
   const PRIMEIRO_PRODUTO = 4;
   const produtos = scope.itens
     .map((it, idx) =>
-      paginaProduto(
-        it,
-        imagens[it.codigo] ?? "",
-        contato,
-        String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"),
-        assets.logoWhite,
-        imagensCutout[it.codigo] ?? false,
-      ),
+      paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite),
     )
     .join("");
 
@@ -439,11 +431,8 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-eyebrow { margin-top: 12px; font-size: 10px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-eyebrow b { color: ${ORANGE}; font-weight: 700; margin-left: 6px; }
 .pp-figure { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px 0; }
-.pp-imgcard { width: 190px; height: 190px; background: rgba(255,255,255,.07); border-radius: 16px; display: flex; align-items: center; justify-content: center; }
+.pp-imgcard { width: 190px; height: 190px; background: #f3f6fa; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
 .pp-imgcard img { max-width: 150px; max-height: 170px; object-fit: contain; }
-/* Fotos sem recorte de fundo confiável (fundo de estúdio branco intacto) — card
-   claro em vez de navy, pra evitar a "caixa branca" contra o navy do card padrão. */
-.pp-imgcard-clara { background: #f3f6fa; }
 .pp-price { border-top: 1px solid rgba(255,255,255,.16); padding-top: 16px; }
 .pp-v-label { font-size: 9.5px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-v-row { display: flex; align-items: baseline; gap: 10px; margin-top: 7px; }

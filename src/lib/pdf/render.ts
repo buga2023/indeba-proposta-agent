@@ -60,17 +60,17 @@ function dataUri(relPath: string): string {
 }
 
 // Fotos com fundo removido (recorte automático + revisão visual, jul/2026) vivem ao
-// lado do original, mesmo nome + sufixo "-cutout.png" — usadas no card navy da ficha
-// de produto (consolidada) pra evitar a "caixa branca" do fundo de estúdio original.
-// Nem toda foto tem uma boa (bordas translúcidas corroem no recorte) — ficha cai pro
-// card claro nesse caso (ver .pp-imgcard-clara em template-consolidada.ts).
-function resolverImagemProduto(imagemPath: string): { uri: string; cutout: boolean } {
+// lado do original, mesmo nome + sufixo "-cutout.png" — usadas no card claro da ficha
+// de produto (consolidada) pra evitar a "caixa branca" do fundo de estúdio original
+// colidindo com o card. Nem toda foto tem uma boa (bordas translúcidas corroem no
+// recorte) — cai pro original nesse caso, sem quebrar.
+function resolverImagemProduto(imagemPath: string): string {
   const cutoutPath = imagemPath.replace(/\.jpe?g$/i, "-cutout.png");
   if (cutoutPath !== imagemPath) {
     const uri = dataUri(cutoutPath);
-    if (uri) return { uri, cutout: true };
+    if (uri) return uri;
   }
-  return { uri: "", cutout: false };
+  return "";
 }
 
 // Rodapé institucional repetido em toda página (Playwright footerTemplate).
@@ -92,7 +92,6 @@ export function montarDocumento(
   imagens: Record<string, string>,
   banner: string,
   asset: (p: string) => string,
-  imagensCutout: Record<string, boolean> = {},
 ): { html: string; footer: string; marginTop: string } {
   switch (scope.tipo) {
     case "orcamento":
@@ -103,17 +102,12 @@ export function montarDocumento(
       // o render bloqueia requisição externa (route abort acima), então não dá pra
       // carregar de CDN: tem que vir embutida, igual às imagens.
       return {
-        html: consolidadaHtml(
-          scope,
-          imagens,
-          {
-            logo: asset("/marca/indeba-express-logo.png"),
-            logoWhite: asset("/marca/indeba-express-logo-white.png"),
-            fontSans: asset("/fonts/geist-sans-variable.woff2"),
-            fontMono: asset("/fonts/geist-mono-variable.woff2"),
-          },
-          imagensCutout,
-        ),
+        html: consolidadaHtml(scope, imagens, {
+          logo: asset("/marca/indeba-express-logo.png"),
+          logoWhite: asset("/marca/indeba-express-logo-white.png"),
+          fontSans: asset("/fonts/geist-sans-variable.woff2"),
+          fontMono: asset("/fonts/geist-mono-variable.woff2"),
+        }),
         footer: FOOTER_PAG,
         marginTop: "0mm",
       };
@@ -148,15 +142,12 @@ export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
   // Foto vem da base (catálogo). Enquanto faltar, cai no placeholder — nunca quebra.
   const generico = dataUri("/produtos/_generico.svg");
   const imagens: Record<string, string> = {};
-  const imagensCutout: Record<string, boolean> = {};
   for (const item of scope.itens) {
-    const cortada = resolverImagemProduto(item.imagemPath);
-    imagens[item.codigo] = cortada.uri || dataUri(item.imagemPath) || generico;
-    imagensCutout[item.codigo] = cortada.cutout;
+    imagens[item.codigo] = resolverImagemProduto(item.imagemPath) || dataUri(item.imagemPath) || generico;
   }
   const banner = dataUri("/marca/header-ies.png");
 
-  const doc = montarDocumento(scope, imagens, banner, dataUri, imagensCutout);
+  const doc = montarDocumento(scope, imagens, banner, dataUri);
   const html = "<!DOCTYPE html>" + doc.html;
 
   const browser = await abrirNavegador();
