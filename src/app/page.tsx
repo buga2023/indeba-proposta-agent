@@ -263,6 +263,12 @@ export default function Home() {
     setScope((s) => (s ? { ...s, textoApresentacao: { conteudo: novo, procedencia: "MANUAL" } } : s));
   }
 
+  // Condições comerciais (validade/prazo/pagamento/frete) editáveis direto na Revisão —
+  // mesmo setter que o chat de correção já usa (setCondicaoComercial).
+  function editarCondicao(campo: "validade" | "prazoEntrega" | "pagamento" | "frete", valor: string) {
+    setScope((s) => (s ? setCondicaoComercial(s, campo, valor) : s));
+  }
+
   // Aplicação determinística do chat de correção (EdicaoChat): a IA já classificou a
   // ação e resolveu o item/campo alvo (rota /api/comando-edicao); aqui só chamamos os
   // MESMOS setters que os controles manuais da Revisão usam. Preço/quantidade sempre
@@ -596,6 +602,7 @@ export default function Home() {
             {...{ reviewVariant, setReviewVariant, scope, excluded, includedItems, total, toggleProduct, changeQty, editarPreco }}
             onRefinar={refinarProposta}
             onEditarTexto={editarTexto}
+            onEditarCondicao={editarCondicao}
             onComandoChat={aplicarComandoChat}
             refining={refining}
             goToManual={novaProposta}
@@ -1544,6 +1551,7 @@ function ReviewScreen({
   editarPreco,
   onRefinar,
   onEditarTexto,
+  onEditarCondicao,
   onComandoChat,
   refining,
   goToManual,
@@ -1560,6 +1568,7 @@ function ReviewScreen({
   editarPreco: (codigo: string, idx: number, valor: string) => void;
   onRefinar: (texto: string) => void;
   onEditarTexto: (texto: string) => void;
+  onEditarCondicao: (campo: "validade" | "prazoEntrega" | "pagamento" | "frete", valor: string) => void;
   onComandoChat: (r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null }) => string | void;
   refining: boolean;
   goToManual: () => void;
@@ -1688,6 +1697,31 @@ function ReviewScreen({
 
         {/* Chat de correção pontual — adicional ao Refinar com IA acima */}
         <EdicaoChat scope={scope} onComando={onComandoChat} />
+
+        {/* Condições comerciais — editáveis direto (antes só dava pra mudar via chat de correção) */}
+        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
+          <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginBottom: "8px" }}>Condições comerciais</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
+            {(
+              [
+                ["validade", "Validade da proposta"],
+                ["prazoEntrega", "Prazo de entrega"],
+                ["pagamento", "Forma de pagamento"],
+                ["frete", "Frete"],
+              ] as const
+            ).map(([campo, label]) => (
+              <label key={campo}>
+                <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "4px" }}>{label}</div>
+                <input
+                  value={scope.condicoesComerciais[campo] ?? ""}
+                  onChange={(e) => onEditarCondicao(campo, e.target.value)}
+                  placeholder="—"
+                  style={{ width: "100%", height: "34px", padding: "0 10px", borderRadius: "6px", border: "1px solid var(--gray-200)", background: "var(--gray-50)", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", boxSizing: "border-box" }}
+                />
+              </label>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="ies-scroll" style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
