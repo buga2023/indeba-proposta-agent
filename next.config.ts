@@ -56,6 +56,13 @@ const nextConfig: NextConfig = {
       // does not exist". Caminho REAL do pnpm (nunca o symlink @sparticuz/chromium).
       "./node_modules/.pnpm/@sparticuz+chromium@*/node_modules/@sparticuz/chromium/bin/**",
     ],
+    // pdfjs-dist tenta subir um worker (pdf.worker.mjs) por import dinâmico relativo ao
+    // próprio pacote; sem isso no bundle serverless, quebra com "Setting up fake worker
+    // failed: Cannot find module .../pdf.worker.mjs" (mesma classe de problema do
+    // Chromium acima — o tracing estático não segue o require/import dinâmico do pacote
+    // externo). Usado por Importar orçamento e Análise de contrato (extração de PDF).
+    "/api/orcamento/importar": ["./node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+    "/api/contrato/extrair": ["./node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
