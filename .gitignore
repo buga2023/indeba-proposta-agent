@@ -64,3 +64,8 @@ dev.log
 
 # perfil de estilo derivado das referencias (artefato de runtime; gerado via /api/referencias/sync)
 /data/referencias/
+
+# Autostart do backend de IA (Ollama+proxy+túnel) — artefatos locais, não versionar.
+scripts/autostart.log
+scripts/.ollama-tunnel-url
+deploy-autostart.log
