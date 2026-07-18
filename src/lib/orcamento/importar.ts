@@ -101,12 +101,15 @@ export function validarPrecos(
   return { aceitos, rejeitados };
 }
 
-// Normaliza para casamento: minúsculas, sem acento, só alfanumérico.
+// Normaliza para casamento: minúsculas, sem acento, só alfanumérico. Apóstrofo é
+// REMOVIDO (não vira espaço) — senão "Soft's" vira dois tokens "soft"+"s" e nunca casa
+// com "Softs" (comum em texto de ERP/orçamento, que costuma vir sem apóstrofo).
 const norm = (s: string) =>
   s
     .toLowerCase()
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
+    .replace(/['’]/g, "")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 

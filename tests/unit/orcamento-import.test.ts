@@ -58,6 +58,14 @@ describe("matchCatalogo — casa item do orçamento com produto do catálogo", (
   it("sem casamento → null (não força vínculo errado)", () => {
     expect(matchCatalogo("Detergente neutro genérico", PRODUTOS)).toBeNull();
   });
+
+  // Achado em produção (2026-07-17): "Soft's Concentrado" no catálogo vs "SOFTS
+  // CONCENTRADO" no texto do orçamento (ERP costuma escrever sem apóstrofo) — casava
+  // errado antes porque "soft's" virava dois tokens ("soft" + "s") no normalizador.
+  it("apóstrofo no nome do catálogo não impede o casamento com texto sem apóstrofo", () => {
+    const comApostrofo = [{ codigo: "SOFTS-CONCENTRADO", nome: "Soft's Concentrado" }];
+    expect(matchCatalogo("381286 - SOFTS CONCENTRADO - BD20", comApostrofo)?.codigo).toBe("SOFTS-CONCENTRADO");
+  });
 });
 
 describe("estruturarOrcamento", () => {

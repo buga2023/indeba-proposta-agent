@@ -162,6 +162,14 @@ export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
       else route.abort();
     });
     await page.setContent(html, { waitUntil: "networkidle" });
+    // "networkidle" não cobre imagens embutidas via data: URI (não fazem fetch de rede) —
+    // o decode delas ainda é assíncrono no Chromium. Sem esperar, o PDF às vezes sai com
+    // uma foto de produto em branco (visto em produção: 1 de 5 produtos sem imagem, sempre
+    // um diferente — race condition clássica, não dado/arquivo quebrado). `img.decode()`
+    // garante que todo <img> já pintou antes de tirar o "print".
+    await page.evaluate(() =>
+      Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => {}))),
+    );
     return await page.pdf({
       format: "A4",
       printBackground: true,
