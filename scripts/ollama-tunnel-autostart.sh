@@ -40,14 +40,33 @@ else
 fi
 
 # 3) Túnel Cloudflare (aponta pro proxy, NUNCA direto pro Ollama)
+# Health-check real: processo pode estar vivo mas preso num loop de reconexão
+# (aconteceu em 2026-07-18 — cf.log só "Retrying connection", nunca serve request).
+# Por isso não basta checar se o processo existe: testamos a URL pública de verdade.
+TOKEN_HC=$(grep "^OLLAMA_AUTH_TOKEN=" .env.local | cut -d= -f2-)
+TUNEL_SAUDAVEL=false
+if [ -f "$STATE" ]; then
+  URL_ATUAL_TESTE=$(cat "$STATE")
+  CODE=$(curl -s -o /dev/null -m 10 -w "%{http_code}" -H "Authorization: Bearer $TOKEN_HC" "$URL_ATUAL_TESTE/api/tags" 2>/dev/null)
+  [ "$CODE" = "200" ] && TUNEL_SAUDAVEL=true
+fi
+
 if ! tasklist //FI "IMAGENAME eq cloudflared.exe" 2>/dev/null | grep -qi cloudflared.exe; then
   log "Túnel não estava rodando — iniciando..."
   rm -f cf.log
   nohup "$CF" tunnel --url http://127.0.0.1:11435 --http-host-header localhost:11435 --logfile cf.log > /dev/null 2>&1 &
   disown
   sleep 8
+elif [ "$TUNEL_SAUDAVEL" = false ]; then
+  log "Túnel rodando mas não responde (health-check falhou) — matando e reiniciando..."
+  taskkill //F //IM cloudflared.exe > /dev/null 2>&1
+  sleep 1
+  rm -f cf.log
+  nohup "$CF" tunnel --url http://127.0.0.1:11435 --http-host-header localhost:11435 --logfile cf.log > /dev/null 2>&1 &
+  disown
+  sleep 8
 else
-  log "Túnel já rodando."
+  log "Túnel já rodando e saudável."
 fi
 
 # 4) Descobre a URL atual do túnel (log novo se acabamos de iniciar; senão reaproveita

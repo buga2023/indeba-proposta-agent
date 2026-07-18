@@ -65,6 +65,8 @@ export const FichaProduto = z.object({
       cor: z.string().optional(),
       odor: z.string().optional(),
       uso: z.string().optional(),
+      densidade: z.string().optional(),
+      cloroAtivo: z.string().optional(),
     })
     .optional(),
 });

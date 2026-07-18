@@ -139,7 +139,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   const carac = f?.caracteristicas
     ? `<div class="pp-panel"><h4>Características</h4><div class="pp-rows-cols">${Object.entries(f.caracteristicas)
         .filter(([, v]) => v)
-        .map(([k, v]) => `<div class="pp-row"><span class="k">${k === "pH" ? "pH" : k[0].toUpperCase() + k.slice(1)}</span><span class="v">${esc(String(v))}</span></div>`)
+        .map(([k, v]) => `<div class="pp-row"><span class="k">${k === "pH" ? "pH" : k === "cloroAtivo" ? "Cloro ativo" : k[0].toUpperCase() + k.slice(1)}</span><span class="v">${esc(String(v))}</span></div>`)
         .join("")}</div></div>`
     : "";
 
@@ -431,8 +431,8 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-eyebrow { margin-top: 12px; font-size: 10px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-eyebrow b { color: ${ORANGE}; font-weight: 700; margin-left: 6px; }
 .pp-figure { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px 0; }
-.pp-imgcard { width: 190px; height: 190px; background: #f3f6fa; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
-.pp-imgcard img { max-width: 150px; max-height: 170px; object-fit: contain; }
+.pp-imgcard { width: 230px; height: 420px; background: #f3f6fa; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px -14px rgba(0,0,0,.35); }
+.pp-imgcard img { max-width: 190px; max-height: 390px; object-fit: contain; }
 .pp-price { border-top: 1px solid rgba(255,255,255,.16); padding-top: 16px; }
 .pp-v-label { font-size: 9.5px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-v-row { display: flex; align-items: baseline; gap: 10px; margin-top: 7px; }
