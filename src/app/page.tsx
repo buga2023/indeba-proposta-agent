@@ -1353,6 +1353,46 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
 // a montagem converge no MESMO /api/montar-estruturado da Proposta manual.
 type ItemImportado = { nome: string; quantidade: number; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; codigoCatalogo: string | null; nomeCatalogo: string | null };
 
+/* Prévia animada (shimmer) enquanto a IA lê o orçamento e casa os itens com o catálogo. */
+function ImportacaoSkeleton() {
+  const barra = (w: string, h = "12px"): CSSProperties => ({ width: w, height: h, borderRadius: "6px" });
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px", animation: "fadeUp .4s var(--ease-out, ease) both" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "9px", color: "var(--primary)", fontSize: "13.5px", fontWeight: 600 }}>
+        {[0, 0.16, 0.32].map((d) => (
+          <span key={d} style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--primary)", animation: `wave 1.3s ease-in-out infinite ${d}s` }} />
+        ))}
+        <span style={{ marginLeft: "4px" }}>Lendo o documento e conferindo os produtos no catálogo…</span>
+      </div>
+
+      <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", display: "flex", flexWrap: "wrap", gap: "16px", animation: "popIn .4s ease both" }}>
+        {["1 1 220px", "1 1 160px", "1 1 150px", "1 1 170px"].map((flex, i) => (
+          <div key={i} style={{ flex, minWidth: 0, display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div className="ies-skeleton" style={barra("55%", "10px")} />
+            <div className="ies-skeleton" style={barra("100%", "38px")} />
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", animation: "popIn .4s ease both", animationDelay: "80ms" }}>
+        <div className="ies-skeleton" style={barra("200px", "13px")} />
+        <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+          {[0, 1, 2].map((i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "2.2fr 70px 90px 80px 120px 34px", gap: "8px", alignItems: "center", animation: "popIn .4s ease both", animationDelay: `${120 + i * 80}ms` }}>
+              <div className="ies-skeleton" style={barra("100%", "34px")} />
+              <div className="ies-skeleton" style={barra("100%", "34px")} />
+              <div className="ies-skeleton" style={barra("100%", "34px")} />
+              <div className="ies-skeleton" style={barra("100%", "34px")} />
+              <div className="ies-skeleton" style={barra("100%", "34px")} />
+              <div />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) => void }) {
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [importando, setImportando] = useState(false);
@@ -1453,12 +1493,15 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
             <input type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }} onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} />
           </label>
           <Hoverable onClick={importar} base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 18px", borderRadius: "10px", border: "none", background: arquivo ? "var(--primary)" : "var(--surface-muted)", color: arquivo ? "#fff" : "var(--text-subtle)", cursor: arquivo ? "pointer" : "default", fontSize: "13px", fontWeight: 600, opacity: importando ? 0.7 : 1 }} hover={arquivo ? { background: "var(--primary-hover)" } : {}}>
+            {importando && <span style={{ width: "13px", height: "13px", border: "2px solid rgba(255,255,255,.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite", flex: "none" }} />}
             {importando ? "Extraindo…" : "Extrair dados"}
           </Hoverable>
           <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>A IA estrutura o documento; preços só entram se constarem no texto. Você confere tudo antes de montar.</span>
         </div>
 
         {erro && <div style={{ background: "var(--danger-soft, #FEE2E2)", border: "1px solid #fca5a5", color: "#b91c1c", borderRadius: "10px", padding: "10px 14px", fontSize: "13px" }}>{erro}</div>}
+
+        {importando && !conferindo && <ImportacaoSkeleton />}
 
         {conferindo && rejeitados.length > 0 && (
           <div style={{ background: "#FFF7ED", border: "1px solid #fdba74", color: "#9a3412", borderRadius: "10px", padding: "10px 14px", fontSize: "13px" }}>
@@ -1597,6 +1640,11 @@ function ReviewScreen({
   const qtyBtnSm: CSSProperties = { ...qtyBtn, width: "24px", height: "24px", borderRadius: "5px", fontSize: "13px" };
 
   const [ajuste, setAjuste] = useState("");
+  // Painel de ajustes (texto/refino/chat/condições) começa fechado: colapsado ele é
+  // só uma barra fina, então o vendedor já vê os produtos selecionados (o que mais
+  // importa revisar) sem precisar rolar a tela — antes esse bloco sempre aberto sozinho
+  // já preenchia a viewport inteira em telas de notebook comuns (~768px de altura).
+  const [ajustesAbertos, setAjustesAbertos] = useState(false);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--gray-50)" }}>
@@ -1647,75 +1695,92 @@ function ReviewScreen({
         </div>
       )}
 
-      {/* Edição e refino pelo funcionário (antes do PDF final): texto editável + refino por IA */}
-      <div style={{ flex: "none", padding: "14px 28px 0", display: "flex", flexDirection: "column", gap: "10px" }}>
-        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderLeft: "3px solid var(--blue-500)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-            <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--blue-500)", background: "var(--blue-50)", borderRadius: "999px", padding: "2px 8px", whiteSpace: "nowrap" }}>{scope.textoApresentacao.procedencia}</span>
-            <span style={{ fontSize: "11.5px", color: "var(--gray-400)" }}>Texto de apresentação — edite à vontade</span>
-          </div>
-          <textarea
-            value={scope.textoApresentacao.conteudo}
-            onChange={(e) => onEditarTexto(e.target.value)}
-            rows={3}
-            placeholder="Texto de apresentação da proposta…"
-            style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", color: "var(--gray-900)", lineHeight: 1.55, resize: "vertical", fontFamily: "var(--font-sans), sans-serif", outline: "none", background: "var(--gray-50)", boxSizing: "border-box" }}
-          />
-        </div>
-
-        {/* Refino por IA — anexa o ajuste ao briefing e reprocessa (preço segue do catálogo) */}
-        <form
-          onSubmit={(e) => { e.preventDefault(); if (ajuste.trim() && !refining) { onRefinar(ajuste); setAjuste(""); } }}
-          style={{ display: "flex", gap: "8px", alignItems: "center", background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "7px 8px 7px 14px", boxShadow: "var(--shadow-sm)" }}
+      {/* Edição e refino pelo funcionário (antes do PDF final): texto editável + refino por IA.
+          Colapsado por padrão — expandido ele sozinho já preenche a viewport inteira em telas de
+          notebook comuns, escondendo os produtos (o que mais importa revisar) sem rolar a tela. */}
+      <div style={{ flex: "none", padding: "14px 28px 0" }}>
+        <button
+          onClick={() => setAjustesAbertos((v) => !v)}
+          style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", height: "40px", padding: "0 14px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", boxShadow: "var(--shadow-sm)", cursor: "pointer", fontFamily: "var(--font-sans), sans-serif" }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}>
-            <path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15l-1.9-4.1L5.5 9l4.6-1.4L12 3z" />
-            <path d="M19 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z" />
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="var(--gray-500)" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", transform: ajustesAbertos ? "rotate(90deg)" : "none", transition: "transform .15s ease" }}>
+            <path d="M4 2l5 4.5L4 11" />
           </svg>
-          <input
-            value={ajuste}
-            onChange={(e) => setAjuste(e.target.value)}
-            disabled={refining}
-            placeholder="Refinar com IA — ex.: adicione mais desinfetantes, deixe o texto mais curto e formal"
-            style={{ flex: 1, border: "none", outline: "none", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", background: "transparent" }}
-          />
-          <button
-            type="submit"
-            disabled={refining || !ajuste.trim()}
-            style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "7px", border: "none", background: refining || !ajuste.trim() ? "var(--gray-200)" : "var(--blue-800)", color: "white", cursor: refining || !ajuste.trim() ? "default" : "pointer", fontSize: "13px", fontWeight: 600, fontFamily: "inherit", flex: "none" }}
-          >
-            {refining ? (
-              <>
-                <span style={{ width: "13px", height: "13px", border: "2px solid rgba(255,255,255,.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
-                Refinando…
-              </>
-            ) : (
-              "Refinar"
-            )}
-          </button>
-        </form>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--gray-800)" }}>Ajustes da proposta</span>
+          <span style={{ fontSize: "11.5px", color: "var(--gray-400)" }}>texto de apresentação · refino por IA · chat de correção · condições comerciais</span>
+        </button>
 
-        {/* Chat de correção pontual — adicional ao Refinar com IA acima */}
-        <EdicaoChat scope={scope} onComando={onComandoChat} />
-
-        {/* Condições comerciais — editáveis direto (antes só dava pra mudar via chat de
-            correção). Edita scope.consolidada.condicoes.itens: é o que o PDF final (modelo
-            Consolidada, único selecionável hoje) realmente renderiza na página de fechamento. */}
-        {scope.consolidada && (
-          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
-            <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginBottom: "8px" }}>Condições comerciais</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
-              {scope.consolidada.condicoes.itens.map((item, i) => (
-                <label key={i}>
-                  <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "4px" }}>{item.titulo}</div>
-                  <input
-                    value={item.texto}
-                    onChange={(e) => onEditarCondicaoConsolidada(i, e.target.value)}
-                    style={{ width: "100%", height: "34px", padding: "0 10px", borderRadius: "6px", border: "1px solid var(--gray-200)", background: "var(--gray-50)", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", boxSizing: "border-box" }}
-                  />
-                </label>
-              ))}
+        {ajustesAbertos && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
+            <div style={{ background: "white", border: "1px solid var(--gray-200)", borderLeft: "3px solid var(--blue-500)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--blue-500)", background: "var(--blue-50)", borderRadius: "999px", padding: "2px 8px", whiteSpace: "nowrap" }}>{scope.textoApresentacao.procedencia}</span>
+                <span style={{ fontSize: "11.5px", color: "var(--gray-400)" }}>Texto de apresentação — edite à vontade</span>
+              </div>
+              <textarea
+                value={scope.textoApresentacao.conteudo}
+                onChange={(e) => onEditarTexto(e.target.value)}
+                rows={3}
+                placeholder="Texto de apresentação da proposta…"
+                style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", color: "var(--gray-900)", lineHeight: 1.55, resize: "vertical", fontFamily: "var(--font-sans), sans-serif", outline: "none", background: "var(--gray-50)", boxSizing: "border-box" }}
+              />
             </div>
+
+            {/* Refino por IA — anexa o ajuste ao briefing e reprocessa (preço segue do catálogo) */}
+            <form
+              onSubmit={(e) => { e.preventDefault(); if (ajuste.trim() && !refining) { onRefinar(ajuste); setAjuste(""); } }}
+              style={{ display: "flex", gap: "8px", alignItems: "center", background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "7px 8px 7px 14px", boxShadow: "var(--shadow-sm)" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}>
+                <path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15l-1.9-4.1L5.5 9l4.6-1.4L12 3z" />
+                <path d="M19 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z" />
+              </svg>
+              <input
+                value={ajuste}
+                onChange={(e) => setAjuste(e.target.value)}
+                disabled={refining}
+                placeholder="Refinar com IA — ex.: adicione mais desinfetantes, deixe o texto mais curto e formal"
+                style={{ flex: 1, border: "none", outline: "none", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", background: "transparent" }}
+              />
+              <button
+                type="submit"
+                disabled={refining || !ajuste.trim()}
+                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "7px", border: "none", background: refining || !ajuste.trim() ? "var(--gray-200)" : "var(--blue-800)", color: "white", cursor: refining || !ajuste.trim() ? "default" : "pointer", fontSize: "13px", fontWeight: 600, fontFamily: "inherit", flex: "none" }}
+              >
+                {refining ? (
+                  <>
+                    <span style={{ width: "13px", height: "13px", border: "2px solid rgba(255,255,255,.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
+                    Refinando…
+                  </>
+                ) : (
+                  "Refinar"
+                )}
+              </button>
+            </form>
+
+            {/* Chat de correção pontual — adicional ao Refinar com IA acima */}
+            <EdicaoChat scope={scope} onComando={onComandoChat} />
+
+            {/* Condições comerciais — editáveis direto (antes só dava pra mudar via chat de
+                correção). Edita scope.consolidada.condicoes.itens: é o que o PDF final (modelo
+                Consolidada, único selecionável hoje) realmente renderiza na página de fechamento. */}
+            {scope.consolidada && (
+              <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
+                <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginBottom: "8px" }}>Condições comerciais</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
+                  {scope.consolidada.condicoes.itens.map((item, i) => (
+                    <label key={i}>
+                      <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "4px" }}>{item.titulo}</div>
+                      <input
+                        value={item.texto}
+                        onChange={(e) => onEditarCondicaoConsolidada(i, e.target.value)}
+                        style={{ width: "100%", height: "34px", padding: "0 10px", borderRadius: "6px", border: "1px solid var(--gray-200)", background: "var(--gray-50)", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", boxSizing: "border-box" }}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
