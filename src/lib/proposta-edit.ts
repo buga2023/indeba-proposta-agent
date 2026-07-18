@@ -70,3 +70,39 @@ export function setCondicaoComercial(
 ): PropostaScope {
   return { ...scope, condicoesComerciais: { ...scope.condicoesComerciais, [campo]: valor } };
 }
+
+// Edita o TEXTO de um item de "Condições Comerciais" do modelo Proposta Consolidada
+// (scope.consolidada.condicoes.itens[i].texto) — é esse campo que o PDF final
+// realmente renderiza (o modelo "consolidada" é o único selecionável hoje;
+// setCondicaoComercial acima alimenta os outros modelos, hoje sem uso). Título/ícone
+// ficam fixos: só o conteúdo do item é editável.
+export function setCondicaoConsolidadaTexto(scope: PropostaScope, index: number, texto: string): PropostaScope {
+  if (!scope.consolidada) return scope;
+  return {
+    ...scope,
+    consolidada: {
+      ...scope.consolidada,
+      condicoes: {
+        ...scope.consolidada.condicoes,
+        itens: scope.consolidada.condicoes.itens.map((it, i) => (i === index ? { ...it, texto } : it)),
+      },
+    },
+  };
+}
+
+// Mesma edição de cima, mas pelo "campo" clássico (validade/prazoEntrega/pagamento/
+// frete) que o chat de correção já classifica (comando.campoCondicao) — casa
+// deterministicamente pelo ícone do item padrão (consolidada-defaults.ts), nunca por
+// posição ou heurística de texto. Sem o item correspondente, não faz nada (nunca
+// inventa/adiciona item novo).
+const ICONE_POR_CAMPO_CONDICAO = { validade: "validade", prazoEntrega: "prazo", pagamento: "pagamento", frete: "frete" } as const;
+export function setCondicaoConsolidadaPorCampo(
+  scope: PropostaScope,
+  campo: "validade" | "prazoEntrega" | "pagamento" | "frete",
+  texto: string,
+): PropostaScope {
+  if (!scope.consolidada) return scope;
+  const icone = ICONE_POR_CAMPO_CONDICAO[campo];
+  const index = scope.consolidada.condicoes.itens.findIndex((it) => it.icone === icone);
+  return index === -1 ? scope : setCondicaoConsolidadaTexto(scope, index, texto);
+}

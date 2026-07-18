@@ -15,7 +15,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
 import type { Usuario } from "@/lib/auth";
-import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, cortarParaOrcamento } from "@/lib/proposta-edit";
+import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento } from "@/lib/proposta-edit";
 import { AjudaChat } from "@/components/ajuda-chat";
 import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
@@ -263,10 +263,10 @@ export default function Home() {
     setScope((s) => (s ? { ...s, textoApresentacao: { conteudo: novo, procedencia: "MANUAL" } } : s));
   }
 
-  // Condições comerciais (validade/prazo/pagamento/frete) editáveis direto na Revisão —
-  // mesmo setter que o chat de correção já usa (setCondicaoComercial).
-  function editarCondicao(campo: "validade" | "prazoEntrega" | "pagamento" | "frete", valor: string) {
-    setScope((s) => (s ? setCondicaoComercial(s, campo, valor) : s));
+  // Condições comerciais do modelo Consolidada (o único selecionável hoje) — é ESTE
+  // campo que o PDF final realmente renderiza (ver setCondicaoConsolidadaTexto).
+  function editarCondicaoConsolidada(index: number, texto: string) {
+    setScope((s) => (s ? setCondicaoConsolidadaTexto(s, index, texto) : s));
   }
 
   // Aplicação determinística do chat de correção (EdicaoChat): a IA já classificou a
@@ -301,7 +301,7 @@ export default function Home() {
         if (comando.codigoItem && numero) editarPreco(comando.codigoItem, 0, numero);
         break;
       case "alterar_condicao_comercial":
-        if (comando.campoCondicao && comando.valorTexto) setScope((s) => (s ? setCondicaoComercial(s, comando.campoCondicao!, comando.valorTexto!) : s));
+        if (comando.campoCondicao && comando.valorTexto) setScope((s) => (s ? setCondicaoConsolidadaPorCampo(s, comando.campoCondicao!, comando.valorTexto!) : s));
         break;
       case "limitar_orcamento": {
         if (!numero) break;
@@ -602,7 +602,7 @@ export default function Home() {
             {...{ reviewVariant, setReviewVariant, scope, excluded, includedItems, total, toggleProduct, changeQty, editarPreco }}
             onRefinar={refinarProposta}
             onEditarTexto={editarTexto}
-            onEditarCondicao={editarCondicao}
+            onEditarCondicaoConsolidada={editarCondicaoConsolidada}
             onComandoChat={aplicarComandoChat}
             refining={refining}
             goToManual={novaProposta}
@@ -1551,7 +1551,7 @@ function ReviewScreen({
   editarPreco,
   onRefinar,
   onEditarTexto,
-  onEditarCondicao,
+  onEditarCondicaoConsolidada,
   onComandoChat,
   refining,
   goToManual,
@@ -1568,7 +1568,7 @@ function ReviewScreen({
   editarPreco: (codigo: string, idx: number, valor: string) => void;
   onRefinar: (texto: string) => void;
   onEditarTexto: (texto: string) => void;
-  onEditarCondicao: (campo: "validade" | "prazoEntrega" | "pagamento" | "frete", valor: string) => void;
+  onEditarCondicaoConsolidada: (index: number, texto: string) => void;
   onComandoChat: (r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null }) => string | void;
   refining: boolean;
   goToManual: () => void;
@@ -1698,30 +1698,26 @@ function ReviewScreen({
         {/* Chat de correção pontual — adicional ao Refinar com IA acima */}
         <EdicaoChat scope={scope} onComando={onComandoChat} />
 
-        {/* Condições comerciais — editáveis direto (antes só dava pra mudar via chat de correção) */}
-        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
-          <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginBottom: "8px" }}>Condições comerciais</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
-            {(
-              [
-                ["validade", "Validade da proposta"],
-                ["prazoEntrega", "Prazo de entrega"],
-                ["pagamento", "Forma de pagamento"],
-                ["frete", "Frete"],
-              ] as const
-            ).map(([campo, label]) => (
-              <label key={campo}>
-                <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "4px" }}>{label}</div>
-                <input
-                  value={scope.condicoesComerciais[campo] ?? ""}
-                  onChange={(e) => onEditarCondicao(campo, e.target.value)}
-                  placeholder="—"
-                  style={{ width: "100%", height: "34px", padding: "0 10px", borderRadius: "6px", border: "1px solid var(--gray-200)", background: "var(--gray-50)", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", boxSizing: "border-box" }}
-                />
-              </label>
-            ))}
+        {/* Condições comerciais — editáveis direto (antes só dava pra mudar via chat de
+            correção). Edita scope.consolidada.condicoes.itens: é o que o PDF final (modelo
+            Consolidada, único selecionável hoje) realmente renderiza na página de fechamento. */}
+        {scope.consolidada && (
+          <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginBottom: "8px" }}>Condições comerciais</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
+              {scope.consolidada.condicoes.itens.map((item, i) => (
+                <label key={i}>
+                  <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "4px" }}>{item.titulo}</div>
+                  <input
+                    value={item.texto}
+                    onChange={(e) => onEditarCondicaoConsolidada(i, e.target.value)}
+                    style={{ width: "100%", height: "34px", padding: "0 10px", borderRadius: "6px", border: "1px solid var(--gray-200)", background: "var(--gray-50)", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", boxSizing: "border-box" }}
+                  />
+                </label>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="ies-scroll" style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>

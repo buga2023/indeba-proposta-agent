@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { setPrecoEmbalagem, normalizarPreco, extrairNumero, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, cortarParaOrcamento } from "@/lib/proposta-edit";
+import { setPrecoEmbalagem, normalizarPreco, extrairNumero, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento } from "@/lib/proposta-edit";
 import type { PropostaScope } from "@/lib/contracts";
 
 const scope = {
@@ -54,6 +54,46 @@ describe("proposta-edit", () => {
     const novo = setCondicaoComercial(scope, "frete", "FOB");
     expect(novo.condicoesComerciais.frete).toBe("FOB");
     expect(novo.condicoesComerciais.pagamento).toBe("Boleto");
+  });
+
+  // scope.consolidada.condicoes.itens é o que o PDF do modelo Consolidada (único
+  // selecionável hoje) realmente renderiza na página de fechamento — setCondicaoComercial
+  // acima NÃO chega lá. Teste-guardião contra regressão desse bug (achado em auditoria).
+  describe("condições comerciais do modelo Consolidada — o que o PDF final renderiza", () => {
+    const scopeConsolidada = {
+      ...scope,
+      consolidada: {
+        condicoes: {
+          itens: [
+            { titulo: "Validade da Proposta", texto: "30 dias", icone: "validade" },
+            { titulo: "Prazo de Implantação", texto: "15 dias úteis", icone: "prazo" },
+            { titulo: "Forma de Pagamento", texto: "Boleto 30 dias", icone: "pagamento" },
+            { titulo: "Frete e Entrega", texto: "CIF", icone: "frete" },
+          ],
+          mensagemFechamento: "x",
+          consultor: "y",
+          cargo: "z",
+        },
+      },
+    } as unknown as PropostaScope;
+
+    it("setCondicaoConsolidadaTexto edita só o item do índice, sem mutar o original", () => {
+      const novo = setCondicaoConsolidadaTexto(scopeConsolidada, 0, "7 dias corridos");
+      expect(novo.consolidada!.condicoes.itens[0].texto).toBe("7 dias corridos");
+      expect(novo.consolidada!.condicoes.itens[1].texto).toBe("15 dias úteis");
+      expect(scopeConsolidada.consolidada!.condicoes.itens[0].texto).toBe("30 dias"); // imutável
+    });
+
+    it("setCondicaoConsolidadaPorCampo casa pelo ícone do item (chat de correção)", () => {
+      const novo = setCondicaoConsolidadaPorCampo(scopeConsolidada, "frete", "FOB");
+      expect(novo.consolidada!.condicoes.itens.find((i) => i.icone === "frete")!.texto).toBe("FOB");
+    });
+
+    it("setCondicaoConsolidadaPorCampo sem item correspondente não altera nada (nunca inventa item)", () => {
+      const semFrete = { ...scopeConsolidada, consolidada: { ...scopeConsolidada.consolidada, condicoes: { ...scopeConsolidada.consolidada!.condicoes, itens: scopeConsolidada.consolidada!.condicoes.itens.slice(0, 3) } } } as unknown as PropostaScope;
+      const novo = setCondicaoConsolidadaPorCampo(semFrete, "frete", "FOB");
+      expect(novo).toBe(semFrete);
+    });
   });
 
   // Chat "limitar_orcamento" — corta do mais barato pro mais caro, nunca esvazia a proposta.
