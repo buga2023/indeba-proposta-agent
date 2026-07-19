@@ -1157,6 +1157,7 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
 
   return (
     <div style={{ background: "var(--background)", minHeight: "100vh" }}>
+      {montando && <MontandoOverlay />}
       <ScreenHead
         title="Proposta manual"
         sub="Monte direto do catálogo — preço sempre do catálogo"
@@ -1385,6 +1386,54 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
 // a montagem converge no MESMO /api/montar-estruturado da Proposta manual.
 type ItemImportado = { nome: string; quantidade: number; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; codigoCatalogo: string | null; nomeCatalogo: string | null };
 
+// Passos exibidos durante a montagem — heurística por tempo decorrido, não progresso
+// real do servidor (a API não relata etapa a etapa): "selecionar catálogo" é sempre
+// rápido, o texto de apresentação por IA é o que pode levar até ~2min em CPU. Cronômetro
+// honesto em vez de barra de progresso falsa — não fabricamos um percentual que não temos.
+function MontandoOverlay({ titulo = "Montando sua proposta" }: { titulo?: string }) {
+  const [seg, setSeg] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setSeg((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const passo = seg < 2 ? 0 : 1;
+  const PASSOS = ["Selecionando produtos do catálogo", "Escrevendo a apresentação com IA", "Preparando a proposta"];
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(15,26,36,.55)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, animation: "overlay-in .2s ease both" }}>
+      <div style={{ background: "var(--surface-card)", borderRadius: "18px", padding: "34px 38px", width: "380px", boxShadow: "0 24px 60px rgba(15,26,36,.35)", animation: "popIn .3s ease both", textAlign: "center" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: "9px", marginBottom: "18px" }}>
+          {[0, 0.16, 0.32].map((d) => (
+            <span key={d} style={{ width: "10px", height: "10px", borderRadius: "50%", background: "var(--primary)", animation: `wave 1.3s ease-in-out infinite ${d}s` }} />
+          ))}
+        </div>
+        <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)", marginBottom: "6px" }}>{titulo}</div>
+        <div style={{ fontSize: "12.5px", color: "var(--text-subtle)", marginBottom: "20px" }}>Pode levar até 2 minutos — a IA roda no computador da equipe, não na nuvem.</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "9px", textAlign: "left" }}>
+          {PASSOS.map((texto, i) => {
+            const feito = i < passo;
+            const ativo = i === passo;
+            return (
+              <div key={texto} style={{ display: "flex", alignItems: "center", gap: "9px", opacity: i > passo ? 0.45 : 1 }}>
+                <span style={{ width: "16px", height: "16px", borderRadius: "50%", flex: "none", display: "flex", alignItems: "center", justifyContent: "center", background: feito ? "var(--success)" : "var(--surface-muted)", border: ativo ? "2px solid var(--primary)" : "none", boxSizing: "border-box" }}>
+                  {feito ? (
+                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M1.5 4.5l2 2 4-4" /></svg>
+                  ) : ativo ? (
+                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--primary)", animation: "pulse 1.1s ease-in-out infinite" }} />
+                  ) : null}
+                </span>
+                <span style={{ fontSize: "13px", color: feito || ativo ? "var(--text-body)" : "var(--text-subtle)", fontWeight: ativo ? 600 : 400 }}>{texto}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ marginTop: "20px", fontSize: "11px", color: "var(--text-subtle)", fontFamily: "var(--font-mono)" }}>
+          {String(Math.floor(seg / 60)).padStart(2, "0")}:{String(seg % 60).padStart(2, "0")}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* Prévia animada (shimmer) enquanto a IA lê o orçamento e casa os itens com o catálogo. */
 function ImportacaoSkeleton() {
   const barra = (w: string, h = "12px"): CSSProperties => ({ width: w, height: h, borderRadius: "6px" });
@@ -1520,6 +1569,7 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
 
   return (
     <div style={{ background: "var(--background)", minHeight: "100vh" }}>
+      {montando && <MontandoOverlay />}
       <ScreenHead
         title="Importar orçamento"
         sub="PDF do orçamento → proposta no padrão Indeba — preço sai do documento"
