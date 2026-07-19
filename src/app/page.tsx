@@ -183,10 +183,6 @@ export default function Home() {
   const toast = useToast();
   const [palette, setPalette] = useState(false);
   const [reviewVariant, setReviewVariant] = useState<"A" | "B">("A");
-  // Acumulador de contexto do "Refinar com IA" (Revisão) — cada refino anexa o
-  // pedido a esta string e reprocessa (ver refinarProposta). Começa vazio: a
-  // proposta nasce sempre da Manual/Importar, não de um briefing digitado.
-  const [briefingText, setBriefingText] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [refining, setRefining] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -269,6 +265,28 @@ export default function Home() {
     setScope((s) => (s ? setCondicaoConsolidadaTexto(s, index, texto) : s));
   }
 
+  // Dados do cliente editáveis direto (antes só dava pra mudar via chat de correção —
+  // mesma virada de campo direto já feita pra condições comerciais).
+  function editarCliente(campo: "razaoSocial" | "cnpj" | "segmento" | "responsavel", valor: string) {
+    setScope((s) => (s ? setClienteCampo(s, campo, valor) : s));
+  }
+
+  // Corta itens (do mais barato pro mais caro) até caber no teto — usado tanto pelo
+  // botão direto "Definir teto" quanto pelo comando "limitar_orcamento" do chat.
+  function aplicarTeto(teto: number): string {
+    const { codigosRemover, totalFinal } = cortarParaOrcamento(
+      includedItems.map((it) => ({ codigo: it.codigo, precoUnit: precoUnit(it), quantidade: it.quantidade })),
+      total,
+      teto,
+    );
+    if (codigosRemover.length === 0) {
+      return total <= teto ? `Já está dentro do teto de ${fmt(teto)} (total ${fmt(total)}).` : `Não dá pra cortar mais sem esvaziar a proposta — total atual ${fmt(total)}.`;
+    }
+    const nomes = codigosRemover.map((c) => includedItems.find((it) => it.codigo === c)?.nome ?? c);
+    codigosRemover.forEach(toggleProduct);
+    return `Removi ${nomes.map((n) => `"${n}"`).join(", ")} pra caber no teto — total agora ${fmt(totalFinal)}.`;
+  }
+
   // Aplicação determinística do chat de correção (EdicaoChat): a IA já classificou a
   // ação e resolveu o item/campo alvo (rota /api/comando-edicao); aqui só chamamos os
   // MESMOS setters que os controles manuais da Revisão usam. Preço/quantidade sempre
@@ -303,21 +321,9 @@ export default function Home() {
       case "alterar_condicao_comercial":
         if (comando.campoCondicao && comando.valorTexto) setScope((s) => (s ? setCondicaoConsolidadaPorCampo(s, comando.campoCondicao!, comando.valorTexto!) : s));
         break;
-      case "limitar_orcamento": {
-        if (!numero) break;
-        const teto = Number(numero.replace(",", "."));
-        const { codigosRemover, totalFinal } = cortarParaOrcamento(
-          includedItems.map((it) => ({ codigo: it.codigo, precoUnit: precoUnit(it), quantidade: it.quantidade })),
-          total,
-          teto,
-        );
-        if (codigosRemover.length === 0) {
-          return total <= teto ? `Já está dentro do teto de R$ ${numero} (total ${fmt(total)}).` : `Não dá pra cortar mais sem esvaziar a proposta — total atual ${fmt(total)}.`;
-        }
-        const nomes = codigosRemover.map((c) => includedItems.find((it) => it.codigo === c)?.nome ?? c);
-        codigosRemover.forEach(toggleProduct);
-        return `Removi ${nomes.map((n) => `"${n}"`).join(", ")} pra caber no teto — total agora ${fmt(totalFinal)}.`;
-      }
+      case "limitar_orcamento":
+        if (numero) return aplicarTeto(Number(numero.replace(",", ".")));
+        break;
       case "selecionar_por_necessidade":
         if (itensSelecionados && itensSelecionados.length > 0) {
           setScope((s) => (s ? { ...s, itens: itensSelecionados } : s));
@@ -330,32 +336,35 @@ export default function Home() {
     }
   }
 
-  // Refino por prompt: anexa o ajuste ao briefing e reprocessa pelo MESMO /api/montar
-  // (mesmo cliente/tipo). Backbone determinístico intacto — preço continua do catálogo.
-  async function refinarProposta(ajuste: string) {
-    const a = ajuste.trim();
-    if (!a || !scope || refining) return;
-    const novoBriefing = `${briefingText.trim()}\n\nAjuste solicitado: ${a}`.trim();
+  // Refino por prompt do TEXTO de apresentação (rota /api/refinar-texto): reescreve só
+  // `textoApresentacao` seguindo a instrução do vendedor, com os itens já selecionados
+  // como grounding de função. NÃO reprocessa seleção de produtos — diferente do chat de
+  // correção (que reprocessa item/campo específico) e de montarProposta (briefing inicial).
+  async function refinarTexto(instrucao: string) {
+    const pedido = instrucao.trim();
+    if (!pedido || !scope || refining) return;
     setRefining(true);
     setError(null);
     try {
-      const r = await fetch("/api/montar", {
+      const r = await fetch("/api/refinar-texto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ briefing: novoBriefing, razaoSocial: scope.cliente.razaoSocial, cnpj: scope.cliente.cnpj, segmento: scope.cliente.segmento, responsavel: scope.cliente.responsavel, tipo: scope.tipo }),
+        body: JSON.stringify({
+          textoAtual: scope.textoApresentacao.conteudo,
+          instrucao: pedido,
+          itens: includedItems.map((it) => ({ codigo: it.codigo, nome: it.nome })),
+        }),
       });
-      if (!r.ok) throw new Error(`Falha ao refinar (${r.status}).`);
-      const data = await r.json();
-      if (data?.precisaTipo || !Array.isArray(data?.itens)) throw new Error("Resposta inesperada do servidor.");
-      // Reusa o id do registro atual: refino ATUALIZA a mesma proposta, não cria outra.
-      const atualizado = { ...(data as PropostaScope), id: scope.id };
-      setBriefingText(novoBriefing); // acumula o contexto para o próximo refino
+      if (!r.ok) {
+        const data = await r.json().catch(() => null);
+        throw new Error(data?.erro ?? `Falha ao refinar o texto (${r.status}).`);
+      }
+      const data = (await r.json()) as { conteudo: string; procedencia: "IA-TEXTO" };
+      const atualizado: PropostaScope = { ...scope, textoApresentacao: data };
       setScope(atualizado);
-      setExcluded(new Set());
-      if (atualizado.itens.length === 0) setError(data.aviso ?? "Nenhum produto casou após o ajuste.");
-      else persistirProposta(atualizado);
+      persistirProposta(atualizado);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao refinar.");
+      setError(e instanceof Error ? e.message : "Erro ao refinar o texto.");
     } finally {
       setRefining(false);
     }
@@ -600,9 +609,11 @@ export default function Home() {
         {screen === "review" && scope && (
           <ReviewScreen
             {...{ reviewVariant, setReviewVariant, scope, excluded, includedItems, total, toggleProduct, changeQty, editarPreco }}
-            onRefinar={refinarProposta}
+            onRefinar={refinarTexto}
             onEditarTexto={editarTexto}
             onEditarCondicaoConsolidada={editarCondicaoConsolidada}
+            onEditarCliente={editarCliente}
+            onDefinirTeto={(teto) => toast(aplicarTeto(teto), "info")}
             onComandoChat={aplicarComandoChat}
             refining={refining}
             goToManual={novaProposta}
@@ -1694,6 +1705,8 @@ function ReviewScreen({
   onRefinar,
   onEditarTexto,
   onEditarCondicaoConsolidada,
+  onEditarCliente,
+  onDefinirTeto,
   onComandoChat,
   refining,
   goToManual,
@@ -1711,6 +1724,8 @@ function ReviewScreen({
   onRefinar: (texto: string) => void;
   onEditarTexto: (texto: string) => void;
   onEditarCondicaoConsolidada: (index: number, texto: string) => void;
+  onEditarCliente: (campo: "razaoSocial" | "cnpj" | "segmento" | "responsavel", valor: string) => void;
+  onDefinirTeto: (teto: number) => void;
   onComandoChat: (r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null }) => string | void;
   refining: boolean;
   goToManual: () => void;
@@ -1744,6 +1759,7 @@ function ReviewScreen({
   // importa revisar) sem precisar rolar a tela — antes esse bloco sempre aberto sozinho
   // já preenchia a viewport inteira em telas de notebook comuns (~768px de altura).
   const [ajustesAbertos, setAjustesAbertos] = useState(false);
+  const [tetoInput, setTetoInput] = useState("");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--gray-50)" }}>
@@ -1825,9 +1841,10 @@ function ReviewScreen({
               />
             </div>
 
-            <div style={{ fontSize: "11.5px", color: "var(--gray-400)" }}>Refinar com IA reprocessa a proposta inteira (texto e seleção de itens); o chat logo abaixo corrige um item específico sem mexer no resto.</div>
+            <div style={{ fontSize: "11.5px", color: "var(--gray-400)" }}>Refinar com IA reescreve só o texto de apresentação, seguindo sua instrução (produtos e preços ficam intocados); o chat logo abaixo corrige cliente, itens ou condições.</div>
 
-            {/* Refino por IA — anexa o ajuste ao briefing e reprocessa (preço segue do catálogo) */}
+            {/* Refino de texto por IA (rota /api/refinar-texto) — reescreve só o textoApresentacao,
+                nunca a seleção de itens (preço segue do catálogo, intocado) */}
             <form
               onSubmit={(e) => { e.preventDefault(); if (ajuste.trim() && !refining) { onRefinar(ajuste); setAjuste(""); } }}
               style={{ display: "flex", gap: "8px", alignItems: "center", background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "7px 8px 7px 14px", boxShadow: "var(--shadow-sm)" }}
@@ -1840,7 +1857,7 @@ function ReviewScreen({
                 value={ajuste}
                 onChange={(e) => setAjuste(e.target.value)}
                 disabled={refining}
-                placeholder="Refinar com IA — ex.: adicione mais desinfetantes, deixe o texto mais curto e formal"
+                placeholder="Refinar texto com IA — ex.: deixe mais curto e formal, dê mais ênfase em economia"
                 style={{ flex: 1, border: "none", outline: "none", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", background: "transparent" }}
               />
               <button
@@ -1858,6 +1875,33 @@ function ReviewScreen({
                 )}
               </button>
             </form>
+
+            {/* Dados do cliente — editáveis direto (antes só dava pra mudar via chat de
+                correção, ex.: trocar CNPJ). Mesma virada de campo direto já feita pras
+                condições comerciais logo abaixo. */}
+            <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
+              <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginBottom: "8px" }}>Dados do cliente</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
+                {(
+                  [
+                    ["razaoSocial", "Razão social"],
+                    ["cnpj", "CNPJ"],
+                    ["segmento", "Segmento"],
+                    ["responsavel", "Responsável"],
+                  ] as const
+                ).map(([campo, rotulo]) => (
+                  <label key={campo}>
+                    <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "4px" }}>{rotulo}</div>
+                    <input
+                      value={scope.cliente[campo] ?? ""}
+                      onChange={(e) => onEditarCliente(campo, e.target.value)}
+                      placeholder={campo === "cnpj" ? "00.000.000/0000-00" : undefined}
+                      style={{ width: "100%", height: "34px", padding: "0 10px", borderRadius: "6px", border: "1px solid var(--gray-200)", background: "var(--gray-50)", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", boxSizing: "border-box" }}
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
 
             {/* Chat de correção pontual — adicional ao Refinar com IA acima */}
             <EdicaoChat scope={scope} onComando={onComandoChat} />
@@ -1882,6 +1926,34 @@ function ReviewScreen({
                 </div>
               </div>
             )}
+
+            {/* Teto de orçamento — corta os itens mais baratos até caber (antes só via
+                chat, ex.: "não deixe passar de R$800"). Nunca esvazia a proposta. */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const teto = Number(tetoInput.replace(",", "."));
+                if (teto > 0) { onDefinirTeto(teto); setTetoInput(""); }
+              }}
+              style={{ display: "flex", gap: "8px", alignItems: "center", background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "10px 16px", boxShadow: "var(--shadow-sm)" }}
+            >
+              <span style={{ fontSize: "11.5px", color: "var(--gray-400)", flex: "none" }}>Não deixar passar de</span>
+              <input
+                value={tetoInput}
+                onChange={(e) => setTetoInput(e.target.value)}
+                inputMode="decimal"
+                placeholder="Ex.: 800"
+                style={{ width: "110px", height: "34px", padding: "0 10px", borderRadius: "6px", border: "1px solid var(--gray-200)", background: "var(--gray-50)", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-mono)", outline: "none" }}
+              />
+              <button
+                type="submit"
+                disabled={!tetoInput.trim()}
+                style={{ padding: "8px 14px", borderRadius: "7px", border: "none", background: tetoInput.trim() ? "var(--blue-800)" : "var(--gray-200)", color: "white", cursor: tetoInput.trim() ? "pointer" : "default", fontSize: "13px", fontWeight: 600, fontFamily: "inherit", flex: "none" }}
+              >
+                Aplicar teto
+              </button>
+              <span style={{ fontSize: "11.5px", color: "var(--gray-400)" }}>total atual: {fmt(total)}</span>
+            </form>
           </div>
         )}
       </div>
