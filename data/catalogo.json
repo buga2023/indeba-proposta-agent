@@ -601,7 +601,7 @@
         "circulacao_cip",
         "imersao"
       ],
-      "imagemPath": "/produtos/primmax-cip-dtx.jpg",
+      "imagemPath": "/produtos/_generico.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-dtx.pdf",
       "ativo": false,
       "embalagens": [
@@ -2188,7 +2188,7 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/primmax-sec.png",
+      "imagemPath": "/produtos/_generico.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sec.pdf",
       "ativo": false,
       "embalagens": [
@@ -2245,7 +2245,7 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/primmax-sol-plus.png",
+      "imagemPath": "/produtos/_generico.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sol-plus.pdf",
       "ativo": false,
       "embalagens": [
@@ -2535,7 +2535,7 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/letah-max.png",
+      "imagemPath": "/produtos/_generico.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/letah-max.pdf",
       "ativo": false,
       "embalagens": [
@@ -3920,7 +3920,7 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/softs-max-karicia.png",
+      "imagemPath": "/produtos/_generico.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/softs-max-karicia.pdf",
       "ativo": false,
       "embalagens": [
@@ -3981,7 +3981,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/softs-concentrado.png",
+      "imagemPath": "/produtos/_generico.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/softs-concentrado.pdf",
       "ativo": false,
       "embalagens": [
@@ -6341,7 +6341,7 @@
         "pulverizacao",
         "manual"
       ],
-      "imagemPath": "/produtos/spar-ht-5.jpg",
+      "imagemPath": "/produtos/_generico.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-5.pdf",
       "ativo": false,
       "embalagens": [
