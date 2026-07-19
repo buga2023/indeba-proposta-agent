@@ -32,6 +32,11 @@ export const Metodo = z.enum([
 ]);
 export type Metodo = z.infer<typeof Metodo>;
 
+// Marca do produto (o catálogo reúne as duas linhas da Indeba). Facet fechada,
+// usada como filtro no Catálogo.
+export const Marca = z.enum(["indeba", "pratt"]);
+export type Marca = z.infer<typeof Marca>;
+
 // Preço SEMPRE como string decimal — nunca float (constituição §1.1, guia §4).
 export const Embalagem = z.object({
   tamanho: z.number().positive(),
@@ -83,6 +88,7 @@ export type EmbalagemCatalogo = z.infer<typeof EmbalagemCatalogo>;
 export const Produto = z.object({
   codigo: z.string().min(1),
   nome: z.string().min(1),
+  marca: Marca,
   linha: Linha,
   descricaoCurta: z.string(),
   descricaoUso: z.string(),

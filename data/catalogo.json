@@ -4,6 +4,7 @@
     {
       "codigo": "AUTOCAR-1000-PLUS",
       "nome": "Autocar 1000 Plus",
+      "marca": "indeba",
       "linha": "automotiva",
       "descricaoCurta": "Detergente desengraxante para limpeza de superfícies com sujidades pesadas e veículos pesados e leves.",
       "descricaoUso": "Na limpeza de superfícies com sujidades pesadas e veículos pesados e leves, oficinas, garagens, entre outros.",
@@ -16,8 +17,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/autocar-1000-plus.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/autocar-1000-plus.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/autocar-1000-plus.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -79,6 +80,7 @@
     {
       "codigo": "AUTOCAR-PLUS",
       "nome": "Autocar Plus",
+      "marca": "indeba",
       "linha": "automotiva",
       "descricaoCurta": "Desengraxante para limpeza de veículo, garagem, postos e superfícies em geral.",
       "descricaoUso": "Na limpeza pesada ou leve de veículos automotivos, postos, garagens e superfícies em geral.",
@@ -92,8 +94,8 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/autocar-plus.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/autocar-plus.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/autocar-plus.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -148,6 +150,7 @@
     {
       "codigo": "CITY-PAN",
       "nome": "City Pan",
+      "marca": "indeba",
       "linha": "automotiva",
       "descricaoCurta": "Desincrustante alcalino em pó para limpeza de chassis de veículos.",
       "descricaoUso": "Na desincrustação de chassis e motor de veículos pesados como caminhões, tratores, empilhadeiras, máquinas de mineração, entre outros. Na limpeza de pisos de oficinas, pátios de manobras, entre outros. Não utilizar em superfícies sensíveis ou pintadas, nem diretamente em borracha.",
@@ -160,8 +163,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/city-pan.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/city-pan.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/city-pan.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -198,6 +201,7 @@
     {
       "codigo": "CITY-T-LIQUIDO",
       "nome": "City T Líquido",
+      "marca": "indeba",
       "linha": "automotiva",
       "descricaoCurta": "Detergente desengraxante alcalino para lavagem pesada e limpeza em geral.",
       "descricaoUso": "Na lavagem e desengraxe de chassis e motor de veículos pesados como caminhões, tratores, empilhadeiras, entre outros. Na limpeza de pisos de oficinas, pátios de manobras, docas, entre outros. Na limpeza de superfícies com sujidades aderidas em indústrias e gráficas. Na limpeza de sanitários e vestiários industriais.",
@@ -211,8 +215,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/city-t-liquido.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/city-t-liquido.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/city-t-liquido.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -264,6 +268,7 @@
     {
       "codigo": "CANDALL-COSMETIC-WR",
       "nome": "Candall Cosmetic WR",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Limpador desengordurante para remoção de ceras naturais, óleos orgânicos, gorduras e pigmentos em equipamentos da indústria de cosméticos e afins.",
       "descricaoUso": "Para limpeza de equipamento, usar puro ou diluído em até 1 parte de produto para 1 parte de água, circulando por 15 a 60 minutos, drenando e enxaguando abundantemente. Para superfícies fixas e equipamentos abertos, diluir 1 parte de produto para 49 partes de água, deixar agir, realizar ação mecânica e enxaguar.",
@@ -277,8 +282,8 @@
         "circulacao_cip",
         "manual"
       ],
-      "imagemPath": "/produtos/candall-cosmetic-wr.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/candall-cosmetic-wr.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/candall-cosmetic-wr.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -316,6 +321,7 @@
     {
       "codigo": "PRIMMAX-AE-FOOD-GRADE",
       "nome": "Primmax AE Food Grade",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Antiespumante grau alimentício para dispersão de espuma em processos de higienização CIP e em caldas de defensivos agrícolas.",
       "descricaoUso": "Em soluções CIP alcalinas, usar 0,4 mL do produto para cada 1 kg de PRIMMAX CIP DT (ou 0,2 mL por kg no caso do PRIMMAX CIP DTX). Em caldas para lavouras, usar em conjunto com PRIMMAX SUNCARE ADT, na proporção de 0,5 mL por litro.",
@@ -331,7 +337,7 @@
         "circulacao_cip"
       ],
       "imagemPath": "/produtos/_generico.svg",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-ae-food-grade.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -375,6 +381,7 @@
     {
       "codigo": "PRIMMAX-ALCLOR",
       "nome": "Primmax Alclor",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente desengordurante e desincrustante alcalino clorado para limpeza de sujidades e incrustações orgânicas em indústrias alimentícias.",
       "descricaoUso": "Preparar solução com 2 partes de produto para até 100 partes de solução, aplicar por método manual ou espuma, deixar agir de 10 a 15 minutos e enxaguar com água corrente. Para limpeza geral de superfícies, diluir 1 parte de produto para até 100 partes de solução.",
@@ -392,8 +399,8 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/primmax-alclor.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-alclor.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -445,6 +452,7 @@
     {
       "codigo": "PRIMMAX-CIP-ADT",
       "nome": "Primmax CIP ADT",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Aditivo líquido para potencializar o poder de limpeza da soda cáustica e de soluções ácidas em processos de limpeza por circulação (CIP).",
       "descricaoUso": "Pode ser dosado diretamente na soda cáustica a 50%, em concentrações de 10 a 20% p/v, ou em soluções de uso de soda cáustica e ácidos, em concentrações de 0,15 a 1,5% p/v.",
@@ -458,8 +466,8 @@
       "metodos": [
         "circulacao_cip"
       ],
-      "imagemPath": "/produtos/primmax-cip-adt.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-cip-adt.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-adt.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -500,6 +508,7 @@
     {
       "codigo": "PRIMMAX-CIP-DT",
       "nome": "Primmax CIP DT",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente desincrustante alcalino cáustico para limpeza por circulação (CIP) de linhas, tubulações, tanques pasteurizadores e contentores plásticos.",
       "descricaoUso": "Após pré-enxágue com água a cerca de 50°C, circular a solução em concentrações entre 0,20% e 3,0% conforme a aplicação (cervejarias, linhas quentes, CIP em geral), por 20 a 50 minutos a até 80°C, com enxágue final com água potável. Desengraxe de carretilhas por imersão em solução de 1 a 3%.",
@@ -515,8 +524,8 @@
         "circulacao_cip",
         "imersao"
       ],
-      "imagemPath": "/produtos/primmax-cip-dt.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-cip-dt.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-dt.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -576,6 +585,7 @@
     {
       "codigo": "PRIMMAX-CIP-DTX",
       "nome": "Primmax CIP DTX",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente desincrustante alcalino cáustico para limpeza por circulação (CIP) de linhas, tubulações, tanques pasteurizadores e contentores plásticos, em concentrações mais elevadas que o PRIMMAX CIP DT.",
       "descricaoUso": "Após pré-enxágue com água a cerca de 50°C, circular a solução em concentrações entre 0,4% e 6,0% conforme a aplicação (cervejarias, linhas quentes, CIP em geral), por 20 a 50 minutos a até 80°C, com enxágue final com água potável. Desengraxe de carretilhas por imersão em solução de 2 a 6%.",
@@ -592,7 +602,7 @@
         "imersao"
       ],
       "imagemPath": "/produtos/primmax-cip-dtx.jpg",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-dtx.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -658,6 +668,7 @@
     {
       "codigo": "PRIMMAX-CIP-NITRO",
       "nome": "Primmax CIP Nitro",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Produto ácido à base de ácido nítrico para desincrustação e higienização por circulação (CIP), enxágue ácido e passivação de aço inox em indústrias de alimentos e bebidas.",
       "descricaoUso": "Para limpeza CIP em bebidas, aplicar concentrações entre 0,20% e 1,00% após enxágue alcalino, circulando 30 a 50 minutos à temperatura ambiente. Para enxágue ácido, 0,40 a 0,80% por 2 horas a 60°C. Para passivação, 10% por 2 horas a 60°C. Para desincrustação CIP em indústrias alimentícias em geral, 2,00 a 3,50% por 20 minutos a 60-65°C.",
@@ -672,8 +683,8 @@
       "metodos": [
         "circulacao_cip"
       ],
-      "imagemPath": "/produtos/primmax-cip-nitro.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-cip-nitro.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-nitro.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -731,6 +742,7 @@
     {
       "codigo": "PRIMMAX-CITRUS",
       "nome": "Primmax Citrus",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Emulsão levemente ácida à base de cera de carnaúba para revestimento protetor de frutas cítricas, retardando o amadurecimento e realçando o brilho.",
       "descricaoUso": "Produto pronto uso. Aplicação mecânica: aplicar puro através do dispositivo da máquina dispersora instalada na esteira do processo. Aplicação por imersão: mergulhar os frutos no produto puro e retirá-los em seguida.",
@@ -746,7 +758,7 @@
         "imersao"
       ],
       "imagemPath": "/produtos/_generico.svg",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-citrus.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -781,6 +793,7 @@
     {
       "codigo": "PRIMMAX-CL",
       "nome": "Primmax CL",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Desincrustante alcalino clorado concentrado para lavagem de ovos, remoção de manchas, lavagem mecânica de louças e limpeza CIP em indústrias alimentícias.",
       "descricaoUso": "Para remoção de manchas, aplicar solução de 3% a 8%, esfregar e enxaguar. Para lavagem de ovos, diluir até 1:750 e aplicar via equipamento de dosagem automática INDEBA a 55-60°C. Para limpeza CIP, aplicar solução de 1% a 5%. Produto de uso exclusivo via Sistema Automático de Dosagem, não deve ser utilizado manualmente.",
@@ -795,8 +808,8 @@
         "diluidor_automatico",
         "circulacao_cip"
       ],
-      "imagemPath": "/produtos/primmax-cl.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-cl.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -847,6 +860,7 @@
     {
       "codigo": "PRIMMAX-DES",
       "nome": "Primmax DES",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Decapante ácido para remoção de incrustações inorgânicas (calcário, óxidos metálicos) em máquinas de lavar louças e equipamentos de aço inoxidável.",
       "descricaoUso": "Para decapagem interna de máquina de lavar louças, adicionar 3 partes de produto para 100 partes de solução, aquecer a 50-60°C e circular por 15 minutos. Para decapagem externa, borrifar o produto puro, deixar agir 10 minutos e fazer ação mecânica com fibra macia. Para desoxidação de carretilhas, imergir em solução de 1 a 5% e aplicar vapor por 5 a 10 minutos.",
@@ -862,8 +876,8 @@
         "pulverizacao",
         "imersao"
       ],
-      "imagemPath": "/produtos/primmax-des.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-des.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -908,6 +922,7 @@
     {
       "codigo": "PRIMMAX-DGA",
       "nome": "Primmax DGA",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente desengordurante e desincrustante de alta formação de espuma para limpeza de sujidades orgânicas em indústrias alimentícias e cozinhas profissionais.",
       "descricaoUso": "Preparar solução com 1 parte de produto para até 100 partes de solução, espalhar pela superfície, deixar atuar de 5 a 10 minutos, esfregar e enxaguar. Pode também ser aplicado com gerador de espuma ou venturi.",
@@ -924,8 +939,8 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/primmax-dga.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-dga.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -975,6 +990,7 @@
     {
       "codigo": "PRIMMAX-DGCLOR",
       "nome": "Primmax DGCLOR",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente clorado para lavagens em geral",
       "descricaoUso": "Lavagens em geral, bancadas e utensílios. Utilizar no diluidor automático.",
@@ -989,7 +1005,7 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/primmax-dgclor.png",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-dgclor.pdf",
       "ativo": true,
       "embalagens": [
         {
@@ -998,6 +1014,20 @@
           "preco": "110.00",
           "diluicaoMax": "1:100",
           "custoDiluido": "0.22"
+        },
+        {
+          "tamanho": 23,
+          "unidade": "kg",
+          "preco": null,
+          "diluicaoMax": null,
+          "custoDiluido": null
+        },
+        {
+          "tamanho": 58,
+          "unidade": "kg",
+          "preco": null,
+          "diluicaoMax": null,
+          "custoDiluido": null
         }
       ],
       "ficha": {
@@ -1046,6 +1076,7 @@
     {
       "codigo": "PRIMMAX-DT",
       "nome": "Primmax DT",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente desincrustante alcalino para lavagem automática de louças e utensílios, desengraxe de equipamentos e limpeza CIP em indústrias alimentícias.",
       "descricaoUso": "Deve ser usado exclusivamente via Sistema Automático de Dosagem INDEBA. Dosagem de 0,10% a 0,30% (1 a 3 mL por litro de água) para lavagem de louças a 55-65°C. Em CIP de linhas quentes, usar até 5,0%; em linhas frias, de 0,5% a 3,0%. Não deve ser utilizado manualmente.",
@@ -1060,8 +1091,8 @@
         "diluidor_automatico",
         "circulacao_cip"
       ],
-      "imagemPath": "/produtos/primmax-dt.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-dt.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1114,6 +1145,7 @@
     {
       "codigo": "PRIMMAX-HORT-FLV",
       "nome": "Primmax Hort FLV",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Desinfetante líquido clorado para sanificação de frutas, verduras e legumes em estabelecimentos de manipulação e produção de alimentos.",
       "descricaoUso": "Preparar solução de 200 ppm de cloro livre (100 mL do produto completando o volume com água em recipiente de 10 litros). Lavar as frutas, verduras e legumes em água corrente, imergir na solução por 10 minutos, retirar e enxaguar com água corrente.",
@@ -1127,8 +1159,8 @@
       "metodos": [
         "imersao"
       ],
-      "imagemPath": "/produtos/primmax-hort-flv.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-hort-flv.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1171,6 +1203,7 @@
     {
       "codigo": "PRIMMAX-HORT",
       "nome": "Primmax Hort",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Desinfetante para hortifrutícolas em pó",
       "descricaoUso": "Desinfecção de hortifrutícolas. Diluir 50g em 10L de água.",
@@ -1185,7 +1218,7 @@
         "imersao"
       ],
       "imagemPath": "/produtos/primmax-hort.png",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-hort.pdf",
       "ativo": true,
       "embalagens": [
         {
@@ -1223,6 +1256,7 @@
     {
       "codigo": "PRIMMAX-INOX",
       "nome": "Primmax Inox",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Polidor à base de óleo mineral grau farmacêutico para acabamento e proteção de superfícies em aço inoxidável.",
       "descricaoUso": "Fazer limpeza prévia da superfície com detergente e secar completamente. Aplicar pequena quantidade do produto puro com pano limpo e seco, espalhar de forma homogênea no sentido do fio do inox e polir com outro pano limpo e seco.",
@@ -1236,8 +1270,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/primmax-inox.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-inox.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1269,6 +1303,7 @@
     {
       "codigo": "PRIMMAX-LDF-PLUS",
       "nome": "Primmax LDF Plus",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente desincrustante alcalino com ação descarbonizante, seguro para metais sensíveis (SMS)",
       "descricaoUso": "Limpeza pesada de panelas, assadeiras, fornos, fogões e demais equipamentos da área de cocção em indústrias de A&B e cozinhas industriais. Remoção de sujidades de equipamentos, superfícies, peças e utensílios em indústrias de alimentos e bebidas, incluindo limpeza de metais sensíveis (alumínio, cobre e zinco).",
@@ -1283,8 +1318,8 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/primmax-ldf-plus.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-ldf-plus.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1328,6 +1363,7 @@
     {
       "codigo": "PRIMMAX-LDF",
       "nome": "Primmax LDF",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Desincrustante alcalino para gorduras carbonizadas",
       "descricaoUso": "Remove gorduras carbonizadas em superfícies e utensílios.",
@@ -1341,8 +1377,8 @@
         "imersao",
         "manual"
       ],
-      "imagemPath": "/produtos/primmax-ldf.png",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-ldf.pdf",
       "ativo": true,
       "embalagens": [
         {
@@ -1387,6 +1423,7 @@
     {
       "codigo": "PRIMMAX-LUBRICK",
       "nome": "Primmax Lubrick",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Lubrificante de esteiras para embalagens cartonadas e garrafas",
       "descricaoUso": "Lubrificação de esteiras transportadoras de botijões de gás, garrafas PET, embalagens longa vida, latas e garrafas de vidro, reduzindo o coeficiente de atrito e o consumo de energia elétrica. Forma película protetora evitando oxidação.",
@@ -1399,8 +1436,8 @@
       "metodos": [
         "imersao"
       ],
-      "imagemPath": "/produtos/primmax-lubrick.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-lubrick.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-lubrick.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1436,6 +1473,7 @@
     {
       "codigo": "PRIMMAX-MANGOWASH",
       "nome": "Primmax Mangowash",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Produto para neutralização, remoção de látex e limpeza de mangas e mamões",
       "descricaoUso": "Indústria alimentícia/fruticultura: neutralização e remoção de látex e limpeza da casca de mangas e mamões, facilitando a remoção de caulim e evitando redeposição de sujidade na casca do fruto.",
@@ -1448,8 +1486,8 @@
       "metodos": [
         "imersao"
       ],
-      "imagemPath": "/produtos/primmax-mangowash.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-mangowash.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-mangowash.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1491,6 +1529,7 @@
     {
       "codigo": "PRIMMAX-OIL",
       "nome": "Primmax Oil",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Óleo protetivo para carretilhas, gancheiras e nórias",
       "descricaoUso": "Proteção de superfícies de aço inox, aço carbono ou ferro fundido de carretilhas, gancheiras e nórias contra oxidação, como etapa final do processo de tratamento (após desengraxe alcalino e desoxidação).",
@@ -1503,8 +1542,8 @@
       "metodos": [
         "imersao"
       ],
-      "imagemPath": "/produtos/primmax-oil.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-oil.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-oil.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1533,6 +1572,7 @@
     {
       "codigo": "PRIMMAX-PANCLOR",
       "nome": "Primmax Panclor",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Desincrustante alcalino clorado com ação alvejante",
       "descricaoUso": "Desincrustação e alvejamento, principalmente na remoção de amido em superfícies, equipamentos e utensílios em cozinhas, dando maior brilho.",
@@ -1546,8 +1586,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/primmax-panclor.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-panclor.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-panclor.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1588,6 +1628,7 @@
     {
       "codigo": "PRIMMAX-PLUS",
       "nome": "Primmax Plus",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente concentrado desengordurante para uso geral",
       "descricaoUso": "Lavar louças, pisos, paredes, bancadas, caixas e lavagens em geral. Utilizar no diluidor automático.",
@@ -1603,7 +1644,7 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/primmax-plus.png",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-plus.pdf",
       "ativo": true,
       "embalagens": [
         {
@@ -1612,6 +1653,20 @@
           "preco": "130.00",
           "diluicaoMax": "1:100",
           "custoDiluido": "0.26"
+        },
+        {
+          "tamanho": 53,
+          "unidade": "kg",
+          "preco": null,
+          "diluicaoMax": null,
+          "custoDiluido": null
+        },
+        {
+          "tamanho": 21,
+          "unidade": "kg",
+          "preco": null,
+          "diluicaoMax": null,
+          "custoDiluido": null
         }
       ],
       "ficha": {
@@ -1670,6 +1725,7 @@
     {
       "codigo": "PRIMMAX-REWAX",
       "nome": "Primmax Rewax",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Removedor de cera de carnaúba",
       "descricaoUso": "Remoção de incrustações de cera de carnaúba e sujidades pesadas em instalações de Packing Houses (Fruticultura) e Indústria Alimentícia.",
@@ -1683,8 +1739,8 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/primmax-rewax.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-rewax.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1722,6 +1778,7 @@
     {
       "codigo": "PRIMMAX-SANAP",
       "nome": "Primmax Sanap",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Desinfetante à base de ácido peracético para indústria alimentícia",
       "descricaoUso": "Desinfecção de superfícies em geral de cozinhas profissionais e indústrias alimentícias, incluindo equipamentos processadores de carne e salas refrigeradas. Em indústrias de bebidas, uso por circulação (CIP) para desinfecção de tanques, tubulações, carbonatadores, trocadores de calor e enchedoras. Em laticínios, desinfecção de plantas HTST e UHT. Também usado na desinfecção de hortifrutícolas e sanificação de frutos na pós-colheita.",
@@ -1739,8 +1796,8 @@
         "imersao",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/primmax-sanap.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-sanap.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-sanap.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1811,6 +1868,7 @@
     {
       "codigo": "PRIMMAX-SANCLOR",
       "nome": "Primmax Sanclor",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Desinfetante líquido clorado para indústria alimentícia",
       "descricaoUso": "Desinfecção de superfícies em frigoríficos, abatedouros avícolas, granjas de ovos, laticínios, indústria de pescados e indústrias alimentícias em geral. Uso pelo método de circulação (CIP) de tanques, tubulações e equipamentos, imersão de peças e limpeza mecânica por jateamento de fôrmas plásticas de chocolate.",
@@ -1826,8 +1884,8 @@
         "imersao",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/primmax-sanclor.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-sanclor.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-sanclor.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1882,6 +1940,7 @@
     {
       "codigo": "PRIMMAX-SANDRY",
       "nome": "Primmax Sandry",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Desinfetante a seco para indústria alimentícia, alto poder de secagem",
       "descricaoUso": "Estabelecimentos de manipulação e produção de alimentos e bebidas, cozinhas comerciais e industriais, frigoríficos, laticínios, indústrias de pescados e limpeza de superfícies de bares e restaurantes. Pode ser usado em qualquer etapa do processo produtivo, dispensando enxágue final, em locais com contato direto com alimentos.",
@@ -1895,8 +1954,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/primmax-sandry.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-sandry.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1930,6 +1989,7 @@
     {
       "codigo": "PRIMMAX-SANPER-50",
       "nome": "Primmax Sanper 50",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Produto ácido à base de peróxido de hidrogênio 50% para desinfecção CIP e aspersão",
       "descricaoUso": "Desinfecção CIP (por circulação) e aspersão na indústria alimentícia, não corrosivo às superfícies de inox, alumínio, estanho, zinco, teflon, polietileno, revestimentos sintéticos, esmaltados ou borrachas. Indicado também para tratamento de buchos e vísceras.",
@@ -1944,8 +2004,8 @@
         "circulacao_cip",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/primmax-sanper-50.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-sanper-50.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-sanper-50.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -1987,6 +2047,7 @@
     {
       "codigo": "PRIMMAX-SANPER-FOOD-GRADE",
       "nome": "Primmax Sanper Food Grade",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Produto ácido à base de peróxido de hidrogênio 35% para CIP e envase asséptico",
       "descricaoUso": "Lavagem desinfetante em diversas etapas do processamento de alimentos, CIP (por circulação), máquinas de envase asséptico (longa vida) e aspersão na indústria alimentícia, não corrosivo às superfícies de inox, alumínio, estanho, zinco, teflon, polietileno, revestimentos sintéticos, esmaltados ou borrachas. Indicado também para tratamento de buchos e vísceras.",
@@ -2001,8 +2062,8 @@
         "circulacao_cip",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/primmax-sanper-food-grade.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-sanper-food-grade.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-sanper-food-grade.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2032,6 +2093,7 @@
     {
       "codigo": "PRIMMAX-SANQUAT",
       "nome": "Primmax Sanquat",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante concentrado à base de quaternário de 5ª geração",
       "descricaoUso": "Elimina maus odores em ralos, lixos e calhas; combate o cheiro de alimentos e desinfeta o ambiente por pulverização. Utilizar no diluidor automático.",
@@ -2047,7 +2109,7 @@
         "pulverizacao"
       ],
       "imagemPath": "/produtos/primmax-sanquat.png",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-sanquat.pdf",
       "ativo": true,
       "embalagens": [
         {
@@ -2056,6 +2118,13 @@
           "preco": "220.00",
           "diluicaoMax": "1:250",
           "custoDiluido": "0.18"
+        },
+        {
+          "tamanho": 1000,
+          "unidade": "L",
+          "preco": null,
+          "diluicaoMax": null,
+          "custoDiluido": null
         }
       ],
       "ficha": {
@@ -2106,6 +2175,7 @@
     {
       "codigo": "PRIMMAX-SEC",
       "nome": "Primmax Sec",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Secante abrilhantador de uso institucional",
       "descricaoUso": "Lavagem mecânica de utensílios de cozinha. Desengraxante neutro indicado também como aditivo na limpeza leve de máquinas e equipamentos. Não deve ser utilizado manualmente.",
@@ -2118,8 +2188,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/primmax-sec.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-sec.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-sec.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2160,6 +2230,7 @@
     {
       "codigo": "PRIMMAX-SOL-PLUS",
       "nome": "Primmax Sol Plus",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente de uso geral para lavagem manual, uso institucional",
       "descricaoUso": "Limpeza manual de utensílios de cozinhas, louças, talheres e superfícies em geral. Lavagem por imersão ou aplicação direta, incluindo lavagem de frutas e equipamentos em geral.",
@@ -2174,8 +2245,8 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/primmax-sol-plus.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-sol-plus.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-sol-plus.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2228,6 +2299,7 @@
     {
       "codigo": "PRIMMAX-SUBZERO",
       "nome": "Primmax Subzero",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente para lavagem de superfícies frias",
       "descricaoUso": "Produto indicado para limpeza de superfícies frias, como câmaras frigoríficas, túneis de congelamento, ultra congeladores, reatores de produção de sorvetes, moldes de picolés, entre outros. Alta eficiência na remoção de sujidades orgânicas (gorduras, proteínas e carboidratos), mesmo em altas diluições. Seguro para limpeza de metais sensíveis (alumínio, cobre e zinco).",
@@ -2242,8 +2314,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/primmax-subzero.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/primmax-subzero.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-subzero.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2284,6 +2356,7 @@
     {
       "codigo": "PRIMMAX-SUNCARE-ADT",
       "nome": "Primmax Suncare ADT",
+      "marca": "indeba",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Dispersante de sólidos e óleos para agricultura",
       "descricaoUso": "Indicado para uso como dispersante de sólidos e soluções oleosas no tratamento de lavouras em geral, frutas, legumes, verduras, entre outros. Veículo espalhante usado na pulverização de sólidos utilizados para proteção de hortifruti contra a ação solar; aditivo dispersante de sólidos, soluções oleosas e fungicidas em lavouras; promove maior aderência, cobertura e fácil remoção no momento da lavagem dos frutos e vegetais para processo de embalagem, principalmente quando empregado com o detergente Primmax Mangowash.",
@@ -2298,8 +2371,8 @@
         "pulverizacao",
         "manual"
       ],
-      "imagemPath": "/produtos/primmax-suncare-adt.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/primmax-suncare-adt.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2341,6 +2414,7 @@
     {
       "codigo": "LETAH-DICLOR",
       "nome": "Letah Diclor",
+      "marca": "indeba",
       "linha": "higiene_clinica",
       "descricaoCurta": "Higienizador hospitalar em pó, ação 4 em 1: limpa, desencrusta, desinfecta e alveja superfícies fixas.",
       "descricaoUso": "Absorção de sangue e demais fluidos corpóreos: espalhar o produto puro sobre a superfície com o fluido derramado, deixar atuar 10 minutos e recolher os resíduos. Limpeza e desinfecção de superfícies fixas em áreas hospitalares: preparar solução a 3% (300 g do produto completando o volume com água para 10 litros), aplicar na superfície, deixar atuar 10 minutos, esfregar com escova ou vassoura de nylon e remover a solução com rodo.",
@@ -2354,8 +2428,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/letah-diclor.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/letah-diclor.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/letah-diclor.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2395,6 +2469,7 @@
     {
       "codigo": "LETAH-GEL",
       "nome": "Letah Gel",
+      "marca": "indeba",
       "linha": "higiene_clinica",
       "descricaoCurta": "Gel antisséptico para as mãos, com secagem rápida no contato e pH neutro; eficiência comprovada contra Salmonella entérica e Staphylococcus aureus.",
       "descricaoUso": "Antissepsia complementar das mãos: após a lavagem das mãos, aplicar o gel sobre as mãos, friccionando-as até secar. Antissepsia entre procedimentos com pacientes: aplicar o gel sobre as mãos, friccionando-as até secar. Recomenda-se lavar as mãos após 3 a 5 aplicações ou sempre que houver contato com matéria orgânica ou sujidades. Não utilizar em áreas críticas de hospitais (sala cirúrgica).",
@@ -2407,8 +2482,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/letah-gel.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/letah-gel.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2446,6 +2521,7 @@
     {
       "codigo": "LETAH-MAX",
       "nome": "Letah Max",
+      "marca": "indeba",
       "linha": "higiene_clinica",
       "descricaoCurta": "Desinfetante hospitalar concentrado à base de quaternário de amônio de 5ª geração para superfícies fixas e artigos não críticos.",
       "descricaoUso": "Diluição 1:150 com ação comprovada contra Pseudomonas, Salmonella choleraesuis, Staphylococcus aureus, Escherichia coli e Acinetobacter baumannii; diluição 1:130 contra Klebsiella pneumoniae carbapenemase. Aplicar a solução com borrifadores, panos, esponjas ou mops limpos, deixar em contato 10 minutos, sem necessidade de enxágue. Artigos que possam ser imersos: limpeza prévia e imersão na solução por 10 minutos, enxaguar e secar.",
@@ -2459,8 +2535,8 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/letah-max.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/letah-max.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/letah-max.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2503,6 +2579,7 @@
     {
       "codigo": "LETAH-OXY-CD",
       "nome": "Letah Oxy CD",
+      "marca": "indeba",
       "linha": "higiene_clinica",
       "descricaoCurta": "Desinfetante hospitalar à base de peróxido de hidrogênio com tecnologia HPH: limpeza, ação alvejante e desinfecção de superfícies fixas e artigos não críticos, incluindo áreas com Clostridium difficile.",
       "descricaoUso": "Desinfecção de superfícies fixas: diluir 1,5:100 (1,5 L do produto para 98,5 L de água), aplicar com borrifadores, panos, esponjas ou mops limpos, deixar em contato 10 minutos, sem necessidade de enxágue. Áreas de isolamento colonizadas com Clostridium difficile: diluição 1:16 (6,25 L para 93,75 L de água). Desinfecção de artigos não críticos: diluir 1,5:100 e aplicar sobre o artigo; artigos imersíveis: limpeza prévia, imersão por 10 minutos, enxaguar e secar.",
@@ -2516,8 +2593,8 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/letah-oxy-cd.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/letah-oxy-cd.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2561,6 +2638,7 @@
     {
       "codigo": "LETAH-OXY-HPC",
       "nome": "Letah Oxy HPC",
+      "marca": "indeba",
       "linha": "higiene_clinica",
       "descricaoCurta": "Desinfetante de nível intermediário à base de peróxido de hidrogênio, com ação de limpeza, para superfícies fixas em áreas críticas, semicríticas e não críticas, e artigos de inaloterapia e assistência ventilatória.",
       "descricaoUso": "Desinfecção de nível intermediário de artigos de inaloterapia e assistência ventilatória: lavar, enxaguar e secar, imergir na solução a 6,25% por 10 minutos, deixar secar ao ar ou enxaguar se necessário. Limpeza e desinfecção de superfícies fixas em uma única etapa e desinfecção de artigos não críticos: aplicar solução a 1,5%, deixar em contato 10 minutos. Limpeza pesada de pisos e superfícies em geral: aplicar solução a 0,5%.",
@@ -2574,8 +2652,8 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/letah-oxy-hpc.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/letah-oxy-hpc.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2625,6 +2703,7 @@
     {
       "codigo": "LETAH-PLUS",
       "nome": "Letah Plus",
+      "marca": "indeba",
       "linha": "higiene_clinica",
       "descricaoCurta": "Desincrustante para artigos cirúrgicos, laboratoriais, utensílios de cozinha profissional e em geral; isento de fosfato. Não possui atividade desinfetante.",
       "descricaoUso": "Diluir o produto na concentração de 0,5% (100 mL do produto completando com água para 20 litros de solução). Imergir os artigos a serem lavados na solução por 15 minutos (a ação pode ser melhorada com água morna). Retirar os artigos com pinça, enxaguar e secar. Proceder à desinfecção ou esterilização dos materiais.",
@@ -2638,8 +2717,8 @@
       "metodos": [
         "imersao"
       ],
-      "imagemPath": "/produtos/letah-plus.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/letah-plus.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2676,6 +2755,7 @@
     {
       "codigo": "LETAHCLOR-PLUS",
       "nome": "Letahclor Plus",
+      "marca": "indeba",
       "linha": "higiene_clinica",
       "descricaoCurta": "Desinfetante hospitalar clorado à base de hipoclorito de sódio, com 20.000 ppm de cloro ativo, para superfícies fixas; eficiente contra fungos e bactérias Gram positivas e Gram negativas, incluindo Pseudomonas.",
       "descricaoUso": "Superfícies fixas: aplicar diretamente sobre a superfície, tempo de contato de 10 minutos, retirar os excessos com auxílio de panos limpos, não enxaguar. Hemodiálise: diluir 50 mL do produto completando com água para 1 litro de solução, tempo de contato de 30 minutos, observando os procedimentos específicos de cada equipamento.",
@@ -2688,8 +2768,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/letahclor-plus.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/letahclor-plus.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2725,6 +2805,7 @@
     {
       "codigo": "LETAHCLOR",
       "nome": "Letahclor",
+      "marca": "indeba",
       "linha": "higiene_clinica",
       "descricaoCurta": "Desinfetante hospitalar clorado à base de hipoclorito de sódio, com 10.000 ppm de cloro ativo, para superfícies fixas; eficiente contra fungos e bactérias Gram positivas e Gram negativas, incluindo Pseudomonas.",
       "descricaoUso": "Superfícies fixas: aplicar puro diretamente sobre a superfície, tempo de contato de 10 minutos, retirar os excessos com auxílio de panos limpos, não enxaguar. Hemodiálise: diluir 100 mL do produto completando com água para 1 litro de solução, tempo de contato de 30 minutos, observando os procedimentos específicos de cada equipamento.",
@@ -2737,8 +2818,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/letahclor.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/letahclor.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2777,6 +2858,7 @@
     {
       "codigo": "LETAHZYME-MULTIENZIMATICO-5E",
       "nome": "Letahzyme Multienzimático 5E",
+      "marca": "indeba",
       "linha": "higiene_clinica",
       "descricaoCurta": "Detergente enzimático super concentrado para limpeza de artigos médicos críticos, não críticos e endoscópios; amplo blend enzimático, não corrosivo e sem formação de espuma.",
       "descricaoUso": "Uso manual: diluir 1 mL do produto para 1 L de água, imergir os artigos na solução, injetar a solução nos lumens de artigos canulados com pistola ou seringa (flushing) antes da imersão completa, mergulhar por 5 minutos para remoção da matéria orgânica e enxaguar abundantemente com água. Equipamento automático: diluir 1 mL/1 L de água, seguir as recomendações do fabricante do equipamento e utilizar imediatamente após o preparo.",
@@ -2792,7 +2874,7 @@
         "imersao"
       ],
       "imagemPath": "/produtos/letahzyme-multienzimatico-5e.jpg",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/letahzyme-multienzimatico-5e.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2833,6 +2915,7 @@
     {
       "codigo": "DERMOL-BACTER-PLUS",
       "nome": "Sabonete Dermol Bacter Plus",
+      "marca": "indeba",
       "linha": "higiene_pessoal",
       "descricaoCurta": "Sabonete perolizado antisséptico para as mãos",
       "descricaoUso": "Higienização e antissepsia das mãos. Pronto para uso.",
@@ -2848,13 +2931,20 @@
         "manual"
       ],
       "imagemPath": "/produtos/dermol-bacter-plus.png",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/dermol-bacter-plus.pdf",
       "ativo": true,
       "embalagens": [
         {
           "tamanho": 800,
           "unidade": "ml",
           "preco": "35.00",
+          "diluicaoMax": null,
+          "custoDiluido": null
+        },
+        {
+          "tamanho": 5,
+          "unidade": "L",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -2882,6 +2972,7 @@
     {
       "codigo": "DERMOL-CLASSIC",
       "nome": "Sabonete Dermol Classic",
+      "marca": "indeba",
       "linha": "higiene_pessoal",
       "descricaoCurta": "Sabonete perolizado para mãos",
       "descricaoUso": "Aplicar diretamente sobre as mãos previamente umedecidas. Friccionar uma mão contra a outra durante cerca de 1 minuto, não esquecendo o dorso, espaços interdigitais e espaços sob as unhas. Enxaguar com água corrente.",
@@ -2900,8 +2991,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/sabonete-dermol-classic.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/dermol-classic.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/dermol-classic.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2940,6 +3031,7 @@
     {
       "codigo": "DERMOL-GREASE",
       "nome": "Sabonete Dermol Grease",
+      "marca": "indeba",
       "linha": "higiene_pessoal",
       "descricaoCurta": "Sabonete desengraxante para mãos",
       "descricaoUso": "Aplicar diretamente sobre as mãos previamente umedecidas. Friccionar uma mão contra a outra durante cerca de 1 minuto, não esquecendo o dorso, espaços interdigitais e espaços sob as unhas. Enxaguar com água corrente. Remove sujidades como graxa, óleo, gordura, entre outros.",
@@ -2961,8 +3053,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/sabonete-dermol-grease.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/dermol-grease.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -2993,6 +3085,7 @@
     {
       "codigo": "INDEBA-C",
       "nome": "Sabonete Indeba C",
+      "marca": "indeba",
       "linha": "higiene_pessoal",
       "descricaoCurta": "Sabonete super concentrado para mãos",
       "descricaoUso": "Deve ser utilizado na diluição de 10% (100 mL de Sabonete Indeba C completando com água para 1 litro de solução), aplicando diretamente sobre as mãos previamente umedecidas. Friccionar uma mão contra a outra durante cerca de 1 minuto, não esquecendo o dorso, espaços interdigitais e espaços sob as unhas. Enxaguar com água corrente.",
@@ -3007,8 +3100,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/sabonete-indeba-c.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/indeba-c.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/indeba-c.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3045,6 +3138,7 @@
     {
       "codigo": "ALVACLOR-165",
       "nome": "Alvaclor 165",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Alvejante clorado em pó, também indicado para oxidação de manchas em tecidos.",
       "descricaoUso": "Na operação de desinfecção e oxidação das manchas na lavagem de roupas de algodão e poliéster, brancas e de cores firmes, com sujidades leves e pesadas, em máquinas lavadoras.",
@@ -3057,8 +3151,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/alvaclor-165.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/alvaclor-165.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/alvaclor-165.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3097,6 +3191,7 @@
     {
       "codigo": "ALVACLOR-180-ALVEJANTE",
       "nome": "Alvaclor 180 Alvejante",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Alvejante clorado em pó, também indicado para oxidação de manchas em tecidos.",
       "descricaoUso": "Na operação de oxidação das manchas na lavagem de roupas de algodão e poliéster, brancas e de cores firmes, com sujidades leves e pesadas, em máquinas lavadoras.",
@@ -3109,8 +3204,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/alvaclor-180-alvejante.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/alvaclor-180-alvejante.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/alvaclor-180-alvejante.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3149,6 +3244,7 @@
     {
       "codigo": "CANDALL-PT",
       "nome": "Candall PT",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Alvejante redutor para remoção de manchas sensíveis à redução e recuperação do grau de brancura.",
       "descricaoUso": "Em lavanderias hospitalares, hoteleiras, comerciais e industriais, na operação de tratamento de manchas em roupas de algodão ou poliéster (uso apenas em tecidos brancos).",
@@ -3164,8 +3260,8 @@
       "metodos": [
         "imersao"
       ],
-      "imagemPath": "/produtos/candall-pt.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/candall-pt.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/candall-pt.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3200,6 +3296,7 @@
     {
       "codigo": "CANDALL-RF",
       "nome": "Candall RF",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Removedor de manchas de ferrugem e desincrustante ácido, de ação rápida.",
       "descricaoUso": "Removedor de manchas de ferrugem e óxidos metálicos, assim como manchas sensíveis à complexação, indicado para roupas brancas e de cores firmes.",
@@ -3213,8 +3310,8 @@
         "imersao",
         "manual"
       ],
-      "imagemPath": "/produtos/candall-rf.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/candall-rf.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3255,6 +3352,7 @@
     {
       "codigo": "CITY-AC",
       "nome": "City AC",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Acidulante neutralizador de resíduos alcalinos.",
       "descricaoUso": "Na operação de acidulação, em lavagem de roupas brancas e de cores firmes, em máquinas lavadoras.",
@@ -3267,8 +3365,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/city-ac.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/city-ac.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/city-ac.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3308,6 +3406,7 @@
     {
       "codigo": "CITY-RH-900",
       "nome": "City RH 900",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente em pó para lavagem de roupas, com alto poder dispersante e branqueadores ópticos.",
       "descricaoUso": "Na operação de pré-lavagem e/ou lavagem de roupas de algodão e poliéster, brancas e de cores firmes, a baixa e alta temperatura, com sujidades leves ou pesadas, em máquinas lavadoras.",
@@ -3320,8 +3419,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/city-rh-900.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/city-rh-900.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/city-rh-900.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3353,6 +3452,7 @@
     {
       "codigo": "CITY-RH-CONCENTRADO",
       "nome": "City RH Concentrado",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente concentrado em pó para lavagem de roupas, com agentes sequestrantes e branqueadores ópticos.",
       "descricaoUso": "Na operação de pré-lavagem e/ou lavagem de roupas de algodão e poliéster, brancas e de cores firmes, a baixa e alta temperatura, com sujidades leves e pesadas, em máquinas lavadoras. Indicado também para limpeza e desengraxe de máquinas e equipamentos.",
@@ -3366,8 +3466,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/city-rh-concentrado.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/city-rh-concentrado.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/city-rh-concentrado.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3411,6 +3511,7 @@
     {
       "codigo": "CITY-RH",
       "nome": "City RH",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente concentrado em pó para lavagem de roupas, com agentes sequestrantes e branqueadores ópticos.",
       "descricaoUso": "Na operação de pré-lavagem e/ou lavagem de roupas de algodão e poliéster, brancas e de cores firmes, a baixa e alta temperatura, com sujidades leves ou pesadas, em máquinas lavadoras.",
@@ -3423,8 +3524,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/city-rh.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/city-rh.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/city-rh.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3457,6 +3558,7 @@
     {
       "codigo": "CLARIT-7000",
       "nome": "Clarit 7000",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente para lavagem de roupas, com branqueadores ópticos e tensoativo biodegradável.",
       "descricaoUso": "Na operação de pré-lavagem e lavagem de roupas de algodão e poliéster, brancas e de cores firmes, a baixa e alta temperatura, com sujidades leves e pesadas, em máquinas lavadoras. Indicado também para limpeza e desengraxe de máquinas e equipamentos.",
@@ -3470,8 +3572,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/clarit-7000.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/clarit-7000.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/clarit-7000.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3511,6 +3613,7 @@
     {
       "codigo": "CLARIT-CLOR",
       "nome": "Clarit Clor",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Desinfetante em pó, com eficiência comprovada contra bactérias, também indicado para oxidação de manchas em tecidos.",
       "descricaoUso": "Na operação de oxidação das manchas e desinfecção na lavagem de roupas de algodão e poliéster, brancas e de cores firmes, com sujidades leves e pesadas, em máquinas lavadoras.",
@@ -3523,8 +3626,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/clarit-clor.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/clarit-clor.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/clarit-clor.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3557,6 +3660,7 @@
     {
       "codigo": "CLARIT-PASTA",
       "nome": "Clarit Pasta",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente umectante em pasta, auxilia na remoção de sujidades proteicas e albuminosas.",
       "descricaoUso": "Na operação de umectação de roupas, podendo ser utilizado em máquina de lavar ou manualmente.",
@@ -3570,8 +3674,8 @@
         "diluidor_automatico",
         "manual"
       ],
-      "imagemPath": "/produtos/clarit-pasta.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/clarit-pasta.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/clarit-pasta.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3603,6 +3707,7 @@
     {
       "codigo": "CLARIT-SOUR",
       "nome": "Clarit Sour",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Neutralizador ácido que devolve a neutralidade dos tecidos e neutraliza o cloro residual.",
       "descricaoUso": "Na operação de acidulação, em lavagem de roupas brancas e de cores firmes, em máquinas lavadoras.",
@@ -3615,8 +3720,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/clarit-sour.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/clarit-sour.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/clarit-sour.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3650,6 +3755,7 @@
     {
       "codigo": "KARICIA",
       "nome": "Karícia",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Produto para acabamento e perfumação de roupas, com essência tradicional exclusiva Indeba.",
       "descricaoUso": "Em lavanderias comerciais, hoteleiras ou industriais, na fase de passadoria dos tecidos.",
@@ -3664,8 +3770,8 @@
       "metodos": [
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/karicia.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/karicia.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/karicia.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3704,6 +3810,7 @@
     {
       "codigo": "PRIMMA-OXY-S",
       "nome": "Primma Oxy S",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Alvejante à base de oxigênio ativo em pó, eficaz a partir de 50°C.",
       "descricaoUso": "Na operação de alvejamento na lavagem de roupas de algodão e poliéster, brancas e de cores firmes com sujidades leves e pesadas, remoção de manchas de sangue, fezes, medicamentos, óleos, gorduras, entre outros.",
@@ -3717,7 +3824,7 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/_generico.svg",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/primma-oxy-s.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3745,6 +3852,7 @@
     {
       "codigo": "SOFTLIN-CONCENTRADO",
       "nome": "Softlin Concentrado",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Amaciante de tecidos e roupas com tecnologia de essência em microcápsulas.",
       "descricaoUso": "Na operação de amaciamento de todos os tipos de tecidos, nas lavanderias hospitalares, hoteleiras, comerciais e industriais.",
@@ -3761,8 +3869,8 @@
         "diluidor_automatico",
         "manual"
       ],
-      "imagemPath": "/produtos/softlin-concentrado.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/softlin-concentrado.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/softlin-concentrado.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3796,6 +3904,7 @@
     {
       "codigo": "SOFTS-MAX-KARICIA",
       "nome": "Soft's Max Karícia",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Amaciante de tecidos e roupas, altamente concentrado em perfume, com tecnologia de essência em microcápsulas.",
       "descricaoUso": "Na operação de amaciamento de todos os tipos de tecidos, nas lavanderias hospitalares, hoteleiras, comerciais e industriais.",
@@ -3811,8 +3920,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/softs-max-karicia.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/softs-max-karicia.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/softs-max-karicia.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3857,6 +3966,7 @@
     {
       "codigo": "SOFTS-CONCENTRADO",
       "nome": "Soft's Concentrado",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Amaciante concentrado de tecidos e roupas",
       "descricaoUso": "Na operação de amaciamento de todos os tipos de tecidos, nas lavanderias hospitalares, hoteleiras, comerciais e industriais.",
@@ -3871,8 +3981,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/soft-s-concentrado.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/softs-concentrado.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/softs-concentrado.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3919,6 +4029,7 @@
     {
       "codigo": "SOFTS",
       "nome": "Soft's",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Amaciante de tecidos e roupas",
       "descricaoUso": "Na operação de amaciamento de todos os tipos de tecidos, nas lavanderias hospitalares, hoteleiras, comerciais e industriais.",
@@ -3933,8 +4044,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/soft-s.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/softs.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/softs.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -3969,6 +4080,7 @@
     {
       "codigo": "SPARLAV",
       "nome": "Sparlav",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente umectante em pasta",
       "descricaoUso": "Na operação de umectação de roupas hospitalares com sujidades pesadas (sangue, fezes, entre outros). Na operação de lavagem de roupas delicadas de todas as cores e tecidos (lã, seda, entre outros), com sujidades leves, em máquinas lavadoras ou manualmente.",
@@ -3982,8 +4094,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/sparlav.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/sparlav.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/sparlav.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4016,6 +4128,7 @@
     {
       "codigo": "SPARTEX",
       "nome": "Spartex",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente umectante em pasta",
       "descricaoUso": "Na operação de umectação de roupas.",
@@ -4028,8 +4141,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spartex.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/spartex.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/spartex.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4067,6 +4180,7 @@
     {
       "codigo": "TEXSPAR-AP",
       "nome": "Texspar AP",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Alvejante à base de ácido peracético",
       "descricaoUso": "Em lavanderias Hospitalares, Hoteleiras, Comerciais e Industriais no alvejamento de roupas de algodão e Poliéster, brancas e de cores firmes, com sujidades leves ou pesadas e amplo espectro na remoção de manchas.",
@@ -4081,8 +4195,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-ap.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-ap.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-ap.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4113,6 +4227,7 @@
     {
       "codigo": "TEXSPAR-CL",
       "nome": "Texspar CL",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Desinfetante e alvejante para roupas hospitalares",
       "descricaoUso": "Na desinfecção de pisos, paredes e outras superfícies não sensíveis ao cloro. No alvejamento de roupas de algodão e poliéster brancas e de cores firmes, com sujidades leves ou pesadas (sangue, fezes, medicamentos, óleos e gorduras, entre outros), ou em máquinas lavadoras.",
@@ -4127,8 +4242,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-cl.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-cl.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-cl.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4169,6 +4284,7 @@
     {
       "codigo": "TEXSPAR-DEGREASE",
       "nome": "Texspar Degrease",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente para lavagem de tecidos com sujidades graxosas",
       "descricaoUso": "Indicado para lavagem de tecidos de algodão e poliéster/algodão, a frio com sujidade pesada de óleo ou graxa. Também indicado como desengraxante de máquinas e equipamentos, bem como para lavagem de caixas de gordura.",
@@ -4182,8 +4298,8 @@
         "imersao",
         "manual"
       ],
-      "imagemPath": "/produtos/texspar-degrease.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-degrease.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-degrease.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4231,6 +4347,7 @@
     {
       "codigo": "TEXSPAR-DSA",
       "nome": "Texspar DSA",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente e desincrustante para lavagem de roupas",
       "descricaoUso": "Na operação de desengraxe, pré-lavagem, lavagem e umectação de roupas brancas e de cores firmes, com sujidades pesadas ou leves em máquinas lavadoras. Pode ser utilizado também na lavagem de superfícies e equipamentos em geral.",
@@ -4244,8 +4361,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-dsa.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-dsa.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dsa.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4289,6 +4406,7 @@
     {
       "codigo": "TEXSPAR-DTA",
       "nome": "Texspar DTA",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Ativador alcalino líquido",
       "descricaoUso": "Na Desagregação, lavagem e pré-lavagem de roupas de algodão e poliéster brancas e de cores firmes, com sujidades leves ou pesadas (sangue, fezes, medicamentos, óleos e gorduras, etc.), em máquinas lavadoras.",
@@ -4302,8 +4420,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-dta.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-dta.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dta.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4335,6 +4453,7 @@
     {
       "codigo": "TEXSPAR-DTC",
       "nome": "Texspar DTC",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente desengraxante para lavagem de roupas",
       "descricaoUso": "Indicado para lavagem de roupas brancas e coloridas, de cores firmes, de algodão e mistas, em hospitais, hotéis e motéis, restaurantes e lavanderias industriais.",
@@ -4350,7 +4469,7 @@
         "manual"
       ],
       "imagemPath": "/produtos/texspar-dtc.jpg",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtc.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4394,6 +4513,7 @@
     {
       "codigo": "TEXSPAR-DTK",
       "nome": "Texspar DTK",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Aditivo de lavagem desincrustante, dispersante e anti-redepositante",
       "descricaoUso": "Na operação de desagregação, pré-lavagem, lavagem de roupas brancas e de cores firmes, com sujidades pesadas ou leves em máquinas lavadoras. Indicado também como aditivo para limpeza e desengraxe de máquinas e equipamentos.",
@@ -4406,8 +4526,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-dtk.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-dtk.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtk.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4450,6 +4570,7 @@
     {
       "codigo": "TEXSPAR-DTN",
       "nome": "Texspar DTN",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente desincrustante e desengraxante para lavagem de roupas",
       "descricaoUso": "Indicado para lavagem de roupas brancas e coloridas, de cores firmes, de algodão e mistas, em hospitais, hotéis e motéis, restaurantes e lavanderias industriais.",
@@ -4465,8 +4586,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-dtn.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-dtn.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtn.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4507,6 +4628,7 @@
     {
       "codigo": "TEXSPAR-DTS",
       "nome": "Texspar DTS",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente para lavagem de roupas institucionais",
       "descricaoUso": "Na operação de desagregação, pré-lavagem, lavagem e umectação de roupas brancas e de cores firmes.",
@@ -4519,8 +4641,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-dts.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-dts.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dts.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4565,6 +4687,7 @@
     {
       "codigo": "TEXSPAR-DTT",
       "nome": "Texspar DTT",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Acidulante para processos não clorados",
       "descricaoUso": "Operação de acidulação e tratamento do ferro presente na água, em lavagem de roupas brancas e de cores firmes, com sujidades pesadas ou leves em máquinas lavadoras.",
@@ -4578,7 +4701,7 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/_generico.svg",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtt.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4623,6 +4746,7 @@
     {
       "codigo": "TEXSPAR-DTZ",
       "nome": "Texspar DTZ",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Neutralizador de resíduos oxidantes e alcalinos",
       "descricaoUso": "Indicado para lavagem de roupas brancas e de cores firmes, de algodão e mistas, em hospitais, hotéis e motéis, restaurantes e lavanderias industriais.",
@@ -4637,8 +4761,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-dtz.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-dtz.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtz.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4682,6 +4806,7 @@
     {
       "codigo": "TEXSPAR-DXA",
       "nome": "Texspar DXA",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Ativador alcalino líquido",
       "descricaoUso": "Na Desagregação, lavagem e pré-lavagem de roupas de algodão e poliéster brancas e de cores firmes, com sujidades leves ou pesadas (sangue, fezes, medicamentos, óleos e gorduras, etc.), em máquinas lavadoras.",
@@ -4695,8 +4820,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-dxa.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-dxa.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxa.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4734,6 +4859,7 @@
     {
       "codigo": "TEXSPAR-DXG-AMON",
       "nome": "Texspar DXG Amon",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente desengordurante para lavagem de roupas",
       "descricaoUso": "Uso profissional na operação de desengraxe, pré-lavagem, lavagem e umectação de roupas brancas e de cores firmes, com sujidades pesadas ou leves em máquinas lavadoras. Indicado também para limpeza e desengraxe de máquinas e equipamentos.",
@@ -4746,8 +4872,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-dxg-amon.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-dxg-amon.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxg-amon.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4796,6 +4922,7 @@
     {
       "codigo": "TEXSPAR-DXG",
       "nome": "Texspar DXG",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente desengraxante para lavagem de roupas",
       "descricaoUso": "Uso profissional na operação de desagregação, pré-lavagem, lavagem e umectação de roupas brancas e de cores firmes, com sujidades pesadas ou leves em máquinas lavadoras.",
@@ -4808,8 +4935,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-dxg.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-dxg.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxg.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4852,6 +4979,7 @@
     {
       "codigo": "TEXSPAR-DXZ",
       "nome": "Texspar DXZ",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Neutralizador de resíduos oxidantes e alcalinos",
       "descricaoUso": "Indicado para lavagem de roupas brancas e de cores firmes, de algodão e mistas, em hospitais, hotéis e motéis, restaurantes e lavanderias industriais.",
@@ -4867,8 +4995,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-dxz.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-dxz.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxz.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4913,6 +5041,7 @@
     {
       "codigo": "TEXSPAR-PE",
       "nome": "Texspar PE",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Alvejante à base de peróxido de hidrogênio",
       "descricaoUso": "Uso profissional em lavanderias Hospitalares, Hoteleiras, Comerciais e Industriais no alvejamento de roupas de algodão e poliéster, brancas e de cores firmes, com sujidades pesadas ou leves e na remoção de manchas de medicamentos, sucos, chá, café, entre outros, em máquinas lavadoras.",
@@ -4928,8 +5057,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-pe.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-pe.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-pe.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -4974,6 +5103,7 @@
     {
       "codigo": "TEXSPAR-PL",
       "nome": "Texspar PL",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Removedor de clorhexidina e desincrustante ácido",
       "descricaoUso": "Uso profissional na operação de tratamento de tecidos de algodão ou poliéster que contenham Clorhexidina. Não remove as manchas acastanhadas resultantes da reação de Clorhexidina com agentes clorados.",
@@ -4986,8 +5116,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-pl.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-pl.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-pl.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5021,6 +5151,7 @@
     {
       "codigo": "TEXSPAR-RHA",
       "nome": "Texspar RHA",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Ativador alcalino líquido",
       "descricaoUso": "Indicado para lavagem de roupas brancas e de cores firmes, de algodão e mistas, em hospitais, hotéis e motéis, restaurantes e lavanderias industriais.",
@@ -5036,8 +5167,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-rha.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-rha.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-rha.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5069,6 +5200,7 @@
     {
       "codigo": "TEXSPAR-RHC",
       "nome": "Texspar RHC",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente desengraxante para lavagem de roupas",
       "descricaoUso": "Indicado para lavagem de roupas brancas e coloridas, de cores firmes, de algodão e mistas, em hospitais, hotéis e motéis, restaurantes e lavanderias industriais.",
@@ -5084,8 +5216,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-rhc.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-rhc.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhc.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5118,6 +5250,7 @@
     {
       "codigo": "TEXSPAR-RHE",
       "nome": "Texspar RHE",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Aromatizador ultra concentrado de roupas",
       "descricaoUso": "Uso profissional nas lavanderias comerciais, hoteleiras e industriais, na fase de acabamento, após o processo de lavagem, nos minutos finais de secagem das roupas.",
@@ -5132,8 +5265,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-rhe.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-rhe.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhe.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5175,6 +5308,7 @@
     {
       "codigo": "TEXSPAR-RHK",
       "nome": "Texspar RHK",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Aditivo de lavagem dispersante e anti-redepositante desincrustante",
       "descricaoUso": "Indicado para lavagem de roupas brancas e coloridas, de cores firmes, de algodão e mistas, em hospitais, hotéis e motéis, restaurantes e lavanderias industriais. Indicado também para limpeza e desengraxe de máquinas e equipamentos.",
@@ -5190,8 +5324,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-rhk.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-rhk.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhk.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5227,6 +5361,7 @@
     {
       "codigo": "TEXSPAR-RHN",
       "nome": "Texspar RHN",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente desincrustante e desengraxante para lavagem de roupas",
       "descricaoUso": "Indicado para lavagem de roupas brancas e coloridas, de cores firmes, de algodão e mistas, em hospitais, hotéis e motéis, restaurantes e lavanderias industriais.",
@@ -5243,8 +5378,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-rhn.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-rhn.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhn.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5277,6 +5412,7 @@
     {
       "codigo": "TEXSPAR-RHS",
       "nome": "Texspar RHS",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Agente sequestrante de dureza",
       "descricaoUso": "Uso profissional na operação de acidulação e tratamento do ferro e dureza presente na água, em lavagem de roupas brancas e de cores firmes, com sujidades pesadas ou leves em máquinas lavadoras.",
@@ -5289,8 +5425,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-rhs.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-rhs.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhs.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5325,6 +5461,7 @@
     {
       "codigo": "TEXSPAR-RHT",
       "nome": "Texspar RHT",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Acidulante para processos não clorados",
       "descricaoUso": "Uso profissional na operação de acidulação e tratamento do ferro e dureza presente na água, em lavagem de roupas brancas e de cores firmes, com sujidades pesadas ou leves em máquinas lavadoras.",
@@ -5337,8 +5474,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-rht.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-rht.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-rht.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5376,6 +5513,7 @@
     {
       "codigo": "TEXSPAR-RHZ",
       "nome": "Texspar RHZ",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Neutralizador de resíduos oxidantes e alcalinos",
       "descricaoUso": "Indicado para lavagem de roupas brancas e de cores firmes, de algodão e mistas, em hospitais, hotéis e motéis, restaurantes e lavanderias industriais.",
@@ -5391,8 +5529,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-rhz.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-rhz.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhz.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5430,6 +5568,7 @@
     {
       "codigo": "TEXSPAR-SOFTLIN-CONCENTRADO",
       "nome": "Texspar Softlin Concentrado",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Amaciante de tecidos e roupas com tecnologia de essência em microcápsulas",
       "descricaoUso": "Uso profissional na operação de amaciamento de todos os tipos de tecidos, nas lavanderias hospitalares, hoteleiras, comerciais e industriais.",
@@ -5445,8 +5584,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-softlin-concentrado.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-softlin-concentrado.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-softlin-concentrado.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5486,6 +5625,7 @@
     {
       "codigo": "TEXSPAR-SOFTS-CONCENTRADO",
       "nome": "Texspar Soft's Concentrado",
+      "marca": "indeba",
       "linha": "lavanderia",
       "descricaoCurta": "Amaciante de tecidos e roupas com tecnologia de essência em microcápsulas",
       "descricaoUso": "Uso profissional na operação de amaciamento de todos os tipos de tecidos, nas lavanderias hospitalares, hoteleiras, comerciais e industriais.",
@@ -5501,8 +5641,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/texspar-soft-s-concentrado.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/texspar-softs-concentrado.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/texspar-softs-concentrado.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5543,6 +5683,7 @@
     {
       "codigo": "CANDALL-TMI",
       "nome": "Candall TMI",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Detergente desincrustante ácido para uso industrial",
       "descricaoUso": "Limpeza de ambientes e equipamentos industriais, tais como linhas de tubulações, remoção de óleos e graxas de máquinas, e desoxidação de equipamentos (carretilhas, roldanas, ganchos, nórias, balancins, caminhões baú, tanques, silos e similares). Não deve ser utilizado em superfícies pintadas, vitrificadas e esmaltadas.",
@@ -5556,8 +5697,8 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/candall-tmi.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/candall-tmi.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5610,6 +5751,7 @@
     {
       "codigo": "EMULSOIL-130",
       "nome": "Emulsoil 130",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Detergente flotador desengordurante e desengraxante",
       "descricaoUso": "Limpeza de superfícies como pisos, paredes, azulejos, entre outros, com sujidades em geral e de natureza oleosa e graxosa. Indicado também para limpeza e desengraxe de máquinas e equipamentos.",
@@ -5622,8 +5764,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/emulsoil-130.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/emulsoil-130.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5668,6 +5810,7 @@
     {
       "codigo": "IGUATEMI",
       "nome": "Iguatemi",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante perfumado para uso geral",
       "descricaoUso": "Desinfecção e limpeza de superfícies em geral. Não é necessário enxágue. Disponível nas essências Lavanda, Pinho e Floral.",
@@ -5680,8 +5823,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/iguatemi.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/iguatemi.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/iguatemi.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5725,6 +5868,7 @@
     {
       "codigo": "INDEBA-T",
       "nome": "Indeba T",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Detergente neutro de uso geral",
       "descricaoUso": "Lavagem de superfícies em geral: pisos, paredes, azulejos, sanitários, vidros, estofados, carpetes, tapetes, artigos médicos e odontológicos. Uso em condomínios, clubes, clínicas, hospitais, restaurantes, hotéis, pousadas, entre outros.",
@@ -5740,8 +5884,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/indeba-t.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/indeba-t.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5785,6 +5929,7 @@
     {
       "codigo": "SPAR-24",
       "nome": "Spar 24",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Limpador super concentrado de baixa espuma",
       "descricaoUso": "Desengraxe e limpeza de superfícies em geral, como vidros, vidrarias, paredes, azulejos, banheiros, pisos com ou sem tratamento, em hotéis, motéis, instituições de ensino, instituições de saúde, shoppings, entre outras áreas.",
@@ -5801,8 +5946,8 @@
         "diluidor_automatico",
         "manual"
       ],
-      "imagemPath": "/produtos/spar-24.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-24.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5850,6 +5995,7 @@
     {
       "codigo": "SPAR-FLOOR-PLUS",
       "nome": "Spar Floor Plus",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Limpador concentrado de baixíssima espuma para pisos industriais",
       "descricaoUso": "Limpeza de pisos industriais, vinílicos, cerâmicas, granitos, cimento e pedras. Uso em máquinas lavadoras automáticas e enceradeiras. Eficaz na remoção de graxas, gorduras, grafites, fuligem e demais sujidades pesadas e incrustadas.",
@@ -5864,7 +6010,7 @@
         "manual"
       ],
       "imagemPath": "/produtos/_generico.svg",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-floor-plus.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5914,6 +6060,7 @@
     {
       "codigo": "SPAR-HT-1",
       "nome": "Spar HT-1",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Decapante ácido para remoção de incrustações inorgânicas",
       "descricaoUso": "Limpeza e remoção de incrustações inorgânicas, principalmente óxido de ferro, em vasos sanitários, pias, azulejos, pisos, superfícies de inox como torneiras, entre outros.",
@@ -5926,8 +6073,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spar-ht-1-decapante.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-1.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -5965,6 +6112,7 @@
     {
       "codigo": "SPAR-HT-2-DBQ",
       "nome": "Spar HT-2 DBQ",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante de uso geral à base de quaternário de amônio de 5ª geração para banheiros químicos",
       "descricaoUso": "Desinfecção e limpeza de banheiros químicos e sanitários de aviões, ônibus, vias públicas, entre outros. Ideal para odorização do ambiente com essência tutti-frutti.",
@@ -5977,8 +6125,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spar-ht-2-dbq.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/spar-ht-2-dbq.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-2-dbq.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6016,6 +6164,7 @@
     {
       "codigo": "SPAR-HT-2",
       "nome": "Spar HT-2",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante concentrado à base de quaternário de amônio de 5ª geração",
       "descricaoUso": "Desinfecção e limpeza de superfícies em geral. Não é necessário enxágue. Disponível nas versões Lavanda, Floral e Karícia.",
@@ -6028,8 +6177,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spar-ht-2.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/spar-ht-2.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-2.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6068,6 +6217,7 @@
     {
       "codigo": "SPAR-HT-3",
       "nome": "Spar HT-3",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Limpador desengordurante para vidros e superfícies em geral",
       "descricaoUso": "Limpeza e acabamento de vidros, espelhos, fórmicas, azulejos, telefones, alumínio, superfícies plásticas, esmaltadas, vitrificadas, em hotéis, motéis, hospitais e ambientes em geral. Forma película protetora contra manchas de impressões digitais.",
@@ -6082,8 +6232,8 @@
         "pulverizacao",
         "manual"
       ],
-      "imagemPath": "/produtos/spar-ht-3.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-3.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6123,6 +6273,7 @@
     {
       "codigo": "SPAR-HT-4",
       "nome": "Spar HT-4",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Detergente concentrado perfumado para uso geral",
       "descricaoUso": "Limpeza de superfícies laváveis como banheiros, pisos, paredes, azulejos, vidros, etc., em hotéis, motéis, hospitais e ambientes em geral. Seguro para superfícies sensíveis como porcelanato.",
@@ -6136,8 +6287,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spar-ht-4.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/spar-ht-4.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-4.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6176,6 +6327,7 @@
     {
       "codigo": "SPAR-HT-5",
       "nome": "Spar HT-5 Antimofo",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Neutralizador de odores e fungicida antimofo",
       "descricaoUso": "Formulado para eliminação do fungo trichophyton interdigitale ('Mofo'), deixando agradável e suave aroma no ambiente. Indicado também para neutralizar maus odores, principalmente de tabaco.",
@@ -6190,7 +6342,7 @@
         "manual"
       ],
       "imagemPath": "/produtos/spar-ht-5.jpg",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-5.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6234,6 +6386,7 @@
     {
       "codigo": "SPAR-HT-6",
       "nome": "Spar HT-6",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Produto à base de silicone para brilho e proteção de superfícies",
       "descricaoUso": "Uso em superfícies emborrachadas, móveis de madeira, couro, fórmica, envernizados e laqueados. Não aplicar em pisos. Forma película protetora contra ação do tempo, umidade, manchas d'água e poeira.",
@@ -6246,8 +6399,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spar-ht-6.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-6.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6277,6 +6430,7 @@
     {
       "codigo": "SPAR-HT-7",
       "nome": "Spar HT-7 Amon",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Limpador desengordurante de alta performance",
       "descricaoUso": "Limpeza de superfícies laváveis em geral: azulejos, pisos, paredes, vidros, sanitários, etc., com sujidades leves e pesadas de natureza oleosa/gordurosa. Seguro para vidros e porcelanatos.",
@@ -6289,8 +6443,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spar-ht-7-amon.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-7.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6328,6 +6482,7 @@
     {
       "codigo": "SPAR-HT-8",
       "nome": "Spar HT-8 Oxy",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante e limpador para uso geral com tecnologia HPH",
       "descricaoUso": "Desinfecção, limpeza, alvejamento e controle de odores em pisos, porcelanatos, cerâmicas, granitos, aços inox, alumínios, plásticos, PVC, vinil, vidros, espelhos, fórmicas, paredes, mobiliários, maçanetas, telefones, rejuntes, tecidos, carpetes e estofados, em hotéis, motéis, hospitais, consultórios, clínicas e ambientes em geral.",
@@ -6342,8 +6497,8 @@
         "pulverizacao",
         "manual"
       ],
-      "imagemPath": "/produtos/spar-ht-8-oxy.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-8.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6386,6 +6541,7 @@
     {
       "codigo": "SPAR-HT-9",
       "nome": "Spar HT-9 Clor",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Detergente desincrustante clorado de alta espuma",
       "descricaoUso": "Limpeza pesada de sujidades e incrustações orgânicas em rejuntes, canto de box, paredes, pisos, azulejos e superfícies em geral. Indicado para instituições de saúde, hotéis, motéis, instituições de ensino, shoppings, entre outras áreas. Não indicado para metais sensíveis (alumínio, cobre, zinco).",
@@ -6401,8 +6557,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spar-ht-9-clor.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/spar-ht-9.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-9.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6451,6 +6607,7 @@
     {
       "codigo": "SPAR-LG",
       "nome": "Spar LG",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Detergente desengraxante para superfícies fixas",
       "descricaoUso": "Remoção de gorduras e sujidades de superfícies fixas em geral como pisos, paredes, banheiros, banheiros químicos, áreas externas, etc.",
@@ -6463,8 +6620,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spar-lg.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/spar-lg.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-lg.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6513,6 +6670,7 @@
     {
       "codigo": "SPAR-P",
       "nome": "Spar P",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Detergente em geleia para uso geral com essência natural de pinho",
       "descricaoUso": "Limpeza de superfícies em geral, tais como pisos, paredes, banheiros, vias públicas, lixeiras, entre outros. Indicado também para limpeza e desengraxe de máquinas e equipamentos.",
@@ -6526,8 +6684,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spar-p.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/spar-p.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-p.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6570,6 +6728,7 @@
     {
       "codigo": "SPARTEC-KARICIA",
       "nome": "Spartec Karícia",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Limpa tapetes e carpetes",
       "descricaoUso": "Uso em processos de limpeza de carpetes, tapetes, colchões, sofás, cadeiras, bancos de veículos e tecidos em geral. Não agride as fibras nem altera as cores. Indicado para uso em extratoras.",
@@ -6582,8 +6741,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spartec-karicia.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/spartec-karicia.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6633,6 +6792,7 @@
     {
       "codigo": "METALIC-1-PLUS",
       "nome": "Metalic 1 Plus",
+      "marca": "indeba",
       "linha": "tratamento_pisos",
       "descricaoCurta": "Removedor de ceras e impermeabilizantes à base de uretano ou poliuretano e sujidade pesada ou antiga",
       "descricaoUso": "Uso institucional em pisos laváveis em geral para remoção de cera ou impermeabilizante à base de uretano ou poliuretano, e limpeza de superfícies com sujidade pesada ou antiga. Diluir 1 parte do produto para 4 partes de solução (podendo chegar a até 1 parte para 10 partes, dependendo do acúmulo). Espalhar a solução, aguardar 5 a 10 minutos sem deixar secar, promover ação mecânica com enceradeira industrial e disco de remoção, remover com rodo ou aspirador de líquidos e enxaguar abundantemente. Evitar contato com superfícies pintadas.",
@@ -6650,8 +6810,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/metalic-1-plus.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/metalic-1-plus.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6687,6 +6847,7 @@
     {
       "codigo": "METALIC-1",
       "nome": "Metalic 1",
+      "marca": "indeba",
       "linha": "tratamento_pisos",
       "descricaoCurta": "Removedor de ceras, impermeabilizantes à base de água e sujidades pesadas, sem cheiro",
       "descricaoUso": "Uso institucional em pisos laváveis em geral para remoção de cera ou impermeabilizante à base de água, e limpeza de superfícies com sujidade pesada ou antiga. Não recomendado para remoção de impermeabilização à base de uretano ou poliuretano. Diluir 1 parte do produto para 4 partes de solução (podendo chegar a até 1 parte para 10 partes, dependendo do acúmulo), com água a partir de 25°C. Espalhar a solução, aguardar 4 a 5 minutos sem deixar secar, promover ação mecânica com enceradeira industrial e disco de remoção, remover com rodo, pano ou aspirador de líquidos, e enxaguar abundantemente. Evitar contato com superfícies pintadas.",
@@ -6705,8 +6866,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/metalic-1.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/metalic-1.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6743,6 +6904,7 @@
     {
       "codigo": "METALIC-2-S",
       "nome": "Metalic 2 S",
+      "marca": "indeba",
       "linha": "tratamento_pisos",
       "descricaoCurta": "Base seladora para pisos porosos, forma filme uniforme, transparente e antiderrapante",
       "descricaoUso": "Selante para pisos porosos laváveis como granilite, ardósia, cerâmica e pisos de alta resistência (em mármore e granito, aplicar apenas nos não polidos). Após remoção da película impermeabilizante/selante anterior com Metalic 1 e secagem completa, aplicar o produto sobre o piso com rodo e pano, aplicador com luva ou mop, criando película uniforme. Aplicar de 2 a 4 camadas, aguardando secagem completa entre camadas. Adequado para rotações HS e UHS. Produto não inflamável.",
@@ -6755,8 +6917,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/metalic-2-s.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/metalic-2-s.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/metalic-2-s.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6788,6 +6950,7 @@
     {
       "codigo": "METALIC-3-SI",
       "nome": "Metalic 3 SI",
+      "marca": "indeba",
       "linha": "tratamento_pisos",
       "descricaoCurta": "Selador e impermeabilizante de dupla função, ideal para áreas de alto tráfego, filme uniforme e brilhante",
       "descricaoUso": "Base seladora e acabamento de pisos porosos laváveis como paviflex, cerâmica, granilite e pisos vinílicos, para clientes com alto nível de tráfego. Lavar o piso com Metalic 1 para retirar qualquer película anterior e deixar secar bem. Aplicar sobre o piso com rodo e pano, aplicador com luva ou mop, criando película uniforme, de 2 a 4 camadas, aguardando secagem completa entre camadas. Após 24h, polir com máquina High Speed e disco pelo de porco; quando o polimento não surtir mais efeito, usar Metalic 3 SI diluído 1 parte para 3 partes de solução como spray buff. Produto não inflamável.",
@@ -6800,8 +6963,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/metalic-3-si.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/metalic-3-si.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/metalic-3-si.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6842,6 +7005,7 @@
     {
       "codigo": "METALIC-4-SI",
       "nome": "Metalic 4 SI",
+      "marca": "indeba",
       "linha": "tratamento_pisos",
       "descricaoCurta": "Selador e impermeabilizante para pisos de altíssimo tráfego, com resina de poliuretano, alto brilho e antiderrapante",
       "descricaoUso": "Base seladora e acabamento de pisos porosos laváveis como paviflex, cerâmica, granilite e pisos vinílicos, para clientes com alto nível de tráfego. Lavar o piso com Metalic 1 ou Metalic 1 Plus para retirar qualquer película anterior e deixar secar bem. Aplicar com equipamento apropriado (mop, aplicador de cera, etc.), criando película uniforme, de 2 a 4 camadas, aguardando secagem completa entre camadas. Após 24h, polir com máquina High Speed e disco pelo de porco; quando o polimento não surtir mais efeito, usar Metalic 4 SI diluído 1 parte para 3 partes de solução como spray buff. Altamente resistente à chuva e umidade. Produto não inflamável.",
@@ -6854,8 +7018,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/metalic-4-si.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/_generico.svg",
+      "fichaTecnicaPath": "/fichas-tecnicas/metalic-4-si.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6894,6 +7058,7 @@
     {
       "codigo": "METALIC-5-SI",
       "nome": "Metalic 5 SI",
+      "marca": "indeba",
       "linha": "tratamento_pisos",
       "descricaoCurta": "Base seladora e impermeabilizante de dupla função, ideal para baixo a médio tráfego, pronto para uso",
       "descricaoUso": "Base seladora e acabamento de pisos porosos laváveis como paviflex, cerâmica, granilite e pisos vinílicos, para clientes com baixo a médio nível de tráfego. Lavar o piso com Metalic 1 para retirar qualquer película anterior e deixar secar bem. Aplicar sobre o piso com rodo e pano, aplicador com luva ou mop, criando película uniforme, de 2 a 4 camadas, aguardando secagem completa entre camadas. Produto pronto para uso e não inflamável.",
@@ -6906,8 +7071,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/metalic-5-si.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/metalic-5-si.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/metalic-5-si.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6942,6 +7107,7 @@
     {
       "codigo": "PRATT-ALCOOL-70",
       "nome": "Pratt Álcool 70%",
+      "marca": "pratt",
       "linha": "higiene_pessoal",
       "descricaoCurta": "Preparação alcoólica antisséptica para mãos 70º INPM, de secagem rápida e pH neutro.",
       "descricaoUso": "Indicado na higienização e antissepsia das mãos em geral, em hospitais, lavanderias hospitalares, clínicas e cozinhas profissionais, entre outros. Também indicado para higienização de louças e copos (não deixa gosto desagradável).",
@@ -6958,7 +7124,7 @@
         "manual"
       ],
       "imagemPath": "/produtos/_generico.svg",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-alcool-70.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -6989,6 +7155,7 @@
     {
       "codigo": "PRATT-ALCOOL-GEL-70",
       "nome": "Pratt Álcool Gel 70%",
+      "marca": "pratt",
       "linha": "higiene_pessoal",
       "descricaoCurta": "Preparação alcoólica antisséptica em gel para mãos 70º INPM, de secagem rápida e pH neutro.",
       "descricaoUso": "Indicado na higienização e antissepsia das mãos em geral, em hospitais, lavanderias hospitalares, clínicas e cozinhas profissionais, entre outros.",
@@ -7004,8 +7171,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-alcool-gel-70.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-alcool-gel-70.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-alcool-gel-70.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7042,6 +7209,7 @@
     {
       "codigo": "PRATT-AMACIANTE-PREMIUM",
       "nome": "Pratt Amaciante Premium Flores Nobres",
+      "marca": "pratt",
       "linha": "lavanderia",
       "descricaoCurta": "Amaciante de tecidos com essência encapsulada de liberação gradual e fragrância exclusiva de flores nobres.",
       "descricaoUso": "Amacia e suaviza as roupas perfumando-as agradavelmente, conserva a tonalidade das cores e a vida útil das roupas, facilita a passagem de ferro. Indicado na operação de amaciamento de todos os tipos de tecidos, em lavanderias hospitalares, hoteleiras, comerciais e industriais. Pode ser usado em máquinas lavadoras ou manualmente.",
@@ -7056,8 +7224,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-amaciante-premium.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-amaciante-premium.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-amaciante-premium.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7096,6 +7264,7 @@
     {
       "codigo": "PRATT-AMACIANTE",
       "nome": "Pratt Amaciante Lírio do Campo",
+      "marca": "pratt",
       "linha": "lavanderia",
       "descricaoCurta": "Amaciante de tecidos e roupas com fragrância de lírio do campo.",
       "descricaoUso": "Amacia e suaviza as roupas perfumando-as agradavelmente, conserva a tonalidade das cores e a vida útil das roupas, facilita a passagem de ferro. Indicado na operação de amaciamento de todos os tipos de tecidos, em lavanderias hospitalares, hoteleiras, comerciais e industriais. Pode ser usado em máquinas lavadoras ou manualmente.",
@@ -7111,7 +7280,7 @@
         "manual"
       ],
       "imagemPath": "/produtos/pratt-amaciante.jpg",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-amaciante.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7149,6 +7318,7 @@
     {
       "codigo": "PRATT-CLOR-2",
       "nome": "Pratt Clor 2%",
+      "marca": "pratt",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante com cloro ativo estabilizado para uso geral, ação comprovada em banheiros, cozinhas e superfícies.",
       "descricaoUso": "Ação comprovada na eliminação dos principais micro-organismos encontrados em banheiros, cozinhas e superfícies em geral. Indicado para alvejamento de rejuntes, louças, pedras, prevenção de novas sujidades e eliminação de mau cheiro. Também indicado para desinfecção de frutas, verduras e legumes.",
@@ -7164,8 +7334,8 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/pratt-clor-2.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-clor-2.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-clor-2.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7211,6 +7381,7 @@
     {
       "codigo": "PRATT-DESINCRUSTANTE",
       "nome": "Pratt Desincrustante",
+      "marca": "pratt",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Desincrustante alcalino de uso profissional, com alto poder de remoção de gordura carbonizada, ação a frio.",
       "descricaoUso": "Indicado para limpeza de fornos, fogões, chapas, câmaras de defumação e demais superfícies de equipamentos da área de cocção impregnadas com gorduras carbonizadas. Indicado para a Indústria de Alimentos em geral, incluindo limpeza diária de pisos e azulejos de cozinha.",
@@ -7224,8 +7395,8 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/pratt-desincrustante.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-desincrustante.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-desincrustante.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7267,6 +7438,7 @@
     {
       "codigo": "PRATT-DESINFETANTE-CITRONELA",
       "nome": "Pratt Desinfetante Citronela",
+      "marca": "pratt",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante para uso geral com fragrância exclusiva de citronela, não necessita enxágue.",
       "descricaoUso": "Desinfecção comprovada na eliminação dos principais micro-organismos encontrados em banheiros e superfícies em geral. Atua em sujidades leves sem agredir a superfície (pisos, móveis, etc).",
@@ -7279,8 +7451,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-desinfetante-citronela.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-desinfetante-citronela.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-citronela.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7322,6 +7494,7 @@
     {
       "codigo": "PRATT-DESINFETANTE-CITRICO",
       "nome": "Pratt Desinfetante Cítrico",
+      "marca": "pratt",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante para uso geral com fragrância exclusiva cítrica, não necessita enxágue.",
       "descricaoUso": "Desinfecção comprovada na eliminação dos principais micro-organismos encontrados em banheiros e superfícies em geral. Atua em sujidades leves sem agredir a superfície (pisos, móveis, entre outros).",
@@ -7334,8 +7507,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-desinfetante-citrico.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-desinfetante-citrico.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-citrico.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7378,6 +7551,7 @@
     {
       "codigo": "PRATT-DESINFETANTE-FLORAL",
       "nome": "Pratt Desinfetante Floral",
+      "marca": "pratt",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante para uso geral com fragrância tradicional floral, não necessita enxágue.",
       "descricaoUso": "Desinfecção comprovada na eliminação dos principais micro-organismos encontrados em banheiros e superfícies em geral. Atua em sujidades leves sem agredir a superfície (pisos, móveis, entre outros).",
@@ -7390,8 +7564,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-desinfetante-floral.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-desinfetante-floral.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-floral.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7440,6 +7614,7 @@
     {
       "codigo": "PRATT-DESINFETANTE-LAVANDA",
       "nome": "Pratt Desinfetante Lavanda",
+      "marca": "pratt",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante para uso geral com fragrância exclusiva floral (lavanda), não necessita enxágue.",
       "descricaoUso": "Desinfecção comprovada na eliminação dos principais micro-organismos encontrados em banheiros e superfícies em geral. Atua em sujidades leves sem agredir a superfície (pisos, móveis, entre outros).",
@@ -7452,8 +7627,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-desinfetante-lavanda.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-desinfetante-lavanda.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-lavanda.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7502,6 +7677,7 @@
     {
       "codigo": "PRATT-DESINFETANTE-LIMAO-DO-BOSQUE",
       "nome": "Pratt Desinfetante Limão do Bosque",
+      "marca": "pratt",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante para uso geral com fragrância exclusiva de limão do bosque, não necessita enxágue.",
       "descricaoUso": "Desinfecção comprovada na eliminação dos principais micro-organismos encontrados em banheiros e superfícies em geral. Atua em sujidades leves sem agredir a superfície (pisos, móveis, entre outros).",
@@ -7514,8 +7690,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-desinfetante-limao-do-bosque.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-desinfetante-limao-do-bosque.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-limao-do-bosque.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7557,6 +7733,7 @@
     {
       "codigo": "PRATT-DETERGENTE-CLORADO",
       "nome": "Pratt Detergente Clorado",
+      "marca": "pratt",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Detergente clorado de alto poder desincrustante, desengordurante e alvejante, com excelente performance na limpeza de sujidades orgânicas (proteínas, gorduras, carboidratos e sangue).",
       "descricaoUso": "Na limpeza pesada de sujidades orgânicas (gorduras, proteína, sangue, entre outros) que ficam incrustadas em superfícies de equipamentos, paredes, pisos e instalações. Não indicado para lavagem de metais sensíveis (alumínio, cobre, zinco, entre outros).",
@@ -7572,8 +7749,8 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/pratt-detergente-clorado.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-detergente-clorado.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-detergente-clorado.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7608,6 +7785,7 @@
     {
       "codigo": "PRATT-DETERGENTE-NEUTRO-FLORAL",
       "nome": "Pratt Detergente Neutro Floral",
+      "marca": "pratt",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente neutro de ação desengordurante, com fragrância floral, indicado também para cozinhas profissionais e lavagem de louças.",
       "descricaoUso": "Indicado para limpeza de superfícies em geral como paredes, azulejos, banheiros, pisos, pintura de veículos, etc. Indicado também para lavagem de louças e sujidades leves.",
@@ -7622,8 +7800,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-detergente-neutro-floral.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-detergente-neutro-floral.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-detergente-neutro-floral.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7665,6 +7843,7 @@
     {
       "codigo": "PRATT-DETERGENTE-NEUTRO",
       "nome": "Pratt Detergente Neutro",
+      "marca": "pratt",
       "linha": "alimentos_bebidas",
       "descricaoCurta": "Detergente neutro de ação desengordurante, indicado também para cozinhas profissionais e lavagem de louças.",
       "descricaoUso": "Indicado para limpeza de superfícies em geral como paredes, azulejos, banheiros, pisos, pintura de veículos, etc. Indicado também para lavagem de louças e sujidades leves.",
@@ -7679,8 +7858,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-detergente-neutro.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-detergente-neutro.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-detergente-neutro.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7720,6 +7899,7 @@
     {
       "codigo": "PRATT-HIPOCLORITO-1",
       "nome": "Pratt Hipoclorito 1%",
+      "marca": "pratt",
       "linha": "higiene_clinica",
       "descricaoCurta": "Desinfetante hospitalar para superfícies fixas e artigos não críticos, com ação comprovada contra Pseudomonas, Staphylococcus aureus e Salmonella choleraesuis, à base de cloro estabilizado.",
       "descricaoUso": "Para desinfecção de superfícies fixas das diversas áreas hospitalares e estabelecimentos de atendimento à saúde; desinfecção de artigos não críticos; desinfecção de mamadeiras, bicos e chupetas por imersão.",
@@ -7734,8 +7914,8 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/pratt-hipoclorito-1.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-hipoclorito-1.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-hipoclorito-1.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7781,6 +7961,7 @@
     {
       "codigo": "PRATT-LAVA-ROUPAS",
       "nome": "Pratt Lava Roupas",
+      "marca": "pratt",
       "linha": "lavanderia",
       "descricaoCurta": "Detergente para lavagem de roupas com nova tecnologia que reduz o desgaste dos tecidos, eficiente na remoção de sujidades e manchas, com excelente poder umectante e emulsionante e concentrado em branqueadores ópticos.",
       "descricaoUso": "Na operação de desagregação, pré-lavagem, lavagem e umectação de roupas em lavanderias.",
@@ -7793,8 +7974,8 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/pratt-lava-roupas.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-lava-roupas.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-lava-roupas.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7829,6 +8010,7 @@
     {
       "codigo": "PRATT-MULTIUSO",
       "nome": "Pratt Multiuso Aromas Cítricos",
+      "marca": "pratt",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Limpador multiuso com ação desengordurante, forma película protetora contra manchas de impressões digitais, promove brilho e não necessita enxágue. Fragrância exclusiva de aromas cítricos.",
       "descricaoUso": "Para limpeza e acabamento de vidros, espelhos, fórmicas, azulejos, telefones, alumínio, superfícies plásticas, esmaltadas e vitrificadas. Uso em hotéis, motéis, hospitais, condomínios e ambientes em geral.",
@@ -7844,8 +8026,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-multiuso.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-multiuso.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-multiuso.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7889,6 +8071,7 @@
     {
       "codigo": "PRATT-OXY",
       "nome": "Pratt Oxy",
+      "marca": "pratt",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Limpador e alvejante para uso geral à base de peróxido de hidrogênio, removedor de manchas, eficiente e seguro em superfícies coloridas, com formação de oxigênio ativo que reduz a necessidade de ação mecânica e é eficaz na remoção de maus odores.",
       "descricaoUso": "Indicado na limpeza, alvejamento e controle de odores em pisos com ou sem acabamento acrílico, porcelanatos, cerâmicas, granitos, aços inox, alumínios, plásticos, pvc, vinil, vidros, espelhos, fórmicas, paredes, mobiliários, maçanetas, telefones, rejuntes, tecidos, carpetes e estofados. Em hotéis, motéis, hospitais, consultórios, ambulatórios, clínicas médicas e odontológicas e ambientes em geral.",
@@ -7904,8 +8087,8 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/pratt-oxy.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-oxy.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-oxy.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -7948,6 +8131,7 @@
     {
       "codigo": "PRATT-POS-OBRA",
       "nome": "Pratt Pós-Obra",
+      "marca": "pratt",
       "linha": "tratamento_pisos",
       "descricaoCurta": "Decapante ácido para remoção de resíduos pós-obra, excelente na remoção de oxidações e impurezas (em especial ferrugem), desagregando e removendo resíduos de construção ou reforma.",
       "descricaoUso": "Indicado para a decapagem e desincrustação ácida pós-obra, auxiliando a remoção de oxidações e impurezas como ferrugem, crostas de fundição e incrustações superficiais como cimento, gesso, rejuntamentos, respingos de tinta e argamassa colante em superfícies em geral. Após a limpeza é recomendada a neutralização com detergente alcalino, a exemplo do PRATT ULTRA.",
@@ -7961,8 +8145,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-pos-obra.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-pos-obra.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-pos-obra.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -8002,6 +8186,7 @@
     {
       "codigo": "PRATT-SABONETE-ERVA-DOCE",
       "nome": "Pratt Sabonete Erva Doce",
+      "marca": "pratt",
       "linha": "higiene_pessoal",
       "descricaoCurta": "Sabonete líquido que remove sujidades e excesso de oleosidade das mãos, propicia toque macio e suave, com pH neutro e essência tradicional de erva doce.",
       "descricaoUso": "Indicado na higienização das mãos em geral em hospitais, hotéis, motéis, escritórios, instituições de ensino, lavanderias hospitalares, clínicas, cozinhas profissionais, indústrias de alimentos e bebidas, etc.",
@@ -8017,8 +8202,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-sabonete-erva-doce.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-sabonete-erva-doce.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-sabonete-erva-doce.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -8050,6 +8235,7 @@
     {
       "codigo": "PRATT-SABONETE-ESPUMA",
       "nome": "Pratt Sabonete Espuma",
+      "marca": "pratt",
       "linha": "higiene_pessoal",
       "descricaoCurta": "Sabonete que remove sujidades e excesso de oleosidade das mãos, propicia lavagem com espuma consistente e toque macio e suave, com pH neutro e essência exclusiva de lírio do campo.",
       "descricaoUso": "Indicado na higienização das mãos em geral em shoppings, condomínios, terminais de transportes, hotéis, motéis, escritórios, instituições de ensino, entre outros.",
@@ -8063,8 +8249,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-sabonete-espuma.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-sabonete-espuma.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-sabonete-espuma.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -8103,6 +8289,7 @@
     {
       "codigo": "PRATT-SABONETE-PEROLIZADO",
       "nome": "Pratt Sabonete Perolizado Lírio do Campo",
+      "marca": "pratt",
       "linha": "higiene_pessoal",
       "descricaoCurta": "Sabonete que remove sujidades e excesso de oleosidade das mãos, propicia toque macio e suave, com pH neutro e essência exclusiva de lírio do campo.",
       "descricaoUso": "Indicado na higienização das mãos em geral em hospitais, hotéis, motéis, escritórios, instituições de ensino, lavanderias hospitalares, clínicas, cozinhas profissionais, indústrias de alimentos e bebidas, etc.",
@@ -8118,8 +8305,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-sabonete-perolizado.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-sabonete-perolizado.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-sabonete-perolizado.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -8147,6 +8334,7 @@
     {
       "codigo": "PRATT-ULTRA-GEL",
       "nome": "Pratt Ultra Gel",
+      "marca": "pratt",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Limpador desengordurante em gel, com excelente performance na limpeza de poeiras incrustadas e resíduos de sola de sapatos em pisos, seguro para vidros e porcelanatos.",
       "descricaoUso": "Indicado para limpeza de superfícies laváveis em geral como azulejos, paredes, vidros, fórmicas, esquadrias, sanitários, cozinhas, pisos de porcelanato, cerâmica, paviflex, mantas vinílicas, granito, mármore, ardósia, granilite, rejuntes, entre outros, com sujidades leves ou pesadas de natureza oleosa e gordurosa.",
@@ -8160,8 +8348,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-ultra-gel.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-ultra-gel.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-ultra-gel.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -8207,6 +8395,7 @@
     {
       "codigo": "PRATT-ULTRA",
       "nome": "Pratt Ultra",
+      "marca": "pratt",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Limpador desengordurante para limpeza de superfícies em geral, indicado para pisos, paredes, azulejos e rejuntes, seguro para vidros e porcelanatos, com excelente performance na limpeza de poeiras incrustadas e resíduos de sola de sapatos.",
       "descricaoUso": "Indicado para limpeza de superfícies laváveis em geral como azulejos, paredes, vidros, fórmicas, esquadrias, sanitários, cozinhas, pisos de porcelanato, cerâmica, paviflex, mantas vinílicas, granito, mármore, ardósia, granilite, rejuntes, entre outros, com sujidades leves ou pesadas de natureza oleosa e gordurosa.",
@@ -8220,8 +8409,8 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/pratt-ultra.jpg",
-      "fichaTecnicaPath": null,
+      "imagemPath": "/produtos/pratt-ultra.png",
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-ultra.pdf",
       "ativo": false,
       "embalagens": [
         {
@@ -8267,6 +8456,7 @@
     {
       "codigo": "PRATT-ALCOOL-GEL",
       "nome": "Pratt Álcool Gel",
+      "marca": "pratt",
       "linha": "higiene_pessoal",
       "descricaoCurta": "Preparação alcoólica antisséptica para as mãos 70 INPM",
       "descricaoUso": "Antissepsia das mãos. Pronto para uso.",
@@ -8281,7 +8471,7 @@
         "manual"
       ],
       "imagemPath": "/produtos/pratt-alcool-gel.png",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/pratt-alcool-gel-70.pdf",
       "ativo": true,
       "embalagens": [
         {
@@ -8311,6 +8501,7 @@
     {
       "codigo": "SPAR-HT2",
       "nome": "Spar HT2",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Desinfetante com essência de uso geral (Floral, Lavanda ou Karícia)",
       "descricaoUso": "Desinfecção de superfícies das áreas administrativas. Utilizar no diluidor automático.",
@@ -8325,7 +8516,7 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/spar-ht2.png",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-2.pdf",
       "ativo": true,
       "embalagens": [
         {
@@ -8363,6 +8554,7 @@
     {
       "codigo": "SPAR-HT3",
       "nome": "Spar HT3",
+      "marca": "indeba",
       "linha": "limpeza_conservacao",
       "descricaoCurta": "Limpador multiuso para vidros, espelhos e superfícies",
       "descricaoUso": "Higienização de vidros, espelhos e superfícies. Utilizar no diluidor automático.",
@@ -8376,7 +8568,7 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/spar-ht3.png",
-      "fichaTecnicaPath": null,
+      "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-3.pdf",
       "ativo": true,
       "embalagens": [
         {

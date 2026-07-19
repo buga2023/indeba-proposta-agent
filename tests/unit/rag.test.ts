@@ -22,6 +22,7 @@ describe("chunk — quebra por tamanho respeitando parágrafos", () => {
 const PRODUTO: Produto = {
   codigo: "PRIMMAX-PLUS",
   nome: "Primmax Plus",
+  marca: "indeba",
   linha: "alimentos_bebidas",
   descricaoCurta: "Detergente concentrado desengordurante",
   descricaoUso: "Lavar louças, pisos e bancadas.",

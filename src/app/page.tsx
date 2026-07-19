@@ -13,7 +13,7 @@
  */
 
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
+import type { PropostaScope, PropostaItem, Produto, Funcao, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
 import type { Usuario } from "@/lib/auth";
 import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento } from "@/lib/proposta-edit";
 import { AjudaChat } from "@/components/ajuda-chat";
@@ -755,6 +755,27 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
             <div style={{ fontSize: "12.5px", color: "#7ee2a8", fontWeight: 700, marginTop: "4px" }}>{aprovadas} aprovada{aprovadas === 1 ? "" : "s"}</div>
           </div>
         </div>
+
+        {/* ── Onboarding: só aparece sem nenhuma proposta ainda; some pra sempre depois da 1ª ── */}
+        {propostas !== null && totalProp === 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", background: "var(--info-soft)", border: "1px solid var(--blue-200, #a8cbea)", borderRadius: "14px", padding: "16px 20px", flexWrap: "wrap" }}>
+            <span style={{ width: "34px", height: "34px", borderRadius: "10px", background: "var(--surface-card)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)", flex: "none" }}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" /></svg>
+            </span>
+            <div style={{ flex: 1, minWidth: "220px" }}>
+              <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--text-strong)" }}>Duas formas de montar uma proposta</div>
+              <div style={{ fontSize: "12.5px", color: "var(--text-muted)", marginTop: "2px" }}>Manual: escolha os produtos do catálogo e defina as quantidades. Importar orçamento: suba um PDF existente e deixe o sistema extrair os itens pra você conferir.</div>
+            </div>
+            <div style={{ display: "flex", gap: "8px", flex: "none" }}>
+              <Hoverable onClick={() => setScreen("manual")} base={{ height: "34px", padding: "0 14px", borderRadius: "9px", border: "none", background: "var(--primary)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "12.5px", fontWeight: 600 }} hover={{ background: "var(--primary-hover, var(--blue-700))" }}>
+                Montar manual
+              </Hoverable>
+              <Hoverable onClick={() => setScreen("importar")} base={{ height: "34px", padding: "0 14px", borderRadius: "9px", border: "1px solid var(--blue-200, #a8cbea)", background: "var(--surface-card)", color: "var(--primary)", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "12.5px", fontWeight: 600 }} hover={{ background: "var(--info-soft)" }}>
+                Importar orçamento
+              </Hoverable>
+            </div>
+          </div>
+        )}
 
         {/* ── KPIs ── */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px" }}>
@@ -1769,7 +1790,7 @@ function ReviewScreen({
           como responder. Só aviso, NÃO bloqueia a geração (pedido explícito). */}
       {scope.tipo === "consolidada" && !scope.consolidada?.contato?.whatsapp && !scope.consolidada?.contato?.emailConsultor && (
         <div style={{ margin: "14px 28px 0", padding: "11px 14px", background: "var(--danger-soft, #FEF2F2)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>
-          Esta proposta vai sair sem WhatsApp nem e-mail de contato — o cliente não vai ter como responder. Configure <code>INDEBA_WHATSAPP</code>/<code>INDEBA_CONSULTOR_EMAIL</code> no ambiente quando puder.
+          Esta proposta vai sair sem WhatsApp nem e-mail de contato — o cliente não vai ter como responder. Avise o time técnico para cadastrar o contato do consultor.
         </div>
       )}
 
@@ -1803,6 +1824,8 @@ function ReviewScreen({
                 style={{ width: "100%", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "8px 10px", fontSize: "13px", color: "var(--gray-900)", lineHeight: 1.55, resize: "vertical", fontFamily: "var(--font-sans), sans-serif", outline: "none", background: "var(--gray-50)", boxSizing: "border-box" }}
               />
             </div>
+
+            <div style={{ fontSize: "11.5px", color: "var(--gray-400)" }}>Refinar com IA reprocessa a proposta inteira (texto e seleção de itens); o chat logo abaixo corrige um item específico sem mexer no resto.</div>
 
             {/* Refino por IA — anexa o ajuste ao briefing e reprocessa (preço segue do catálogo) */}
             <form
@@ -2080,7 +2103,7 @@ function PdfScreen({
 
       {contatoAusente && (
         <div style={{ maxWidth: "820px", margin: "0 auto 16px", padding: "11px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>
-          Esta Proposta de Solução não tem WhatsApp nem e-mail de contato configurado — o cliente não teria como responder. Configure <code>INDEBA_WHATSAPP</code>/<code>INDEBA_CONSULTOR_EMAIL</code> no ambiente quando puder (não bloqueia a geração).
+          Esta Proposta de Solução não tem WhatsApp nem e-mail de contato configurado — o cliente não teria como responder. Avise o time técnico para cadastrar o contato do consultor (não bloqueia a geração).
         </div>
       )}
 
@@ -2541,6 +2564,8 @@ function HistoryScreen({
 
 /* ═══════════════════════ TELA: CATALOG ═══════════════════════ */
 
+const MARCA_LABEL: Record<string, string> = { indeba: "Indeba", pratt: "Pratt" };
+
 function CatalogScreen({
   catalogo,
   erro,
@@ -2552,17 +2577,26 @@ function CatalogScreen({
   catFilter: string;
   setCatFilter: (c: string) => void;
 }) {
+  const [busca, setBusca] = useState("");
+  const [funcaoFiltro, setFuncaoFiltro] = useState("Todas");
+  const [marcaFiltro, setMarcaFiltro] = useState("Todas");
   const todos = catalogo ?? [];
   const ativos = todos.filter((p) => p.ativo);
   const linhas = Array.from(new Set(ativos.map((p) => humaniza(p.linha))));
   const allCats = ["Todos", ...linhas, "Arquivados"];
+  const funcoes = Array.from(new Set(ativos.flatMap((p) => p.funcoes))).sort();
+  const marcas = Array.from(new Set(todos.map((p) => p.marca)));
 
-  const filtered =
+  const porLinha =
     catFilter === "Todos"
       ? ativos
       : catFilter === "Arquivados"
         ? todos.filter((p) => !p.ativo)
         : ativos.filter((p) => humaniza(p.linha) === catFilter);
+  const porFuncao = funcaoFiltro === "Todas" ? porLinha : porLinha.filter((p) => p.funcoes.includes(funcaoFiltro as Funcao));
+  const porMarca = marcaFiltro === "Todas" ? porFuncao : porFuncao.filter((p) => p.marca === marcaFiltro);
+  const q = busca.trim().toLowerCase();
+  const filtered = (q ? porMarca.filter((p) => `${p.nome} ${p.codigo}`.toLowerCase().includes(q)) : porMarca).sort((a, b) => a.nome.localeCompare(b.nome));
 
   return (
     <div style={{ padding: "28px" }}>
@@ -2590,7 +2624,7 @@ function CatalogScreen({
             <circle cx="6.5" cy="6.5" r="4" />
             <path d="M10 10l3 3" />
           </svg>
-          <input type="text" placeholder="Buscar produto ou SKU..." style={{ border: "none", background: "transparent", fontSize: "14px", color: "var(--gray-900)", flex: 1, fontFamily: "var(--font-sans), sans-serif" }} />
+          <input type="text" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar produto ou SKU..." style={{ border: "none", background: "transparent", fontSize: "14px", color: "var(--gray-900)", flex: 1, fontFamily: "var(--font-sans), sans-serif" }} />
         </div>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
           {allCats.map((cat) => (
@@ -2605,6 +2639,35 @@ function CatalogScreen({
         </div>
       </div>
 
+      <div style={{ display: "flex", alignItems: "center", gap: "18px", marginBottom: "20px", flexWrap: "wrap", fontSize: "12.5px", color: "var(--gray-500)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+          <span>Função:</span>
+          {["Todas", ...funcoes].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFuncaoFiltro(f)}
+              style={{ padding: "3px 11px", borderRadius: "999px", border: "1px solid " + (funcaoFiltro === f ? "#1E6BB8" : "#E3EBF3"), cursor: "pointer", fontSize: "12px", fontWeight: funcaoFiltro === f ? 600 : 400, background: funcaoFiltro === f ? "#EAF2FA" : "white", color: funcaoFiltro === f ? "#1E6BB8" : "#5B6E7D", fontFamily: "var(--font-sans), sans-serif" }}
+            >
+              {f === "Todas" ? f : humaniza(f)}
+            </button>
+          ))}
+        </div>
+        {marcas.length > 1 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+            <span>Marca:</span>
+            {["Todas", ...marcas].map((m) => (
+              <button
+                key={m}
+                onClick={() => setMarcaFiltro(m)}
+                style={{ padding: "3px 11px", borderRadius: "999px", border: "1px solid " + (marcaFiltro === m ? "#1E6BB8" : "#E3EBF3"), cursor: "pointer", fontSize: "12px", fontWeight: marcaFiltro === m ? 600 : 400, background: marcaFiltro === m ? "#EAF2FA" : "white", color: marcaFiltro === m ? "#1E6BB8" : "#5B6E7D", fontFamily: "var(--font-sans), sans-serif" }}
+              >
+                {m === "Todas" ? m : MARCA_LABEL[m] ?? m}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       {erro ? (
         <div style={{ textAlign: "center", padding: "60px 40px", color: "#DC2626", fontSize: "14px" }}>Não foi possível carregar o catálogo: {erro}</div>
       ) : filtered.length === 0 ? (
@@ -2616,39 +2679,72 @@ function CatalogScreen({
             </svg>
           </div>
           <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--gray-900)", marginBottom: "8px" }}>{catalogo === null ? "Carregando catálogo…" : "Nenhum produto encontrado"}</h3>
-          <p style={{ fontSize: "14px", color: "var(--gray-500)" }}>Tente outro filtro ou adicione um produto ao catálogo.</p>
+          <p style={{ fontSize: "14px", color: "var(--gray-500)" }}>{q ? `Nenhum resultado para "${busca}". Tente outro termo ou filtro.` : "Tente outro filtro ou adicione um produto ao catálogo."}</p>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "14px" }}>
+        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 84px 150px 1fr 100px 40px 92px", gap: "12px", alignItems: "center", padding: "10px 16px", background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)", fontSize: "11px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".03em" }}>
+            <span />
+            <span>Produto</span>
+            <span>Marca</span>
+            <span>Linha</span>
+            <span>Funções</span>
+            <span style={{ textAlign: "right" }}>Preço</span>
+            <span />
+            <span>Status</span>
+          </div>
           {filtered.map((item) => {
             const e = item.embalagens[0];
             return (
               <Hoverable
                 key={item.codigo}
                 as="div"
-                base={{ background: "white", borderRadius: "12px", borderWidth: "1px", borderStyle: "solid", borderColor: "var(--gray-200)", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "var(--shadow-sm)", transition: "transform .18s ease,box-shadow .18s ease,border-color .18s ease" }}
-                hover={{ transform: "translateY(-3px)", boxShadow: "0 10px 24px rgba(15,26,36,.1)", borderColor: "var(--gray-300)" }}
+                base={{ display: "grid", gridTemplateColumns: "44px 1fr 84px 150px 1fr 100px 40px 92px", gap: "12px", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--gray-100)", transition: "background .15s ease" }}
+                hover={{ background: "var(--gray-50)" }}
               >
-                <div style={{ height: "3px", background: linhaCor(item.linha) }} />
-                <div style={{ padding: "14px 16px", flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: linhaCor(item.linha), flexShrink: 0 }} />
-                      <span style={{ fontSize: "11px", color: "var(--gray-500)", fontWeight: 500 }}>{humaniza(item.linha)}</span>
-                    </div>
-                    <span style={{ fontSize: "11px", fontWeight: 500, color: item.ativo ? "#16A34A" : "#94A6B8" }}>{item.ativo ? "Ativo" : "Arquivado"}</span>
-                  </div>
-                  <div style={{ width: "100%", height: "72px", background: "var(--gray-100)", borderRadius: "8px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.imagemPath} alt={item.nome} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} onError={(ev) => ((ev.currentTarget.style.display = "none"))} />
-                  </div>
-                  <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--gray-900)", marginBottom: "2px", lineHeight: 1.3 }}>{item.nome}</div>
-                  <div style={{ fontSize: "11.5px", color: "var(--gray-400)", flex: 1, marginBottom: "10px" }}>SKU: {item.codigo}</div>
-                  <div style={{ paddingTop: "10px", borderTop: "1px solid var(--gray-100)", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-                    <div style={{ fontSize: "17px", fontWeight: 700, color: "var(--blue-500)" }}>{e?.preco ? fmt(Number(e.preco)) : "—"}</div>
-                    <div style={{ fontSize: "11px", color: "var(--gray-400)" }}>/ {e ? `${e.tamanho} ${e.unidade}` : "un"}</div>
-                  </div>
+                <div style={{ width: "40px", height: "40px", background: "var(--gray-100)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flex: "none" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={item.imagemPath} alt={item.nome} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} onError={(ev) => ((ev.currentTarget.style.display = "none"))} />
                 </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--gray-900)", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.nome}</div>
+                  <div style={{ fontSize: "11px", color: "var(--gray-400)", fontFamily: "var(--font-mono)" }}>{item.codigo}</div>
+                </div>
+                <span style={{ fontSize: "11.5px", color: "var(--gray-500)" }}>{MARCA_LABEL[item.marca] ?? item.marca}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: 0 }}>
+                  <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: linhaCor(item.linha), flexShrink: 0 }} />
+                  <span style={{ fontSize: "11.5px", color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{humaniza(item.linha)}</span>
+                </div>
+                <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                  {item.funcoes.map((f) => (
+                    <span key={f} style={{ fontSize: "10.5px", fontWeight: 600, color: "var(--gray-500)", background: "var(--gray-100)", borderRadius: "999px", padding: "2px 8px" }}>{humaniza(f)}</span>
+                  ))}
+                </div>
+                <div style={{ textAlign: "right", fontSize: "13px", fontWeight: 700, color: "var(--blue-500)", fontFamily: "var(--font-mono)" }}>
+                  {e?.preco ? fmt(Number(e.preco)) : "—"}
+                </div>
+                {item.fichaTecnicaPath ? (
+                  <a
+                    href={item.fichaTecnicaPath}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(ev) => ev.stopPropagation()}
+                    title="Ficha técnica"
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", height: "28px", borderRadius: "7px", color: "var(--primary, #1E6BB8)", flex: "none" }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 2h5l3.5 3.5v8a1 1 0 01-1 1h-7.5a1 1 0 01-1-1V3a1 1 0 011-1z" /><path d="M9.5 2v3.5H13" /></svg>
+                  </a>
+                ) : <span />}
+                {item.ativo ? (
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: "#16A34A" }}>Ativo</span>
+                ) : (
+                  <span
+                    title="Sem preço cadastrado — ainda não entra em propostas"
+                    style={{ fontSize: "10.5px", fontWeight: 700, color: "#94A6B8", background: "var(--gray-100)", borderRadius: "999px", padding: "2px 8px", width: "fit-content" }}
+                  >
+                    Arquivado
+                  </span>
+                )}
               </Hoverable>
             );
           })}

@@ -69,3 +69,10 @@ dev.log
 scripts/autostart.log
 scripts/.ollama-tunnel-url
 deploy-autostart.log
+
+# materiais de trabalho soltos na raiz (zips fonte de ficha técnica/foto, rascunhos
+# de proposta em PDF/HTML, prints) — não fazem parte do produto, ficam só locais
+/*.zip
+/*.pdf
+/*.html
+/*.png

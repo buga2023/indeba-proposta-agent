@@ -7,6 +7,7 @@ import type { Produto, FacetasDetectadas, Funcao } from "@/lib/contracts";
 const produto = (codigo: string, preco: string, funcoes: Funcao[] = ["desengordurante"]): Produto => ({
   codigo,
   nome: codigo,
+  marca: "indeba",
   linha: "alimentos_bebidas",
   descricaoCurta: "x",
   descricaoUso: "x",

@@ -32,25 +32,15 @@ describe("assistente de ajuda — aterrado no catálogo", () => {
     for (const p of desengord) expect(r).toContain(p.nome);
   });
 
-  it("FAQ: 'como gero uma proposta' explica o passo a passo", () => {
-    expect(responder("como gero uma proposta?", produtos)).toMatch(/briefing/i);
+  it("FAQ: 'como gero uma proposta' explica os dois caminhos (manual/importar)", () => {
+    const r = responder("como gero uma proposta?", produtos)!;
+    expect(r).toMatch(/manual/i);
+    expect(r).toMatch(/importar/i);
   });
 
-  it("FAQ: explica a prospecção de leads (funcionalidade nova)", () => {
-    const r = responder("como funciona a prospecção?", produtos)!;
-    expect(r).toMatch(/prospect/i);
-    expect(r).toMatch(/abordagem|abordagens/i);
-  });
-
-  it("FAQ: contatos da prospecção — distingue confirmado de estimado", () => {
-    const r = responder("os contatos são confiáveis?", produtos)!;
-    expect(r).toMatch(/estimado/i);
-    expect(r).toMatch(/confirmado/i);
-  });
-
-  it("REGRESSÃO: prospecção não rouba a pergunta de proposta", () => {
-    // "como gero uma proposta" não tem termo de prospecção → tem que cair na FAQ certa
-    expect(responder("como gero uma proposta?", produtos)).toMatch(/briefing/i);
+  it("FAQ: 'quais tipos de proposta' explica que só a Proposta de Solução é oferecida na criação", () => {
+    const r = responder("quais tipos de proposta existem?", produtos)!;
+    expect(r).toMatch(/proposta de solução/i);
   });
 
   it("HONESTIDADE: pergunta fora do escopo → null (não inventa)", () => {

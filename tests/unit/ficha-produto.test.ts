@@ -4,6 +4,7 @@ import { Produto, FichaProduto } from "@/lib/contracts/produto";
 const base = {
   codigo: "X",
   nome: "X",
+  marca: "indeba",
   linha: "alimentos_bebidas",
   descricaoCurta: "",
   descricaoUso: "",

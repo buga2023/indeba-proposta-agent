@@ -11,6 +11,7 @@ const { carregarCatalogo } = vi.hoisted(() => ({
       {
         codigo: "PRIMMAX-PLUS",
         nome: "Primmax Plus",
+        marca: "indeba",
         linha: "alimentos_bebidas",
         descricaoCurta: "Detergente concentrado",
         descricaoUso: "Lavar louças e pisos",
@@ -25,6 +26,7 @@ const { carregarCatalogo } = vi.hoisted(() => ({
       {
         codigo: "SEM-PRECO",
         nome: "Produto Sem Preço",
+        marca: "indeba",
         linha: "alimentos_bebidas",
         descricaoCurta: "x",
         descricaoUso: "x",
