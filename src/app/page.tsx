@@ -12,7 +12,7 @@
  * Constituição: preço/embalagem vêm SEMPRE do catálogo; a IA só seleciona e escreve.
  */
 
-import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
 import type { PropostaScope, PropostaItem, Produto, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
 import type { Usuario } from "@/lib/auth";
 import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento } from "@/lib/proposta-edit";
@@ -1406,9 +1406,24 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
   const [tipo, setTipo] = useState<TipoProposta>("consolidada");
   const [itens, setItens] = useState<ItemImportado[]>([]);
   const [montando, setMontando] = useState(false);
+  const [zonaAtiva, setZonaAtiva] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const campoLabel: CSSProperties = { fontSize: "11.5px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "5px" };
   const campoInput: CSSProperties = { width: "100%", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", fontSize: "13.5px", color: "var(--text-strong)", fontFamily: "var(--font-sans)", outline: "none" };
+
+  function tamanhoLegivel(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function onDropArquivo(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setZonaAtiva(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) setArquivo(f);
+  }
 
   async function importar() {
     if (!arquivo || importando) return;
@@ -1469,6 +1484,7 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
   }
 
   const setItem = (i: number, patch: Partial<ItemImportado>) => setItens((xs) => xs.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  const totalItens = itens.reduce((s, it) => s + (Number(it.preco.replace(",", ".")) || 0) * it.quantidade, 0);
 
   return (
     <div style={{ background: "var(--background)", minHeight: "100vh" }}>
@@ -1486,33 +1502,83 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
       />
       <div style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "980px" }}>
         {/* Upload */}
-        <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", display: "flex", flexWrap: "wrap", gap: "14px", alignItems: "center" }}>
-          <label style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", borderRadius: "10px", border: "1px dashed var(--border-strong)", background: "var(--surface-muted)", cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "var(--text-body)" }}>
-            <svg width="16" height="16" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 11V3.5M5.5 6.5l3-3 3 3" /><path d="M3 11.5v2a1 1 0 001 1h9a1 1 0 001-1v-2" /></svg>
-            {arquivo ? arquivo.name : "Escolher arquivo (PDF, DOCX ou TXT)"}
-            <input type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }} onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} />
-          </label>
-          <Hoverable onClick={importar} base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 18px", borderRadius: "10px", border: "none", background: arquivo ? "var(--primary)" : "var(--surface-muted)", color: arquivo ? "#fff" : "var(--text-subtle)", cursor: arquivo ? "pointer" : "default", fontSize: "13px", fontWeight: 600, opacity: importando ? 0.7 : 1 }} hover={arquivo ? { background: "var(--primary-hover)" } : {}}>
-            {importando && <span style={{ width: "13px", height: "13px", border: "2px solid rgba(255,255,255,.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite", flex: "none" }} />}
-            {importando ? "Extraindo…" : "Extrair dados"}
-          </Hoverable>
-          <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>A IA estrutura o documento; preços só entram se constarem no texto. Você confere tudo antes de montar.</span>
+        <div
+          onClick={() => !arquivo && fileInputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); if (!arquivo) setZonaAtiva(true); }}
+          onDragLeave={() => setZonaAtiva(false)}
+          onDrop={onDropArquivo}
+          style={{
+            display: "flex",
+            flexDirection: arquivo ? "row" : "column",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: arquivo ? "space-between" : "center",
+            gap: arquivo ? "14px" : "8px",
+            padding: arquivo ? "16px 20px" : "40px 24px",
+            borderRadius: "16px",
+            border: `1.5px dashed ${zonaAtiva ? "var(--primary)" : "var(--border-strong)"}`,
+            background: zonaAtiva ? "var(--info-soft)" : "var(--surface-card)",
+            boxShadow: "var(--shadow-sm)",
+            cursor: arquivo ? "default" : "pointer",
+            textAlign: "center",
+            transition: "border-color .18s ease, background .18s ease",
+            animation: "fadeUp .35s ease both",
+          }}
+        >
+          <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }} onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} />
+          {arquivo ? (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "var(--info-soft)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
+                  <svg width="18" height="18" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 2h5l3.5 3.5v8a1 1 0 01-1 1h-7.5a1 1 0 01-1-1V3a1 1 0 011-1z" /><path d="M9.5 2v3.5H13" /></svg>
+                </div>
+                <div style={{ minWidth: 0, textAlign: "left" }}>
+                  <div style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "360px" }}>{arquivo.name}</div>
+                  <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{tamanhoLegivel(arquivo.size)} · pronto para extrair</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: "none" }}>
+                <Hoverable onClick={() => { setArquivo(null); setErro(null); }} title="Trocar arquivo" base={{ width: "34px", height: "34px", borderRadius: "9px", border: "1px solid var(--border)", background: "var(--surface)", color: "var(--text-subtle)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", lineHeight: 1 }} hover={{ background: "var(--surface-muted)" }}>×</Hoverable>
+                <Hoverable onClick={importar} base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 18px", borderRadius: "10px", border: "none", background: "var(--primary)", color: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: 600, boxShadow: "var(--shadow-sm)", opacity: importando ? 0.7 : 1 }} hover={{ background: "var(--primary-hover)" }}>
+                  {importando && <span style={{ width: "13px", height: "13px", border: "2px solid rgba(255,255,255,.45)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite", flex: "none" }} />}
+                  {importando ? "Extraindo…" : "Extrair dados"}
+                </Hoverable>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "var(--info-soft)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="24" height="24" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 11V3.5M5.5 6.5l3-3 3 3" /><path d="M3 11.5v2a1 1 0 001 1h9a1 1 0 001-1v-2" /></svg>
+              </div>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)" }}>Arraste o orçamento aqui, ou clique para escolher</div>
+              <div style={{ fontSize: "12px", color: "var(--text-subtle)" }}>PDF, DOCX ou TXT · até 15MB</div>
+            </>
+          )}
         </div>
+        {!arquivo && <span style={{ fontSize: "12px", color: "var(--text-subtle)", textAlign: "center" }}>A IA estrutura o documento; preços só entram se constarem no texto. Você confere tudo antes de montar.</span>}
 
-        {erro && <div style={{ background: "var(--danger-soft, #FEE2E2)", border: "1px solid #fca5a5", color: "#b91c1c", borderRadius: "10px", padding: "10px 14px", fontSize: "13px" }}>{erro}</div>}
+        {erro && (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--danger-soft)", border: "1px solid #FECACA", color: "#B91C1C", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", animation: "popIn .25s ease both" }}>
+            <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><circle cx="8.5" cy="8.5" r="6.5" /><path d="M8.5 5.5v3.5M8.5 11.5h.01" /></svg>
+            {erro}
+          </div>
+        )}
 
         {importando && !conferindo && <ImportacaoSkeleton />}
 
         {conferindo && rejeitados.length > 0 && (
-          <div style={{ background: "#FFF7ED", border: "1px solid #fdba74", color: "#9a3412", borderRadius: "10px", padding: "10px 14px", fontSize: "13px" }}>
-            <b>{rejeitados.length} {rejeitados.length === 1 ? "item ficou de fora" : "itens ficaram de fora"}</b> — preço não confere com o documento: {rejeitados.map((r) => `${r.nome} (${r.preco})`).join(", ")}. Confira o PDF e adicione manualmente se precisar.
+          <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", background: "var(--warning-soft)", border: "1px solid #FED7AA", color: "#9a3412", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", animation: "popIn .25s ease both" }}>
+            <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none", marginTop: "1px" }}><path d="M8.5 2.5l7 12.2a1 1 0 01-.87 1.5H2.37a1 1 0 01-.87-1.5l7-12.2a1 1 0 011.74 0z" /><path d="M8.5 7v3.2M8.5 12.5h.01" /></svg>
+            <span><b>{rejeitados.length} {rejeitados.length === 1 ? "item ficou de fora" : "itens ficaram de fora"}</b> — preço não confere com o documento: {rejeitados.map((r) => `${r.nome} (${r.preco})`).join(", ")}. Confira o PDF e adicione manualmente se precisar.</span>
           </div>
         )}
 
         {conferindo && (
           <>
             {/* Cliente + tipo */}
-            <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "flex-end" }}>
+            <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", animation: "popIn .3s ease both" }}>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)", marginBottom: "14px" }}>Dados do cliente</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "flex-end" }}>
               <label style={{ flex: "1 1 220px", minWidth: 0 }}>
                 <div style={campoLabel}>Razão social *</div>
                 <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Ex.: Laticínio São João Ltda" style={campoInput} />
@@ -1545,15 +1611,21 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
                 </div>
               )}
             </div>
+            </div>
 
             {/* Itens extraídos (conferência) */}
-            <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", animation: "popIn .3s ease both", animationDelay: "40ms" }}>
               <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)", marginBottom: "12px" }}>Itens do orçamento <span style={{ fontWeight: 500, color: "var(--text-subtle)", fontSize: "12px" }}>— confira nome, embalagem e preço</span></div>
-              <div style={{ display: "grid", gridTemplateColumns: "2.2fr 70px 90px 80px 120px 34px", gap: "8px", fontSize: "11px", fontWeight: 700, color: "var(--text-subtle)", textTransform: "uppercase", letterSpacing: ".04em", padding: "0 2px 6px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "2.2fr 70px 90px 80px 120px 34px", gap: "8px", fontSize: "11px", fontWeight: 700, color: "var(--text-subtle)", textTransform: "uppercase", letterSpacing: ".04em", padding: "8px 10px", background: "var(--surface-muted)", borderRadius: "8px", marginBottom: "4px" }}>
                 <span>Item</span><span>Qtd</span><span>Tamanho</span><span>Unid.</span><span>Preço (R$)</span><span />
               </div>
               {itens.map((it, i) => (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "2.2fr 70px 90px 80px 120px 34px", gap: "8px", alignItems: "center", padding: "5px 0" }}>
+                <Hoverable
+                  key={i}
+                  as="div"
+                  base={{ display: "grid", gridTemplateColumns: "2.2fr 70px 90px 80px 120px 34px", gap: "8px", alignItems: "center", padding: "6px 10px", borderRadius: "8px" }}
+                  hover={{ background: "var(--surface-sunken)" }}
+                >
                   <div style={{ minWidth: 0 }}>
                     <input value={it.nome} onChange={(e) => setItem(i, { nome: e.target.value })} style={campoInput} />
                     {it.nomeCatalogo && (
@@ -1569,9 +1641,15 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
                   </select>
                   <input value={it.preco} onChange={(e) => setItem(i, { preco: e.target.value })} style={{ ...campoInput, textAlign: "right", fontFamily: "var(--font-mono)" }} />
                   <button onClick={() => setItens((xs) => xs.filter((_, j) => j !== i))} title="Remover" style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--surface)", color: "var(--text-subtle)", cursor: "pointer", fontSize: "15px", lineHeight: 1 }}>×</button>
-                </div>
+                </Hoverable>
               ))}
               {itens.length === 0 && <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "8px 0" }}>Nenhum item aprovado pela guarda de preço — confira o documento.</div>}
+              {itens.length > 0 && (
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline", gap: "8px", marginTop: "10px", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
+                  <span style={{ fontSize: "12.5px", color: "var(--text-subtle)" }}>{itens.length} {itens.length === 1 ? "item" : "itens"} · Total</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "16px", color: "var(--primary)" }}>{fmt(totalItens)}</span>
+                </div>
+              )}
             </div>
           </>
         )}
