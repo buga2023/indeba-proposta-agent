@@ -43,13 +43,19 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/montar": ["./data/**/*"],
     "/api/montar-estruturado": ["./data/**/*"],
-    // public/** = imagens do PDF. browsers.json é dado interno do playwright-core
-    // exigido em runtime (coreBundle.js) — o tracing não o detecta sozinho e a
-    // função quebra com "Cannot find module .../browsers.json". Incluímos pelo
-    // caminho REAL do pnpm (.pnpm/...), NUNCA pelo symlink node_modules/playwright-core
-    // (a Vercel rejeita arquivos em diretórios symlinkados no pacote serverless).
+    // Só as pastas de public/ que o render.ts realmente lê (produtos/marca/fonts —
+    // ver EXT_PERMITIDAS em src/lib/pdf/render.ts). NUNCA "./public/**/*": isso
+    // arrasta public/fichas-tecnicas/ (91MB de PDF, nunca lido por esta função) pro
+    // bundle da Lambda e estoura o limite de 250MB descompactado. browsers.json é
+    // dado interno do playwright-core exigido em runtime (coreBundle.js) — o tracing
+    // não o detecta sozinho e a função quebra com "Cannot find module .../browsers.json".
+    // Incluímos pelo caminho REAL do pnpm (.pnpm/...), NUNCA pelo symlink
+    // node_modules/playwright-core (a Vercel rejeita arquivos em diretórios
+    // symlinkados no pacote serverless).
     "/api/pdf": [
-      "./public/**/*",
+      "./public/produtos/**/*",
+      "./public/marca/**/*",
+      "./public/fonts/**/*",
       "./node_modules/.pnpm/playwright-core@*/node_modules/playwright-core/browsers.json",
       // Binários do Chromium serverless (chromium.br, fonts/swiftshader/al2023 .tar.br):
       // são binários, o tracing não os segue. Sem eles: "The input directory .../bin
@@ -63,6 +69,12 @@ const nextConfig: NextConfig = {
     // externo). Usado por Importar orçamento e Análise de contrato (extração de PDF).
     "/api/orcamento/importar": ["./node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
     "/api/contrato/extrair": ["./node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+  },
+  // Cinto de segurança: mesmo com o include acima já restrito a produtos/marca/fonts,
+  // exclui explicitamente as fichas técnicas (91MB de PDF) do bundle do /api/pdf —
+  // essa função nunca lê esses arquivos (só o Catálogo linka pra eles no navegador).
+  outputFileTracingExcludes: {
+    "/api/pdf": ["./public/fichas-tecnicas/**/*"],
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
