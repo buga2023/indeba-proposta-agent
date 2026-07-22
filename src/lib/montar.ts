@@ -78,6 +78,7 @@ export async function montarProposta(
       imagemPath: p.imagemPath,
       embalagens, // [CATÁLOGO] — preço nunca vem da IA
       ficha: p.ficha ?? null, // [CATÁLOGO] snapshot p/ página de produto (consolidada)
+      fichaTecnicaPath: p.fichaTecnicaPath,
       quantidade: 1, // ajustável na revisão pelo vendedor
       procedenciaSelecao: sel.procedencia,
       motivo: sel.motivo,
@@ -135,6 +136,7 @@ export async function montarPropostaEstruturada(
         imagemPath: p.imagemPath,
         embalagens,
         ficha: p.ficha ?? null, // [CATÁLOGO] snapshot p/ página de produto (consolidada)
+        fichaTecnicaPath: p.fichaTecnicaPath,
         quantidade: it.quantidade ?? 1,
         procedenciaSelecao: "MANUAL",
         motivo: it.embalagens?.length
@@ -150,6 +152,7 @@ export async function montarPropostaEstruturada(
       imagemPath: it.imagemPath ?? "/produtos/_generico.svg",
       embalagens: it.embalagens!,
       ficha: null, // item próprio não tem ficha de catálogo
+      fichaTecnicaPath: null,
       quantidade: it.quantidade ?? 1,
       procedenciaSelecao: "MANUAL",
       motivo: "Item informado manualmente pelo vendedor.",
@@ -201,6 +204,7 @@ export function itemDoCatalogo(codigo: string, quantidade = 1): PropostaItem {
     imagemPath: p.imagemPath,
     embalagens,
     ficha: p.ficha ?? null,
+    fichaTecnicaPath: p.fichaTecnicaPath,
     quantidade: Math.max(1, Math.round(quantidade)),
     procedenciaSelecao: "MANUAL",
     motivo: "Adicionado pelo chat de correção.",

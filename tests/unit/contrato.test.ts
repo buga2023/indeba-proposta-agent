@@ -22,6 +22,7 @@ const PROPOSTA: PropostaScope = {
       quantidade: 2,
       procedenciaSelecao: "IA-SELEÇÃO",
       motivo: "m",
+      fichaTecnicaPath: null,
     },
     {
       codigo: "B2",
@@ -32,6 +33,7 @@ const PROPOSTA: PropostaScope = {
       quantidade: 1,
       procedenciaSelecao: "MANUAL",
       motivo: "m",
+      fichaTecnicaPath: null,
     },
   ],
   condicoesComerciais: {

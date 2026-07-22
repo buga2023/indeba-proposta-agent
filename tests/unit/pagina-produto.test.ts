@@ -14,6 +14,7 @@ const item: PropostaItem = {
   quantidade: 1,
   procedenciaSelecao: "MANUAL",
   motivo: "",
+  fichaTecnicaPath: null,
   ficha: {
     titulo: "Detergente Desengordurante",
     subtitulo: "Alcalino Concentrado",

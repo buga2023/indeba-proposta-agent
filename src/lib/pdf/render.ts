@@ -107,6 +107,7 @@ export function montarDocumento(
           logoWhite: asset("/marca/indeba-express-logo-white.png"),
           fontSans: asset("/fonts/geist-sans-variable.woff2"),
           fontMono: asset("/fonts/geist-mono-variable.woff2"),
+          siteUrl: process.env.SITE_URL || "",
         }),
         footer: FOOTER_PAG,
         marginTop: "0mm",

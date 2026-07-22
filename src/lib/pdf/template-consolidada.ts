@@ -82,7 +82,7 @@ export type ContatoConsolidada = { whatsapp: string | null; emailConsultor: stri
 // texto, só reposicionado). `simples`/`semVenda`: sinalizam o quão rica é a ficha
 // (nenhum dado técnico/venda vs. só técnico) — o layout em rail já centraliza o
 // conteúdo disponível sozinho, então essas classes hoje são só um sinal semântico.
-export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, numero?: string, logoWhite?: string): string {
+export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, numero?: string, logoWhite?: string, siteUrl = ""): string {
   const f = item.ficha ?? null;
   const titulo = esc(item.nome); // nome comercial real — sempre bate com a ficha técnica em PDF (nunca a categoria de marketing)
   const categoria = f?.titulo && f.titulo !== item.nome ? `<div class="pp-eyebrow-cat">${esc(f.titulo)}</div>` : "";
@@ -164,6 +164,13 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
     ? `<div class="pp-price"><div class="pp-v-label">Valor</div><div class="pp-v-row"><span class="pp-v-size">${cotada.tamanho} ${esc(cotada.unidade)}</span><span class="pp-v-price">${brl(cotada.preco)}</span></div><p class="pp-v-note">Consulte condições especiais para compras de maiores volumes.</p></div>`
     : "";
 
+  // Link pra ficha técnica real (PDF em public/fichas-tecnicas/) — só quando o produto
+  // tem uma cadastrada E siteUrl foi configurado (nunca gera link relativo/quebrado,
+  // já que o PDF final é aberto fora do navegador).
+  const linkFicha = item.fichaTecnicaPath && siteUrl
+    ? `<a class="pp-ficha-link" href="${esc(siteUrl)}${esc(item.fichaTecnicaPath)}" target="_blank" rel="noopener">Ver ficha técnica completa</a>`
+    : "";
+
   // Rodapé da ficha: slogan fixo + WhatsApp/e-mail do payload (só renderiza contato
   // que existir — nunca número fictício).
   const contatos = [
@@ -185,6 +192,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
       ${eyebrow}
       <div class="pp-figure"><div class="pp-imgcard"><img src="${dataUri}" alt="${titulo}"/></div></div>
       ${valores}
+      ${linkFicha}
       ${railFoot}
     </aside>
     <div class="pp-content">
@@ -231,7 +239,7 @@ const wave = (cls: string) => `<svg class="${cls}" viewBox="0 0 360 300" fill="n
 export function consolidadaHtml(
   scope: PropostaScope,
   imagens: Record<string, string>,
-  assets: { logo: string; logoWhite: string; fontSans: string; fontMono: string },
+  assets: { logo: string; logoWhite: string; fontSans: string; fontMono: string; siteUrl?: string },
 ): string {
   const c = scope.consolidada ?? consolidadaDefaults();
   const cli = scope.cliente;
@@ -306,7 +314,7 @@ export function consolidadaHtml(
   const PRIMEIRO_PRODUTO = 4;
   const produtos = scope.itens
     .map((it, idx) =>
-      paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite),
+      paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite, assets.siteUrl),
     )
     .join("");
 
@@ -453,6 +461,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-v-size { font-size: 12px; font-weight: 700; color: ${ORANGE}; letter-spacing: .5px; }
 .pp-v-price { font-family: "Geist Mono", monospace; font-size: 27px; font-weight: 700; letter-spacing: .3px; }
 .pp-v-note { font-size: 9px; line-height: 1.4; color: rgba(255,255,255,.5); margin-top: 8px; max-width: 200px; }
+.pp-ficha-link { display: inline-block; margin-top: 12px; font-size: 9px; font-weight: 700; color: ${ORANGE}; text-decoration: underline; }
 .pp-railfoot { margin-top: 14px; font-size: 8.5px; letter-spacing: 1.2px; color: rgba(255,255,255,.4); text-transform: uppercase; }
 /* Coluna de conteúdo: centraliza o bloco principal verticalmente — sem isso,
    produtos com pouca ficha (sem indicado-para/benefícios) deixavam a metade de

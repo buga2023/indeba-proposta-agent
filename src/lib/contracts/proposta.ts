@@ -20,6 +20,10 @@ export const PropostaItem = z.object({
   imagemPath: z.string(), // [CATÁLOGO]
   embalagens: z.array(Embalagem), // [CATÁLOGO]
   ficha: FichaProduto.nullable().optional(), // [CATÁLOGO] snapshot p/ página de produto
+  // [CATÁLOGO] caminho estático do PDF da ficha técnica real (ex. "/fichas-tecnicas/AUTOCAR-PLUS.pdf").
+  // null = produto sem ficha técnica cadastrada ainda. Default null: propostas antigas
+  // persistidas continuam parseando sem o campo.
+  fichaTecnicaPath: z.string().nullable().default(null),
   // Quantidade ajustável pelo vendedor na tela de revisão. Subtotal = preço da
   // 1ª embalagem × quantidade (modelo de orçamento). Default 1.
   quantidade: z.number().int().positive().default(1),

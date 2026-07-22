@@ -23,6 +23,7 @@ const scopeBase: PropostaScope = {
       quantidade: 3,
       procedenciaSelecao: "IA-SELEÇÃO",
       motivo: "casou",
+      fichaTecnicaPath: null,
     },
   ],
   condicoesComerciais: { validade: "30 dias", prazoEntrega: "15 dias", pagamento: "à vista", frete: "CIF" },
