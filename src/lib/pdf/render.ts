@@ -65,7 +65,7 @@ function dataUri(relPath: string): string {
 // colidindo com o card. Nem toda foto tem uma boa (bordas translúcidas corroem no
 // recorte) — cai pro original nesse caso, sem quebrar.
 function resolverImagemProduto(imagemPath: string): string {
-  const cutoutPath = imagemPath.replace(/\.jpe?g$/i, "-cutout.png");
+  const cutoutPath = imagemPath.replace(/\.(jpe?g|png)$/i, "-cutout.png");
   if (cutoutPath !== imagemPath) {
     const uri = dataUri(cutoutPath);
     if (uri) return uri;

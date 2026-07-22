@@ -2062,7 +2062,7 @@ function ReviewScreen({
                     <span style={{ fontSize: "11px", color: "var(--gray-500)", fontWeight: 500 }}>{procLabel(p.procedenciaSelecao)}</span>
                     <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--gray-400)", background: "var(--gray-100)", padding: "2px 7px", borderRadius: "4px" }}>{p.codigo}</span>
                   </div>
-                  <div style={{ width: "100%", height: "90px", background: "var(--gray-100)", borderRadius: "8px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                  <div style={{ width: "100%", height: "90px", background: "#fff", border: "1px solid var(--gray-100)", borderRadius: "8px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} onError={(e) => ((e.currentTarget.style.display = "none"))} />
                   </div>
@@ -2472,7 +2472,7 @@ function ComercialPreview({ scope, itens }: { scope: PropostaScope; itens: Propo
         const e = p.embalagens[0];
         return (
           <div key={p.codigo} style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
-            <div style={{ flex: "0 0 90px", height: "100px", display: "flex", alignItems: "center", justifyContent: "center", background: "#fbfcfe", border: "1px solid #eef2f7", borderRadius: "8px", overflow: "hidden" }}>
+            <div style={{ flex: "0 0 90px", height: "100px", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #eef2f7", borderRadius: "8px", overflow: "hidden" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "82px", maxHeight: "92px", objectFit: "contain" }} onError={(ev) => (ev.currentTarget.style.display = "none")} />
             </div>
@@ -2550,7 +2550,7 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
         const e = p.embalagens[0];
         return (
           <div key={p.codigo} style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
-            <div style={{ flex: "0 0 90px", height: "100px", display: "flex", alignItems: "center", justifyContent: "center", background: "#fbfcfe", border: "1px solid #eef2f7", borderRadius: "8px", overflow: "hidden" }}>
+            <div style={{ flex: "0 0 90px", height: "100px", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #eef2f7", borderRadius: "8px", overflow: "hidden" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "82px", maxHeight: "92px", objectFit: "contain" }} onError={(ev) => (ev.currentTarget.style.display = "none")} />
             </div>
@@ -2861,7 +2861,7 @@ function CatalogScreen({
                 base={{ display: "grid", gridTemplateColumns: "44px 1fr 84px 150px 1fr 100px 40px 92px", gap: "12px", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--gray-100)", transition: "background .15s ease" }}
                 hover={{ background: "var(--gray-50)" }}
               >
-                <div style={{ width: "40px", height: "40px", background: "var(--gray-100)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flex: "none" }}>
+                <div style={{ width: "40px", height: "40px", background: "#fff", border: "1px solid var(--gray-100)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flex: "none" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={item.imagemPath} alt={item.nome} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} onError={(ev) => ((ev.currentTarget.style.display = "none"))} />
                 </div>
