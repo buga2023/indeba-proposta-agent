@@ -119,6 +119,80 @@ function Hoverable({
   );
 }
 
+/** Campo "Segmento" — múltiplos valores opcionais (0, 1 ou N), como tags. Digita e
+ * confirma com Enter/vírgula; Backspace num campo vazio remove a última. Internamente
+ * o cliente ainda guarda um único `segmento: string | null` (contrato não muda) — as
+ * tags são unidas por ", " ao montar a proposta. */
+function SegmentoInput({ value, onChange, campoLabel, campoInput }: { value: string[]; onChange: (v: string[]) => void; campoLabel: CSSProperties; campoInput: CSSProperties }) {
+  const [draft, setDraft] = useState("");
+  const adicionar = () => {
+    const v = draft.trim();
+    if (v && !value.includes(v)) onChange([...value, v]);
+    setDraft("");
+  };
+  return (
+    <label style={{ flex: "1 1 200px", minWidth: 0 }}>
+      <div style={campoLabel}>Segmento</div>
+      <div
+        style={{
+          ...campoInput,
+          height: "auto",
+          minHeight: "38px",
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: "6px",
+          padding: "6px 8px",
+        }}
+      >
+        {value.map((seg) => (
+          <span
+            key={seg}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "5px",
+              padding: "3px 8px",
+              borderRadius: "999px",
+              border: "1px solid var(--border-strong)",
+              background: "var(--surface-muted)",
+              color: "var(--text-body)",
+              fontSize: "12px",
+              fontWeight: 500,
+              lineHeight: 1.4,
+            }}
+          >
+            {seg}
+            <button
+              type="button"
+              onClick={() => onChange(value.filter((s) => s !== seg))}
+              aria-label={`Remover ${seg}`}
+              style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, color: "inherit", opacity: 0.7, fontSize: "13px", lineHeight: 1, display: "inline-flex" }}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              adicionar();
+            } else if (e.key === "Backspace" && !draft && value.length) {
+              onChange(value.slice(0, -1));
+            }
+          }}
+          onBlur={adicionar}
+          placeholder={value.length ? "" : "Ex.: Laticínio"}
+          style={{ flex: "1 1 100px", minWidth: "80px", border: "none", outline: "none", background: "transparent", fontSize: "13.5px", color: "var(--text-strong)", fontFamily: "var(--font-sans)", padding: "2px 4px" }}
+        />
+      </div>
+    </label>
+  );
+}
+
 /* ── Chrome global: ações do header (busca/assistente) compartilhadas com as telas ── */
 const ChromeContext = createContext<{ openPalette: () => void; openAssistant: () => void }>({
   openPalette: () => {},
@@ -1007,7 +1081,7 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
   const [linhaFiltro, setLinhaFiltro] = useState<string>("todas");
   const [razaoSocial, setRazaoSocial] = useState(prefill?.razaoSocial ?? "");
   const [cnpj, setCnpj] = useState("");
-  const [segmento, setSegmento] = useState(prefill?.segmento ?? "");
+  const [segmentos, setSegmentos] = useState<string[]>(prefill?.segmento ? prefill.segmento.split(",").map((s) => s.trim()).filter(Boolean) : []);
   const [responsavel, setResponsavel] = useState("");
   const [tipo, setTipo] = useState<TipoProposta>("consolidada");
   const [itens, setItens] = useState<Record<string, number>>({}); // codigo → quantidade
@@ -1124,7 +1198,7 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
     try {
       const body = {
         tipo,
-        cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmento.trim() || null, responsavel: responsavel.trim() || null },
+        cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmentos.join(", ") || null, responsavel: responsavel.trim() || null },
         itens: [
           ...selCat.map((x) => {
             const idx = tamanhoIdx(x.produto.codigo);
@@ -1229,10 +1303,7 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
               <div style={campoLabel}>CNPJ</div>
               <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0001-00" style={campoInput} />
             </label>
-            <label style={{ flex: "1 1 200px", minWidth: 0 }}>
-              <div style={campoLabel}>Segmento</div>
-              <input value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="Ex.: Laticínio" style={campoInput} />
-            </label>
+            <SegmentoInput value={segmentos} onChange={setSegmentos} campoLabel={campoLabel} campoInput={campoInput} />
             <label style={{ flex: "1 1 200px", minWidth: 0 }}>
               <div style={campoLabel}>Responsável</div>
               <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Quem recebe a proposta" style={campoInput} />
@@ -1519,7 +1590,7 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
   const [rejeitados, setRejeitados] = useState<ItemRejeitado[]>([]);
   const [razaoSocial, setRazaoSocial] = useState("");
   const [cnpj, setCnpj] = useState("");
-  const [segmento, setSegmento] = useState("");
+  const [segmentos, setSegmentos] = useState<string[]>([]);
   const [responsavel, setResponsavel] = useState("");
   const [tipo, setTipo] = useState<TipoProposta>("consolidada");
   const [itens, setItens] = useState<ItemImportado[]>([]);
@@ -1556,7 +1627,7 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
       const res = d as OrcamentoImportResponse;
       setRazaoSocial(res.extraido.cliente.razaoSocial ?? "");
       setCnpj(res.extraido.cliente.cnpj ?? "");
-      setSegmento(res.extraido.cliente.segmento ?? "");
+      setSegmentos(res.extraido.cliente.segmento ? res.extraido.cliente.segmento.split(",").map((s) => s.trim()).filter(Boolean) : []);
       setResponsavel(res.extraido.cliente.responsavel ?? "");
       setItens(res.extraido.itens.map((it) => ({ nome: it.nome, quantidade: it.quantidade, tamanho: it.tamanho == null ? "" : String(it.tamanho), unidade: it.unidade ?? "un", preco: it.preco, codigoCatalogo: it.codigoCatalogo, nomeCatalogo: it.nomeCatalogo })));
       setRejeitados(res.rejeitados);
@@ -1579,7 +1650,7 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
     try {
       const body = {
         tipo,
-        cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmento.trim() || null, responsavel: responsavel.trim() || null },
+        cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmentos.join(", ") || null, responsavel: responsavel.trim() || null },
         itens: itens.map((it) => ({
           // codigo (quando casou com o catálogo) → foto/descrição do catálogo no PDF;
           // as embalagens SEMPRE vão junto: o preço autoritativo é o do orçamento.
@@ -1706,10 +1777,7 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
                 <div style={campoLabel}>CNPJ</div>
                 <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" style={campoInput} />
               </label>
-              <label style={{ flex: "1 1 150px", minWidth: 0 }}>
-                <div style={campoLabel}>Segmento</div>
-                <input value={segmento} onChange={(e) => setSegmento(e.target.value)} placeholder="Ex.: Laticínio" style={campoInput} />
-              </label>
+              <SegmentoInput value={segmentos} onChange={setSegmentos} campoLabel={campoLabel} campoInput={campoInput} />
               <label style={{ flex: "1 1 170px", minWidth: 0 }}>
                 <div style={campoLabel}>Responsável</div>
                 <input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Quem recebe a proposta" style={campoInput} />
