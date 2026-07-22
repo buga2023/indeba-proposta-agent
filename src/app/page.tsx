@@ -1011,6 +1011,9 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
   const [responsavel, setResponsavel] = useState("");
   const [tipo, setTipo] = useState<TipoProposta>("consolidada");
   const [itens, setItens] = useState<Record<string, number>>({}); // codigo → quantidade
+  const [tamanhos, setTamanhos] = useState<Record<string, number>>({}); // codigo → índice escolhido em produto.embalagens
+  const tamanhoIdx = (codigo: string) => tamanhos[codigo] ?? 0;
+  const setTamanho = (codigo: string, idx: number) => setTamanhos((m) => ({ ...m, [codigo]: idx }));
   // Itens próprios (fora do catálogo): preço digitado por humano → procedência MANUAL.
   const [custom, setCustom] = useState<{ id: number; nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; qtd: number }[]>([]);
   // Produto do catálogo SEM preço (arquivado, aguardando precificação) → preço digitado
@@ -1043,7 +1046,7 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
   const filtrados = linhaFiltro === "todas" ? porBusca : porBusca.filter((p) => p.linha === linhaFiltro);
   // null = catálogo sem preço E ainda sem valor digitado nessa sessão.
   const precoDe = (p: Produto): number | null => {
-    const doCatalogo = p.embalagens[0]?.preco;
+    const doCatalogo = p.embalagens[tamanhoIdx(p.codigo)]?.preco;
     if (doCatalogo != null) return Number(doCatalogo);
     const digitado = Number((precoManual[p.codigo] ?? "").replace(",", "."));
     return digitado > 0 ? digitado : null;
@@ -1094,6 +1097,13 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
     setShowCustom(false);
   }
 
+  // Reordena embalagens colocando o tamanho escolhido em [0] — mantém a convenção
+  // universal do app de que embalagens[0] é sempre a cotada, sem exigir mudança de
+  // schema em PropostaItem nem nos demais pontos que já leem embalagens[0].
+  function comEscolhidoPrimeiro<E>(embalagens: E[], escolhido: E): E[] {
+    return [escolhido, ...embalagens.filter((e) => e !== escolhido)];
+  }
+
   async function montar() {
     if (montando) return;
     if (!razaoSocial.trim()) {
@@ -1117,19 +1127,20 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
         cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmento.trim() || null, responsavel: responsavel.trim() || null },
         itens: [
           ...selCat.map((x) => {
-            const embCatalogo = x.produto.embalagens[0];
+            const idx = tamanhoIdx(x.produto.codigo);
+            const embEscolhido = x.produto.embalagens[idx];
             // Catálogo sem preço (produto arquivado): manda TODOS os tamanhos do
-            // catálogo (não só o primeiro — produto pode vir em 5/20/50L, cada um
+            // catálogo (não só o escolhido — produto pode vir em 5/20/50L, cada um
             // com foto/preço próprio no fornecedor) com o preço digitado pelo
             // vendedor (nunca inventado pela IA) — mesmo preço unitário aplicado a
             // todos por ora (preço por tamanho fica pra uma tela dedicada depois).
-            // Com preço no catálogo, manda só o código (preço/tamanhos vêm de lá).
-            if (embCatalogo?.preco == null) {
+            // O tamanho escolhido vai em [0] (convenção "cotada" do resto do app).
+            if (embEscolhido?.preco == null) {
               const preco = precoDe(x.produto);
               return {
                 codigo: x.produto.codigo,
                 quantidade: x.qtd,
-                embalagens: x.produto.embalagens.map((e) => ({
+                embalagens: comEscolhidoPrimeiro(x.produto.embalagens, embEscolhido).map((e) => ({
                   tamanho: e.tamanho,
                   unidade: e.unidade,
                   preco: (preco ?? 0).toFixed(2),
@@ -1138,7 +1149,23 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
                 })),
               };
             }
-            return { codigo: x.produto.codigo, quantidade: x.qtd };
+            // Com preço no catálogo: se o tamanho escolhido já é o primeiro do
+            // catálogo, comportamento de hoje (só o código, preço/tamanhos vêm de
+            // lá). Senão, manda a lista reordenada (só os tamanhos com preço real —
+            // igual ao filtro que o catálogo já aplica pro caso padrão).
+            const comPreco = x.produto.embalagens.filter((e) => e.preco != null);
+            if (comPreco[0] === embEscolhido) return { codigo: x.produto.codigo, quantidade: x.qtd };
+            return {
+              codigo: x.produto.codigo,
+              quantidade: x.qtd,
+              embalagens: comEscolhidoPrimeiro(comPreco, embEscolhido).map((e) => ({
+                tamanho: e.tamanho,
+                unidade: e.unidade,
+                preco: e.preco!,
+                diluicaoMax: e.diluicaoMax,
+                custoDiluido: e.custoDiluido,
+              })),
+            };
           }),
           ...custom.map((c) => ({ nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: null, custoDiluido: null }], quantidade: c.qtd })),
         ],
@@ -1271,7 +1298,7 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
             <div className="ies-scroll" style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "440px", overflowY: "auto" }}>
               {filtrados.map((p) => {
                 const incluido = Boolean(itens[p.codigo]);
-                const semPrecoCatalogo = p.embalagens[0]?.preco == null;
+                const semPrecoCatalogo = p.embalagens[tamanhoIdx(p.codigo)]?.preco == null;
                 const preco = precoDe(p);
                 const podeAdicionar = preco != null;
                 return (
@@ -1281,8 +1308,18 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
                       <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nome}</div>
                       <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{p.codigo} · {humaniza(p.linha)}{!p.ativo && " · arquivado"}</div>
                       {p.embalagens.length > 1 && (
-                        <div style={{ fontSize: "10.5px", color: "var(--text-subtle)", marginTop: "2px" }}>
-                          {p.embalagens.length} tamanhos ({p.embalagens.map((e) => `${e.tamanho}${e.unidade}`).join(", ")}){semPrecoCatalogo ? " — mesmo preço p/ todos" : ""}
+                        <div style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                          <select
+                            value={tamanhoIdx(p.codigo)}
+                            onChange={(e) => setTamanho(p.codigo, Number(e.target.value))}
+                            disabled={incluido}
+                            style={{ fontSize: "10.5px", color: "var(--text-subtle)", border: "1px solid var(--border)", borderRadius: "6px", padding: "1px 4px", background: "var(--surface)" }}
+                          >
+                            {p.embalagens.map((e, i) => (
+                              <option key={i} value={i}>{e.tamanho}{e.unidade}</option>
+                            ))}
+                          </select>
+                          {semPrecoCatalogo && <span style={{ fontSize: "10.5px", color: "var(--text-subtle)" }}>mesmo preço p/ todos</span>}
                         </div>
                       )}
                     </div>
