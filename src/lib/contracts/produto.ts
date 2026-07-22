@@ -61,7 +61,11 @@ export const FichaProduto = z.object({
   descricao: z.string().optional(),     // parágrafo hero
   indicadoPara: z.array(z.object({ label: z.string(), icone: z.string() })).optional(),
   beneficios: z.array(z.string()).optional(),
-  diluicoes: z.array(z.object({ uso: z.string(), razao: z.string() })).optional(),
+  diluicoes: z.array(z.object({
+    uso: z.string(),                    // "Finalidade de uso"
+    razao: z.string(),                  // "Diluição"
+    comoAplicar: z.string().optional(), // "Como aplicar" — 3ª coluna, quando a ficha técnica real traz o modo de aplicação
+  })).optional(),
   rendimento: z.string().optional(),
   caracteristicas: z
     .object({

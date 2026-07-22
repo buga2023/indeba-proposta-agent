@@ -4398,7 +4398,8 @@
         "diluicoes": [
           {
             "uso": "desengraxe/umectação/pré-lavagem/lavagem",
-            "razao": "nível de água baixo, temperatura ambiente a 80°C, tempo de 5' a 20', dosagem de 0,5 a 4,0 mL/kg"
+            "razao": "nível de água baixo, temperatura ambiente a 80°C, tempo de 5' a 20', dosagem de 0,5 a 4,0 mL/kg",
+            "comoAplicar": "Diluir na dosagem indicada e aplicar via Sistema Eletrônico de Dosagem Indeba; também pode ser usado na limpeza manual de superfícies e equipamentos."
           }
         ]
       }
@@ -4447,7 +4448,14 @@
         },
         "rendimento": "Desagregação/Pré-lavagem/Lavagem: 0,5 a 5,0 mL/kg, nível baixo, ambiente/80°C, 10 a 20 minutos",
         "subtitulo": "ATIVADOR ALCALINO LÍQUIDO",
-        "descricao": "Formulação equilibrada e concentrada em agentes alcalinos e agentes dispersantes, facilitando a remoção e dispersão das sujidades. Em conjunto com o detergente, promove de maneira rápida e eficiente a remoção de sujidades pesadas, mantendo o pH ideal durante as etapas de Desagregação, lavagem e pré-lavagem. Otimiza processos oxigenados. Ideal para lavagem de roupas hospitalares, pois contribui significativamente para remoção de manchas de sangue, assim como para roupas hoteleiras com sujidades de molhos, sucos, café, etc."
+        "descricao": "Formulação equilibrada e concentrada em agentes alcalinos e agentes dispersantes, facilitando a remoção e dispersão das sujidades. Em conjunto com o detergente, promove de maneira rápida e eficiente a remoção de sujidades pesadas, mantendo o pH ideal durante as etapas de Desagregação, lavagem e pré-lavagem. Otimiza processos oxigenados. Ideal para lavagem de roupas hospitalares, pois contribui significativamente para remoção de manchas de sangue, assim como para roupas hoteleiras com sujidades de molhos, sucos, café, etc.",
+        "diluicoes": [
+          {
+            "uso": "desagregação/pré-lavagem/lavagem",
+            "razao": "nível de água baixo, temperatura ambiente/80°C, tempo 10' a 20', dosagem de 0,5 a 5,0 mL/kg",
+            "comoAplicar": "Dosar exclusivamente pelo Sistema Eletrônico de Dosagem Indeba, direto na máquina de lavar, na etapa de desagregação/pré-lavagem."
+          }
+        ]
       }
     },
     {
@@ -4505,7 +4513,8 @@
         "diluicoes": [
           {
             "uso": "desengraxe/umectação/pré-lavagem/lavagem",
-            "razao": "0,5 a 4,0 mL/Kg (nível de água baixo, temperatura ambiente/80°C, tempo 5' a 20')"
+            "razao": "0,5 a 4,0 mL/Kg (nível de água baixo, temperatura ambiente/80°C, tempo 5' a 20')",
+            "comoAplicar": "Diluir na dosagem indicada e aplicar via Sistema Eletrônico de Dosagem Indeba, direto na máquina de lavar."
           }
         ]
       }
@@ -4561,7 +4570,8 @@
         "diluicoes": [
           {
             "uso": "desengraxe, pré-lavagem e lavagem",
-            "razao": "0,5 a 4,0 mL/kg"
+            "razao": "0,5 a 4,0 mL/kg",
+            "comoAplicar": "Dosar exclusivamente pelo Sistema Eletrônico de Dosagem Indeba, junto ao detergente (Texspar RHC/DTS), na etapa de desagregação/pré-lavagem."
           }
         ],
         "descricao": "Na operação de desagregação, pré-lavagem, lavagem de roupas brancas e de cores firmes, com sujidades pesadas ou leves em máquinas lavadoras. Indicado também como aditivo para limpeza e desengraxe de máquinas e equipamentos."
@@ -4622,6 +4632,13 @@
           "Remove incrustações inorgânica dos tecidos",
           "Eficiente mesmo em água com dureza elevada (de até 90ppm de CaCO3)",
           "Contém tensoativos biodegradáveis"
+        ],
+        "diluicoes": [
+          {
+            "uso": "desengraxe/umectação/pré-lavagem/lavagem",
+            "razao": "nível de água baixo, temperatura ambiente, tempo 5' a 20', dosagem de 0,5 a 4,0 mL/kg",
+            "comoAplicar": "Diluir na dosagem indicada e aplicar via Sistema Eletrônico de Dosagem Indeba, direto na máquina de lavar."
+          }
         ]
       }
     },
@@ -4679,7 +4696,8 @@
         "diluicoes": [
           {
             "uso": "desagregação/pré-lavagem/lavagem/umectação",
-            "razao": "0,5 a 4,0 mL/Kg (nível de água baixo, temperatura ambiente/80º C, tempo 5' a 20')"
+            "razao": "0,5 a 4,0 mL/Kg (nível de água baixo, temperatura ambiente/80º C, tempo 5' a 20')",
+            "comoAplicar": "Dosar exclusivamente pelo Sistema Eletrônico de Dosagem Indeba, na etapa de desagregação/pré-lavagem/umectação."
           }
         ]
       }
