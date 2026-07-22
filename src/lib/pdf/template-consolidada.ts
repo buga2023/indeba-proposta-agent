@@ -84,7 +84,8 @@ export type ContatoConsolidada = { whatsapp: string | null; emailConsultor: stri
 // conteúdo disponível sozinho, então essas classes hoje são só um sinal semântico.
 export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, numero?: string, logoWhite?: string): string {
   const f = item.ficha ?? null;
-  const titulo = f?.titulo ? esc(f.titulo) : esc(item.nome);
+  const titulo = esc(item.nome); // nome comercial real — sempre bate com a ficha técnica em PDF (nunca a categoria de marketing)
+  const categoria = f?.titulo && f.titulo !== item.nome ? `<div class="pp-eyebrow-cat">${esc(f.titulo)}</div>` : "";
   const subtitulo = f?.subtitulo ? `<div class="pp-sub">${esc(f.subtitulo)}</div>` : "";
   const eyebrow = f?.linhaLabel ? `<div class="pp-eyebrow">LINHA<b>${esc(f.linhaLabel)}</b></div>` : ""; // sem linha → sem eyebrow vazio
   const descricao = esc(f?.descricao || item.descricaoUso || "");
@@ -109,16 +110,29 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
         .join("")}</div></div>`
     : "";
 
-  const diluicoes = f?.diluicoes?.length
-    ? `<div class="pp-panel"><h4>Modo de diluição</h4><div class="pp-rows">${f.diluicoes
-        .map((d) => `<div class="pp-row"><span class="k">${esc(d.uso)}</span><span class="v">${esc(d.razao)}</span></div>`)
-        .join("")}</div></div>`
-    : diluicaoEmbalagem
-      ? `<div class="pp-panel"><h4>Modo de diluição</h4><div class="pp-rows">
-          <div class="pp-row"><span class="k">Diluição máxima</span><span class="v">${esc(diluicaoEmbalagem.diluicaoMax!)}</span></div>
-          ${diluicaoEmbalagem.custoDiluido ? `<div class="pp-row"><span class="k">Custo/litro diluído</span><span class="v">${brl(diluicaoEmbalagem.custoDiluido)}</span></div>` : ""}
-        </div></div>`
-      : "";
+  // Tabela "Modo de uso" (3 colunas) — só quando a ficha traz `comoAplicar` (dado real
+  // extraído da ficha técnica). Sem isso, mantém o painel de 2 colunas de sempre.
+  const temModoDeUso = f?.diluicoes?.some((d) => d.comoAplicar);
+  const diluicoes = temModoDeUso
+    ? ""
+    : f?.diluicoes?.length
+      ? `<div class="pp-panel"><h4>Modo de diluição</h4><div class="pp-rows">${f.diluicoes
+          .map((d) => `<div class="pp-row"><span class="k">${esc(d.uso)}</span><span class="v">${esc(d.razao)}</span></div>`)
+          .join("")}</div></div>`
+      : diluicaoEmbalagem
+        ? `<div class="pp-panel"><h4>Modo de diluição</h4><div class="pp-rows">
+            <div class="pp-row"><span class="k">Diluição máxima</span><span class="v">${esc(diluicaoEmbalagem.diluicaoMax!)}</span></div>
+            ${diluicaoEmbalagem.custoDiluido ? `<div class="pp-row"><span class="k">Custo/litro diluído</span><span class="v">${brl(diluicaoEmbalagem.custoDiluido)}</span></div>` : ""}
+          </div></div>`
+        : "";
+  const modoUso = temModoDeUso
+    ? `<div class="pp-panel pp-panel-modo"><h4>Modo de uso</h4><table class="pp-modo-tb">
+        <thead><tr><th>Finalidade de uso</th><th>Diluição</th><th>Como aplicar</th></tr></thead>
+        <tbody>${f!.diluicoes!
+          .map((d) => `<tr><td>${esc(d.uso)}</td><td>${esc(d.razao)}</td><td>${esc(d.comoAplicar ?? "")}</td></tr>`)
+          .join("")}</tbody>
+      </table></div>`
+    : "";
   const rendimento = f?.rendimento
     ? `<div class="pp-panel"><h4>Rendimento aproximado</h4>${fmtRendimento(f.rendimento)}</div>`
     : "";
@@ -157,7 +171,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
     contato?.emailConsultor ? `<span class="pp-c-item"><span class="ic">${iconeSvg("email", ORANGE)}</span>${esc(contato.emailConsultor)}</span>` : "",
   ].filter(Boolean).join("");
 
-  const specs = diluicoes || rendimento || embalagens || carac ? `<div class="pp-specs">${diluicoes}${rendimento}${embalagens}${carac}</div>` : "";
+  const specs = diluicoes || modoUso || rendimento || embalagens || carac ? `<div class="pp-specs">${diluicoes}${modoUso}${rendimento}${embalagens}${carac}</div>` : "";
   const runmark = numero ? `<div class="pp-runmark">Proposta de Solução <b>${esc(numero)}</b></div>` : "";
   const railFoot = numero ? `<div class="pp-railfoot">Página ${esc(numero)} · Proposta de Solução</div>` : "";
 
@@ -177,7 +191,7 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
       ${runmark}
       <div class="pp-main">
         <div>
-          <h2 class="pp-tit">${titulo}</h2>${subtitulo}
+          <h2 class="pp-tit">${titulo}</h2>${categoria}${subtitulo}
           ${descricao ? `<p class="pp-desc">${descricao}</p>` : ""}
         </div>
         ${indicado}
@@ -431,8 +445,8 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-eyebrow { margin-top: 12px; font-size: 10px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-eyebrow b { color: ${ORANGE}; font-weight: 700; margin-left: 6px; }
 .pp-figure { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px 0; }
-.pp-imgcard { width: 230px; height: 420px; background: #f3f6fa; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px -14px rgba(0,0,0,.35); }
-.pp-imgcard img { max-width: 190px; max-height: 390px; object-fit: contain; }
+.pp-imgcard { width: 240px; height: 460px; background: #f3f6fa; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px -14px rgba(0,0,0,.35); }
+.pp-imgcard img { max-width: 208px; max-height: 428px; object-fit: contain; }
 .pp-price { border-top: 1px solid rgba(255,255,255,.16); padding-top: 16px; }
 .pp-v-label { font-size: 9.5px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-v-row { display: flex; align-items: baseline; gap: 10px; margin-top: 7px; }
@@ -449,6 +463,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
 .pp-tit { color: ${NAVY}; font-size: 25px; font-weight: 800; line-height: 1.08; letter-spacing: -.3px; }
 .pp-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin-top: 4px; }
+.pp-eyebrow-cat { color: #8a95a3; font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .3px; margin-top: 4px; }
 .pp-desc { color: #5a6878; font-size: 11.5px; line-height: 1.55; max-width: 400px; }
 .pp-label { display: inline-block; background: ${NAVY}; color: #fff; font-size: 10px; font-weight: 700;
   letter-spacing: 1.3px; text-transform: uppercase; padding: 6px 13px; border-radius: 7px; margin-bottom: 12px; }
@@ -481,6 +496,15 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-row .k { color: #6b7787; } .pp-row .v { font-weight: 700; color: ${NAVY}; text-align: right; }
 .pp-rows-cols .pp-row { justify-content: flex-start; }
 .pp-rows-cols .pp-row .k { flex: none; } .pp-rows-cols .pp-row .v { text-align: left; }
+/* Modo de uso (3 colunas: finalidade/diluição/como aplicar) — só quando a ficha
+   técnica real traz o texto de aplicação; tabela de verdade (não k/v), já que aqui
+   são 3 valores por linha, não um par. */
+.pp-panel-modo { background: transparent; border: 1px solid #e0e6ee; padding: 0; overflow: hidden; }
+.pp-panel-modo h4 { background: #eef2f7; padding: 10px 14px; margin-bottom: 0; border-bottom: 1px solid #e0e6ee; }
+.pp-modo-tb { width: 100%; border-collapse: collapse; }
+.pp-modo-tb th { background: ${NAVY}; color: #fff; font-size: 8.5px; text-transform: uppercase; letter-spacing: .5px; text-align: left; padding: 7px 10px; }
+.pp-modo-tb td { font-size: 9.5px; color: #4a5768; padding: 7px 10px; border-bottom: 1px solid #f0f3f7; vertical-align: top; }
+.pp-modo-tb tr:last-child td { border-bottom: none; }
 .pp-big { text-align: center; color: ${ORANGE}; font-weight: 800; font-size: 12px; }
 /* Rendimento multi-dosagem (Sanquat, Sanclor, Sanap…): lista legível em vez de paredão
    laranja centralizado. Dose em destaque, contexto (entre parênteses) em cinza abaixo. */
