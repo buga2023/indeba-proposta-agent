@@ -32,6 +32,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Raiz explícita do Turbopack. Sem isso, o Next infere a raiz procurando lockfiles
+  // acima do projeto e pode escolher um diretório de fora (ex.: um package-lock.json
+  // solto no home do dev), quebrando a resolução de módulos (geist/font/sans etc.).
+  turbopack: { root: process.cwd() },
   // Não revela o framework no header (OWASP A05).
   poweredByHeader: false,
   // Render do PDF roda no server — esses pacotes não podem ser empacotados pelo bundler.

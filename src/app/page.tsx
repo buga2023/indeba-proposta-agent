@@ -1013,12 +1013,22 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
   const [itens, setItens] = useState<Record<string, number>>({}); // codigo → quantidade
   const [tamanhos, setTamanhos] = useState<Record<string, number>>({}); // codigo → índice escolhido em produto.embalagens
   const tamanhoIdx = (codigo: string) => tamanhos[codigo] ?? 0;
-  const setTamanho = (codigo: string, idx: number) => setTamanhos((m) => ({ ...m, [codigo]: idx }));
   // Itens próprios (fora do catálogo): preço digitado por humano → procedência MANUAL.
   const [custom, setCustom] = useState<{ id: number; nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; qtd: number }[]>([]);
-  // Produto do catálogo SEM preço (arquivado, aguardando precificação) → preço digitado
-  // por humano na hora de adicionar (codigo → texto digitado). Nunca vem da IA.
+  // Preço digitado por humano na tela (codigo → texto). Vale para QUALQUER produto:
+  // os arquivados (sem preço no catálogo) e também os precificados, cujo valor de
+  // catálogo é só o ponto de partida editável. Nunca vem da IA.
   const [precoManual, setPrecoManual] = useState<Record<string, string>>({});
+  const setTamanho = (codigo: string, idx: number) => {
+    setTamanhos((m) => ({ ...m, [codigo]: idx }));
+    // Cada tamanho tem preço próprio no catálogo: ao trocar, o campo volta a
+    // refletir o catálogo (o valor digitado valia para o tamanho anterior).
+    setPrecoManual((m) => {
+      const n = { ...m };
+      delete n[codigo];
+      return n;
+    });
+  };
   const [draft, setDraft] = useState<{ nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string }>({ nome: "", tamanho: "", unidade: "L", preco: "" });
   const [showCustom, setShowCustom] = useState(false);
   const nextId = useRef(1);
@@ -1044,12 +1054,23 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
   const q = busca.trim().toLowerCase();
   const porBusca = q ? disponiveis.filter((p) => `${p.nome} ${p.codigo} ${p.descricaoCurta}`.toLowerCase().includes(q)) : disponiveis;
   const filtrados = linhaFiltro === "todas" ? porBusca : porBusca.filter((p) => p.linha === linhaFiltro);
-  // null = catálogo sem preço E ainda sem valor digitado nessa sessão.
+  // Preço do catálogo para o tamanho escolhido (null = produto arquivado/sem preço).
+  const precoCatalogo = (p: Produto): number | null => {
+    const e = p.embalagens[tamanhoIdx(p.codigo)]?.preco;
+    return e == null ? null : Number(e);
+  };
+  // Houve digitação nessa sessão para esse produto? (campo em branco = sem edição)
+  const foiEditado = (p: Produto) => (precoManual[p.codigo] ?? "").trim() !== "";
+  // O que aparece no campo: o digitado, ou o do catálogo como ponto de partida.
+  const precoInput = (p: Produto): string => precoManual[p.codigo] ?? (precoCatalogo(p)?.toFixed(2) ?? "");
+  // null = sem preço utilizável ainda (arquivado sem digitação, ou digitação inválida).
+  // O valor digitado SEMPRE prevalece sobre o catálogo — nenhum produto tem preço fixo.
   const precoDe = (p: Produto): number | null => {
-    const doCatalogo = p.embalagens[tamanhoIdx(p.codigo)]?.preco;
-    if (doCatalogo != null) return Number(doCatalogo);
-    const digitado = Number((precoManual[p.codigo] ?? "").replace(",", "."));
-    return digitado > 0 ? digitado : null;
+    if (foiEditado(p)) {
+      const digitado = Number(precoManual[p.codigo].replace(",", "."));
+      return digitado > 0 ? digitado : null;
+    }
+    return precoCatalogo(p);
   };
   const selCat = Object.entries(itens)
     .map(([codigo, qtd]) => ({ produto: disponiveis.find((p) => p.codigo === codigo), qtd }))
@@ -1058,8 +1079,8 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
   const rows: { key: string; nome: string; sub: string; preco: number; qtd: number; onQtd: (q: number) => void }[] = [
     ...selCat.map((x) => {
       const preco = precoDe(x.produto) ?? 0;
-      const semPreco = x.produto.embalagens[0]?.preco == null;
-      return { key: x.produto.codigo, nome: x.produto.nome, sub: semPreco ? `${fmt(preco)} un. · preço digitado` : `${fmt(preco)} un. · catálogo`, preco, qtd: x.qtd, onQtd: (q: number) => setQtd(x.produto.codigo, q) };
+      const digitado = foiEditado(x.produto);
+      return { key: x.produto.codigo, nome: x.produto.nome, sub: digitado ? `${fmt(preco)} un. · preço digitado` : `${fmt(preco)} un. · catálogo`, preco, qtd: x.qtd, onQtd: (q: number) => setQtd(x.produto.codigo, q) };
     }),
     ...custom.map((c) => ({ key: `c${c.id}`, nome: c.nome, sub: `${fmt(Number(c.preco) || 0)} un. · ${c.tamanho}${c.unidade} · manual`, preco: Number(c.preco) || 0, qtd: c.qtd, onQtd: (q: number) => setCustomQtd(c.id, q) })),
   ];
@@ -1150,20 +1171,26 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
               };
             }
             // Com preço no catálogo: se o tamanho escolhido já é o primeiro do
-            // catálogo, comportamento de hoje (só o código, preço/tamanhos vêm de
-            // lá). Senão, manda a lista reordenada (só os tamanhos com preço real —
-            // igual ao filtro que o catálogo já aplica pro caso padrão).
+            // catálogo E ninguém editou o preço na tela, comportamento de hoje (só o
+            // código, preço/tamanhos vêm de lá). Senão, manda a lista reordenada (só
+            // os tamanhos com preço real — igual ao filtro que o catálogo já aplica
+            // pro caso padrão).
             const comPreco = x.produto.embalagens.filter((e) => e.preco != null);
-            if (comPreco[0] === embEscolhido) return { codigo: x.produto.codigo, quantidade: x.qtd };
+            const editado = foiEditado(x.produto);
+            if (comPreco[0] === embEscolhido && !editado) return { codigo: x.produto.codigo, quantidade: x.qtd };
+            // Preço editado na tela vale só para o tamanho cotado — os demais
+            // continuam com o valor do catálogo. custoDiluido do editado é zerado
+            // porque foi calculado em cima do preço antigo.
+            const precoEditado = precoDe(x.produto);
             return {
               codigo: x.produto.codigo,
               quantidade: x.qtd,
               embalagens: comEscolhidoPrimeiro(comPreco, embEscolhido).map((e) => ({
                 tamanho: e.tamanho,
                 unidade: e.unidade,
-                preco: e.preco!,
+                preco: e === embEscolhido && editado ? (precoEditado ?? 0).toFixed(2) : e.preco!,
                 diluicaoMax: e.diluicaoMax,
-                custoDiluido: e.custoDiluido,
+                custoDiluido: e === embEscolhido && editado ? null : e.custoDiluido,
               })),
             };
           }),
@@ -1187,7 +1214,7 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
       {montando && <MontandoOverlay />}
       <ScreenHead
         title="Proposta manual"
-        sub="Monte direto do catálogo — preço sempre do catálogo"
+        sub="Monte direto do catálogo — o preço vem do catálogo e pode ser ajustado"
         right={
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             {rows.length > 0 && (
@@ -1323,17 +1350,19 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
                         </div>
                       )}
                     </div>
-                    {semPrecoCatalogo ? (
-                      <input
-                        value={precoManual[p.codigo] ?? ""}
-                        onChange={(e) => setPrecoManual((m) => ({ ...m, [p.codigo]: e.target.value }))}
-                        placeholder="Preço R$"
-                        inputMode="decimal"
-                        disabled={incluido}
-                        style={{ ...campoInput, width: "92px", height: "32px", flex: "none", fontSize: "12.5px", padding: "0 8px" }}
-                      />
-                    ) : (
-                      <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--primary)", fontSize: "13px", whiteSpace: "nowrap" }}>{fmt(preco ?? 0)}</span>
+                    {/* Preço SEMPRE editável — o do catálogo é ponto de partida, não valor fixo. */}
+                    <input
+                      aria-label={`Preço de ${p.nome}`}
+                      data-testid={`preco-${p.codigo}`}
+                      value={precoInput(p)}
+                      onChange={(e) => setPrecoManual((m) => ({ ...m, [p.codigo]: e.target.value }))}
+                      placeholder="Preço R$"
+                      inputMode="decimal"
+                      title={foiEditado(p) ? "Preço digitado (sobrescreve o catálogo)" : "Preço do catálogo — pode editar"}
+                      style={{ ...campoInput, width: "92px", height: "32px", flex: "none", fontSize: "12.5px", padding: "0 8px", textAlign: "right", fontFamily: "var(--font-mono)", fontWeight: 700, color: foiEditado(p) ? "var(--text-strong)" : "var(--primary)", borderColor: foiEditado(p) ? "var(--primary)" : "var(--border-strong)" }}
+                    />
+                    {!semPrecoCatalogo && foiEditado(p) && (
+                      <span title="Preço alterado nesta proposta" style={{ fontSize: "10.5px", fontWeight: 700, color: "var(--primary)", flex: "none" }}>editado</span>
                     )}
                     <button onClick={() => add(p.codigo)} disabled={incluido || !podeAdicionar} title={incluido ? "Já incluído" : podeAdicionar ? "Adicionar" : "Digite o preço primeiro"} style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--border-strong)", background: incluido || !podeAdicionar ? "var(--surface-muted)" : "var(--surface)", cursor: incluido || !podeAdicionar ? "default" : "pointer", color: incluido || !podeAdicionar ? "var(--text-subtle)" : "var(--primary)", fontSize: "18px", lineHeight: 1, flex: "none" }}>+</button>
                   </div>
