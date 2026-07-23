@@ -32,6 +32,18 @@ const dec = (n: number) => n.toLocaleString("pt-BR", { minimumFractionDigits: 2,
 // Nº do orçamento derivado do id (mesma lógica do template-orcamento.ts).
 const numeroDoc = (id: string) => String((parseInt(id.replace(/[^0-9a-f]/gi, "").slice(0, 6) || "0", 16) % 9000) + 1000);
 const precoUnit = (it: PropostaItem) => Number(it.embalagens[0]?.preco ?? 0);
+// Quando a proposta foi gerada: data + hora, no fuso de quem está olhando (o ISO vem em
+// UTC do banco). Data completa com ano — o histórico atravessa anos e "23 jul." ficava
+// ambíguo. `hoje` deixa o dia corrente óbvio, que é o recorte da faxina de fim de dia.
+function dataHora(iso: string): { data: string; hora: string; hoje: boolean } {
+  const d = new Date(iso);
+  const agora = new Date();
+  return {
+    data: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }),
+    hora: d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    hoje: d.toDateString() === agora.toDateString(),
+  };
+}
 const unidadeDe = (it: PropostaItem) => {
   const e = it.embalagens[0];
   return e ? `${e.tamanho} ${e.unidade}` : "—";
@@ -872,7 +884,13 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
                     <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.cliente}</div>
                     <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{tipoLabel(p.tipo)} · {p.qtdItens} {p.qtdItens === 1 ? "item" : "itens"} · {STATUS_UI[p.status].label}</div>
                   </div>
-                  <div style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--primary)", fontSize: "14px", whiteSpace: "nowrap" }}>R$ {Number(p.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                  <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                    <div style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--primary)", fontSize: "14px" }}>R$ {Number(p.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</div>
+                    {/* Quando foi gerada — o mesmo carimbo que a faxina das 17h usa. */}
+                    <div style={{ fontSize: "11px", color: "var(--text-subtle)" }}>
+                      {dataHora(p.criadoEm).hoje ? `hoje ${dataHora(p.criadoEm).hora}` : `${dataHora(p.criadoEm).data} ${dataHora(p.criadoEm).hora}`}
+                    </div>
+                  </div>
                 </div>
               ))
             )}
@@ -2649,7 +2667,7 @@ function HistoryScreen({
   verArquivadas: boolean;
   onVerArquivadas: (v: boolean) => void;
 }) {
-  const cols = "1.7fr 1fr 80px 130px 80px 110px 150px";
+  const cols = "1.7fr 1fr 128px 130px 80px 110px 150px";
   const lista = propostas ?? [];
   // Faturamento = só o que o cliente APROVOU (status comercial real, não o que foi gerado).
   const aprovado = lista.filter((p) => p.status === "aprovada").reduce((s, p) => s + (Number(p.total) || 0), 0);
@@ -2717,7 +2735,7 @@ function HistoryScreen({
             {[
               { t: "Cliente", a: "left" },
               { t: "Segmento", a: "left" },
-              { t: "Data", a: "left" },
+              { t: "Gerada em", a: "left" },
               { t: "Status", a: "center" },
               { t: "Itens", a: "center" },
               { t: "Valor", a: "right" },
@@ -2727,7 +2745,10 @@ function HistoryScreen({
             ))}
           </div>
           {lista.map((p, idx) => {
-            const data = new Date(p.atualizadoEm).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+            // Coluna mostra quando a proposta foi GERADA (criadoEm), não a última edição —
+            // é esse o carimbo que a faxina de fim de expediente usa para decidir o corte.
+            const gerada = dataHora(p.criadoEm);
+            const editada = p.atualizadoEm !== p.criadoEm ? dataHora(p.atualizadoEm) : null;
             const su = STATUS_UI[p.status];
             return (
               <Hoverable
@@ -2738,7 +2759,14 @@ function HistoryScreen({
               >
                 <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-900)" }}>{p.cliente}</div>
                 <div style={{ fontSize: "13px", color: "var(--gray-500)", textTransform: "capitalize" }}>{p.segmento ? p.segmento.replace(/_/g, " ") : "—"}</div>
-                <div style={{ fontSize: "13px", color: "var(--gray-400)" }}>{data}</div>
+                <div title={editada ? `Editada em ${editada.data} às ${editada.hora}` : "Nunca editada depois de gerada"}>
+                  <div style={{ fontSize: "13px", color: gerada.hoje ? "var(--gray-900)" : "var(--gray-500)", fontWeight: gerada.hoje ? 600 : 400 }}>
+                    {gerada.data}
+                  </div>
+                  <div style={{ fontSize: "11.5px", color: "var(--gray-400)", fontFamily: "var(--font-mono)" }}>
+                    {gerada.hora}{gerada.hoje ? " · hoje" : ""}
+                  </div>
+                </div>
                 <div style={{ display: "flex", justifyContent: "center" }}>
                   {/* Status comercial editável: muda direto na lista (PATCH otimista). */}
                   <select
