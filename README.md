@@ -208,6 +208,9 @@ BASE_URL=http://127.0.0.1:3187 node tests/e2e/preco-todos-produtos.mjs
 Usam o pacote `playwright` que já é dependência do projeto (o mesmo do render de PDF) —
 não há `@playwright/test` nem runner extra.
 
+O que ainda falta validar e as pendências abertas estão em
+[`docs/proximos-passos.md`](docs/proximos-passos.md).
+
 ## Deploy
 
 Roda na Vercel (projeto `indeba-propostas-agent`,
