@@ -5,7 +5,8 @@ import type { Produto } from "@/lib/contracts";
 import { responder, WELCOME, SUGESTOES, NAO_SEI } from "./ajuda-chat-logic";
 
 // Assistente de AJUDA do Agente de Proposta. DETERMINÍSTICO e aterrado no catálogo
-// real (/api/catalogo) — preço/ficha vêm sempre do catálogo, nunca inventados
+// real (/api/catalogo) — ficha vem sempre do catálogo e o preço nasce dele
+// (ajustável por humano na tela); nada disso é inventado pela IA
 // (constituição §1.2). Não usa IA/Ollama. A lógica (o "cérebro") está em
 // ./ajuda-chat-logic e é testada em tests/unit/ajuda-chat.test.ts.
 

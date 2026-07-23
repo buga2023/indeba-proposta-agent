@@ -40,11 +40,14 @@ de implantação (referência visual B — Indeba Express, Matheus Resende). Det
 ## 1. Princípios (Constituição — não violar)
 
 1. **Backbone determinístico, IA como tempero.** Preço, imagem, embalagem e ficha vêm do
-   catálogo. A IA só toca em seleção de produto e texto de apresentação. `[DESIGN]`
+   catálogo. A IA só toca em seleção de produto e texto de apresentação. O preço do
+   catálogo é o *ponto de partida* e pode ser ajustado por decisão humana explícita na
+   tela (procedência vira `MANUAL`); o que a IA nunca faz é emitir um número. `[DESIGN]`
 2. **Dados Primeiro.** Nenhuma feature antes do schema correspondente em §4. Marco 0
    (catálogo) antes de qualquer outra coisa. `[DESIGN]`
-3. **Todo dado crítico cita a origem.** Cada item carrega `procedencia`; preço é sempre
-   `[CATÁLOGO]`. Se um valor não tem origem no catálogo, ele não sai. `[GUIA]`
+3. **Todo dado crítico cita a origem.** Cada item carrega `procedencia`; preço é
+   `[CATÁLOGO]` ou `MANUAL` (digitado por humano, sempre rotulado como tal na tela). O
+   que não pode existir é preço sem origem — vindo do modelo. `[GUIA]`
 4. **Toda seleção e todo texto são inspecionáveis e corrigíveis.** O vendedor revisa e
    ajusta antes do export. (Mateus: a referência da Indeba é "meio que editável".) `[FONTE]`
 5. **Degradação graciosa, nunca fabricação.** Sem produto/preço no catálogo → sinaliza a
@@ -265,7 +268,8 @@ revisa (opcional) e exporta.*
 - **T2.2** — Briefing → `PedidoScope`: a IA extrai as facetas do texto livre (§4.2).
 - **T2.3** — Seleção: recuperação híbrida (§2) → `SelecaoExplicada` (§4.3) → popula o `PropostaScope`.
 - **T2.4** — Geração do `texto_apresentacao` personalizado por cliente/segmento.
-- **T2.5** — Procedência por item gravada; preço/imagem sempre `[CATÁLOGO]`, nunca da IA.
+- **T2.5** — Procedência por item gravada; imagem sempre `[CATÁLOGO]` e preço
+  `[CATÁLOGO]` ou `MANUAL` (ajuste humano na tela) — nunca da IA.
 
 ### Marco 3 — Revisão, edição e refinamentos
 - **T3.1** — Edição inline com `override_preco` rastreado (§4.5).
@@ -290,7 +294,7 @@ approach do `editorial-pdf`) · **Vitest + Playwright Test** · deploy local na 
 
 | Risco | Mitigação | Princípio |
 |---|---|---|
-| Alucinação de preço | Dado sempre do catálogo; IA nunca emite número | §1.1, §1.5 |
+| Alucinação de preço | Preço nasce do catálogo; só muda por digitação humana rotulada na tela; IA nunca emite número | §1.1, §1.5 |
 | 200 imagens inconsistentes | Padronizar no Marco 0 (T0.3) | §1.2 |
 | Marca errada no PDF | Template parametriza identidade (Indeba × Indeba Express) | Achados |
 | Fidelidade visual à referência | Validar T1.2 contra a Taquipe | §1.4 |

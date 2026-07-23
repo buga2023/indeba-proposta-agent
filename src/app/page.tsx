@@ -6,7 +6,8 @@
  *   - Briefing  → POST /api/montar  (IA seleciona do catálogo; tipo "orcamento")
  *   - Revisão   → edita o PropostaScope real (quantidade + incluir/excluir)
  *   - PDF       → POST /api/pdf      (mesmo objeto que a tela mostra vira PDF — §4)
- *   - Catálogo  → GET  /api/catalogo (data/catalogo.json — preço sempre do catálogo)
+ *   - Catálogo  → GET  /api/catalogo (data/catalogo.json — preço nasce do catálogo,
+ *     ajustável por humano na tela; nunca vem da IA)
  *   - Histórico → GET  /api/propostas (log append-only de PDFs gerados — §1.8)
  *
  * Constituição: preço/embalagem vêm SEMPRE do catálogo; a IA só seleciona e escreve.
@@ -753,7 +754,7 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
           <div style={{ position: "relative", zIndex: 1, maxWidth: "560px" }}>
             <div style={{ fontSize: "12.5px", color: "rgba(255,255,255,.66)", fontWeight: 600, letterSpacing: ".02em", minHeight: "16px" }}>{hoje}</div>
             <div style={{ fontSize: "27px", fontWeight: 800, letterSpacing: "-.02em", marginTop: "5px" }}>{primeiroNome ? `${saudacao}, ${primeiroNome}` : saudacao}</div>
-            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.74)", marginTop: "7px", lineHeight: 1.55 }}>Monte a proposta direto do catálogo — escolha os produtos, defina as quantidades e gere o PDF no padrão Indeba. Preço e ficha sempre do catálogo.</div>
+            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.74)", marginTop: "7px", lineHeight: 1.55 }}>Monte a proposta direto do catálogo — escolha os produtos, defina as quantidades e gere o PDF no padrão Indeba. Ficha sempre do catálogo; o preço vem de lá e você ajusta se precisar.</div>
             <div style={{ display: "flex", gap: "10px", marginTop: "20px", flexWrap: "wrap" }}>
               <Hoverable onClick={() => setScreen("manual")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 18px", borderRadius: "12px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600, boxShadow: "var(--shadow-accent)" }} hover={{ background: "var(--accent-hover)" }}>
                 <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="2" /><path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" /></svg>Nova proposta
@@ -2097,7 +2098,7 @@ function ReviewScreen({
                   </div>
                   <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)", marginBottom: "4px", lineHeight: 1.3 }}>{p.nome}</div>
                   <div style={{ fontSize: "12.5px", color: "var(--gray-500)", lineHeight: 1.5, marginBottom: "12px", flex: 1 }}>{p.descricaoUso}</div>
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "2px 8px", background: "var(--gray-100)", borderRadius: "999px", marginBottom: "10px", width: "fit-content" }} title="Preço e ficha vêm do catálogo">
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "2px 8px", background: "var(--gray-100)", borderRadius: "999px", marginBottom: "10px", width: "fit-content" }} title="Ficha e preço vêm do catálogo — o preço pode ser ajustado aqui">
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#94A6B8" strokeWidth={1.5}>
                       <path d="M1 2h8M1 5h8M1 8h5" />
                     </svg>

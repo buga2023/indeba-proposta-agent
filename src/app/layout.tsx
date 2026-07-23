@@ -7,7 +7,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Plataforma de IA — Indeba",
-  description: "Plataforma de IA da Indeba: propostas, prospecção, posts e atendimento. Preço sempre do catálogo.",
+  description: "Plataforma de IA da Indeba: propostas, prospecção, posts e atendimento. Preço vem do catálogo e só muda por decisão humana — nunca da IA.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

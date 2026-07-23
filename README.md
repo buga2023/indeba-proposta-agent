@@ -6,10 +6,11 @@ do dia a dia comercial e administrativo: prospecção, posts de Instagram, atend
 financeiro, cobrança, compras, fiscal, contábil e contratos.
 
 A ideia por trás de tudo é a mesma: um backbone determinístico faz o trabalho que não
-pode errar, e a IA entra só onde faz sentido — selecionar e escrever. Preço, ficha,
-embalagem e imagem vêm sempre do catálogo; na prospecção, empresa e contato vêm de fontes
-reais (base da Receita e páginas web), nunca inventados pelo modelo. Se um dado crítico
-não tem origem confiável, ele não sai.
+pode errar, e a IA entra só onde faz sentido — selecionar e escrever. Ficha, embalagem e
+imagem vêm sempre do catálogo; o preço também nasce do catálogo e só muda por decisão
+humana explícita na tela (a IA nunca emite um número). Na prospecção, empresa e contato
+vêm de fontes reais (base da Receita e páginas web), nunca inventados pelo modelo. Se um
+dado crítico não tem origem confiável, ele não sai.
 
 ## O que tem dentro
 
@@ -17,7 +18,8 @@ não tem origem confiável, ele não sai.
   no catálogo e escreve o texto; o PDF sai no padrão Indeba. O tipo (orçamento,
   implantação ou comercial) é detectado pelo prompt e, em caso de dúvida, perguntado. Dá
   para refinar tudo antes de exportar. Existe também a via **manual**, sem IA, em que o
-  vendedor monta a proposta direto do catálogo.
+  vendedor monta a proposta direto do catálogo — escolhe o tamanho cotado e, se precisar,
+  ajusta o preço de qualquer produto (o do catálogo entra pré-preenchido).
 - **Prospecção** — descreve o que vende e o cliente ideal; o agente busca empresas reais
   (base da Receita Federal no Postgres, ou busca web via Tavily), minera contatos das
   páginas por regex e a IA escreve só a abordagem. Cada contato vem marcado como
@@ -182,8 +184,29 @@ pnpm test
 ```
 
 Cada área entrega o seu teste-guardião. Os dois principais: o preço que sai no PDF é
-sempre igual ao do catálogo, mesmo com a IA no fluxo; e, na prospecção, sem fonte web que
-case, o contato não sai e o prospect fica como estimado.
+sempre o que o humano viu na tela (do catálogo ou ajustado por ele), nunca um número
+emitido pela IA; e, na prospecção, sem fonte web que case, o contato não sai e o prospect
+fica como estimado.
+
+### E2E (Playwright)
+
+Rodam contra um servidor de verdade, com o auth desligado. Suba o app e execute:
+
+```bash
+AUTH_ENABLED=false pnpm exec next dev -H 127.0.0.1 -p 3187   # num terminal
+BASE_URL=http://127.0.0.1:3187 node tests/e2e/preco-editavel.mjs
+BASE_URL=http://127.0.0.1:3187 node tests/e2e/preco-todos-produtos.mjs
+```
+
+- `preco-editavel.mjs` — guardião do preço editável na Proposta manual: o campo vem
+  pré-preenchido com o catálogo, o valor digitado prevalece e chega ao
+  `/api/montar-estruturado` como embalagem explícita, só no tamanho cotado.
+- `preco-todos-produtos.mjs` — varre o catálogo inteiro (150 produtos, 197 embalagens)
+  conferindo que todo produto tem campo de preço editável com o valor certo de cada
+  tamanho.
+
+Usam o pacote `playwright` que já é dependência do projeto (o mesmo do render de PDF) —
+não há `@playwright/test` nem runner extra.
 
 ## Deploy
 
