@@ -98,7 +98,9 @@ export type PropostaScope = z.infer<typeof PropostaScope>;
 // Status COMERCIAL, MUTÁVEL — eixo separado do `status` do documento (rascunho/finalizada).
 // A proposta gerada é persistida (store de trabalho); o log append-only (lib/log.ts)
 // continua sendo a auditoria imutável de cada PDF emitido (constituição §8).
-export const StatusProposta = z.enum(["rascunho", "em_edicao", "enviada", "aprovada", "recusada"]);
+// `arquivada` é terminal e existe para tirar a proposta do dashboard sem apagar nada
+// (a faxina diária de fim de expediente usa esse status — src/lib/manutencao.ts).
+export const StatusProposta = z.enum(["rascunho", "em_edicao", "enviada", "aprovada", "recusada", "arquivada"]);
 export type StatusProposta = z.infer<typeof StatusProposta>;
 
 // Linha do histórico — leve (sem o scope inteiro) para listar.

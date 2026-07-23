@@ -75,8 +75,15 @@ export async function salvarProposta(scope: PropostaScope, autor: string): Promi
   return mapearRegistro(row);
 }
 
-export async function listarPropostas(limite = 200): Promise<PropostaResumo[]> {
-  const rows = await prisma.proposta.findMany({ orderBy: { atualizadoEm: "desc" }, take: limite });
+// Por padrão o dashboard/histórico NÃO mostra arquivadas (a faxina de fim de expediente
+// tira as de dias anteriores da frente — ver src/lib/manutencao.ts). Elas continuam no
+// banco e voltam à listagem com `incluirArquivadas`.
+export async function listarPropostas(limite = 200, incluirArquivadas = false): Promise<PropostaResumo[]> {
+  const rows = await prisma.proposta.findMany({
+    where: incluirArquivadas ? undefined : { status: { not: "arquivada" } },
+    orderBy: { atualizadoEm: "desc" },
+    take: limite,
+  });
   return rows.map(mapearResumo);
 }
 

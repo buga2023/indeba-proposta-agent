@@ -31,7 +31,9 @@ const scopeBase: PropostaScope = {
 
 describe("contrato de persistência da proposta", () => {
   it("StatusProposta cobre exatamente o fluxo comercial decidido", () => {
-    expect(StatusProposta.options).toEqual(["rascunho", "em_edicao", "enviada", "aprovada", "recusada"]);
+    // `arquivada` é terminal e NÃO é etapa do funil: entra pela faxina de fim de
+    // expediente (src/lib/manutencao.ts) para tirar do dashboard sem apagar nada.
+    expect(StatusProposta.options).toEqual(["rascunho", "em_edicao", "enviada", "aprovada", "recusada", "arquivada"]);
     expect(StatusProposta.safeParse("finalizada").success).toBe(false); // status do DOCUMENTO, não comercial
   });
 

@@ -127,7 +127,7 @@ const ChromeContext = createContext<{ openPalette: () => void; openAssistant: ()
 });
 
 /* tipo do registro do histórico (espelha EventoProposta da API, sem importar node) */
-type StatusProposta = "rascunho" | "em_edicao" | "enviada" | "aprovada" | "recusada";
+type StatusProposta = "rascunho" | "em_edicao" | "enviada" | "aprovada" | "recusada" | "arquivada";
 // Espelha PropostaResumo (src/lib/contracts/proposta.ts): proposta persistida + status.
 type PropostaLog = {
   id: string;
@@ -149,6 +149,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
   enviada: { label: "Enviada", bg: "#DBEAFE", fg: "#2563EB" },
   aprovada: { label: "Aprovada", bg: "#DCFCE7", fg: "#16A34A" },
   recusada: { label: "Recusada", bg: "#FEE2E2", fg: "#DC2626" },
+  arquivada: { label: "Arquivada", bg: "#E2E8F0", fg: "#475569" },
 };
 
 type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config" | "perfil";
@@ -198,6 +199,9 @@ export default function Home() {
   const [catalogoErro, setCatalogoErro] = useState<string | null>(null);
   const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
   const [propostasErro, setPropostasErro] = useState<string | null>(null);
+  // A faxina de fim de expediente arquiva as propostas de dias anteriores; este toggle
+  // traz de volta as arquivadas (elas nunca são apagadas, só saem da listagem padrão).
+  const [verArquivadas, setVerArquivadas] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
 
   // Usuário da sessão atual — personaliza saudação e sidebar.
@@ -229,12 +233,12 @@ export default function Home() {
         .catch((e) => setCatalogoErro(e instanceof Error ? e.message : "Erro"));
     }
     if (screen === "history" && propostas === null) {
-      fetch("/api/propostas")
+      fetch(verArquivadas ? "/api/propostas?arquivadas=1" : "/api/propostas")
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
         .then((d: { propostas: PropostaLog[] }) => setPropostas(d.propostas))
         .catch((e) => setPropostasErro(e instanceof Error ? e.message : "Erro"));
     }
-  }, [screen, catalogo, propostas]);
+  }, [screen, catalogo, propostas, verArquivadas]);
 
   function changeQty(codigo: string, d: number) {
     setScope((s) =>
@@ -644,6 +648,11 @@ export default function Home() {
             goToManual={novaProposta}
             onReabrir={reabrirProposta}
             onStatus={mudarStatus}
+            verArquivadas={verArquivadas}
+            onVerArquivadas={(v) => {
+              setVerArquivadas(v);
+              setPropostas(null); // força o refetch com o novo filtro
+            }}
           />
         )}
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
@@ -2629,12 +2638,16 @@ function HistoryScreen({
   goToManual,
   onReabrir,
   onStatus,
+  verArquivadas,
+  onVerArquivadas,
 }: {
   propostas: PropostaLog[] | null;
   erro: string | null;
   goToManual: () => void;
   onReabrir: (id: string) => void;
   onStatus: (id: string, status: StatusProposta) => void;
+  verArquivadas: boolean;
+  onVerArquivadas: (v: boolean) => void;
 }) {
   const cols = "1.7fr 1fr 80px 130px 80px 110px 150px";
   const lista = propostas ?? [];
@@ -2654,8 +2667,13 @@ function HistoryScreen({
       <div style={{ margin: "-28px -28px 24px" }}>
         <ScreenHead
           title="Propostas"
-          sub={propostas === null ? "Carregando…" : `${lista.length} proposta(s) gerada(s)`}
+          sub={propostas === null ? "Carregando…" : `${lista.length} proposta(s) ${verArquivadas ? "(incluindo arquivadas)" : "gerada(s)"}`}
           right={
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12.5px", color: "var(--gray-500)", cursor: "pointer", whiteSpace: "nowrap" }} title="A faxina de fim de expediente arquiva as propostas de dias anteriores — elas continuam no banco">
+              <input type="checkbox" checked={verArquivadas} onChange={(e) => onVerArquivadas(e.target.checked)} style={{ cursor: "pointer" }} />
+              Mostrar arquivadas
+            </label>
             <Hoverable
               base={{ display: "flex", alignItems: "center", gap: "8px", height: "38px", padding: "0 18px", background: "var(--orange-500)", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(236,122,28,.35)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease" }}
               hover={{ background: "#D2680F", boxShadow: "0 4px 14px rgba(236,122,28,.5)", transform: "translateY(-1px)" }}
@@ -2667,6 +2685,7 @@ function HistoryScreen({
               </svg>
               Nova proposta
             </Hoverable>
+            </div>
           }
         />
       </div>

@@ -19,7 +19,9 @@ dado crítico não tem origem confiável, ele não sai.
   implantação ou comercial) é detectado pelo prompt e, em caso de dúvida, perguntado. Dá
   para refinar tudo antes de exportar. Existe também a via **manual**, sem IA, em que o
   vendedor monta a proposta direto do catálogo — escolhe o tamanho cotado e, se precisar,
-  ajusta o preço de qualquer produto (o do catálogo entra pré-preenchido).
+  ajusta o preço de qualquer produto (o do catálogo entra pré-preenchido). Às 17h um cron
+  arquiva as propostas de dias anteriores, então o dashboard começa cada dia limpo — sem
+  apagar nada (o checkbox *"Mostrar arquivadas"* traz de volta).
 - **Prospecção** — descreve o que vende e o cliente ideal; o agente busca empresas reais
   (base da Receita Federal no Postgres, ou busca web via Tavily), minera contatos das
   páginas por regex e a IA escreve só a abordagem. Cada contato vem marcado como
@@ -80,8 +82,9 @@ para prospecção, o store de propostas, os chamados, os e-mails aprendidos e a 
 | `/api/montar-estruturado` | POST | itens escolhidos à mão → `PropostaScope` (sem IA) |
 | `/api/pdf` | POST | `PropostaScope` → PDF (Playwright) |
 | `/api/catalogo` | GET | catálogo de produtos |
-| `/api/propostas` | GET · POST | log/store das propostas |
+| `/api/propostas` | GET · POST | log/store das propostas (`?arquivadas=1` inclui as arquivadas) |
 | `/api/propostas/[id]` | GET · PATCH | abre e atualiza uma proposta |
+| `/api/manutencao/arquivar-antigas` | GET | faxina do dashboard (Vercel Cron, 17h BRT) |
 | `/api/prospectar` | POST | prospecção (Receita/Tavily + mineração + IA) |
 | `/api/instagram` | POST | briefing → posts de Instagram |
 | `/api/referencias/sync` | GET · POST | perfil de estilo (GET na UI; POST alimentado por n8n/Drive) |
@@ -153,6 +156,7 @@ O arquivo de exemplo comenta cada uma; o resumo:
 | `GESTOR_EMAIL` | cobrança | destinatário do resumo (editável no painel) |
 | `ADMIN_EMAILS` / `AUTH_SESSION_SECRET` | com auth | e-mails que nascem admin e assinatura do cookie |
 | `UPSTASH_REDIS_REST_URL` / `_TOKEN` | prod | rate limit e log durável |
+| `CRON_SECRET` | prod | libera a faxina diária do dashboard (sem ela a rota responde 503) |
 
 Sem `TAVILY_API_KEY` a prospecção roda só com o conhecimento do modelo. Sem Ollama, a
 proposta degrada para o caminho determinístico; a prospecção e o atendimento dependem da
@@ -207,6 +211,11 @@ BASE_URL=http://127.0.0.1:3187 node tests/e2e/preco-todos-produtos.mjs
 
 Usam o pacote `playwright` que já é dependência do projeto (o mesmo do render de PDF) —
 não há `@playwright/test` nem runner extra.
+
+Há também `scripts/verificar-faxina.mjs`, que valida a faxina do dashboard contra um
+Postgres de verdade (semeia propostas de datas diferentes, chama a rota do cron e confere
+o resultado; limpa o que criou no fim). Precisa do banco no ar (`pnpm db:up`) e de um
+servidor com `CRON_SECRET` definido.
 
 O que ainda falta validar e as pendências abertas estão em
 [`docs/proximos-passos.md`](docs/proximos-passos.md).

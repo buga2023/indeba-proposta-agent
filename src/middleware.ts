@@ -3,8 +3,10 @@ import type { NextRequest } from "next/server";
 import { authAtiva, validarSessao } from "@/lib/auth";
 import { rateLimitOk } from "@/lib/ratelimit";
 
-// Rotas de API públicas: a própria autenticação. Tudo o mais exige sessão.
-const API_PUBLICAS = ["/api/login", "/api/logout", "/api/cadastro"];
+// Rotas de API públicas: a própria autenticação, mais o cron de manutenção — que não
+// recebe cookie de sessão e se autentica pelo CRON_SECRET dentro da própria rota
+// (503 se a variável não existir, 401 se o bearer não bater).
+const API_PUBLICAS = ["/api/login", "/api/logout", "/api/cadastro", "/api/manutencao/arquivar-antigas"];
 
 function ipDe(req: NextRequest): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";

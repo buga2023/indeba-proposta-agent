@@ -7,9 +7,11 @@ import { respostaErro } from "@/lib/erro";
 export const runtime = "nodejs";
 
 // Histórico = propostas persistidas (store de trabalho, com status comercial mutável).
-export async function GET() {
+// `?arquivadas=1` traz também as que a faxina de fim de expediente tirou da frente.
+export async function GET(req: NextRequest) {
   try {
-    return NextResponse.json({ propostas: await listarPropostas() });
+    const incluirArquivadas = req.nextUrl.searchParams.get("arquivadas") === "1";
+    return NextResponse.json({ propostas: await listarPropostas(200, incluirArquivadas) });
   } catch (e) {
     return respostaErro(e, "Falha ao listar propostas", 500);
   }

@@ -39,6 +39,7 @@ Em *Settings → Environment Variables* (Production):
 | `AUTH_SESSION_SECRET` | um valor **longo e aleatório** (ex.: `openssl rand -hex 32`) |
 | `UPSTASH_REDIS_REST_URL` | do painel do Upstash |
 | `UPSTASH_REDIS_REST_TOKEN` | do painel do Upstash |
+| `CRON_SECRET` | outro valor longo e aleatório — libera a faxina diária (§7) |
 
 > As **senhas ficam só na Vercel** (e no seu `.env.local`), nunca no git.
 
@@ -61,3 +62,30 @@ pnpm build          # valida o build de produção (inclui middleware/edge)
 1. Acesse a URL → tela de **login** (crie sua conta pelo link "Criar conta").
 2. Envie 10–20 briefings seguidos → propostas montadas, sem bloqueio (dentro do rate limit).
 3. Baixe um PDF → confira preços do catálogo.
+
+## 7. Faxina do dashboard (Vercel Cron)
+
+`vercel.json` agenda `GET /api/manutencao/arquivar-antigas` às **20:00 UTC = 17h de
+Brasília**, no fim do expediente. A rota arquiva toda proposta criada antes da meia-noite
+de Brasília do dia corrente — ou seja, sobram no dashboard só as geradas naquele dia.
+
+- **Arquivar não apaga.** O registro continua no banco com o `scope` inteiro; só sai da
+  listagem padrão. Na tela Propostas, o checkbox *"Mostrar arquivadas"* traz de volta, e
+  o seletor de status desfaz uma a uma.
+- A rota não recebe cookie (o cron não manda sessão): ela se autentica pelo header
+  `Authorization: Bearer $CRON_SECRET`, que a Vercel injeta sozinha nos crons do projeto.
+  **Sem `CRON_SECRET` configurado a rota responde 503** e nada é arquivado — ela nunca
+  fica aberta por omissão.
+- O corte é sempre calculado em Brasília (UTC-3 fixo desde 2019), nunca no fuso do
+  servidor; `tests/unit/manutencao.test.ts` guarda esse limite.
+
+Para disparar à mão (ex.: primeira faxina, sem esperar as 17h):
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" \
+  https://indeba-propostas-agent.vercel.app/api/manutencao/arquivar-antigas
+# → {"ok":true,"arquivadas":N,"corte":"...T03:00:00.000Z"}
+```
+
+> Cron na Vercel tem limite de execuções por plano (no Hobby, uma vez por dia) — este
+> agendamento já é diário, então cabe.
