@@ -126,6 +126,18 @@ export function paginaProduto(
   const simples = !f?.indicadoPara?.length && !f?.beneficios?.length && !f?.diluicoes?.length && !diluicaoEmbalagem && !f?.caracteristicas && !f?.rendimento;
   const semVenda = !simples && !f?.indicadoPara?.length && !f?.beneficios?.length;
 
+  // Fichas MUITO longas (Primmax Sanap: 6 benefícios grandes + 7 finalidades de diluição)
+  // não cabiam na página e o overflow:hidden cortava o último painel e o rodapé de contato.
+  // O peso do texto decide um modo denso (tipografia/espaçamento mais justos) em vez de
+  // cortar conteúdo. Limiar calibrado no catálogo inteiro: pega as 3 fichas mais pesadas,
+  // que são exatamente as que chegavam perto do limite da página.
+  const pesoFicha =
+    (f?.descricao?.length ?? 0) +
+    (f?.beneficios ?? []).reduce((s, b) => s + b.length, 0) +
+    (f?.diluicoes ?? []).reduce((s, d) => s + d.uso.length + d.razao.length + (d.comoAplicar?.length ?? 0), 0) +
+    (f?.rendimento?.length ?? 0);
+  const denso = pesoFicha > 1100;
+
   const indicado = f?.indicadoPara?.length
     ? `<div><div class="pp-label">Indicado para</div><div class="pp-icons">${f.indicadoPara
         .map((i) => `<div class="pp-ic"><span class="ic">${iconeSvg(i.icone)}</span><span>${esc(i.label)}</span></div>`)
@@ -171,7 +183,11 @@ export function paginaProduto(
   // da ficha técnica; o único valor que aparece em qualquer lugar do card é o da cotada,
   // no bloco de Valor da rail. Ordenada por volume crescente (L convertido pra ml
   // equivalente, já que alguns produtos misturam L/ml nas embalagens — ex.: Letah Gel).
-  const volumeOrdenacao = (e: (typeof item.embalagens)[number]) => (e.unidade === "L" ? e.tamanho * 1000 : e.tamanho);
+  // Ordena por volume equivalente em ml. kg conta como litro (produtos são líquidos/pó
+  // com densidade ~1): sem isso "23 kg" (23) vinha antes de "5 L" (5000) e a lista saía
+  // fora de ordem — 23 kg · 58 kg · 5 L.
+  const volumeOrdenacao = (e: (typeof item.embalagens)[number]) =>
+    e.unidade === "L" || e.unidade === "kg" ? e.tamanho * 1000 : e.tamanho;
   const disponiveis = item.embalagens.length > 1 ? [...item.embalagens].sort((a, b) => volumeOrdenacao(a) - volumeOrdenacao(b)) : [];
   // A cotada aparece na lista com selo "cotada" — a lista é informação da ficha
   // técnica (todos os tamanhos que o produto tem), e sem o selo o cliente lia os
@@ -236,7 +252,7 @@ export function paginaProduto(
     ? `<img class="pp-wm-logo" src="${logoWhite}" alt="Indeba Express"/>`
     : `<div class="pp-wm"><b>indeba</b><span>express</span><i>.</i></div>`;
 
-  return `<section class="prodpg${simples ? " prodpg-simples" : semVenda ? " prodpg-sem-venda" : ""}">
+  return `<section class="prodpg${simples ? " prodpg-simples" : semVenda ? " prodpg-sem-venda" : ""}${denso ? " prodpg-denso" : ""}">
     <aside class="pp-rail">
       ${wm}
       ${eyebrow}
@@ -580,15 +596,25 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-emb-cotada { border-color: ${ORANGE}; box-shadow: inset 0 0 0 1px ${ORANGE}; }
 .pp-emb-cotada i { display: inline-block; font-family: "Geist", sans-serif; font-style: normal; font-size: 8px;
   font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: ${ORANGE}; margin-left: 7px; }
-/* Diluição pode ter frases longas (uso e razão) — coluna única sempre, com
-   k/v nas pontas (space-between); em duas colunas estreitas o texto colide.
-   Características (valores curtos: "Líquido", "Amarelo") ganha grid 2 colunas
+/* Diluição: finalidade (curta, cinza) à esquerda e a instrução à direita. Antes as duas
+   iam nas pontas com space-between e a instrução em bandeira à direita — numa frase
+   longa ("2 partes de Primmax DGClor para até 100 partes de solução; pré-lavar…") isso
+   virava um bloco de 4 linhas com a margem esquerda serrilhada, difícil de ler. Agora é
+   grid de colunas fixas (a instrução alinhada à esquerda, alinhando entre as linhas) e
+   um fio separando cada finalidade.
+   Características (valores curtos: "Líquido", "Amarelo") continua num grid 2 colunas
    à parte (.pp-rows-cols), com k/v coladinhos — space-between ali jogaria o
    valor pra ponta da célula, longe da chave. */
-.pp-rows { display: flex; flex-direction: column; gap: 6px; }
+.pp-rows { display: flex; flex-direction: column; }
 .pp-rows-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
 .pp-row { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; }
 .pp-row .k { color: #6b7787; } .pp-row .v { font-weight: 700; color: ${NAVY}; text-align: right; }
+.pp-rows .pp-row { display: grid; grid-template-columns: 31% 1fr; gap: 14px; align-items: baseline;
+  padding: 7px 0; border-top: 1px solid #dfe6ee; }
+.pp-rows .pp-row:first-child { border-top: none; padding-top: 1px; }
+.pp-rows .pp-row .k { display: block; font-size: 9.5px; line-height: 1.35; }
+.pp-rows .pp-row .k::first-letter { text-transform: uppercase; } /* fichas trazem tudo em caixa baixa */
+.pp-rows .pp-row .v { font-weight: 600; text-align: left; line-height: 1.5; }
 .pp-rows-cols .pp-row { justify-content: flex-start; }
 .pp-rows-cols .pp-row .k { flex: none; } .pp-rows-cols .pp-row .v { text-align: left; }
 /* Modo de uso (3 colunas: finalidade/diluição/como aplicar) — só quando a ficha
@@ -608,6 +634,22 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-rlist li:first-child { border-top: none; padding-top: 0; }
 .pp-rlist li b { display: block; color: ${ORANGE}; font-weight: 800; font-size: 9.5px; }
 .pp-rlist li span { display: block; color: #6b7787; font-size: 8.5px; line-height: 1.3; margin-top: 1px; }
+/* Modo denso — fichas muito longas (ver "denso" em paginaProduto). Mesma página, mesmo
+   conteúdo: só tipografia e respiros mais justos, pra nada ser cortado pelo overflow. */
+.prodpg-denso .pp-tit { font-size: 22px; }
+.prodpg-denso .pp-desc { font-size: 10.5px; line-height: 1.45; }
+.prodpg-denso .pp-main { gap: 12px; }
+.prodpg-denso .pp-label { margin-bottom: 9px; padding: 5px 11px; }
+.prodpg-denso .pp-benes { gap: 5px; }
+.prodpg-denso .pp-be p { font-size: 9.8px; line-height: 1.35; }
+.prodpg-denso .pp-specs { gap: 7px; }
+.prodpg-denso .pp-panel { padding: 9px 12px; }
+.prodpg-denso .pp-panel h4 { padding-bottom: 6px; margin-bottom: 6px; }
+.prodpg-denso .pp-rows .pp-row { padding: 4.5px 0; font-size: 9.2px; }
+.prodpg-denso .pp-rows .pp-row .k { font-size: 8.8px; }
+.prodpg-denso .pp-rows .pp-row .v { line-height: 1.4; }
+.prodpg-denso .pp-rows-cols .pp-row { font-size: 9.2px; }
+.prodpg-denso .pp-contact { padding-top: 10px; margin-top: 10px; }
 .pp-contact { border-top: 1px solid #e5ebf2; padding-top: 13px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .pp-c-left b { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 1px; color: ${NAVY}; text-transform: uppercase; }
 .pp-c-left span { font-size: 8.5px; letter-spacing: .5px; color: #9aa3ae; text-transform: uppercase; }

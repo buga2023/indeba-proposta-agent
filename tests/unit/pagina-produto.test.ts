@@ -83,6 +83,22 @@ describe("paginaProduto", () => {
     expect(paginaProduto(cotada20, "data:,x")).toContain('<span class="pp-emb-chip pp-emb-cotada">20 L<i>cotada</i></span>');
   });
 
+  // kg conta como litro na ordenação (densidade ~1): sem isso "23 kg" (23) vinha antes de
+  // "5 L" (5000) e o Primmax DGClor listava 23 kg · 58 kg · 5 L.
+  it("ordena tamanhos em kg junto com os em litro", () => {
+    const emKg: PropostaItem = {
+      ...item,
+      embalagens: [
+        { tamanho: 5, unidade: "L", preco: "120.00", diluicaoMax: "1:100", custoDiluido: null },
+        { tamanho: 23, unidade: "kg", preco: "500.00", diluicaoMax: null, custoDiluido: null },
+        { tamanho: 58, unidade: "kg", preco: "1200.00", diluicaoMax: null, custoDiluido: null },
+      ],
+    };
+    const html = paginaProduto(emKg, "data:,x");
+    expect(html.indexOf("5 L<i>cotada</i>")).toBeLessThan(html.indexOf("23 kg"));
+    expect(html.indexOf("23 kg")).toBeLessThan(html.indexOf("58 kg"));
+  });
+
   it("ordena 'Embalagens disponíveis' por volume crescente, independente da ordem no payload", () => {
     const foraDeOrdem: PropostaItem = {
       ...item,
