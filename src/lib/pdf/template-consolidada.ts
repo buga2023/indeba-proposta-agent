@@ -1,5 +1,6 @@
 import type { PropostaItem, PropostaScope } from "../contracts";
 import { consolidadaDefaults } from "../consolidada-defaults";
+import { custoLitroDiluido } from "../diluicao";
 
 export const esc = (s: string) =>
   String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -28,6 +29,20 @@ export const fmtRendimento = (raw: string): string => {
 
 const NAVY = "#0b2a4a";
 const ORANGE = "#e8622a";
+
+// Margem inferior do PDF (mm) para a Consolidada: ZERO. A faixa branca no pé de
+// TODA página ("todas as páginas estão com esse recorte", áudio do Matheus 24/07)
+// era a margem inferior do page.pdf (15mm) onde o Chromium desenhava o rodapé de
+// paginação: o fundo colorido (capa cinza, rail navy, onda) parava ali e o
+// documento ficava com um degrau branco na borda. Com margem 0 o desenho sangra
+// até a borda da página; a paginação passa a ser desenhada DENTRO do HTML
+// (.pgnum), o que só é possível porque cada seção é garantidamente 1 página
+// (altura fixa + overflow hidden) e o total é conhecido (totalPaginas()).
+export const MARGEM_INFERIOR_CONSOLIDADA = 0;
+const ALTURA_PAGINA = `${297 - MARGEM_INFERIOR_CONSOLIDADA}mm`; // A4 297mm, margem superior 0
+
+// capa + apresentação + comodatos + 1 página por produto + condições comerciais.
+export const totalPaginas = (qtdItens: number) => qtdItens + 4;
 
 // Set de ícones inline (traço navy). Chave desconhecida → ponto genérico. Usados
 // em "indicado para", cards, comodatos e condições. Paths simples, estilo linha.
@@ -76,13 +91,26 @@ export const iconeSvg = (nome: string, cor = NAVY): string =>
 // Contatos do rodapé da ficha e das condições (payload — ver ConsolidadaBloco.contato).
 export type ContatoConsolidada = { whatsapp: string | null; emailConsultor: string | null };
 
+// Paginação DENTRO da página (o rodapé nativo do Chromium exigia margem inferior,
+// e essa margem era a faixa branca que cortava o fundo de toda página). Números
+// vêm da própria montagem — cada seção é 1 página garantida (altura fixa).
+const pgnum = (n: number, total: number) => `<div class="pgnum">Página ${n}/${total}</div>`;
+
 // Uma página A4 rica por produto — rail navy (marca/foto/preço) + coluna de conteúdo
 // (texto/specs). `numero` é só o número de página ("06"), nunca HTML pronto — o
 // runmark "Proposta de Solução NN" é montado aqui, igual às outras seções (mesmo
 // texto, só reposicionado). `simples`/`semVenda`: sinalizam o quão rica é a ficha
 // (nenhum dado técnico/venda vs. só técnico) — o layout em rail já centraliza o
 // conteúdo disponível sozinho, então essas classes hoje são só um sinal semântico.
-export function paginaProduto(item: PropostaItem, dataUri: string, contato?: ContatoConsolidada, numero?: string, logoWhite?: string, siteUrl = ""): string {
+export function paginaProduto(
+  item: PropostaItem,
+  dataUri: string,
+  contato?: ContatoConsolidada,
+  numero?: string,
+  logoWhite?: string,
+  siteUrl = "",
+  totalPag?: number,
+): string {
   const f = item.ficha ?? null;
   const titulo = esc(item.nome); // nome comercial real — sempre bate com a ficha técnica em PDF (nunca a categoria de marketing)
   const categoria = f?.titulo && f.titulo !== item.nome ? `<div class="pp-eyebrow-cat">${esc(f.titulo)}</div>` : "";
@@ -145,9 +173,17 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   // equivalente, já que alguns produtos misturam L/ml nas embalagens — ex.: Letah Gel).
   const volumeOrdenacao = (e: (typeof item.embalagens)[number]) => (e.unidade === "L" ? e.tamanho * 1000 : e.tamanho);
   const disponiveis = item.embalagens.length > 1 ? [...item.embalagens].sort((a, b) => volumeOrdenacao(a) - volumeOrdenacao(b)) : [];
+  // A cotada aparece na lista com selo "cotada" — a lista é informação da ficha
+  // técnica (todos os tamanhos que o produto tem), e sem o selo o cliente lia os
+  // outros tamanhos como se também estivessem sendo ofertados naquele preço
+  // (áudio do Matheus 24/07: "marquei o de 5 litros, ele puxou a embalagem de 20").
   const embalagens = disponiveis.length
     ? `<div class="pp-panel"><h4>Embalagens disponíveis</h4><div class="pp-emb">${disponiveis
-        .map((e) => `<span class="pp-emb-chip">${e.tamanho} ${esc(e.unidade)}</span>`)
+        .map((e) =>
+          e === item.embalagens[0]
+            ? `<span class="pp-emb-chip pp-emb-cotada">${e.tamanho} ${esc(e.unidade)}<i>cotada</i></span>`
+            : `<span class="pp-emb-chip">${e.tamanho} ${esc(e.unidade)}</span>`,
+        )
         .join("")}</div></div>`
     : "";
   const carac = f?.caracteristicas
@@ -160,8 +196,18 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   // Zona de preço: só a embalagem cotada (embalagens[0]) — nunca lista os demais
   // tamanhos com valor aqui (isso é o bloco "disponíveis" acima, sem preço).
   const cotada = item.embalagens[0];
+  // Valor por litro DILUÍDO — calculado do preço cotado + a diluição da embalagem
+  // cotada (lib/diluicao.ts). Na Proposta Manual essa diluição é a que o consultor
+  // digita na montagem (decisão do Gustavo 25/07). É o argumento comercial de verdade
+  // ("o principal", áudio 24/07): sem ele o cliente compara R$/embalagem, não R$/litro
+  // de uso. Sem diluição informada → não aparece (produto pronto pra uso).
+  const diluido = cotada ? custoLitroDiluido(item.embalagens) : null;
   const valores = cotada
-    ? `<div class="pp-price"><div class="pp-v-label">Valor</div><div class="pp-v-row"><span class="pp-v-size">${cotada.tamanho} ${esc(cotada.unidade)}</span><span class="pp-v-price">${brl(cotada.preco)}</span></div><p class="pp-v-note">Consulte condições especiais para compras de maiores volumes.</p></div>`
+    ? `<div class="pp-price"><div class="pp-v-label">Valor</div><div class="pp-v-row"><span class="pp-v-size">${cotada.tamanho} ${esc(cotada.unidade)}</span><span class="pp-v-price">${brl(cotada.preco)}</span></div>${
+        diluido
+          ? `<div class="pp-diluido"><div class="pp-d-label">Valor por litro diluído</div><div class="pp-d-row"><span class="pp-d-price">${esc(diluido.texto)}</span><span class="pp-d-rat">diluição de ${esc(diluido.rotulo)}</span></div></div>`
+          : ""
+      }<p class="pp-v-note">Consulte condições especiais para compras de maiores volumes.</p></div>`
     : "";
 
   // Link pra ficha técnica real (PDF em public/fichas-tecnicas/) — só quando o produto
@@ -179,8 +225,12 @@ export function paginaProduto(item: PropostaItem, dataUri: string, contato?: Con
   ].filter(Boolean).join("");
 
   const specs = diluicoes || modoUso || rendimento || embalagens || carac ? `<div class="pp-specs">${diluicoes}${modoUso}${rendimento}${embalagens}${carac}</div>` : "";
+  // Página de produto não usa o .pgnum das outras seções: a própria rail já assina o
+  // rodapé ("Página 07/11 · Proposta de Solução"), e os dois no mesmo canto colidiam.
   const runmark = numero ? `<div class="pp-runmark">Proposta de Solução <b>${esc(numero)}</b></div>` : "";
-  const railFoot = numero ? `<div class="pp-railfoot">Página ${esc(numero)} · Proposta de Solução</div>` : "";
+  const railFoot = numero
+    ? `<div class="pp-railfoot">Página ${esc(numero)}${totalPag ? `/${totalPag}` : ""} · Proposta de Solução</div>`
+    : "";
 
   const wm = logoWhite
     ? `<img class="pp-wm-logo" src="${logoWhite}" alt="Indeba Express"/>`
@@ -253,7 +303,10 @@ export function consolidadaHtml(
   const capaRow = (icone: string, rot: string, val: string) =>
     `<div class="cc-row"><span class="cc-ic">${iconeSvg(icone)}</span><div><div class="cc-r">${esc(rot)}</div><div class="cc-v">${esc(val)}</div></div></div>`;
 
+  const total = totalPaginas(scope.itens.length);
+
   const capa = `<section class="capa">
+    ${pgnum(1, total)}
     ${wave("wave")}
     <div class="capa-wm">indeba express</div>
     <img class="capa-logo" src="${assets.logo}" alt="Indeba Express"/>
@@ -275,6 +328,7 @@ export function consolidadaHtml(
   </section>`;
 
   const apres = `<section class="pg sec">
+    ${pgnum(2, total)}
     ${wave("wave wave-sec")}
     ${header("02")}
     ${secLbl("APRESENTAÇÃO")}
@@ -291,6 +345,7 @@ export function consolidadaHtml(
   </section>`;
 
   const comod = `<section class="pg sec">
+    ${pgnum(3, total)}
     ${wave("wave wave-sec")}
     ${header("03")}
     ${secLbl("COMODATOS OFERECIDOS")}
@@ -310,15 +365,16 @@ export function consolidadaHtml(
   const contato = c.contato ?? { whatsapp: null, emailConsultor: null };
   // Numeração do header deriva do índice real (capa=01 sem header, apresentação=02,
   // comodatos=03, 1 página por produto a partir de 04) — bate com "Página X/Y" do
-  // rodapé (contador nativo do Chromium), já que cada seção é garantidamente 1 página.
+  // rodapé (.pgnum), já que cada seção é garantidamente 1 página.
   const PRIMEIRO_PRODUTO = 4;
   const produtos = scope.itens
     .map((it, idx) =>
-      paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite, assets.siteUrl),
+      paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite, assets.siteUrl, total),
     )
     .join("");
 
   const cond = `<section class="pg sec">
+    ${pgnum(total, total)}
     ${wave("wave wave-sec")}
     ${header(String(PRIMEIRO_PRODUTO + scope.itens.length).padStart(2, "0"))}
     ${secLbl("CONDIÇÕES COMERCIAIS")}
@@ -351,14 +407,26 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
    passar de 1 página impressa (ex.: comodatos com mais itens), o box CSS cresce além da
    página física e a onda (position:absolute;bottom:0, ancorada nesse box) passa a flutuar
    no meio/cortar — porque "bottom" nesse caso não é mais o rodapé da página real, é o fim
-   de um box que já vazou pra página seguinte. 278mm ≈ A4 (297mm) menos a margem inferior do
-   PDF (15mm, render.ts) menos folga de segurança; overflow:hidden é o cinto-e-suspensório
-   se algum conteúdo ainda assim passar do previsto (fica invisível, não mancha a página seguinte). */
-.sec { page-break-after: always; overflow: hidden; padding-bottom: 28mm; height: 278mm; }
+   de um box que já vazou pra página seguinte. ALTURA_PAGINA = A4 (297mm) menos a margem
+   inferior do PDF (MARGEM_INFERIOR_CONSOLIDADA, render.ts) — EXATAMENTE a área imprimível,
+   sem folga: a folga de 4-7mm que existia aqui era a faixa branca no pé de toda página
+   ("todas as páginas estão com esse recorte", áudio do Matheus 24/07), porque o fundo
+   colorido (capa cinza, rail navy) parava antes da borda. overflow:hidden é o
+   cinto-e-suspensório se algum conteúdo ainda assim passar do previsto (fica invisível,
+   não mancha a página seguinte). */
+.sec { page-break-after: always; overflow: hidden; padding-bottom: 28mm; height: ${ALTURA_PAGINA}; }
 .sec:last-of-type { page-break-after: auto; }
 /* Onda decorativa das páginas internas: SEMPRE atrás do conteúdo (mesma regra da capa) —
    28mm de faixa de segurança acima (padding-bottom do .sec) garante que texto nunca encoste. */
-.sec > *:not(.wave-sec) { position: relative; z-index: 1; }
+.sec > *:not(.wave-sec):not(.pgnum) { position: relative; z-index: 1; }
+/* Paginação impressa DENTRO da página (substitui o rodapé nativo do Chromium, que exigia
+   margem inferior — a faixa branca que cortava o fundo). Ancorada no canto inferior
+   ESQUERDO da seção (que tem position:relative e altura de página cheia): a arte
+   (onda/quarto de círculo navy) mora no canto inferior direito de toda página, e ali
+   o número cairia em cima dela. */
+.pgnum { position: absolute; left: 12mm; bottom: 6mm; z-index: 3;
+  font-size: 7.5px; letter-spacing: .3px; color: #9aa7b8; }
+.prodpg .pgnum { color: rgba(255,255,255,.45); } /* sobre a rail navy */
 .wave.wave-sec { width: 30mm; } /* especificidade > .wave sozinho — .wave define 96mm mais abaixo (capa) */
 .pg-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5ebf2; padding-bottom: 8px; margin-bottom: 18px; }
 .hlogo { height: 46px; } .hpg { color: #7a8696; font-size: 11px; } .hpg b { color: ${NAVY}; }
@@ -389,17 +457,20 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .eq .ei svg { width: 22px; height: 22px; }
 .eq h3 { color: ${NAVY}; font-weight: 700; font-size: 11px; line-height: 1.3; }
 .eq p { color: #6b7787; font-size: 9.5px; line-height: 1.4; }
-.adv { background: ${NAVY}; border-radius: 16px; padding: 22px 26px; color: #fff; margin-top: 20px; }
-.adv h4 { text-align: center; font-weight: 700; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: rgba(255,255,255,.85); margin-bottom: 16px; }
-.adv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-.av { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
-.av .chk { width: 26px; height: 26px; border-radius: 50%; background: ${ORANGE}; display: flex; align-items: center; justify-content: center; flex: none; }
-.av .chk svg { width: 14px; height: 14px; }
-.av span { font-size: 9.5px; line-height: 1.4; color: rgba(255,255,255,.82); }
+/* Vantagens do Comodato: texto ERA 9.5px e ficava ilegível no impresso (áudio do
+   Matheus 24/07 — "aumentar a letra, está muito pequenininho"). Escala toda a
+   caixa junto (título, check e espaçamento) pra continuar equilibrada. */
+.adv { background: ${NAVY}; border-radius: 16px; padding: 26px 28px; color: #fff; margin-top: 20px; }
+.adv h4 { text-align: center; font-weight: 700; font-size: 13px; letter-spacing: 1.8px; text-transform: uppercase; color: rgba(255,255,255,.9); margin-bottom: 18px; }
+.adv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.av { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.av .chk { width: 30px; height: 30px; border-radius: 50%; background: ${ORANGE}; display: flex; align-items: center; justify-content: center; flex: none; }
+.av .chk svg { width: 16px; height: 16px; }
+.av span { font-size: 12px; line-height: 1.45; color: #fff; }
 /* Capa — fundo claro (padrão validado), decorativos SEMPRE atrás do conteúdo */
-.capa { height: 275mm; position: relative; display: flex; flex-direction: column; align-items: center;
+.capa { height: ${ALTURA_PAGINA}; position: relative; display: flex; flex-direction: column; align-items: center;
   padding-top: 60px; padding-bottom: 110px; page-break-after: always; overflow: hidden; background: #f6f7f9; }
-.capa > *:not(.wave):not(.capa-wm) { position: relative; z-index: 1; }
+.capa > *:not(.wave):not(.capa-wm):not(.pgnum) { position: relative; z-index: 1; }
 .wave { position: absolute; z-index: 0; right: 0; bottom: 0; width: 96mm; height: auto; }
 /* Marca-d'água gigante atrás do card — decorativa, nunca disputa leitura com o conteúdo */
 .capa-wm { position: absolute; z-index: 0; top: 46%; left: 50%; transform: translate(-50%, -50%);
@@ -443,7 +514,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 /* Página de produto — layout "rail": faixa navy à esquerda (marca/foto/preço) +
    coluna de conteúdo à direita (texto/specs). Altura fixa (mesmo raciocínio do
    .sec acima — impede que a página estoure e vaze layout pra página seguinte). */
-.prodpg { height: 278mm; overflow: hidden; page-break-after: always; display: flex; }
+.prodpg { height: ${ALTURA_PAGINA}; overflow: hidden; page-break-after: always; display: flex; position: relative; }
 .pp-rail { width: 79mm; flex: none; color: #fff; background: linear-gradient(165deg, ${NAVY} 0%, #06203f 100%);
   display: flex; flex-direction: column; padding: 32px 26px 26px; }
 .pp-wm { font-size: 17px; letter-spacing: .2px; }
@@ -453,7 +524,10 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-eyebrow { margin-top: 12px; font-size: 10px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-eyebrow b { color: ${ORANGE}; font-weight: 700; margin-left: 6px; }
 .pp-figure { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px 0; }
-.pp-imgcard { width: 240px; height: 460px; background: #f3f6fa; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px -14px rgba(0,0,0,.35); }
+/* Card da foto: fundo BRANCO (não mais cinza) — a foto de produto (recorte com fundo
+   removido) fica sobre branco, sem a "caixa cinza" que o Matheus apontou ("o meio ficou
+   branco com cinza", áudio 24/07). A borda fina segura o card contra a rail navy. */
+.pp-imgcard { width: 240px; height: 460px; background: #fff; border: 1px solid #e6ebf2; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px -14px rgba(0,0,0,.35); }
 .pp-imgcard img { max-width: 208px; max-height: 428px; object-fit: contain; }
 .pp-price { border-top: 1px solid rgba(255,255,255,.16); padding-top: 16px; }
 .pp-v-label { font-size: 9.5px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
@@ -461,6 +535,13 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-v-size { font-size: 12px; font-weight: 700; color: ${ORANGE}; letter-spacing: .5px; }
 .pp-v-price { font-family: "Geist Mono", monospace; font-size: 27px; font-weight: 700; letter-spacing: .3px; }
 .pp-v-note { font-size: 9px; line-height: 1.4; color: rgba(255,255,255,.5); margin-top: 8px; max-width: 200px; }
+/* Valor por litro diluído — segundo destaque da rail (o preço da embalagem manda
+   no tamanho; este manda na cor). Fio superior separa do preço sem virar outro card. */
+.pp-diluido { margin-top: 12px; padding-top: 11px; border-top: 1px dashed rgba(255,255,255,.22); }
+.pp-d-label { font-size: 9px; letter-spacing: 1.6px; color: rgba(255,255,255,.55); text-transform: uppercase; }
+.pp-d-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 5px; }
+.pp-d-price { font-family: "Geist Mono", monospace; font-size: 17px; font-weight: 700; color: ${ORANGE}; }
+.pp-d-rat { font-size: 8.5px; color: rgba(255,255,255,.6); }
 .pp-ficha-link { display: inline-block; margin-top: 12px; font-size: 9px; font-weight: 700; color: ${ORANGE}; text-decoration: underline; }
 .pp-railfoot { margin-top: 14px; font-size: 8.5px; letter-spacing: 1.2px; color: rgba(255,255,255,.4); text-transform: uppercase; }
 /* Coluna de conteúdo: centraliza o bloco principal verticalmente — sem isso,
@@ -494,6 +575,11 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-emb { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .pp-emb-chip { display: inline-block; font-family: "Geist Mono", monospace; font-weight: 700; font-size: 12px; color: ${NAVY};
   background: #fff; border: 1px solid #d6dee8; border-radius: 8px; padding: 7px 16px; }
+/* Chip da embalagem COTADA: os demais tamanhos são só informação da ficha técnica —
+   o selo evita que o cliente leia a lista como oferta de todos os tamanhos. */
+.pp-emb-cotada { border-color: ${ORANGE}; box-shadow: inset 0 0 0 1px ${ORANGE}; }
+.pp-emb-cotada i { display: inline-block; font-family: "Geist", sans-serif; font-style: normal; font-size: 8px;
+  font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: ${ORANGE}; margin-left: 7px; }
 /* Diluição pode ter frases longas (uso e razão) — coluna única sempre, com
    k/v nas pontas (space-between); em duas colunas estreitas o texto colide.
    Características (valores curtos: "Líquido", "Amarelo") ganha grid 2 colunas

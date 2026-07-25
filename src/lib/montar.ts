@@ -171,6 +171,13 @@ export async function montarPropostaEstruturada(
       );
 
   const tipo = entrada.tipo ?? "implantacao";
+  // Condições comerciais preenchidas já na montagem (tela manual) substituem os
+  // defaults — continuam editáveis na Revisão, é o MESMO campo.
+  const bloco = blocoConsolidada(tipo, consultor);
+  const consolidada =
+    bloco && entrada.condicoesConsolidada?.length
+      ? { ...bloco, condicoes: { ...bloco.condicoes, itens: entrada.condicoesConsolidada } }
+      : bloco;
   return PropostaScope.parse({
     id: randomUUID(),
     criadoEm: new Date().toISOString(),
@@ -181,7 +188,7 @@ export async function montarPropostaEstruturada(
     textoApresentacao: texto,
     itens,
     condicoesComerciais: { ...CONDICOES_PADRAO, ...entrada.condicoes },
-    consolidada: blocoConsolidada(tipo, consultor),
+    consolidada,
   });
 }
 

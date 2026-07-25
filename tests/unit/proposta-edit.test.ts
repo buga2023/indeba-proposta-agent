@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { setPrecoEmbalagem, normalizarPreco, extrairNumero, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento } from "@/lib/proposta-edit";
+import { setPrecoEmbalagem, normalizarPreco, extrairNumero, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo } from "@/lib/proposta-edit";
 import type { PropostaScope } from "@/lib/contracts";
 
 const scope = {
@@ -17,7 +17,7 @@ describe("proposta-edit", () => {
     expect(normalizarPreco("abc")).toBe("0.00");
   });
   it("setPrecoEmbalagem atualiza sem mutar o original", () => {
-    const novo = setPrecoEmbalagem(scope, "A", 0, "250,90");
+    const novo = setPrecoEmbalagem(scope, 0, 0, "250,90");
     expect(novo.itens[0].embalagens[0].preco).toBe("250.90");
     expect(scope.itens[0].embalagens[0].preco).toBe("100.00"); // imutável
   });
@@ -37,6 +37,28 @@ describe("proposta-edit", () => {
     });
   });
 
+  // Mesmo produto em duas embalagens = dois itens: editar um NÃO pode arrastar o outro
+  // (por isso os setters trabalham por posição, não por código).
+  it("edita só a posição pedida quando o mesmo código aparece duas vezes", () => {
+    const duplicado = {
+      ...scope,
+      itens: [
+        { codigo: "A", quantidade: 1, embalagens: [{ tamanho: 5, unidade: "L", preco: "130.00", diluicaoMax: null, custoDiluido: null }] },
+        { codigo: "A", quantidade: 1, embalagens: [{ tamanho: 20, unidade: "L", preco: "480.00", diluicaoMax: null, custoDiluido: null }] },
+      ],
+    } as unknown as PropostaScope;
+
+    const comPreco = setPrecoEmbalagem(duplicado, 1, 0, "500,00");
+    expect(comPreco.itens[0].embalagens[0].preco).toBe("130.00");
+    expect(comPreco.itens[1].embalagens[0].preco).toBe("500.00");
+
+    const comQtd = setQuantidadeAbsoluta(duplicado, 0, 4);
+    expect(comQtd.itens.map((i) => i.quantidade)).toEqual([4, 1]);
+
+    expect(posicaoDoCodigo(duplicado, "A")).toBe(0); // chat (só sabe o código) age no primeiro
+    expect(posicaoDoCodigo(duplicado, "ZZZ")).toBe(-1);
+  });
+
   it("setClienteCampo troca só o campo pedido, sem mutar o original", () => {
     const novo = setClienteCampo(scope, "cnpj", "00.000.000/0001-00");
     expect(novo.cliente.cnpj).toBe("00.000.000/0001-00");
@@ -45,9 +67,9 @@ describe("proposta-edit", () => {
   });
 
   it("setQuantidadeAbsoluta define a quantidade (nunca abaixo de 1)", () => {
-    expect(setQuantidadeAbsoluta(scope, "A", 5).itens[0].quantidade).toBe(5);
-    expect(setQuantidadeAbsoluta(scope, "A", 0).itens[0].quantidade).toBe(1);
-    expect(setQuantidadeAbsoluta(scope, "A", -3).itens[0].quantidade).toBe(1);
+    expect(setQuantidadeAbsoluta(scope, 0, 5).itens[0].quantidade).toBe(5);
+    expect(setQuantidadeAbsoluta(scope, 0, 0).itens[0].quantidade).toBe(1);
+    expect(setQuantidadeAbsoluta(scope, 0, -3).itens[0].quantidade).toBe(1);
   });
 
   it("setCondicaoComercial troca só o campo pedido", () => {
@@ -99,31 +121,31 @@ describe("proposta-edit", () => {
   // Chat "limitar_orcamento" — corta do mais barato pro mais caro, nunca esvazia a proposta.
   describe("cortarParaOrcamento", () => {
     const itens = [
-      { codigo: "A", precoUnit: 100, quantidade: 1 },
-      { codigo: "B", precoUnit: 300, quantidade: 1 },
-      { codigo: "C", precoUnit: 50, quantidade: 1 },
+      { pos: 0, precoUnit: 100, quantidade: 1 },
+      { pos: 1, precoUnit: 300, quantidade: 1 },
+      { pos: 2, precoUnit: 50, quantidade: 1 },
     ]; // total = 450
 
     it("corta os mais baratos primeiro até caber no teto", () => {
       const r = cortarParaOrcamento(itens, 450, 200);
-      expect(r.codigosRemover).toEqual(["C", "A"]); // 450 - 50 = 400 (ainda > 200) - 100 = 300... continua
+      expect(r.posicoesRemover).toEqual([2, 0]); // 450 - 50 = 400 (ainda > 200) - 100 = 300... continua
     });
 
     it("já dentro do teto → não corta nada", () => {
       const r = cortarParaOrcamento(itens, 450, 1000);
-      expect(r.codigosRemover).toEqual([]);
+      expect(r.posicoesRemover).toEqual([]);
       expect(r.totalFinal).toBe(450);
     });
 
     it("nunca esvazia a proposta — para com 1 item restante mesmo sem caber no teto", () => {
       const r = cortarParaOrcamento(itens, 450, 10);
-      expect(r.codigosRemover.length).toBe(2); // sobra 1 item (o mais caro), mesmo passando do teto
+      expect(r.posicoesRemover.length).toBe(2); // sobra 1 item (o mais caro), mesmo passando do teto
     });
 
     it("considera quantidade no total removido", () => {
-      const comQtd = [{ codigo: "A", precoUnit: 100, quantidade: 3 }, { codigo: "B", precoUnit: 50, quantidade: 1 }];
+      const comQtd = [{ pos: 0, precoUnit: 100, quantidade: 3 }, { pos: 1, precoUnit: 50, quantidade: 1 }];
       const r = cortarParaOrcamento(comQtd, 350, 100);
-      expect(r.codigosRemover).toEqual(["B"]); // remove o mais barato por unidade primeiro
+      expect(r.posicoesRemover).toEqual([1]); // remove o mais barato por unidade primeiro
     });
   });
 });

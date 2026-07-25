@@ -29,6 +29,12 @@ export const EntradaEstruturada = z.object({
   }),
   itens: z.array(ItemEntrada).min(1),
   textoApresentacao: z.string().optional(), // se vier, procedência MANUAL
+  // Condições comerciais do modelo Consolidada já preenchidas na tela de montagem
+  // (mesma lista que a Revisão edita — ver ConsolidadaBloco.condicoes.itens). Ausente:
+  // usa os defaults. Título/ícone acompanham o texto porque a lista é editável em bloco.
+  condicoesConsolidada: z
+    .array(z.object({ titulo: z.string(), texto: z.string(), icone: z.string() }))
+    .optional(),
   condicoes: z
     .object({
       validade: z.string(),

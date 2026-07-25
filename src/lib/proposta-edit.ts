@@ -7,15 +7,23 @@ export function normalizarPreco(v: string): string {
   return Number.isFinite(n) ? n.toFixed(2) : "0.00";
 }
 
-// Retorna um novo scope com o preço da embalagem [idx] do item [codigo] alterado.
+// O MESMO produto pode aparecer mais de uma vez na proposta em embalagens diferentes
+// (Primmax DT 5 L e 20 L como itens separados) — então o código NÃO identifica um item:
+// quem identifica é a POSIÇÃO em scope.itens. Os setters abaixo trabalham por posição;
+// `posicaoDoCodigo` resolve o caminho do chat de correção, que só sabe o código (age no
+// primeiro item daquele produto).
+export const posicaoDoCodigo = (scope: PropostaScope, codigo: string): number =>
+  scope.itens.findIndex((it) => it.codigo === codigo);
+
+// Retorna um novo scope com o preço da embalagem [idx] do item na posição [pos] alterado.
 // Imutável: não muta o scope recebido (React state).
-export function setPrecoEmbalagem(scope: PropostaScope, codigo: string, idx: number, valor: string): PropostaScope {
+export function setPrecoEmbalagem(scope: PropostaScope, pos: number, idx: number, valor: string): PropostaScope {
   return {
     ...scope,
-    itens: scope.itens.map((it) =>
-      it.codigo !== codigo
+    itens: scope.itens.map((it, i) =>
+      i !== pos
         ? it
-        : { ...it, embalagens: it.embalagens.map((e, i) => (i === idx ? { ...e, preco: normalizarPreco(valor) } : e)) },
+        : { ...it, embalagens: it.embalagens.map((e, j) => (j === idx ? { ...e, preco: normalizarPreco(valor) } : e)) },
     ),
   };
 }
@@ -39,28 +47,28 @@ export function setClienteCampo(
 }
 
 // Quantidade ABSOLUTA (não delta) — mínimo 1, nunca vira 0/negativo por engano de parse.
-export function setQuantidadeAbsoluta(scope: PropostaScope, codigo: string, qtd: number): PropostaScope {
+export function setQuantidadeAbsoluta(scope: PropostaScope, pos: number, qtd: number): PropostaScope {
   const q = Math.max(1, Math.round(qtd));
-  return { ...scope, itens: scope.itens.map((it) => (it.codigo === codigo ? { ...it, quantidade: q } : it)) };
+  return { ...scope, itens: scope.itens.map((it, i) => (i === pos ? { ...it, quantidade: q } : it)) };
 }
 
 // Chat "limitar_orcamento": corta, do item de menor preço unitário pro maior, até o total
 // caber no teto — nunca esvazia a proposta (para com 1 item restante). "Menos importante" não
 // tem julgamento pra IA fazer aqui: preço unitário é o único critério objetivo disponível.
 export function cortarParaOrcamento(
-  itens: { codigo: string; precoUnit: number; quantidade: number }[],
+  itens: { pos: number; precoUnit: number; quantidade: number }[],
   total: number,
   teto: number,
-): { codigosRemover: string[]; totalFinal: number } {
+): { posicoesRemover: number[]; totalFinal: number } {
   const ordenados = [...itens].sort((a, b) => a.precoUnit - b.precoUnit);
-  const codigosRemover: string[] = [];
+  const posicoesRemover: number[] = [];
   let totalFinal = total;
   for (const it of ordenados) {
-    if (totalFinal <= teto || itens.length - codigosRemover.length <= 1) break;
-    codigosRemover.push(it.codigo);
+    if (totalFinal <= teto || itens.length - posicoesRemover.length <= 1) break;
+    posicoesRemover.push(it.pos);
     totalFinal -= it.precoUnit * it.quantidade;
   }
-  return { codigosRemover, totalFinal };
+  return { posicoesRemover, totalFinal };
 }
 
 export function setCondicaoComercial(

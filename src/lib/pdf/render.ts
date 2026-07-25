@@ -5,7 +5,7 @@ import type { PropostaScope } from "../contracts";
 import { documentoHtml } from "./template";
 import { orcamentoHtml } from "./template-orcamento";
 import { comercialHtml } from "./template-comercial";
-import { consolidadaHtml } from "./template-consolidada";
+import { consolidadaHtml, MARGEM_INFERIOR_CONSOLIDADA } from "./template-consolidada";
 
 // Abre o navegador conforme o ambiente:
 //  - Vercel (serverless): Chromium enxuto do @sparticuz/chromium + playwright-core.
@@ -92,7 +92,7 @@ export function montarDocumento(
   imagens: Record<string, string>,
   banner: string,
   asset: (p: string) => string,
-): { html: string; footer: string; marginTop: string } {
+): { html: string; footer: string; marginTop: string; marginBottom?: string } {
   switch (scope.tipo) {
     case "orcamento":
       return { html: orcamentoHtml(scope), footer: FOOTER_PAG, marginTop: "12mm" };
@@ -109,8 +109,13 @@ export function montarDocumento(
           fontMono: asset("/fonts/geist-mono-variable.woff2"),
           siteUrl: process.env.SITE_URL || "",
         }),
-        footer: FOOTER_PAG,
+        // Sem rodapé nativo: a paginação da Consolidada é desenhada no próprio HTML
+        // (.pgnum). O rodapé do Chromium só existe dentro da margem inferior, e é
+        // justamente essa margem que virava a faixa branca cortando o fundo de toda
+        // página — com margem 0 o desenho sangra até a borda.
+        footer: "",
         marginTop: "0mm",
+        marginBottom: `${MARGEM_INFERIOR_CONSOLIDADA}mm`,
       };
     case "comercial":
       return {
@@ -174,12 +179,14 @@ export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
     return await page.pdf({
       format: "A4",
       printBackground: true,
-      displayHeaderFooter: true,
+      // Rodapé nativo só quando o template pede um (a Consolidada imprime a paginação
+      // dentro do HTML — ver montarDocumento).
+      displayHeaderFooter: Boolean(doc.footer),
       headerTemplate: "<div></div>",
-      footerTemplate: doc.footer,
+      footerTemplate: doc.footer || "<div></div>",
       // margens L/R zero: banner/imagens sangram full-width; conteúdo tem padding
       // próprio (.pg). Margem superior varia por tipo (ver montarDocumento).
-      margin: { top: doc.marginTop, bottom: "15mm", left: "0", right: "0" },
+      margin: { top: doc.marginTop, bottom: doc.marginBottom ?? "15mm", left: "0", right: "0" },
     });
   } finally {
     await browser.close();

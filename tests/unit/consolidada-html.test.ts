@@ -48,6 +48,24 @@ describe("consolidadaHtml", () => {
     expect(html).toContain("Proposta de Solução <b>06</b>");
   });
 
+  // A faixa branca no pé de toda página (áudio do Matheus 24/07) era a margem inferior do
+  // page.pdf, onde ficava o rodapé nativo. Agora a seção ocupa a página A4 inteira e a
+  // paginação é impressa no HTML — regressão aqui significa o corte branco de volta.
+  it("seções ocupam a página A4 cheia (sangria até a borda) e imprimem a paginação no HTML", () => {
+    const html = consolidadaHtml(scope, { A: "data:,x", B: "data:,y" }, assets);
+    expect(html).toContain("height: 297mm"); // capa/seções/páginas de produto
+    expect(html).not.toContain("278mm");
+    // capa=1 · apresentação=2 · comodatos=3 · produtos=4,5 · condições=6
+    expect(html).toContain("Página 1/6");
+    expect(html).toContain("Página 2/6");
+    expect(html).toContain("Página 3/6");
+    expect(html).toContain("Página 6/6");
+    // páginas de produto assinam na própria rail (não repetem o .pgnum)
+    expect(html).toContain("Página 04/6 · Proposta de Solução");
+    expect(html).toContain("Página 05/6 · Proposta de Solução");
+    expect(html.match(/class="pgnum"/g)?.length).toBe(4); // capa + 2 seções + condições
+  });
+
   it("onda decorativa (wave-sec) presente em apresentação/comodatos/condições", () => {
     const html = consolidadaHtml(scope, { A: "data:,x", B: "data:,y" }, assets);
     expect(html.match(/wave-sec/g)?.length).toBeGreaterThanOrEqual(3);

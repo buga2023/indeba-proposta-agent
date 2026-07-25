@@ -399,7 +399,7 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-alclor.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-alclor.pdf",
       "ativo": false,
       "embalagens": [
@@ -601,7 +601,7 @@
         "circulacao_cip",
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-cip-dtx.jpg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-dtx.pdf",
       "ativo": false,
       "embalagens": [
@@ -808,7 +808,7 @@
         "diluidor_automatico",
         "circulacao_cip"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-cl.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cl.pdf",
       "ativo": false,
       "embalagens": [
@@ -876,7 +876,7 @@
         "pulverizacao",
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-des.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-des.pdf",
       "ativo": false,
       "embalagens": [
@@ -939,7 +939,7 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-dga.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-dga.pdf",
       "ativo": false,
       "embalagens": [
@@ -1091,7 +1091,7 @@
         "diluidor_automatico",
         "circulacao_cip"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-dt.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-dt.pdf",
       "ativo": false,
       "embalagens": [
@@ -1159,7 +1159,7 @@
       "metodos": [
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-hort-flv.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-hort-flv.pdf",
       "ativo": false,
       "embalagens": [
@@ -1270,7 +1270,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-inox.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-inox.pdf",
       "ativo": false,
       "embalagens": [
@@ -1318,7 +1318,7 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-ldf-plus.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-ldf-plus.pdf",
       "ativo": false,
       "embalagens": [
@@ -1377,7 +1377,7 @@
         "imersao",
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-ldf.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-ldf.pdf",
       "ativo": true,
       "embalagens": [
@@ -1739,7 +1739,7 @@
         "manual",
         "pulverizacao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-rewax.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-rewax.pdf",
       "ativo": false,
       "embalagens": [
@@ -1954,7 +1954,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-sandry.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sandry.pdf",
       "ativo": false,
       "embalagens": [
@@ -2188,7 +2188,7 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-sec.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sec.pdf",
       "ativo": false,
       "embalagens": [
@@ -2245,7 +2245,7 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-sol-plus.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sol-plus.pdf",
       "ativo": false,
       "embalagens": [
@@ -2371,7 +2371,7 @@
         "pulverizacao",
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/primmax-suncare-adt.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-suncare-adt.pdf",
       "ativo": false,
       "embalagens": [
@@ -2482,7 +2482,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/letah-gel.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letah-gel.pdf",
       "ativo": false,
       "embalagens": [
@@ -2535,7 +2535,7 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/letah-max.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letah-max.pdf",
       "ativo": false,
       "embalagens": [
@@ -2593,7 +2593,7 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/letah-oxy-cd.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letah-oxy-cd.pdf",
       "ativo": false,
       "embalagens": [
@@ -2652,7 +2652,7 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/letah-oxy-hpc.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letah-oxy-hpc.pdf",
       "ativo": false,
       "embalagens": [
@@ -2717,7 +2717,7 @@
       "metodos": [
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/letah-plus.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letah-plus.pdf",
       "ativo": false,
       "embalagens": [
@@ -2768,7 +2768,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/letahclor-plus.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letahclor-plus.pdf",
       "ativo": false,
       "embalagens": [
@@ -2818,7 +2818,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/letahclor.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letahclor.pdf",
       "ativo": false,
       "embalagens": [
@@ -3053,7 +3053,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/dermol-grease.png",
       "fichaTecnicaPath": "/fichas-tecnicas/dermol-grease.pdf",
       "ativo": false,
       "embalagens": [
@@ -3310,7 +3310,7 @@
         "imersao",
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/candall-rf.png",
       "fichaTecnicaPath": "/fichas-tecnicas/candall-rf.pdf",
       "ativo": false,
       "embalagens": [
@@ -3920,7 +3920,7 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/softs-max-karicia.png",
       "fichaTecnicaPath": "/fichas-tecnicas/softs-max-karicia.pdf",
       "ativo": false,
       "embalagens": [
@@ -3981,7 +3981,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/softs-concentrado.png",
       "fichaTecnicaPath": "/fichas-tecnicas/softs-concentrado.pdf",
       "ativo": false,
       "embalagens": [
@@ -5715,7 +5715,7 @@
         "manual",
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/candall-tmi.png",
       "fichaTecnicaPath": "/fichas-tecnicas/candall-tmi.pdf",
       "ativo": false,
       "embalagens": [
@@ -5782,7 +5782,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/emulsoil-130.png",
       "fichaTecnicaPath": "/fichas-tecnicas/emulsoil-130.pdf",
       "ativo": false,
       "embalagens": [
@@ -5902,7 +5902,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/indeba-t.png",
       "fichaTecnicaPath": "/fichas-tecnicas/indeba-t.pdf",
       "ativo": false,
       "embalagens": [
@@ -5964,7 +5964,7 @@
         "diluidor_automatico",
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-24.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-24.pdf",
       "ativo": false,
       "embalagens": [
@@ -6091,7 +6091,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-ht-1.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-1.pdf",
       "ativo": false,
       "embalagens": [
@@ -6250,7 +6250,7 @@
         "pulverizacao",
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-ht-3.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-3.pdf",
       "ativo": false,
       "embalagens": [
@@ -6359,7 +6359,7 @@
         "pulverizacao",
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-ht-5.jpg",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-5.pdf",
       "ativo": false,
       "embalagens": [
@@ -6417,7 +6417,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-ht-6.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-6.pdf",
       "ativo": false,
       "embalagens": [
@@ -6461,7 +6461,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-ht-7.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-7.pdf",
       "ativo": false,
       "embalagens": [
@@ -6515,7 +6515,7 @@
         "pulverizacao",
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spar-ht-8.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-8.pdf",
       "ativo": false,
       "embalagens": [
@@ -6759,7 +6759,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/spartec-karicia.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spartec-karicia.pdf",
       "ativo": false,
       "embalagens": [
@@ -6828,7 +6828,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/metalic-1-plus.png",
       "fichaTecnicaPath": "/fichas-tecnicas/metalic-1-plus.pdf",
       "ativo": false,
       "embalagens": [
@@ -6884,7 +6884,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/metalic-1.png",
       "fichaTecnicaPath": "/fichas-tecnicas/metalic-1.pdf",
       "ativo": false,
       "embalagens": [
@@ -7036,7 +7036,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/metalic-4-si.png",
       "fichaTecnicaPath": "/fichas-tecnicas/metalic-4-si.pdf",
       "ativo": false,
       "embalagens": [

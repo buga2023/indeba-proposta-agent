@@ -15,7 +15,9 @@
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
 import type { PropostaScope, PropostaItem, Produto, Funcao, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
 import type { Usuario } from "@/lib/auth";
-import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento } from "@/lib/proposta-edit";
+import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo } from "@/lib/proposta-edit";
+import { custoLitroDiluido } from "@/lib/diluicao";
+import { consolidadaDefaults } from "@/lib/consolidada-defaults";
 import { AjudaChat } from "@/components/ajuda-chat";
 import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
@@ -28,6 +30,25 @@ import { CommandPalette, type PaletteItem } from "./_app/command-palette";
 const fmt = (n: number) => "R$ " + n.toFixed(2).replace(".", ",");
 // Valor sem "R$" (preview do PDF de orçamento espelha o template, que omite o símbolo).
 const dec = (n: number) => n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Diluição digitada pelo consultor → forma canônica "1:N" (aceita "1:20", "20", "1 : 20").
+// Só número → assume 1:N (a parte de produto é sempre 1). Vazio/inválido → null (produto
+// pronto pra uso, ou sem diluição informada: a proposta simplesmente não mostra R$/L diluído).
+const normalizaDiluicao = (v: string): string | null => {
+  const t = (v ?? "").trim();
+  if (!t) return null;
+  const razao = t.match(/^(\d+(?:[.,]\d+)?)\s*:\s*(\d+(?:[.,]\d+)?)$/);
+  if (razao) return `${razao[1].replace(",", ".")}:${razao[2].replace(",", ".")}`;
+  const soN = t.match(/^(\d+(?:[.,]\d+)?)$/);
+  if (soN) return `1:${soN[1].replace(",", ".")}`;
+  return t; // texto livre (ex.: "50g/10L") — o cálculo de R$/L tenta interpretar; se não der, não mostra
+};
+// Seleção da Proposta Manual: produto + índice da embalagem escolhida. Código de produto
+// é [A-Z0-9-], então "#" nunca colide.
+const chave = (codigo: string, idx: number) => `${codigo}#${idx}`;
+const parseChave = (k: string) => {
+  const i = k.lastIndexOf("#");
+  return { codigo: k.slice(0, i), idx: Number(k.slice(i + 1)) || 0 };
+};
 // Nº do orçamento derivado do id (mesma lógica do template-orcamento.ts).
 const numeroDoc = (id: string) => String((parseInt(id.replace(/[^0-9a-f]/gi, "").slice(0, 6) || "0", 16) % 9000) + 1000);
 const precoUnit = (it: PropostaItem) => Number(it.embalagens[0]?.preco ?? 0);
@@ -262,7 +283,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const [scope, setScope] = useState<PropostaScope | null>(null);
-  const [excluded, setExcluded] = useState<Set<string>>(new Set());
+  const [excluded, setExcluded] = useState<Set<number>>(new Set()); // posições em scope.itens fora da proposta
 
   // Handoff Prospecção → Manual: dados do lead pra pré-preencher o cliente.
   const [manualPrefill, setManualPrefill] = useState<{ razaoSocial: string; segmento: string | null } | null>(null);
@@ -309,21 +330,24 @@ export default function Home() {
     }
   }, [screen, catalogo, propostas]);
 
-  function changeQty(codigo: string, d: number) {
+  // Item é identificado pela POSIÇÃO em scope.itens, não pelo código: o mesmo produto
+  // pode estar na proposta duas vezes em embalagens diferentes (5 L e 20 L) e cada linha
+  // tem preço/quantidade/inclusão próprios.
+  function changeQty(pos: number, d: number) {
     setScope((s) =>
-      s ? { ...s, itens: s.itens.map((it) => (it.codigo === codigo ? { ...it, quantidade: Math.max(1, it.quantidade + d) } : it)) } : s,
+      s ? { ...s, itens: s.itens.map((it, i) => (i === pos ? { ...it, quantidade: Math.max(1, it.quantidade + d) } : it)) } : s,
     );
   }
   // Preço editável pelo vendedor na revisão (override da 1ª embalagem). Catálogo
   // permanece intacto; o override vive no PropostaScope (vira PDF/contrato).
-  function editarPreco(codigo: string, idx: number, valor: string) {
-    setScope((s) => (s ? setPrecoEmbalagem(s, codigo, idx, valor) : s));
+  function editarPreco(pos: number, idx: number, valor: string) {
+    setScope((s) => (s ? setPrecoEmbalagem(s, pos, idx, valor) : s));
   }
-  function toggleProduct(codigo: string) {
+  function toggleProduct(pos: number) {
     setExcluded((ex) => {
       const next = new Set(ex);
-      if (next.has(codigo)) next.delete(codigo);
-      else next.add(codigo);
+      if (next.has(pos)) next.delete(pos);
+      else next.add(pos);
       return next;
     });
   }
@@ -348,16 +372,17 @@ export default function Home() {
   // Corta itens (do mais barato pro mais caro) até caber no teto — usado tanto pelo
   // botão direto "Definir teto" quanto pelo comando "limitar_orcamento" do chat.
   function aplicarTeto(teto: number): string {
-    const { codigosRemover, totalFinal } = cortarParaOrcamento(
-      includedItems.map((it) => ({ codigo: it.codigo, precoUnit: precoUnit(it), quantidade: it.quantidade })),
+    const incluidos = (scope?.itens ?? []).map((it, pos) => ({ it, pos })).filter(({ pos }) => !excluded.has(pos));
+    const { posicoesRemover, totalFinal } = cortarParaOrcamento(
+      incluidos.map(({ it, pos }) => ({ pos, precoUnit: precoUnit(it), quantidade: it.quantidade })),
       total,
       teto,
     );
-    if (codigosRemover.length === 0) {
+    if (posicoesRemover.length === 0) {
       return total <= teto ? `Já está dentro do teto de ${fmt(teto)} (total ${fmt(total)}).` : `Não dá pra cortar mais sem esvaziar a proposta — total atual ${fmt(total)}.`;
     }
-    const nomes = codigosRemover.map((c) => includedItems.find((it) => it.codigo === c)?.nome ?? c);
-    codigosRemover.forEach(toggleProduct);
+    const nomes = posicoesRemover.map((p) => scope?.itens[p]?.nome ?? `item ${p + 1}`);
+    posicoesRemover.forEach(toggleProduct);
     return `Removi ${nomes.map((n) => `"${n}"`).join(", ")} pra caber no teto — total agora ${fmt(totalFinal)}.`;
   }
 
@@ -380,17 +405,25 @@ export default function Home() {
       case "alterar_responsavel_cliente":
         if (comando.valorTexto) setScope((s) => (s ? setClienteCampo(s, "responsavel", comando.valorTexto!) : s));
         break;
+      // O chat identifica o item pelo CÓDIGO; com o mesmo produto em dois tamanhos, age
+      // no primeiro deles (a Revisão continua permitindo ajustar cada linha na mão).
       case "alterar_quantidade_item":
-        if (comando.codigoItem && numero) setScope((s) => (s ? setQuantidadeAbsoluta(s, comando.codigoItem!, Number(numero.replace(",", "."))) : s));
+        if (comando.codigoItem && numero) setScope((s) => (s ? setQuantidadeAbsoluta(s, posicaoDoCodigo(s, comando.codigoItem!), Number(numero.replace(",", "."))) : s));
         break;
       case "remover_item":
-        if (comando.codigoItem) toggleProduct(comando.codigoItem);
+        if (comando.codigoItem && scope) {
+          const pos = posicaoDoCodigo(scope, comando.codigoItem);
+          if (pos >= 0) toggleProduct(pos);
+        }
         break;
       case "adicionar_item_catalogo":
         if (itemResolvido) setScope((s) => (s ? { ...s, itens: [...s.itens, itemResolvido] } : s));
         break;
       case "alterar_preco_item":
-        if (comando.codigoItem && numero) editarPreco(comando.codigoItem, 0, numero);
+        if (comando.codigoItem && numero && scope) {
+          const pos = posicaoDoCodigo(scope, comando.codigoItem);
+          if (pos >= 0) editarPreco(pos, 0, numero);
+        }
         break;
       case "alterar_condicao_comercial":
         if (comando.campoCondicao && comando.valorTexto) setScope((s) => (s ? setCondicaoConsolidadaPorCampo(s, comando.campoCondicao!, comando.valorTexto!) : s));
@@ -495,7 +528,7 @@ export default function Home() {
     }
   }
 
-  const includedItems = scope ? scope.itens.filter((it) => !excluded.has(it.codigo)) : [];
+  const includedItems = scope ? scope.itens.filter((_, pos) => !excluded.has(pos)) : [];
   const total = includedItems.reduce((sum, it) => sum + precoUnit(it) * it.quantidade, 0);
   // Contato ausente: só aviso visível (banners abaixo/na Revisão) — NÃO bloqueia mais a
   // geração (pedido explícito). `contatoAusente` continua calculado só pra alimentar os avisos.
@@ -1084,16 +1117,36 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
   const [segmentos, setSegmentos] = useState<string[]>(prefill?.segmento ? prefill.segmento.split(",").map((s) => s.trim()).filter(Boolean) : []);
   const [responsavel, setResponsavel] = useState("");
   const [tipo, setTipo] = useState<TipoProposta>("consolidada");
-  const [itens, setItens] = useState<Record<string, number>>({}); // codigo → quantidade
-  const [tamanhos, setTamanhos] = useState<Record<string, number>>({}); // codigo → índice escolhido em produto.embalagens
+  // SELEÇÃO chaveada por produto + TAMANHO ("PRIMMAX-DT#1"), não só pelo código: o mesmo
+  // produto pode entrar na proposta em mais de uma embalagem — 5 L e 20 L viram dois itens,
+  // cada um com seu preço, diluição e quantidade (pedido do Gustavo, 25/07).
+  const [itens, setItens] = useState<Record<string, number>>({}); // chave(codigo, idx) → quantidade
+  const [tamanhos, setTamanhos] = useState<Record<string, number>>({}); // codigo → índice em foco no seletor da lista
   const tamanhoIdx = (codigo: string) => tamanhos[codigo] ?? 0;
   const setTamanho = (codigo: string, idx: number) => setTamanhos((m) => ({ ...m, [codigo]: idx }));
+  // Diluição desejada por item selecionado (chave → texto digitado pelo consultor, ex.: "1:20").
+  // É a fonte do "valor por litro diluído" na proposta (decisão do Gustavo 25/07: sempre o
+  // consultor, não a ficha). Vai no diluicaoMax da embalagem cotada.
+  const [diluicoes, setDiluicoes] = useState<Record<string, string>>({});
+  const setDiluicao = (k: string, v: string) => setDiluicoes((m) => ({ ...m, [k]: v }));
+  // "Não dilui": produto pronto pra uso (sabonete, álcool gel, desinfetante pronto). Marca
+  // explícita para o consultor NÃO precisar informar diluição — e pra proposta não mostrar
+  // "valor por litro diluído". Ou informa a diluição, ou marca aqui (a montagem cobra).
+  const [naoDilui, setNaoDilui] = useState<Record<string, boolean>>({});
+  const toggleNaoDilui = (k: string, v: boolean) => setNaoDilui((m) => ({ ...m, [k]: v }));
+  // Diluição "efetiva" mostrada/considerada para o item: o que o consultor digitou ou, se
+  // não mexeu, o diluicaoMax do catálogo daquela embalagem (o mesmo que o campo pré-preenche).
+  const diluicaoEfetiva = (k: string, fallbackDil: string | null) => diluicoes[k] ?? fallbackDil ?? "";
   // Itens próprios (fora do catálogo): preço digitado por humano → procedência MANUAL.
-  const [custom, setCustom] = useState<{ id: number; nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; qtd: number }[]>([]);
+  const [custom, setCustom] = useState<{ id: number; nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; diluicao: string; qtd: number }[]>([]);
   // Produto do catálogo SEM preço (arquivado, aguardando precificação) → preço digitado
-  // por humano na hora de adicionar (codigo → texto digitado). Nunca vem da IA.
+  // por humano na hora de adicionar (chave produto+tamanho → texto digitado, já que cada
+  // embalagem tem seu preço). Nunca vem da IA.
   const [precoManual, setPrecoManual] = useState<Record<string, string>>({});
-  const [draft, setDraft] = useState<{ nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string }>({ nome: "", tamanho: "", unidade: "L", preco: "" });
+  // Condições comerciais da proposta (modelo Consolidada) — começam nos defaults e são
+  // editáveis já aqui, sem passar pelos "Ajustes" da Revisão.
+  const [condicoes, setCondicoes] = useState(() => consolidadaDefaults().condicoes.itens);
+  const [draft, setDraft] = useState<{ nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; diluicao: string }>({ nome: "", tamanho: "", unidade: "L", preco: "", diluicao: "" });
   const [showCustom, setShowCustom] = useState(false);
   const nextId = useRef(1);
   const [montando, setMontando] = useState(false);
@@ -1118,40 +1171,47 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
   const q = busca.trim().toLowerCase();
   const porBusca = q ? disponiveis.filter((p) => `${p.nome} ${p.codigo} ${p.descricaoCurta}`.toLowerCase().includes(q)) : disponiveis;
   const filtrados = linhaFiltro === "todas" ? porBusca : porBusca.filter((p) => p.linha === linhaFiltro);
-  // null = catálogo sem preço E ainda sem valor digitado nessa sessão.
-  const precoDe = (p: Produto): number | null => {
-    const doCatalogo = p.embalagens[tamanhoIdx(p.codigo)]?.preco;
+  // null = catálogo sem preço E ainda sem valor digitado nessa sessão. `idx` é o tamanho
+  // em questão (cada embalagem tem preço próprio).
+  const precoDe = (p: Produto, idx = tamanhoIdx(p.codigo)): number | null => {
+    const doCatalogo = p.embalagens[idx]?.preco;
     if (doCatalogo != null) return Number(doCatalogo);
-    const digitado = Number((precoManual[p.codigo] ?? "").replace(",", "."));
+    const digitado = Number((precoManual[chave(p.codigo, idx)] ?? "").replace(",", "."));
     return digitado > 0 ? digitado : null;
   };
   const selCat = Object.entries(itens)
-    .map(([codigo, qtd]) => ({ produto: disponiveis.find((p) => p.codigo === codigo), qtd }))
-    .filter((x): x is { produto: Produto; qtd: number } => Boolean(x.produto));
+    .map(([k, qtd]) => {
+      const { codigo, idx } = parseChave(k);
+      return { k, idx, qtd, produto: disponiveis.find((p) => p.codigo === codigo) };
+    })
+    .filter((x): x is { k: string; idx: number; qtd: number; produto: Produto } => Boolean(x.produto));
   // Linhas unificadas (catálogo + próprias) para render e total.
   const rows: { key: string; nome: string; sub: string; preco: number; qtd: number; onQtd: (q: number) => void }[] = [
     ...selCat.map((x) => {
-      const preco = precoDe(x.produto) ?? 0;
-      const semPreco = x.produto.embalagens[0]?.preco == null;
-      return { key: x.produto.codigo, nome: x.produto.nome, sub: semPreco ? `${fmt(preco)} un. · preço digitado` : `${fmt(preco)} un. · catálogo`, preco, qtd: x.qtd, onQtd: (q: number) => setQtd(x.produto.codigo, q) };
+      const preco = precoDe(x.produto, x.idx) ?? 0;
+      const emb = x.produto.embalagens[x.idx];
+      const semPreco = emb?.preco == null;
+      const tam = emb ? `${emb.tamanho} ${emb.unidade} · ` : "";
+      return { key: x.k, nome: x.produto.nome, sub: `${tam}${fmt(preco)} un. · ${semPreco ? "preço digitado" : "catálogo"}`, preco, qtd: x.qtd, onQtd: (q: number) => setQtd(x.k, q) };
     }),
     ...custom.map((c) => ({ key: `c${c.id}`, nome: c.nome, sub: `${fmt(Number(c.preco) || 0)} un. · ${c.tamanho}${c.unidade} · manual`, preco: Number(c.preco) || 0, qtd: c.qtd, onQtd: (q: number) => setCustomQtd(c.id, q) })),
   ];
   const total = rows.reduce((s, r) => s + r.preco * r.qtd, 0);
 
-  function add(codigo: string) {
+  function add(codigo: string, idx: number) {
     const p = disponiveis.find((x) => x.codigo === codigo);
-    if (p && precoDe(p) == null) return; // arquivado sem preço digitado ainda — botão fica desabilitado
-    setItens((m) => (m[codigo] ? m : { ...m, [codigo]: 1 }));
+    if (p && precoDe(p, idx) == null) return; // arquivado sem preço digitado ainda — botão fica desabilitado
+    const k = chave(codigo, idx);
+    setItens((m) => (m[k] ? m : { ...m, [k]: 1 }));
   }
-  function setQtd(codigo: string, q: number) {
+  function setQtd(k: string, q: number) {
     setItens((m) => {
       if (q <= 0) {
         const n = { ...m };
-        delete n[codigo];
+        delete n[k];
         return n;
       }
-      return { ...m, [codigo]: q };
+      return { ...m, [k]: q };
     });
   }
   function setCustomQtd(id: number, q: number) {
@@ -1166,8 +1226,8 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
       return;
     }
     setErro(null);
-    setCustom((cs) => [...cs, { id: nextId.current++, nome, tamanho: draft.tamanho, unidade: draft.unidade, preco: preco.toFixed(2), qtd: 1 }]);
-    setDraft({ nome: "", tamanho: "", unidade: "L", preco: "" });
+    setCustom((cs) => [...cs, { id: nextId.current++, nome, tamanho: draft.tamanho, unidade: draft.unidade, preco: preco.toFixed(2), diluicao: draft.diluicao, qtd: 1 }]);
+    setDraft({ nome: "", tamanho: "", unidade: "L", preco: "", diluicao: "" });
     setShowCustom(false);
   }
 
@@ -1188,9 +1248,18 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
       setErro("Adicione ao menos um produto (catálogo ou item próprio).");
       return;
     }
-    const semPreco = selCat.filter((x) => precoDe(x.produto) == null);
+    const semPreco = selCat.filter((x) => precoDe(x.produto, x.idx) == null);
     if (semPreco.length > 0) {
       setErro(`Defina o preço de: ${semPreco.map((x) => x.produto.nome).join(", ")}.`);
+      return;
+    }
+    // Diluição obrigatória por produto (decisão do Gustavo 25/07): ou o consultor informa a
+    // diluição, ou marca "não dilui" (produto pronto pra uso). Sem um dos dois, não monta.
+    const semDiluicao = selCat.filter(
+      (x) => !naoDilui[x.k] && !normalizaDiluicao(diluicaoEfetiva(x.k, x.produto.embalagens[x.idx]?.diluicaoMax ?? null)),
+    );
+    if (semDiluicao.length > 0) {
+      setErro(`Informe a diluição (ou marque "não dilui") de: ${semDiluicao.map((x) => x.produto.nome).join(", ")}.`);
       return;
     }
     setMontando(true);
@@ -1199,10 +1268,26 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
       const body = {
         tipo,
         cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmentos.join(", ") || null, responsavel: responsavel.trim() || null },
+        // Só faz sentido no modelo Consolidada (é o bloco que ele renderiza).
+        ...(tipo === "consolidada" ? { condicoesConsolidada: condicoes } : {}),
         itens: [
           ...selCat.map((x) => {
-            const idx = tamanhoIdx(x.produto.codigo);
-            const embEscolhido = x.produto.embalagens[idx];
+            const embEscolhido = x.produto.embalagens[x.idx];
+            // Diluição digitada pelo consultor → grava no diluicaoMax da embalagem COTADA
+            // (embalagens[0]) do payload; é de lá que o template tira o "valor por litro
+            // diluído". Sobrepõe o diluicaoMax do catálogo (decisão do Gustavo 25/07).
+            const naoDil = !!naoDilui[x.k];
+            const dil = naoDil ? null : normalizaDiluicao(diluicoes[x.k] ?? "");
+            // Aplica na cotada ([0]) e zera o custoDiluido (recalculado no render):
+            //  - "não dilui" → força diluicaoMax null (some o "valor por litro diluído");
+            //  - diluição do consultor → sobrepõe a do catálogo;
+            //  - nenhum dos dois (consultor não mexeu) → mantém o diluicaoMax do catálogo.
+            const comDiluicao = <E extends { diluicaoMax: string | null; custoDiluido: string | null }>(embs: E[]): E[] => {
+              if (!embs.length) return embs;
+              if (naoDil) return [{ ...embs[0], diluicaoMax: null, custoDiluido: null }, ...embs.slice(1)];
+              if (dil) return [{ ...embs[0], diluicaoMax: dil, custoDiluido: null }, ...embs.slice(1)];
+              return embs;
+            };
             // Catálogo sem preço (produto arquivado): manda TODOS os tamanhos do
             // catálogo (não só o escolhido — produto pode vir em 5/20/50L, cada um
             // com foto/preço próprio no fornecedor) com o preço digitado pelo
@@ -1210,17 +1295,17 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
             // todos por ora (preço por tamanho fica pra uma tela dedicada depois).
             // O tamanho escolhido vai em [0] (convenção "cotada" do resto do app).
             if (embEscolhido?.preco == null) {
-              const preco = precoDe(x.produto);
+              const preco = precoDe(x.produto, x.idx);
               return {
                 codigo: x.produto.codigo,
                 quantidade: x.qtd,
-                embalagens: comEscolhidoPrimeiro(x.produto.embalagens, embEscolhido).map((e) => ({
+                embalagens: comDiluicao(comEscolhidoPrimeiro(x.produto.embalagens, embEscolhido).map((e) => ({
                   tamanho: e.tamanho,
                   unidade: e.unidade,
                   preco: (preco ?? 0).toFixed(2),
                   diluicaoMax: e.diluicaoMax,
                   custoDiluido: null,
-                })),
+                }))),
               };
             }
             // Com preço no catálogo: se o tamanho escolhido já é o primeiro do
@@ -1228,20 +1313,23 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
             // lá). Senão, manda a lista reordenada (só os tamanhos com preço real —
             // igual ao filtro que o catálogo já aplica pro caso padrão).
             const comPreco = x.produto.embalagens.filter((e) => e.preco != null);
-            if (comPreco[0] === embEscolhido) return { codigo: x.produto.codigo, quantidade: x.qtd };
+            // Atalho "só o código" (preço/tamanhos vêm do catálogo) só vale quando NÃO há
+            // diluição do consultor — com ela, precisamos mandar a embalagem cotada pra
+            // carregar o diluicaoMax digitado.
+            if (comPreco[0] === embEscolhido && !dil && !naoDil) return { codigo: x.produto.codigo, quantidade: x.qtd };
             return {
               codigo: x.produto.codigo,
               quantidade: x.qtd,
-              embalagens: comEscolhidoPrimeiro(comPreco, embEscolhido).map((e) => ({
+              embalagens: comDiluicao(comEscolhidoPrimeiro(comPreco, embEscolhido).map((e) => ({
                 tamanho: e.tamanho,
                 unidade: e.unidade,
                 preco: e.preco!,
                 diluicaoMax: e.diluicaoMax,
                 custoDiluido: e.custoDiluido,
-              })),
+              }))),
             };
           }),
-          ...custom.map((c) => ({ nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: null, custoDiluido: null }], quantidade: c.qtd })),
+          ...custom.map((c) => ({ nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: normalizaDiluicao(c.diluicao), custoDiluido: null }], quantidade: c.qtd })),
         ],
       };
       const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -1326,6 +1414,42 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
           </div>
         </div>
 
+        {/* Condições comerciais — editáveis JÁ aqui, junto dos dados do cliente (antes só
+            nos "Ajustes" da Revisão; pedido do Gustavo 25/07). É o MESMO campo que a
+            Revisão edita e que o PDF renderiza (scope.consolidada.condicoes.itens). */}
+        {tipo === "consolidada" && (
+          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
+                <span style={{ width: "26px", height: "26px", borderRadius: "8px", background: "var(--info-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)", flex: "none" }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><path d="M3 1.5h5l3 3v8H3z" /><path d="M8 1.5v3h3" /></svg>
+                </span>
+                <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)" }}>Condições comerciais</span>
+                <span style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>· vão para a última página da proposta</span>
+              </div>
+              <button
+                onClick={() => setCondicoes(consolidadaDefaults().condicoes.itens)}
+                style={{ background: "none", border: "none", color: "var(--text-subtle)", fontSize: "12px", cursor: "pointer", fontFamily: "inherit", textDecoration: "underline" }}
+              >
+                Restaurar padrão
+              </button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: "14px 20px" }}>
+              {condicoes.map((c, i) => (
+                <label key={c.titulo} style={{ minWidth: 0 }}>
+                  <div style={campoLabel}>{c.titulo}</div>
+                  <textarea
+                    value={c.texto}
+                    onChange={(e) => setCondicoes((cs) => cs.map((x, j) => (j === i ? { ...x, texto: e.target.value } : x)))}
+                    rows={2}
+                    style={{ ...campoInput, height: "auto", minHeight: "58px", padding: "9px 12px", lineHeight: 1.45, resize: "vertical" }}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         {erro && <div style={{ padding: "11px 14px", background: "var(--danger-soft)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
 
         <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "18px", alignItems: "start" }}>
@@ -1368,22 +1492,28 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
             {catalogo === null && !erroCat && <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "12px 0" }}>Carregando catálogo…</div>}
             <div className="ies-scroll" style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "440px", overflowY: "auto" }}>
               {filtrados.map((p) => {
-                const incluido = Boolean(itens[p.codigo]);
-                const semPrecoCatalogo = p.embalagens[tamanhoIdx(p.codigo)]?.preco == null;
-                const preco = precoDe(p);
+                // "Incluído" é por produto + TAMANHO em foco: com o 5 L já na proposta, o
+                // consultor troca o seletor pro 20 L e o "+" volta a habilitar (mesmo produto,
+                // outra embalagem = outro item).
+                const idx = tamanhoIdx(p.codigo);
+                const k = chave(p.codigo, idx);
+                const incluido = Boolean(itens[k]);
+                const outrosTamanhos = Object.keys(itens).filter((o) => parseChave(o).codigo === p.codigo && o !== k).length;
+                const semPrecoCatalogo = p.embalagens[idx]?.preco == null;
+                const preco = precoDe(p, idx);
                 const podeAdicionar = preco != null;
                 return (
                   <div key={p.codigo} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "10px", border: "1px solid var(--border)", background: incluido ? "var(--info-soft)" : "var(--surface)" }}>
                     <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: linhaCor(p.linha), flex: "none" }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nome}</div>
-                      <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{p.codigo} · {humaniza(p.linha)}{!p.ativo && " · arquivado"}</div>
+                      <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{p.codigo} · {humaniza(p.linha)}{!p.ativo && " · arquivado"}{outrosTamanhos > 0 && ` · ${outrosTamanhos} ${outrosTamanhos === 1 ? "outro tamanho" : "outros tamanhos"} na proposta`}</div>
                       {p.embalagens.length > 1 && (
                         <div style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
                           <select
-                            value={tamanhoIdx(p.codigo)}
+                            value={idx}
                             onChange={(e) => setTamanho(p.codigo, Number(e.target.value))}
-                            disabled={incluido}
+                            title="Tamanho cotado — troque para incluir o mesmo produto em outra embalagem"
                             style={{ fontSize: "10.5px", color: "var(--text-subtle)", border: "1px solid var(--border)", borderRadius: "6px", padding: "1px 4px", background: "var(--surface)" }}
                           >
                             {p.embalagens.map((e, i) => (
@@ -1393,11 +1523,29 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
                           {semPrecoCatalogo && <span style={{ fontSize: "10.5px", color: "var(--text-subtle)" }}>mesmo preço p/ todos</span>}
                         </div>
                       )}
+                      {/* Diluição de trabalho: o consultor informa (ex.: 1:20) OU marca "não
+                          dilui" (produto pronto pra uso). É o que gera o "valor por litro
+                          diluído" na proposta. Editável mesmo após incluir, pra poder corrigir. */}
+                      <div style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "10.5px", color: "var(--text-subtle)", flex: "none" }}>Diluição</span>
+                        <input
+                          value={naoDilui[k] ? "" : (diluicoes[k] ?? p.embalagens[idx]?.diluicaoMax ?? "")}
+                          onChange={(e) => setDiluicao(k, e.target.value)}
+                          disabled={Boolean(naoDilui[k])}
+                          placeholder={naoDilui[k] ? "não dilui" : "ex.: 1:20"}
+                          title="Diluição de trabalho (ex.: 1:20). Define o valor por litro diluído na proposta."
+                          style={{ fontSize: "10.5px", color: "var(--text-strong)", border: "1px solid var(--border)", borderRadius: "6px", padding: "0 6px", background: naoDilui[k] ? "var(--surface-muted)" : "var(--surface)", width: "76px", height: "22px" }}
+                        />
+                        <label style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "10.5px", color: "var(--text-subtle)", cursor: "pointer" }} title="Produto pronto pra uso — sem valor por litro diluído">
+                          <input type="checkbox" checked={Boolean(naoDilui[k])} onChange={(e) => toggleNaoDilui(k, e.target.checked)} style={{ cursor: "pointer" }} />
+                          não dilui
+                        </label>
+                      </div>
                     </div>
                     {semPrecoCatalogo ? (
                       <input
-                        value={precoManual[p.codigo] ?? ""}
-                        onChange={(e) => setPrecoManual((m) => ({ ...m, [p.codigo]: e.target.value }))}
+                        value={precoManual[k] ?? ""}
+                        onChange={(e) => setPrecoManual((m) => ({ ...m, [k]: e.target.value }))}
                         placeholder="Preço R$"
                         inputMode="decimal"
                         disabled={incluido}
@@ -1406,7 +1554,7 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
                     ) : (
                       <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--primary)", fontSize: "13px", whiteSpace: "nowrap" }}>{fmt(preco ?? 0)}</span>
                     )}
-                    <button onClick={() => add(p.codigo)} disabled={incluido || !podeAdicionar} title={incluido ? "Já incluído" : podeAdicionar ? "Adicionar" : "Digite o preço primeiro"} style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--border-strong)", background: incluido || !podeAdicionar ? "var(--surface-muted)" : "var(--surface)", cursor: incluido || !podeAdicionar ? "default" : "pointer", color: incluido || !podeAdicionar ? "var(--text-subtle)" : "var(--primary)", fontSize: "18px", lineHeight: 1, flex: "none" }}>+</button>
+                    <button onClick={() => add(p.codigo, idx)} disabled={incluido || !podeAdicionar} title={incluido ? "Este tamanho já está na proposta — troque o tamanho para incluir outro" : podeAdicionar ? "Adicionar" : "Digite o preço primeiro"} style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--border-strong)", background: incluido || !podeAdicionar ? "var(--surface-muted)" : "var(--surface)", cursor: incluido || !podeAdicionar ? "default" : "pointer", color: incluido || !podeAdicionar ? "var(--text-subtle)" : "var(--primary)", fontSize: "18px", lineHeight: 1, flex: "none" }}>+</button>
                   </div>
                 );
               })}
@@ -1432,10 +1580,11 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
                       <option value="ml">ml</option>
                     </select>
                     <input value={draft.preco} onChange={(e) => setDraft((d) => ({ ...d, preco: e.target.value }))} inputMode="decimal" placeholder="Preço R$" style={{ ...campoInput, flex: 1 }} />
+                    <input value={draft.diluicao} onChange={(e) => setDraft((d) => ({ ...d, diluicao: e.target.value }))} placeholder="Diluição 1:20" title="Diluição desejada — gera o valor por litro diluído (opcional)" style={{ ...campoInput, width: "110px", flex: "none" }} />
                   </div>
                   <div style={{ display: "flex", gap: "8px" }}>
                     <Hoverable onClick={addCustom} base={{ flex: 1, height: "36px", borderRadius: "9px", border: "none", background: "var(--primary)", color: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center" }} hover={{ background: "var(--primary-hover)" }}>Adicionar item</Hoverable>
-                    <button onClick={() => { setShowCustom(false); setDraft({ nome: "", tamanho: "", unidade: "L", preco: "" }); }} style={{ height: "36px", padding: "0 14px", borderRadius: "9px", border: "1px solid var(--border-strong)", background: "var(--surface)", color: "var(--text-muted)", cursor: "pointer", fontSize: "13px" }}>Cancelar</button>
+                    <button onClick={() => { setShowCustom(false); setDraft({ nome: "", tamanho: "", unidade: "L", preco: "", diluicao: "" }); }} style={{ height: "36px", padding: "0 14px", borderRadius: "9px", border: "1px solid var(--border-strong)", background: "var(--surface)", color: "var(--text-muted)", cursor: "pointer", fontSize: "13px" }}>Cancelar</button>
                   </div>
                 </div>
               )}
@@ -1870,12 +2019,12 @@ function ReviewScreen({
   reviewVariant: "A" | "B";
   setReviewVariant: (v: "A" | "B") => void;
   scope: PropostaScope;
-  excluded: Set<string>;
+  excluded: Set<number>; // posições em scope.itens (o mesmo produto pode repetir em outra embalagem)
   includedItems: PropostaItem[];
   total: number;
-  toggleProduct: (codigo: string) => void;
-  changeQty: (codigo: string, d: number) => void;
-  editarPreco: (codigo: string, idx: number, valor: string) => void;
+  toggleProduct: (pos: number) => void;
+  changeQty: (pos: number, d: number) => void;
+  editarPreco: (pos: number, idx: number, valor: string) => void;
   onRefinar: (texto: string) => void;
   onEditarTexto: (texto: string) => void;
   onEditarCondicaoConsolidada: (index: number, texto: string) => void;
@@ -2116,11 +2265,11 @@ function ReviewScreen({
       <div className="ies-scroll" style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
         {reviewVariant === "A" ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
-            {scope.itens.map((p) => {
-              const included = !excluded.has(p.codigo);
+            {scope.itens.map((p, pos) => {
+              const included = !excluded.has(pos);
               return (
                 <Hoverable
-                  key={p.codigo}
+                  key={pos}
                   as="div"
                   base={{ background: "white", borderRadius: "12px", borderWidth: "1px", borderStyle: included ? "solid" : "dashed", borderColor: included ? "#E3EBF3" : "#CBD7E3", padding: "16px", display: "flex", flexDirection: "column", opacity: included ? 1 : 0.5, boxShadow: "0 1px 2px rgba(15,26,36,.06)", transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease, opacity .25s ease" }}
                   hover={{ transform: "translateY(-3px)", boxShadow: "0 10px 24px rgba(15,26,36,.1)" }}
@@ -2144,9 +2293,9 @@ function ReviewScreen({
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "10px", borderTop: "1px solid var(--gray-100)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      <button onClick={() => changeQty(p.codigo, -1)} style={qtyBtn}>−</button>
+                      <button onClick={() => changeQty(pos, -1)} style={qtyBtn}>−</button>
                       <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)", minWidth: "18px", textAlign: "center" }}>{p.quantidade}</span>
-                      <button onClick={() => changeQty(p.codigo, 1)} style={qtyBtn}>+</button>
+                      <button onClick={() => changeQty(pos, 1)} style={qtyBtn}>+</button>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
@@ -2154,7 +2303,7 @@ function ReviewScreen({
                         <input
                           aria-label={`Preço de ${p.nome}`}
                           defaultValue={precoUnit(p).toFixed(2)}
-                          onBlur={(ev) => editarPreco(p.codigo, 0, ev.target.value)}
+                          onBlur={(ev) => editarPreco(pos, 0, ev.target.value)}
                           style={{ width: "72px", textAlign: "right", fontSize: "15px", fontWeight: 700, color: "var(--blue-500)", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "2px 6px", fontFamily: "var(--font-sans), sans-serif" }}
                         />
                       </div>
@@ -2162,7 +2311,7 @@ function ReviewScreen({
                     </div>
                   </div>
                   <button
-                    onClick={() => toggleProduct(p.codigo)}
+                    onClick={() => toggleProduct(pos)}
                     style={{ marginTop: "10px", width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid " + (included ? "#A7F3D0" : "#E3EBF3"), background: included ? "#DCFCE7" : "#F7F9FC", color: included ? "#16A34A" : "#94A6B8", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans), sans-serif" }}
                   >
                     {included ? "✓ Incluído" : "+ Incluir"}
@@ -2178,10 +2327,10 @@ function ReviewScreen({
                 <div key={h} style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".05em", textAlign: i === 2 || i === 5 ? "center" : i === 3 || i === 4 ? "right" : "left" }}>{h}</div>
               ))}
             </div>
-            {scope.itens.map((p) => {
-              const included = !excluded.has(p.codigo);
+            {scope.itens.map((p, pos) => {
+              const included = !excluded.has(pos);
               return (
-                <div key={p.codigo} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 80px 110px 110px 100px", minWidth: "640px", padding: "13px 20px", borderBottom: "1px solid #EEF3F8", alignItems: "center", background: included ? "#FFFFFF" : "#F7F9FC", opacity: included ? 1 : 0.45 }}>
+                <div key={pos} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 80px 110px 110px 100px", minWidth: "640px", padding: "13px 20px", borderBottom: "1px solid #EEF3F8", alignItems: "center", background: included ? "#FFFFFF" : "#F7F9FC", opacity: included ? 1 : 0.45 }}>
                   <div>
                     <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-900)" }}>{p.nome}</div>
                     <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginTop: "2px" }}>{p.codigo} · {unidadeDe(p)}</div>
@@ -2191,21 +2340,21 @@ function ReviewScreen({
                     <span style={{ fontSize: "13px", color: "var(--gray-500)" }}>{procLabel(p.procedenciaSelecao)}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
-                    <button onClick={() => changeQty(p.codigo, -1)} style={qtyBtnSm}>−</button>
+                    <button onClick={() => changeQty(pos, -1)} style={qtyBtnSm}>−</button>
                     <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)", minWidth: "16px", textAlign: "center" }}>{p.quantidade}</span>
-                    <button onClick={() => changeQty(p.codigo, 1)} style={qtyBtnSm}>+</button>
+                    <button onClick={() => changeQty(pos, 1)} style={qtyBtnSm}>+</button>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <input
                       aria-label={`Preço de ${p.nome}`}
                       defaultValue={precoUnit(p).toFixed(2)}
-                      onBlur={(ev) => editarPreco(p.codigo, 0, ev.target.value)}
+                      onBlur={(ev) => editarPreco(pos, 0, ev.target.value)}
                       style={{ width: "88px", textAlign: "right", fontSize: "13.5px", color: "var(--gray-700)", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "3px 6px", fontFamily: "var(--font-sans), sans-serif" }}
                     />
                   </div>
                   <div style={{ textAlign: "right", fontSize: "13.5px", fontWeight: 700, color: "var(--blue-500)" }}>{fmt(precoUnit(p) * p.quantidade)}</div>
                   <div style={{ display: "flex", justifyContent: "center" }}>
-                    <button onClick={() => toggleProduct(p.codigo)} style={{ padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: included ? "#DCFCE7" : "#EEF3F8", color: included ? "#16A34A" : "#94A6B8", fontSize: "12px", fontWeight: 600, fontFamily: "var(--font-sans), sans-serif", whiteSpace: "nowrap" }}>{included ? "✓ Incluído" : "+ Incluir"}</button>
+                    <button onClick={() => toggleProduct(pos)} style={{ padding: "4px 10px", borderRadius: "6px", border: "none", cursor: "pointer", background: included ? "#DCFCE7" : "#EEF3F8", color: included ? "#16A34A" : "#94A6B8", fontSize: "12px", fontWeight: 600, fontFamily: "var(--font-sans), sans-serif", whiteSpace: "nowrap" }}>{included ? "✓ Incluído" : "+ Incluir"}</button>
                   </div>
                 </div>
               );
@@ -2394,10 +2543,10 @@ function PdfScreen({
             <div key={h.t} style={{ fontSize: "9px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px", textAlign: h.a as CSSProperties["textAlign"], padding: "0 5px" }}>{h.t}</div>
           ))}
         </div>
-        {includedItems.map((p) => {
+        {includedItems.map((p, i) => {
           const e = p.embalagens[0];
           return (
-            <div key={p.codigo} style={{ display: "grid", gridTemplateColumns: "40px 2.1fr 3fr 92px 92px", padding: "9px 4px", borderBottom: "1px solid #eef2f7", alignItems: "start" }}>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "40px 2.1fr 3fr 92px 92px", padding: "9px 4px", borderBottom: "1px solid #eef2f7", alignItems: "start" }}>
               <div style={{ textAlign: "center", padding: "0 5px" }}>{p.quantidade}</div>
               <div style={{ padding: "0 5px", lineHeight: 1.35 }}>
                 <span style={{ color: "var(--gray-400)" }}>{p.codigo}</span> - <strong style={{ color: "#25303f" }}>{p.nome}</strong>
@@ -2475,7 +2624,7 @@ function ImplantacaoPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
         {itens.map((p, i) => {
           const e = p.embalagens[0];
           return (
-            <div key={p.codigo} style={{ marginBottom: "22px" }}>
+            <div key={i} style={{ marginBottom: "22px" }}>
               <div style={{ color: "var(--blue-500)", fontSize: "14px", fontWeight: 800, lineHeight: 1.4, marginBottom: "10px" }}>{i + 1}. Item: {p.nome} – {p.descricaoUso.toUpperCase()}</div>
               <div style={{ textAlign: "center", marginBottom: "12px" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -2483,8 +2632,8 @@ function ImplantacaoPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderRadius: "6px", padding: "9px 14px", fontSize: "12px" }}><span style={{ color: "var(--orange-500)", fontWeight: 800, marginRight: "6px" }}>o</span> Valor embalagem de <b>{e?.tamanho} {e?.unidade}</b> R$: <b style={{ color: "var(--blue-800)" }}>{dec(precoUnit(p))}</b></div>
-                {e?.diluicaoMax && e?.custoDiluido && (
-                  <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderRadius: "6px", padding: "9px 14px", fontSize: "12px" }}><span style={{ color: "var(--orange-500)", fontWeight: 800, marginRight: "6px" }}>o</span> Valor por litro diluído (Diluição de até <b>{e.diluicaoMax}</b>) R$: <b style={{ color: "var(--blue-800)" }}>{dec(Number(e.custoDiluido))}</b></div>
+                {custoLitroDiluido(p.embalagens) && (
+                  <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderRadius: "6px", padding: "9px 14px", fontSize: "12px" }}><span style={{ color: "var(--orange-500)", fontWeight: 800, marginRight: "6px" }}>o</span> Valor por litro diluído (Diluição de <b>{custoLitroDiluido(p.embalagens)!.rotulo}</b>) R$: <b style={{ color: "var(--blue-800)" }}>{custoLitroDiluido(p.embalagens)!.texto.replace("R$ ", "")}</b></div>
                 )}
                 <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderRadius: "6px", padding: "9px 14px", fontSize: "11.5px", color: "#3a4757", lineHeight: 1.5 }}><span style={{ color: "var(--orange-500)", fontWeight: 800, marginRight: "6px" }}>o</span> Observações: Para mais informações solicitar ficha técnica. A diluição máxima é teórica; na prática pode variar conforme a sujidade.</div>
               </div>
@@ -2536,10 +2685,10 @@ function ComercialPreview({ scope, itens }: { scope: PropostaScope; itens: Propo
       </div>
       {/* soluções */}
       <h2 style={{ fontSize: "14px", fontWeight: 800, color: navy, borderBottom: "2px solid #e6ecf4", paddingBottom: "5px", marginBottom: "14px" }}>Soluções Indicadas para o {scope.cliente.razaoSocial}</h2>
-      {itens.map((p) => {
+      {itens.map((p, i) => {
         const e = p.embalagens[0];
         return (
-          <div key={p.codigo} style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
+          <div key={i} style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
             <div style={{ flex: "0 0 90px", height: "100px", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #eef2f7", borderRadius: "8px", overflow: "hidden" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "82px", maxHeight: "92px", objectFit: "contain" }} onError={(ev) => (ev.currentTarget.style.display = "none")} />
@@ -2550,7 +2699,7 @@ function ComercialPreview({ scope, itens }: { scope: PropostaScope; itens: Propo
               <div style={{ display: "flex", gap: "10px" }}>
                 {box("Embalagem", e ? `${e.tamanho} ${e.unidade}` : "—")}
                 {box("Preço", fmt(precoUnit(p)))}
-                {box("Custo final por litro diluído", e?.custoDiluido ? fmt(Number(e.custoDiluido)) : "—", e?.diluicaoMax ? `até ${e.diluicaoMax}` : undefined)}
+                {box("Custo final por litro diluído", custoLitroDiluido(p.embalagens)?.texto ?? "—", custoLitroDiluido(p.embalagens) ? `diluição ${custoLitroDiluido(p.embalagens)!.rotulo}` : undefined)}
               </div>
             </div>
           </div>
@@ -2614,10 +2763,10 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
       </div>
 
       <h2 style={{ fontSize: "14px", fontWeight: 800, color: navy, borderBottom: "2px solid #e5ebf2", paddingBottom: "5px", marginBottom: "14px" }}>Soluções Indicadas para o {cli.razaoSocial}</h2>
-      {itens.map((p) => {
+      {itens.map((p, i) => {
         const e = p.embalagens[0];
         return (
-          <div key={p.codigo} style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
+          <div key={i} style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
             <div style={{ flex: "0 0 90px", height: "100px", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #eef2f7", borderRadius: "8px", overflow: "hidden" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "82px", maxHeight: "92px", objectFit: "contain" }} onError={(ev) => (ev.currentTarget.style.display = "none")} />
@@ -2628,7 +2777,7 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
               <div style={{ display: "flex", gap: "10px" }}>
                 {box("Embalagem", e ? `${e.tamanho} ${e.unidade}` : "—")}
                 {box("Preço", fmt(precoUnit(p)))}
-                {box("Custo final por litro diluído", e?.custoDiluido ? fmt(Number(e.custoDiluido)) : "—", e?.diluicaoMax ? `até ${e.diluicaoMax}` : undefined)}
+                {box("Custo final por litro diluído", custoLitroDiluido(p.embalagens)?.texto ?? "—", custoLitroDiluido(p.embalagens) ? `diluição ${custoLitroDiluido(p.embalagens)!.rotulo}` : undefined)}
               </div>
             </div>
           </div>

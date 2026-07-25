@@ -48,11 +48,39 @@ describe("paginaProduto", () => {
     expect(html).not.toContain("R$ 480,00"); // 2ª embalagem (20 L) — nunca aparece com preço
   });
 
+  it("mostra o valor por litro diluído da embalagem cotada, com a diluição informada na montagem", () => {
+    const html = paginaProduto(item, "data:,x");
+    // 5 L a R$ 130,00 → R$ 26,00/L de produto; diluição da cotada 1:100 → R$ 0,26 por litro de solução
+    expect(html).toContain("Valor por litro diluído");
+    expect(html).toContain("R$ 0,26");
+    expect(html).toContain("diluição de 1:100");
+  });
+
+  it("sem diluição na embalagem cotada, não inventa valor por litro diluído (nem tira da ficha)", () => {
+    const semDiluicao: PropostaItem = {
+      ...item,
+      embalagens: [{ tamanho: 5, unidade: "L", preco: "130.00", diluicaoMax: null, custoDiluido: null }],
+    };
+    const html = paginaProduto(semDiluicao, "data:,x");
+    expect(html).not.toContain("Valor por litro diluído");
+    expect(html).toContain("Modo de diluição"); // a ficha continua descrevendo a diluição
+  });
+
   it("'Embalagens disponíveis' lista TODOS os tamanhos, incluindo a cotada, sempre sem preço (spec §8, decisão final: repetição permitida)", () => {
     const html = paginaProduto(item, "data:,x");
     expect(html).toContain("Embalagens disponíveis");
-    expect(html).toContain('<span class="pp-emb-chip">5 L</span>'); // a cotada (5L) TAMBÉM aparece ali, sem preço
+    expect(html).toContain('<span class="pp-emb-chip pp-emb-cotada">5 L<i>cotada</i></span>'); // a cotada (5L) aparece ali, sem preço, com selo
     expect(html).toContain('<span class="pp-emb-chip">20 L</span>');
+  });
+
+  it("marca a embalagem COTADA na lista de disponíveis (e só ela)", () => {
+    const html = paginaProduto(item, "data:,x");
+    expect(html.match(/pp-emb-cotada/g)?.length).toBe(1);
+    expect(html).toContain("<i>cotada</i>");
+
+    // troca a cotada: o selo acompanha embalagens[0], não o tamanho
+    const cotada20: PropostaItem = { ...item, embalagens: [item.embalagens[1], item.embalagens[0]] };
+    expect(paginaProduto(cotada20, "data:,x")).toContain('<span class="pp-emb-chip pp-emb-cotada">20 L<i>cotada</i></span>');
   });
 
   it("ordena 'Embalagens disponíveis' por volume crescente, independente da ordem no payload", () => {
@@ -66,8 +94,8 @@ describe("paginaProduto", () => {
     };
     const html = paginaProduto(foraDeOrdem, "data:,x");
     const posMl = html.indexOf("500 ml");
-    const pos5L = html.indexOf('<span class="pp-emb-chip">5 L</span>');
-    const pos20L = html.indexOf('<span class="pp-emb-chip">20 L</span>');
+    const pos5L = html.indexOf(">5 L</span>");
+    const pos20L = html.indexOf("20 L<i>cotada</i>"); // 20 L é a cotada nesse payload
     expect(posMl).toBeLessThan(pos5L); // 500 ml < 5 L
     expect(pos5L).toBeLessThan(pos20L);
   });
