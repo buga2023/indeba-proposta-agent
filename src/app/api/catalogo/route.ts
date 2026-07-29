@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { createHash } from "node:crypto";
+import { NextRequest, NextResponse } from "next/server";
 import { carregarCatalogo } from "@/lib/catalogo";
 import { respostaErro } from "@/lib/erro";
 
@@ -12,33 +13,40 @@ export const runtime = "nodejs";
 // FichaProduto são opcionais, então o recorte continua válido no contrato.
 // Memoizado: `carregarCatalogo` já cacheia em processo, então o mapa roda uma vez por
 // instância, não a cada request. Nunca mutar o objeto do cache — daí o spread.
-let enxuto: ReturnType<typeof carregarCatalogo> | null = null;
+let cache: { corpo: string; etag: string } | null = null;
 function catalogoParaCliente() {
-  if (enxuto) return enxuto;
+  if (cache) return cache;
   const catalogo = carregarCatalogo();
-  enxuto = {
+  const corpo = JSON.stringify({
     ...catalogo,
     produtos: catalogo.produtos.map((p) => ({
       ...p,
       ficha: p.ficha ? { titulo: p.ficha.titulo, descricao: p.ficha.descricao } : p.ficha,
     })),
-  };
-  return enxuto;
+  });
+  cache = { corpo, etag: `"${createHash("sha1").update(corpo).digest("base64url")}"` };
+  return cache;
 }
 
 // Catálogo real (data/catalogo.json) — fonte da verdade dos dados críticos.
 // Leitura para a tela de Catálogo; preço/embalagem nunca vêm da IA (constituição §1).
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const catalogo = catalogoParaCliente();
-    // ~330 KB de JSON (150 produtos com ficha completa) que só muda em deploy — é dado
-    // estático do repositório, não do banco. Sem cache, a tela refetchava a cada visita
-    // e os logs de produção mostravam /api/catalogo várias vezes por minuto, sempre com
-    // o payload inteiro. `private` de propósito: a resposta passa pelo middleware de
-    // auth, então não pode ficar em cache compartilhado de CDN — só no browser de quem
-    // já está autenticado.
-    return NextResponse.json(catalogo, {
-      headers: { "Cache-Control": "private, max-age=300, stale-while-revalidate=3600" },
+    const { corpo, etag } = catalogoParaCliente();
+
+    // Revalidação por ETag em vez de janela de tempo. A primeira tentativa foi
+    // `max-age=300`, e ela mordeu na hora de validar um deploy: o catálogo mudou, o
+    // browser seguiu servindo o antigo do cache e o produto corrigido não aparecia por
+    // 5 minutos. Com `no-cache` o browser SEMPRE pergunta, mas quando nada mudou a
+    // resposta é um 304 vazio — economiza os mesmos ~128 KB sem nunca entregar dado
+    // velho. `private`: a resposta passa pelo middleware de auth e não pode parar em
+    // cache compartilhado de CDN.
+    const headers = { "Cache-Control": "private, no-cache", ETag: etag };
+    if (req.headers.get("if-none-match") === etag) {
+      return new NextResponse(null, { status: 304, headers });
+    }
+    return new NextResponse(corpo, {
+      headers: { ...headers, "Content-Type": "application/json" },
     });
   } catch (e) {
     return respostaErro(e, "Falha ao carregar catálogo", 500);

@@ -18,6 +18,7 @@ import type { Usuario } from "@/lib/auth";
 import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo } from "@/lib/proposta-edit";
 import { custoLitroDiluido } from "@/lib/diluicao";
 import { consolidadaDefaults } from "@/lib/consolidada-defaults";
+import { mascaraCnpj, erroCnpj } from "@/lib/cnpj";
 import { SEGMENTOS, rotuloSegmento, linhaDoSegmento, segmentosLegiveis } from "@/lib/segmento";
 import { imagemEhIlustrativa } from "@/lib/imagem-produto";
 import { AjudaChat } from "@/components/ajuda-chat";
@@ -256,9 +257,14 @@ function SegmentoInput({ value, onChange, campoLabel, campoInput }: { value: str
 }
 
 /* ── Chrome global: ações do header (busca/assistente) compartilhadas com as telas ── */
-const ChromeContext = createContext<{ openPalette: () => void; openAssistant: () => void }>({
+const ChromeContext = createContext<{
+  openPalette: () => void;
+  openAssistant: () => void;
+  goTo: (s: string) => void;
+}>({
   openPalette: () => {},
   openAssistant: () => {},
+  goTo: () => {},
 });
 
 /* tipo do registro do histórico (espelha EventoProposta da API, sem importar node) */
@@ -696,6 +702,7 @@ export default function Home() {
     openPalette: () => setPalette(true),
     // O Assistente (AjudaChat) é um overlay independente; o header pede a abertura via evento.
     openAssistant: () => window.dispatchEvent(new CustomEvent("ies:assistente")),
+    goTo: (s: string) => setScreen(s as Screen),
   };
 
   return (
@@ -1560,7 +1567,17 @@ function ManualScreen({
             </label>
             <label style={{ flex: "1 1 180px", minWidth: 0 }}>
               <div style={campoLabel}>CNPJ</div>
-              <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0001-00" style={campoInput} />
+              {/* Máscara ao digitar + aviso de DV. Opcional: vazio não acusa erro. */}
+              <input
+                value={cnpj}
+                onChange={(e) => setCnpj(mascaraCnpj(e.target.value))}
+                inputMode="numeric"
+                placeholder="00.000.000/0001-00"
+                style={{ ...campoInput, ...(erroCnpj(cnpj) ? { borderColor: "#DC2626" } : {}) }}
+              />
+              {erroCnpj(cnpj) && (
+                <div style={{ fontSize: "11px", color: "#DC2626", marginTop: "3px" }}>{erroCnpj(cnpj)}</div>
+              )}
             </label>
             <SegmentoInput value={segmentos} onChange={setSegmentos} campoLabel={campoLabel} campoInput={campoInput} />
             <label style={{ flex: "1 1 200px", minWidth: 0 }}>
@@ -2112,7 +2129,17 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
               </label>
               <label style={{ flex: "1 1 160px", minWidth: 0 }}>
                 <div style={campoLabel}>CNPJ</div>
-                <input value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0000-00" style={campoInput} />
+                {/* Mesma máscara/validação da Proposta manual (ver lib/cnpj.ts). */}
+                <input
+                  value={cnpj}
+                  onChange={(e) => setCnpj(mascaraCnpj(e.target.value))}
+                  inputMode="numeric"
+                  placeholder="00.000.000/0000-00"
+                  style={{ ...campoInput, ...(erroCnpj(cnpj) ? { borderColor: "#DC2626" } : {}) }}
+                />
+                {erroCnpj(cnpj) && (
+                  <div style={{ fontSize: "11px", color: "#DC2626", marginTop: "3px" }}>{erroCnpj(cnpj)}</div>
+                )}
               </label>
               <SegmentoInput value={segmentos} onChange={setSegmentos} campoLabel={campoLabel} campoInput={campoInput} />
               <label style={{ flex: "1 1 170px", minWidth: 0 }}>
@@ -4302,7 +4329,7 @@ function abrirRelatorio(titulo: string, subtitulo: string, blocos: BlocoRelatori
 
 /* Cabeçalho de tela (design app.html) — barra branca fixa com título + subtítulo + ação. */
 function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) {
-  const { openPalette, openAssistant } = useContext(ChromeContext);
+  const { openPalette, openAssistant, goTo } = useContext(ChromeContext);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "0 24px", height: "62px", background: "var(--surface)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 20, flex: "none" }}>
       <div style={{ minWidth: 0 }}>
@@ -4322,10 +4349,12 @@ function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?
         <span style={{ flex: 1, textAlign: "left" }}>Buscar telas, produtos…</span>
         <span style={{ fontSize: "10.5px", fontWeight: 700, padding: "2px 6px", borderRadius: "5px", background: "var(--surface-card)", border: "1px solid var(--border)", color: "var(--text-subtle)" }}>⌘K</span>
       </Hoverable>
-      {/* Notificações → atalho para Cobrança (régua/inadimplência) */}
+      {/* Notificações → atalho para Cobrança (régua/inadimplência). Estava chamando
+          openPalette: o sino, com badge de não-lido, abria o "Ir para… (tela)" — o
+          handler não batia com o que o próprio comentário já dizia ser a intenção. */}
       <Hoverable
-        onClick={openPalette}
-        title="Notificações"
+        onClick={() => goTo("cobranca")}
+        title="Notificações — cobranças e inadimplência"
         base={{ position: "relative", width: "38px", height: "38px", borderRadius: "10px", border: "1px solid var(--border)", background: "var(--surface)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}
         hover={{ background: "var(--surface-muted)" }}
       >
