@@ -22,6 +22,7 @@ function item(codigo: string, nome: string, preco: string, quantidade: number): 
     quantidade,
     procedenciaSelecao: "IA-SELEÇÃO",
     motivo: "encaixe",
+    tamanhosDisponiveis: [],
     fichaTecnicaPath: null,
   };
 }

@@ -3,8 +3,15 @@ import { carregarCatalogo, produtoPorCodigo } from "./catalogo";
 import { selecionar } from "./selecao/matcher";
 import { extrairPedido } from "./llm/extrair-pedido";
 import { escreverApresentacao } from "./llm/escrever-texto";
-import { PropostaScope, type PropostaItem, type EntradaEstruturada, type Tipo } from "./contracts";
+import { PropostaScope, type PropostaItem, type EntradaEstruturada, type Tipo, type Produto } from "./contracts";
 import { consolidadaDefaults } from "./consolidada-defaults";
+import { ARTE_GENERICA } from "./imagem-produto";
+
+// Tamanhos que o produto TEM (ficha técnica), sem preço — o bloco "Embalagens
+// disponíveis" da ficha sai daqui, e não da lista de cotadas. Inclui tamanho ainda
+// sem preço no catálogo: é informação de ficha técnica, não oferta.
+const tamanhosDoProduto = (p: Produto) =>
+  p.embalagens.map((e) => ({ tamanho: e.tamanho, unidade: e.unidade }));
 
 export type DadosCliente = {
   razaoSocial: string;
@@ -69,14 +76,18 @@ export async function montarProposta(
   // não carrega valor inventado (lacuna sinalizada pela seleção vazia/menor).
   const itens: PropostaItem[] = selecao.itens.flatMap((sel) => {
     const p = catalogo.produtos.find((x) => x.codigo === sel.codigo)!;
-    const embalagens = p.embalagens.filter((e): e is (typeof p.embalagens)[number] & { preco: string } => e.preco !== null);
-    if (embalagens.length === 0) return [];
+    const comPreco = p.embalagens.filter((e): e is (typeof p.embalagens)[number] & { preco: string } => e.preco !== null);
+    if (comPreco.length === 0) return [];
+    // Uma cotada só: sem consultor escolhendo, cota o menor tamanho com preço (o
+    // primeiro do catálogo). Os demais tamanhos seguem visíveis em tamanhosDisponiveis.
+    const embalagens = [comPreco[0]];
     return [{
       codigo: p.codigo,
       nome: p.nome,
       descricaoUso: p.descricaoUso,
       imagemPath: p.imagemPath,
       embalagens, // [CATÁLOGO] — preço nunca vem da IA
+      tamanhosDisponiveis: tamanhosDoProduto(p),
       ficha: p.ficha ?? null, // [CATÁLOGO] snapshot p/ página de produto (consolidada)
       fichaTecnicaPath: p.fichaTecnicaPath,
       quantidade: 1, // ajustável na revisão pelo vendedor
@@ -125,7 +136,11 @@ export async function montarPropostaEstruturada(
       const p = catalogo.produtos.find((x) => x.codigo === it.codigo);
       if (!p) throw new Error(`Produto "${it.codigo}" não está no catálogo`);
       const doCatalogo = p.embalagens.filter((e): e is (typeof p.embalagens)[number] & { preco: string } => e.preco !== null);
-      const embalagens = it.embalagens?.length ? it.embalagens : doCatalogo;
+      // A embalagem COTADA é a que o item traz (a escolhida na tela / a do orçamento
+      // importado). Sem embalagem no item, cota a primeira com preço do catálogo —
+      // nunca a lista inteira: replicar o preço em todos os tamanhos era o que
+      // distorcia o total e ofertava tamanho não pedido (spec Item 3).
+      const embalagens = it.embalagens?.length ? it.embalagens : doCatalogo.slice(0, 1);
       if (embalagens.length === 0) {
         throw new Error(`Produto "${p.nome}" está sem preço no catálogo — informe o valor (orçamento importado ou item próprio)`);
       }
@@ -135,6 +150,7 @@ export async function montarPropostaEstruturada(
         descricaoUso: p.descricaoUso,
         imagemPath: p.imagemPath,
         embalagens,
+        tamanhosDisponiveis: tamanhosDoProduto(p),
         ficha: p.ficha ?? null, // [CATÁLOGO] snapshot p/ página de produto (consolidada)
         fichaTecnicaPath: p.fichaTecnicaPath,
         quantidade: it.quantidade ?? 1,
@@ -149,8 +165,10 @@ export async function montarPropostaEstruturada(
       codigo: slug(it.nome!),
       nome: it.nome!,
       descricaoUso: it.descricaoUso ?? "",
-      imagemPath: it.imagemPath ?? "/produtos/_generico.svg",
+      imagemPath: it.imagemPath ?? ARTE_GENERICA,
       embalagens: it.embalagens!,
+      // Item próprio não tem ficha de catálogo: os tamanhos disponíveis são os informados.
+      tamanhosDisponiveis: it.embalagens!.map((e) => ({ tamanho: e.tamanho, unidade: e.unidade })),
       ficha: null, // item próprio não tem ficha de catálogo
       fichaTecnicaPath: null,
       quantidade: it.quantidade ?? 1,
@@ -179,7 +197,9 @@ export async function montarPropostaEstruturada(
       ? { ...bloco, condicoes: { ...bloco.condicoes, itens: entrada.condicoesConsolidada } }
       : bloco;
   return PropostaScope.parse({
-    id: randomUUID(),
+    // Remontagem de uma proposta existente mantém o id — o auto-save é upsert, então
+    // editar regrava o mesmo registro em vez de duplicar no histórico (spec Item 4).
+    id: entrada.id ?? randomUUID(),
     criadoEm: new Date().toISOString(),
     status: "rascunho",
     tipo,
@@ -210,6 +230,7 @@ export function itemDoCatalogo(codigo: string, quantidade = 1): PropostaItem {
     descricaoUso: p.descricaoUso,
     imagemPath: p.imagemPath,
     embalagens,
+    tamanhosDisponiveis: tamanhosDoProduto(p),
     ficha: p.ficha ?? null,
     fichaTecnicaPath: p.fichaTecnicaPath,
     quantidade: Math.max(1, Math.round(quantidade)),

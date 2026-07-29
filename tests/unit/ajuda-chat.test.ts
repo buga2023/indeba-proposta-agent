@@ -8,11 +8,14 @@ import { responder, preco } from "@/components/ajuda-chat-logic";
 describe("assistente de ajuda — aterrado no catálogo", () => {
   const produtos = carregarCatalogo().produtos;
 
-  it("pergunta de preço de um produto traz o preço REAL do catálogo", () => {
+  // O catálogo não guarda mais preço (quem cota é o consultor, na montagem), então a
+  // resposta certa a "quanto custa" é "sob consulta" — nunca um valor inventado.
+  it("pergunta de preço responde a partir do catálogo, sem inventar valor", () => {
     const plus = produtos.find((p) => p.codigo === "PRIMMAX-PLUS")!;
     const r = responder("quanto custa o Primmax Plus?", produtos)!;
-    expect(r).toContain(preco(plus.embalagens[0].preco)); // "R$ 130,00"
-    expect(r).toContain("130,00");
+    expect(r).toContain(preco(plus.embalagens[0].preco));
+    expect(r).toContain("sob consulta");
+    expect(r).not.toMatch(/R\$ \d/); // nenhum valor saiu do nada
   });
 
   it("nunca inventa preço — todo valor citado existe no catálogo", () => {

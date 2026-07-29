@@ -10,7 +10,7 @@ const scope: PropostaScope = {
   textoApresentacao: { conteudo: "x", procedencia: "MANUAL" },
   itens: [{ codigo: "A", nome: "Produto A", descricaoUso: "u", imagemPath: "/a.png",
     embalagens: [{ tamanho: 5, unidade: "L", preco: "100.00", diluicaoMax: null, custoDiluido: null }],
-    quantidade: 1, procedenciaSelecao: "MANUAL", motivo: "", fichaTecnicaPath: null, ficha: null }],
+    quantidade: 1, procedenciaSelecao: "MANUAL", motivo: "", tamanhosDisponiveis: [], fichaTecnicaPath: null, ficha: null }],
   condicoesComerciais: { validade: "30 dias", prazoEntrega: "15d", pagamento: "boleto", frete: "CIF" },
   consolidada: consolidadaDefaults(),
 };

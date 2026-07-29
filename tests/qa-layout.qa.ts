@@ -45,6 +45,7 @@ function scopeTudo(): PropostaScope {
       diluicaoMax: i === 0 ? e.diluicaoMax ?? "1:100" : e.diluicaoMax,
     })),
     ficha: p.ficha ?? null,
+    tamanhosDisponiveis: [],
     fichaTecnicaPath: p.fichaTecnicaPath,
     quantidade: 1,
     procedenciaSelecao: "MANUAL" as const,

@@ -1,4 +1,5 @@
 import type { PropostaScope } from "../contracts";
+import { segmentosLegiveis } from "../segmento";
 
 // Tipo "orcamento" — saída ERP, FIEL ao modelo real (ref: GVA_ALIMENTOS_..._Orcamento_9572,
 // docs/estrutura-modelos.md "Orçamento (ERP)"): topo data/nº · cabeçalho da empresa com logo
@@ -133,7 +134,7 @@ td.det .emb { color: #9aa7b8; }
     <div class="cli-left">
       <div class="cli-nome">${esc(scope.cliente.razaoSocial)}</div>
       ${scope.cliente.cnpj ? `<div class="cli-doc">CNPJ: ${esc(scope.cliente.cnpj)}</div>` : ""}
-      ${scope.cliente.segmento ? `<div class="cli-seg">${esc(scope.cliente.segmento.replace(/_/g, " "))}</div>` : ""}
+      ${scope.cliente.segmento ? `<div class="cli-seg">${esc(segmentosLegiveis(scope.cliente.segmento))}</div>` : ""}
     </div>
     <div class="cli-right">
       <div class="fld"><div class="fl">Validade da proposta</div><div class="fv">${esc(c.validade)}</div></div>

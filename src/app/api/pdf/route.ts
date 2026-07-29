@@ -10,7 +10,7 @@ export const maxDuration = 60; // render do Chromium serverless (Vercel)
 
 // PropostaScope (revisado na tela) → PDF. Mesmo objeto que a tela mostra vira PDF.
 export async function POST(req: NextRequest) {
-  const parsed = PropostaScope.safeParse(await req.json());
+  const parsed = PropostaScope.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }

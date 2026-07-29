@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 // Infos já estruturadas (sem briefing/IA) → PropostaScope (mesmo objeto canônico).
 export async function POST(req: NextRequest) {
-  const parsed = EntradaEstruturada.safeParse(await req.json());
+  const parsed = EntradaEstruturada.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }

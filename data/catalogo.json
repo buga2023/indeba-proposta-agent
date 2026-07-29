@@ -336,7 +336,7 @@
       "metodos": [
         "circulacao_cip"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/_frasco.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-ae-food-grade.pdf",
       "ativo": false,
       "embalagens": [
@@ -757,7 +757,7 @@
         "pulverizacao",
         "imersao"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/_balde-20.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-citrus.pdf",
       "ativo": false,
       "embalagens": [
@@ -1011,9 +1011,9 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "110.00",
+          "preco": null,
           "diluicaoMax": "1:100",
-          "custoDiluido": "0.22"
+          "custoDiluido": null
         },
         {
           "tamanho": 23,
@@ -1224,9 +1224,9 @@
         {
           "tamanho": 5,
           "unidade": "kg",
-          "preco": "150.00",
+          "preco": null,
           "diluicaoMax": "50g/10L",
-          "custoDiluido": "0.15"
+          "custoDiluido": null
         }
       ],
       "ficha": {
@@ -1384,9 +1384,9 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "160.00",
+          "preco": null,
           "diluicaoMax": "1:20",
-          "custoDiluido": "1.60"
+          "custoDiluido": null
         }
       ],
       "ficha": {
@@ -1650,9 +1650,9 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "130.00",
+          "preco": null,
           "diluicaoMax": "1:100",
-          "custoDiluido": "0.26"
+          "custoDiluido": null
         },
         {
           "tamanho": 53,
@@ -2115,9 +2115,9 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "220.00",
+          "preco": null,
           "diluicaoMax": "1:250",
-          "custoDiluido": "0.18"
+          "custoDiluido": null
         },
         {
           "tamanho": 1000,
@@ -2937,7 +2937,7 @@
         {
           "tamanho": 800,
           "unidade": "ml",
-          "preco": "35.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         },
@@ -3823,7 +3823,7 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/_balde-20.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primma-oxy-s.pdf",
       "ativo": false,
       "embalagens": [
@@ -4718,7 +4718,7 @@
       "metodos": [
         "diluidor_automatico"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/_balde-20.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtt.pdf",
       "ativo": false,
       "embalagens": [
@@ -6027,7 +6027,7 @@
         "diluidor_automatico",
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/_galao-5l.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-floor-plus.pdf",
       "ativo": false,
       "embalagens": [
@@ -7141,7 +7141,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/_generico.svg",
+      "imagemPath": "/produtos/_galao-5l.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-alcool-70.pdf",
       "ativo": false,
       "embalagens": [
@@ -8495,7 +8495,7 @@
         {
           "tamanho": 800,
           "unidade": "ml",
-          "preco": "20.00",
+          "preco": null,
           "diluicaoMax": null,
           "custoDiluido": null
         }
@@ -8540,9 +8540,9 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "130.00",
+          "preco": null,
           "diluicaoMax": "1:50",
-          "custoDiluido": "0.52"
+          "custoDiluido": null
         }
       ],
       "ficha": {
@@ -8592,9 +8592,9 @@
         {
           "tamanho": 5,
           "unidade": "L",
-          "preco": "80.00",
+          "preco": null,
           "diluicaoMax": "1:5",
-          "custoDiluido": "3.20"
+          "custoDiluido": null
         }
       ],
       "ficha": {

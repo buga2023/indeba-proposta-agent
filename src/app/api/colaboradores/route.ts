@@ -29,7 +29,7 @@ const Body = z.object({
 export async function PATCH(req: NextRequest) {
   const { erro } = await exigirGestor(req);
   if (erro) return erro;
-  const parsed = Body.safeParse(await req.json());
+  const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ erro: "Dados inválidos." }, { status: 400 });
   const { email, ...dados } = parsed.data;
   const colaborador = await atualizarColaborador(email, {

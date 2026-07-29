@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const sessao = await validarSessao(req.cookies.get("sessao")?.value);
   if (!sessao) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
-  const parsed = Body.safeParse(await req.json());
+  const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ erro: "Dados inválidos." }, { status: 400 });
   const colaborador = await atualizarColaborador(sessao.email, {
     ...(parsed.data.nome !== undefined ? { nome: parsed.data.nome } : {}),

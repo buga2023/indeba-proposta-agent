@@ -8,7 +8,7 @@ export const maxDuration = 300; // visão por imagem + síntese: bem mais lento 
 
 // Recebe os posts de referência (do n8n/Drive), deriva o perfil de estilo e o salva.
 export async function POST(req: NextRequest) {
-  const parsed = SyncReferenciasRequest.safeParse(await req.json());
+  const parsed = SyncReferenciasRequest.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }

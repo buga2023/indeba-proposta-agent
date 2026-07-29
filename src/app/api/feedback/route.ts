@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  const parsed = FeedbackRequest.safeParse(await req.json());
+  const parsed = FeedbackRequest.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }

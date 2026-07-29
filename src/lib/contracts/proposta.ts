@@ -18,7 +18,19 @@ export const PropostaItem = z.object({
   nome: z.string(), // [CATÁLOGO]
   descricaoUso: z.string(), // [CATÁLOGO]
   imagemPath: z.string(), // [CATÁLOGO]
+  // Embalagens COTADAS — só o que o consultor escolheu, cada uma com o preço daquele
+  // tamanho. Um produto pedido em 5 L e em 20 L entra como DOIS itens (a tela chaveia
+  // a seleção por produto+tamanho), nunca como um item com duas embalagens. Antes a
+  // montagem mandava todos os tamanhos do catálogo replicando o mesmo preço — o total
+  // saía inconsistente e o cliente lia tamanho não ofertado com valor (spec Item 3).
   embalagens: z.array(Embalagem), // [CATÁLOGO]
+  // Tamanhos que o produto TEM na ficha técnica, sem preço — alimenta o bloco
+  // "Embalagens disponíveis" da ficha (decisão do cliente, áudio 16:24), que não pode
+  // depender da lista de cotadas. Opcional: proposta antiga persistida não tem o campo
+  // e continua parseando — nesse caso o template cai na lista de embalagens, como antes.
+  tamanhosDisponiveis: z
+    .array(z.object({ tamanho: z.number().positive(), unidade: z.enum(["L", "kg", "un", "ml"]) }))
+    .optional(),
   ficha: FichaProduto.nullable().optional(), // [CATÁLOGO] snapshot p/ página de produto
   // [CATÁLOGO] caminho estático do PDF da ficha técnica real (ex. "/fichas-tecnicas/AUTOCAR-PLUS.pdf").
   // null = produto sem ficha técnica cadastrada ainda. Default null: propostas antigas
@@ -98,7 +110,11 @@ export type PropostaScope = z.infer<typeof PropostaScope>;
 // Status COMERCIAL, MUTÁVEL — eixo separado do `status` do documento (rascunho/finalizada).
 // A proposta gerada é persistida (store de trabalho); o log append-only (lib/log.ts)
 // continua sendo a auditoria imutável de cada PDF emitido (constituição §8).
-export const StatusProposta = z.enum(["rascunho", "em_edicao", "enviada", "aprovada", "recusada"]);
+// `arquivada` entrou depois: 31 propostas já tinham esse status no banco (arquivamento
+// feito direto no Postgres, fora do app — nada no código escrevia o valor). Como a coluna
+// é String livre, elas passavam pelo INSERT e só explodiam na leitura, derrubando o
+// histórico inteiro com 500. Faltava no enum, não era dado corrompido.
+export const StatusProposta = z.enum(["rascunho", "em_edicao", "enviada", "aprovada", "recusada", "arquivada"]);
 export type StatusProposta = z.infer<typeof StatusProposta>;
 
 // Linha do histórico — leve (sem o scope inteiro) para listar.

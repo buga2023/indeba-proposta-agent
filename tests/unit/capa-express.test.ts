@@ -40,7 +40,10 @@ describe("capa Indeba Express", () => {
     expect(html).toContain("Soluções em Higienização Profissional");
     expect(html).toContain("Laticínio São João Ltda");
     expect(html).toContain("12.345.678/0001-90");
-    expect(html).toContain("laticinio");
+    // O segmento sai LEGÍVEL na capa, nunca o slug interno: o campo guarda
+    // "laticinio"/"lavanderia_hospitalar" e o cliente lia isso impresso (spec Item 2).
+    expect(html).toContain("Laticinio");
+    expect(html).not.toContain(">laticinio<");
     expect(html).toContain("Maria Souza");
     expect(html).toContain("Consultor Responsável");
     expect(html).toContain("07 de julho de 2026");

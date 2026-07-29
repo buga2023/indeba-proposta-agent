@@ -7,8 +7,8 @@ import { prisma } from "@/lib/db";
 import {
   PropostaResumo,
   PropostaRegistro,
+  StatusProposta,
   type PropostaScope,
-  type StatusProposta,
 } from "@/lib/contracts";
 
 // Σ (preço da 1ª embalagem × quantidade) — mesma convenção determinística do log.ts/gerar.ts.
@@ -35,11 +35,25 @@ type Row = {
   atualizadoEm: Date;
 };
 
+// `Proposta.status` é String livre no banco (sem CHECK — ver prisma/schema.prisma), então
+// nada impede uma linha com valor fora do enum comercial: edição manual no painel do banco
+// ou dado anterior ao contrato. Só que `PropostaResumo.parse` lançava nessa linha e o
+// `rows.map` derrubava a LISTA INTEIRA com 500 — uma proposta ruim escondia TODO o
+// histórico, e sem histórico não dá nem pra reabrir/editar as outras. Normaliza pro
+// fallback e registra: a linha continua visível e o select do histórico (PATCH, sempre
+// validado) regrava um status válido, curando o registro.
+function statusDaLinha(status: string, id: string): StatusProposta {
+  const r = StatusProposta.safeParse(status);
+  if (r.success) return r.data;
+  console.warn(`[propostas] status inválido ${JSON.stringify(status)} na proposta ${id} — exibindo como "rascunho"`);
+  return "rascunho";
+}
+
 function baseResumo(row: Row) {
   const itens = (row.scope as { itens?: unknown[] } | null)?.itens;
   return {
     id: row.id,
-    status: row.status,
+    status: statusDaLinha(row.status, row.id),
     autor: row.autor,
     cliente: row.cliente,
     segmento: row.segmento,
@@ -75,9 +89,32 @@ export async function salvarProposta(scope: PropostaScope, autor: string): Promi
   return mapearRegistro(row);
 }
 
-export async function listarPropostas(limite = 200): Promise<PropostaResumo[]> {
-  const rows = await prisma.proposta.findMany({ orderBy: { atualizadoEm: "desc" }, take: limite });
-  return rows.map(mapearResumo);
+// Arquivada = tirada de circulação; não entra na listagem nem nos totais do painel a menos
+// que o usuário peça. O corte é no WHERE (índice @@index([status]) do schema), não no
+// cliente: proposta arquivada não vira linha, não vira JSON e não trafega — o histórico
+// tinha 32 de 39 arquivadas, ou seja, 80% do payload era registro que ninguém queria ver.
+export async function listarPropostas(
+  limite = 200,
+  incluirArquivadas = false,
+): Promise<PropostaResumo[]> {
+  const rows = await prisma.proposta.findMany({
+    where: incluirArquivadas ? undefined : { status: { not: "arquivada" } },
+    orderBy: { atualizadoEm: "desc" },
+    take: limite,
+  });
+  // Listagem tolerante a linha podre: `status` já é normalizado em baseResumo, mas qualquer
+  // outro campo divergente do contrato (tipo fora do enum, total nulo…) também lançava e
+  // levava junto o histórico inteiro. Aqui a linha problemática é PULADA e registrada —
+  // perder uma proposta da lista é ruim, perder TODAS é o que estava acontecendo.
+  const resumos: PropostaResumo[] = [];
+  for (const row of rows) {
+    try {
+      resumos.push(mapearResumo(row));
+    } catch (e) {
+      console.error(`[propostas] linha ${row.id} fora do contrato — fora da listagem:`, e);
+    }
+  }
+  return resumos;
 }
 
 export async function obterProposta(id: string): Promise<PropostaRegistro | null> {

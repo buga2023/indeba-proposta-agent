@@ -14,7 +14,7 @@ const Body = z.object({
 // Cadastro próprio (self-service): o colaborador cria a conta com nome/e-mail/senha.
 // Sucesso já loga direto (mesma sessão do /api/login) — sem passo extra.
 export async function POST(req: NextRequest) {
-  const parsed = Body.safeParse(await req.json());
+  const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ erro: "Dados inválidos." }, { status: 400 });
 
   let usuario;

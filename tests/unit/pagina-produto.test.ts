@@ -14,6 +14,7 @@ const item: PropostaItem = {
   quantidade: 1,
   procedenciaSelecao: "MANUAL",
   motivo: "",
+  tamanhosDisponiveis: [],
   fichaTecnicaPath: null,
   ficha: {
     titulo: "Detergente Desengordurante",
@@ -33,7 +34,6 @@ describe("paginaProduto", () => {
     const html = paginaProduto(item, "data:image/png;base64,AAAA");
     expect(html).toContain("Detergente Desengordurante");
     expect(html).toContain("Alcalino Concentrado");
-    expect(html).toContain("KITCHEN");
     expect(html).toContain("Remove gordura pesada");
     expect(html).toContain("Limpeza pesada");
     expect(html).toContain("1:20");
@@ -66,7 +66,39 @@ describe("paginaProduto", () => {
     expect(html).toContain("Modo de diluição"); // a ficha continua descrevendo a diluição
   });
 
-  it("'Embalagens disponíveis' lista TODOS os tamanhos, incluindo a cotada, sempre sem preço (spec §8, decisão final: repetição permitida)", () => {
+  // A montagem grava a diluição do consultor só em embalagens[0]; os outros tamanhos ficam
+  // com o diluicaoMax do CATÁLOGO. O painel lia a primeira embalagem que tivesse diluição —
+  // então "não dilui" zerava a cotada e o card seguia anunciando a diluição do 20 L.
+  it("com 'não dilui' na cotada, não mostra a diluição de catálogo de outro tamanho", () => {
+    const naoDilui: PropostaItem = {
+      ...item,
+      ficha: null, // sem ficha, a única fonte do painel é a embalagem
+      embalagens: [
+        { tamanho: 5, unidade: "L", preco: "130.00", diluicaoMax: null, custoDiluido: null },
+        { tamanho: 20, unidade: "L", preco: "480.00", diluicaoMax: "1:100", custoDiluido: "0.24" },
+      ],
+    };
+    const html = paginaProduto(naoDilui, "data:,x");
+    expect(html).not.toContain("Modo de diluição");
+    expect(html).not.toContain("1:100");
+    expect(html).not.toContain("Valor por litro diluído");
+  });
+
+  it("o painel de diluição segue a COTADA, não o primeiro tamanho que tiver diluição", () => {
+    const cotadaSemOutraCom: PropostaItem = {
+      ...item,
+      ficha: null,
+      embalagens: [
+        { tamanho: 20, unidade: "L", preco: "480.00", diluicaoMax: "1:200", custoDiluido: null },
+        { tamanho: 5, unidade: "L", preco: "130.00", diluicaoMax: "1:100", custoDiluido: null },
+      ],
+    };
+    const html = paginaProduto(cotadaSemOutraCom, "data:,x");
+    expect(html).toContain("1:200"); // a cotada (20 L)
+    expect(html).not.toContain("1:100"); // a de 5 L não fala pelo card
+  });
+
+  it("'Embalagens disponíveis' lista TODOS os tamanhos, incluindo a cotada, sempre sem preço (spec §4, decisão final: repetição permitida)", () => {
     const html = paginaProduto(item, "data:,x");
     expect(html).toContain("Embalagens disponíveis");
     expect(html).toContain('<span class="pp-emb-chip pp-emb-cotada">5 L<i>cotada</i></span>'); // a cotada (5L) aparece ali, sem preço, com selo
@@ -167,16 +199,19 @@ describe("paginaProduto", () => {
     expect(html).not.toContain("prodpg-simples");
   });
 
-  it("sem linha definida na ficha, não renderiza eyebrow vazio (.pp-eyebrow)", () => {
-    const semLinha = { ...item, ficha: { ...item.ficha, linhaLabel: undefined } };
-    const html = paginaProduto(semLinha, "data:,x");
+  // A LINHA da rail passou a sair do SEGMENTO do cliente (8º parâmetro), não mais do
+  // `ficha.linhaLabel` — que era estático por produto e saía errado (uma proposta de
+  // lavanderia anunciava "LINHA KITCHEN"). Ver src/lib/segmento.ts.
+  it("sem segmento informado, não renderiza eyebrow vazio (.pp-eyebrow)", () => {
+    const html = paginaProduto(item, "data:,x");
     expect(html).not.toContain('class="pp-eyebrow"');
+    expect(html).not.toContain("KITCHEN"); // nunca cai de volta no rótulo antigo da ficha
   });
 
-  it("com linha definida, renderiza o eyebrow da rail com o badge", () => {
-    const html = paginaProduto(item, "data:,x");
+  it("com segmento informado, renderiza o eyebrow da rail com o rótulo do segmento", () => {
+    const html = paginaProduto(item, "data:,x", undefined, undefined, undefined, "", undefined, "cozinha_industrial");
     expect(html).toContain('class="pp-eyebrow"');
-    expect(html).toContain("KITCHEN");
+    expect(html).toContain("COZINHA INDUSTRIAL");
   });
 
   it("com características/rendimento mas sem indicado-para/benefícios, usa o layout 'sem-venda' (nem simples nem padrão) e mantém o grid técnico", () => {

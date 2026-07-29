@@ -1,4 +1,5 @@
 import type { PropostaScope } from "../contracts";
+import { segmentosLegiveis } from "../segmento";
 
 // Capa "Proposta de Solução" — marca Indeba Express. Espelha a spec
 // Especificacao_Capa_Proposta_Indeba_Express.md: A4 branco, logo no topo,
@@ -84,7 +85,7 @@ export function capaExpressHtml(scope: PropostaScope, assets: CapaExpressAssets 
     <div class="cx-card">
       ${linha(IC_PESSOA, "Cliente", c.razaoSocial)}
       ${linha(IC_DOC, "CNPJ", c.cnpj)}
-      ${linha(IC_PASTA, "Segmento", c.segmento)}
+      ${linha(IC_PASTA, "Segmento", segmentosLegiveis(c.segmento) || null)}
       ${linha(IC_PESSOA, "Responsável", c.responsavel)}
     </div>
     <div class="cx-rodape">

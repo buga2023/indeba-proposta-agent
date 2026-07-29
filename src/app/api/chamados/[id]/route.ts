@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ erro: "Só o gestor pode resolver chamados." }, { status: 403 });
   }
   const { id } = await params;
-  const parsed = ChamadoUpdate.safeParse(await req.json());
+  const parsed = ChamadoUpdate.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   try {
     const chamado = await atualizarChamado(id, parsed.data);

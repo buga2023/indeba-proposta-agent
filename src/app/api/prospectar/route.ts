@@ -8,7 +8,7 @@ export const maxDuration = 60; // a IA pode levar alguns segundos
 
 // req do vendedor → 10 prospects + 3 abordagens (IA-gerados, revisáveis na UI).
 export async function POST(req: NextRequest) {
-  const parsed = ProspeccaoRequest.safeParse(await req.json());
+  const parsed = ProspeccaoRequest.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }

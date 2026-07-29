@@ -22,7 +22,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 // preço e itens vêm sempre do scope (constituição §2).
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const parsed = StatusUpdate.safeParse(await req.json());
+  const parsed = StatusUpdate.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   try {
     return NextResponse.json(await atualizarStatusProposta(id, parsed.data.status));

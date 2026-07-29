@@ -1,0 +1,27 @@
+<!-- Arte ILUSTRATIVA de recipiente — balde de 20 (kg ou L), a embalagem padrão do
+     catálogo nesse tamanho (Gustavo, jul/2026). Só para produto SEM foto de estúdio;
+     UI e PDF marcam "imagem ilustrativa". Fundo transparente. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="Balde de 20 quilos (ilustrativo)">
+  <defs>
+    <linearGradient id="b-corpo" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#dbe3ec"/>
+      <stop offset="0.3" stop-color="#f7fafc"/>
+      <stop offset="0.78" stop-color="#e0e8f0"/>
+      <stop offset="1" stop-color="#c4d0dc"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="150" cy="256" rx="72" ry="10" fill="#0f2a44" opacity=".08"/>
+  <!-- alça arqueada -->
+  <path d="M84 96C84 58 116 40 150 40s66 18 66 56" fill="none" stroke="#94a5b6" stroke-width="7" stroke-linecap="round"/>
+  <!-- corpo troncocônico -->
+  <path d="M78 92h144l-16 148a10 10 0 0 1-10 9H104a10 10 0 0 1-10-9z" fill="url(#b-corpo)" stroke="#b3c0cd" stroke-width="2"/>
+  <!-- tampa / aro -->
+  <ellipse cx="150" cy="92" rx="72" ry="13" fill="#eef3f8" stroke="#b3c0cd" stroke-width="2"/>
+  <ellipse cx="150" cy="88" rx="72" ry="13" fill="#f8fbfd" stroke="#c2ced9" stroke-width="2"/>
+  <ellipse cx="150" cy="88" rx="52" ry="8" fill="none" stroke="#dbe4ec" stroke-width="2"/>
+  <!-- rótulo -->
+  <rect x="98" y="126" width="104" height="76" rx="6" fill="#ffffff" stroke="#dde5ee" stroke-width="2"/>
+  <rect x="98" y="126" width="104" height="9" rx="4" fill="#F07A22"/>
+  <path d="M112 154h76M112 166h54M112 178h66" stroke="#c9d3de" stroke-width="5" stroke-linecap="round"/>
+  <text x="150" y="230" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" fill="#7b8b9c" text-anchor="middle">20</text>
+</svg>

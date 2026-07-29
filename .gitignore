@@ -76,3 +76,6 @@ deploy-autostart.log
 /*.pdf
 /*.html
 /*.png
+
+# Saída do QA de PDF (tests/qa-proposta.qa.ts) — artefato local, nunca versionado.
+tests/__saida-qa/

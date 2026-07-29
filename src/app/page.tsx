@@ -13,11 +13,13 @@
  */
 
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
-import type { PropostaScope, PropostaItem, Produto, Funcao, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
+import type { StatusProposta, PropostaScope, PropostaItem, Produto, Funcao, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
 import type { Usuario } from "@/lib/auth";
 import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo } from "@/lib/proposta-edit";
 import { custoLitroDiluido } from "@/lib/diluicao";
 import { consolidadaDefaults } from "@/lib/consolidada-defaults";
+import { SEGMENTOS, rotuloSegmento, linhaDoSegmento, segmentosLegiveis } from "@/lib/segmento";
+import { imagemEhIlustrativa } from "@/lib/imagem-produto";
 import { AjudaChat } from "@/components/ajuda-chat";
 import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
@@ -143,14 +145,23 @@ function Hoverable({
 /** Campo "Segmento" — múltiplos valores opcionais (0, 1 ou N), como tags. Digita e
  * confirma com Enter/vírgula; Backspace num campo vazio remove a última. Internamente
  * o cliente ainda guarda um único `segmento: string | null` (contrato não muda) — as
- * tags são unidas por ", " ao montar a proposta. */
+ * tags são unidas por ", " ao montar a proposta.
+ *
+ * A lista de sugestões (datalist) vem dos segmentos que o catálogo usa, com grafia
+ * única — o campo deixou de ser texto 100% livre porque é ele que define o rótulo
+ * "LINHA {SEGMENTO}" da ficha de produto (spec Item 2). O que for digitado fora da
+ * lista continua valendo (segmento é faceta expansível), só entra normalizado. */
 function SegmentoInput({ value, onChange, campoLabel, campoInput }: { value: string[]; onChange: (v: string[]) => void; campoLabel: CSSProperties; campoInput: CSSProperties }) {
   const [draft, setDraft] = useState("");
   const adicionar = () => {
-    const v = draft.trim();
+    // Normaliza na entrada: "lavanderia_hospitalar", "LAVANDERIA HOSPITALAR" e
+    // "lavanderias hospitalares" viram a mesma tag "Lavanderia Hospitalar" — senão a
+    // mesma casa saía com dois rótulos de linha diferentes.
+    const v = draft.trim() ? rotuloSegmento(draft.trim()) : "";
     if (v && !value.includes(v)) onChange([...value, v]);
     setDraft("");
   };
+  const linha = linhaDoSegmento(value.join(", "));
   return (
     <label style={{ flex: "1 1 200px", minWidth: 0 }}>
       <div style={campoLabel}>Segmento</div>
@@ -166,35 +177,48 @@ function SegmentoInput({ value, onChange, campoLabel, campoInput }: { value: str
           padding: "6px 8px",
         }}
       >
-        {value.map((seg) => (
-          <span
-            key={seg}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "5px",
-              padding: "3px 8px",
-              borderRadius: "999px",
-              border: "1px solid var(--border-strong)",
-              background: "var(--surface-muted)",
-              color: "var(--text-body)",
-              fontSize: "12px",
-              fontWeight: 500,
-              lineHeight: 1.4,
-            }}
-          >
-            {seg}
-            <button
-              type="button"
-              onClick={() => onChange(value.filter((s) => s !== seg))}
-              aria-label={`Remover ${seg}`}
-              style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, color: "inherit", opacity: 0.7, fontSize: "13px", lineHeight: 1, display: "inline-flex" }}
+        {value.map((seg, i) => {
+          // O PRIMEIRO segmento é o que vira a linha da ficha. Ele fica destacado, e os
+          // demais podem ser promovidos num clique — sem isso, quem escolhia dois
+          // segmentos não tinha como dizer qual deles identifica a casa.
+          const principal = i === 0;
+          return (
+            <span
+              key={seg}
+              title={principal ? "Define o rótulo de linha da ficha" : "Clique para usar este como linha da ficha"}
+              onClick={principal ? undefined : () => onChange([seg, ...value.filter((s) => s !== seg)])}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "3px 8px",
+                borderRadius: "999px",
+                border: `1px solid ${principal ? "var(--primary)" : "var(--border-strong)"}`,
+                background: principal ? "var(--info-soft)" : "var(--surface-muted)",
+                color: principal ? "var(--primary)" : "var(--text-body)",
+                fontSize: "12px",
+                fontWeight: principal ? 600 : 500,
+                lineHeight: 1.4,
+                cursor: principal ? "default" : "pointer",
+              }}
             >
-              ×
-            </button>
-          </span>
-        ))}
+              {seg}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation(); // remover não pode ser lido como "promover"
+                  onChange(value.filter((s) => s !== seg));
+                }}
+                aria-label={`Remover ${seg}`}
+                style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, color: "inherit", opacity: 0.7, fontSize: "13px", lineHeight: 1, display: "inline-flex" }}
+              >
+                ×
+              </button>
+            </span>
+          );
+        })}
         <input
+          list="ies-segmentos"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -206,9 +230,26 @@ function SegmentoInput({ value, onChange, campoLabel, campoInput }: { value: str
             }
           }}
           onBlur={adicionar}
-          placeholder={value.length ? "" : "Ex.: Laticínio"}
+          placeholder={value.length ? "Adicionar…" : "Ex.: Lavanderia Hospitalar"}
           style={{ flex: "1 1 100px", minWidth: "80px", border: "none", outline: "none", background: "transparent", fontSize: "13.5px", color: "var(--text-strong)", fontFamily: "var(--font-sans)", padding: "2px 4px" }}
         />
+        <datalist id="ies-segmentos">
+          {SEGMENTOS.map((s) => (
+            <option key={s.valor} value={s.rotulo} />
+          ))}
+        </datalist>
+      </div>
+      {/* O consultor vê, ainda na montagem, o rótulo que vai sair impresso na ficha.
+          Altura reservada: sem ela a linha inteira do formulário pulava a cada tag. */}
+      <div style={{ fontSize: "11px", color: "var(--text-subtle)", marginTop: "5px", minHeight: "15px", lineHeight: 1.35 }}>
+        {linha ? (
+          <>
+            Ficha do produto: <b style={{ color: "var(--text-muted)" }}>LINHA {linha}</b>
+            {value.length > 1 && " · os demais entram só na capa"}
+          </>
+        ) : (
+          "Sem segmento, a ficha sai sem o rótulo de linha."
+        )}
       </div>
     </label>
   );
@@ -221,7 +262,9 @@ const ChromeContext = createContext<{ openPalette: () => void; openAssistant: ()
 });
 
 /* tipo do registro do histórico (espelha EventoProposta da API, sem importar node) */
-type StatusProposta = "rascunho" | "em_edicao" | "enviada" | "aprovada" | "recusada";
+// StatusProposta vem do CONTRATO (import type — some na compilação, não puxa node). Era
+// uma união escrita à mão aqui, e a cópia saiu de sincronia: o contrato ganhou
+// "arquivada" e a UI não, então o TS nem acusava o STATUS_UI incompleto.
 // Espelha PropostaResumo (src/lib/contracts/proposta.ts): proposta persistida + status.
 type PropostaLog = {
   id: string;
@@ -243,6 +286,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
   enviada: { label: "Enviada", bg: "#DBEAFE", fg: "#2563EB" },
   aprovada: { label: "Aprovada", bg: "#DCFCE7", fg: "#16A34A" },
   recusada: { label: "Recusada", bg: "#FEE2E2", fg: "#DC2626" },
+  arquivada: { label: "Arquivada", bg: "#E2E8F0", fg: "#475569" },
 };
 
 type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config" | "perfil";
@@ -287,11 +331,21 @@ export default function Home() {
 
   // Handoff Prospecção → Manual: dados do lead pra pré-preencher o cliente.
   const [manualPrefill, setManualPrefill] = useState<{ razaoSocial: string; segmento: string | null } | null>(null);
+  // A tela de montagem fica MONTADA o tempo todo (escondida fora de foco) — é o rascunho
+  // vivo da proposta. Antes ela era desmontada ao trocar de tela e o estado local ia
+  // junto: quem clicasse em "Nova"/"Proposta manual" depois de montar perdia cliente,
+  // itens, tamanhos, preços e diluições e recomeçava do zero (spec Item 4).
+  // `builderKey` é o ÚNICO jeito de zerar: trocar a key remonta o componente limpo.
+  const [builderKey, setBuilderKey] = useState(0);
+  // Proposta reaberta do histórico para editar — hidrata a tela de montagem inteira.
+  const [scopeParaEditar, setScopeParaEditar] = useState<PropostaScope | null>(null);
   const [catFilter, setCatFilter] = useState("Todos");
   const [catalogo, setCatalogo] = useState<Produto[] | null>(null);
   const [catalogoErro, setCatalogoErro] = useState<string | null>(null);
   const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
   const [propostasErro, setPropostasErro] = useState<string | null>(null);
+  // Ver arquivadas é opt-in: alternar zera a lista pra forçar refetch com o outro filtro.
+  const [verArquivadas, setVerArquivadas] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
 
   // Usuário da sessão atual — personaliza saudação e sidebar.
@@ -323,12 +377,13 @@ export default function Home() {
         .catch((e) => setCatalogoErro(e instanceof Error ? e.message : "Erro"));
     }
     if (screen === "history" && propostas === null) {
-      fetch("/api/propostas")
+      // Arquivadas ficam fora por padrão (o corte é no WHERE do Prisma, não aqui).
+      fetch(verArquivadas ? "/api/propostas?arquivadas=1" : "/api/propostas")
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
         .then((d: { propostas: PropostaLog[] }) => setPropostas(d.propostas))
         .catch((e) => setPropostasErro(e instanceof Error ? e.message : "Erro"));
     }
-  }, [screen, catalogo, propostas]);
+  }, [screen, catalogo, propostas, verArquivadas]);
 
   // Item é identificado pela POSIÇÃO em scope.itens, não pelo código: o mesmo produto
   // pode estar na proposta duas vezes em embalagens diferentes (5 L e 20 L) e cada linha
@@ -596,10 +651,43 @@ export default function Home() {
   // Rótulo de seção da sidebar agrupada (design "Plataforma IA Indeba").
   const navSection: CSSProperties = { fontSize: "10px", fontWeight: 700, letterSpacing: ".07em", textTransform: "uppercase", color: "rgba(255,255,255,.34)", padding: "14px 12px 5px" };
 
+  // "Nova proposta" = começar do ZERO. É a única porta que descarta o rascunho: troca a
+  // key (remonta a tela de montagem limpa) e solta a proposta atual.
   function novaProposta() {
     setManualPrefill(null);
+    setScopeParaEditar(null);
+    setScope(null);
+    setExcluded(new Set());
+    setBuilderKey((k) => k + 1);
     setError(null);
     setScreen("manual");
+  }
+
+  // "Voltar e editar seleção" (Revisão) e o item lateral "Proposta manual": voltam para o
+  // rascunho INTACTO — cliente, itens, tamanhos, preços, diluições e condições seguem lá,
+  // porque a tela nunca foi desmontada. Nada de reset (spec Item 4).
+  function voltarParaMontagem() {
+    setError(null);
+    setScreen("manual");
+  }
+
+  // Editar uma proposta JÁ SALVA: carrega o scope canônico de volta na tela de montagem
+  // (não só na revisão). Remontar regrava o mesmo id — atualização, não duplicata.
+  async function editarProposta(id: string) {
+    try {
+      const r = await fetch(`/api/propostas/${id}`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const reg = await r.json();
+      setScopeParaEditar(reg.scope as PropostaScope);
+      setScope(reg.scope as PropostaScope);
+      setExcluded(new Set());
+      setManualPrefill(null);
+      setBuilderKey((k) => k + 1); // remonta a tela já hidratada com a proposta
+      setError(null);
+      setScreen("manual");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao abrir a proposta para edição.");
+    }
   }
 
   const chrome = {
@@ -639,7 +727,8 @@ export default function Home() {
             Dashboard
           </Hoverable>
           <div className="ies-side-text" style={navSection}>Criar proposta</div>
-          <Hoverable base={navItemStyle(["manual", "review", "pdf"])} hover={navHover} onClick={novaProposta}>
+          {/* Volta pro rascunho, não reseta: era exatamente aqui que a seleção sumia. */}
+          <Hoverable base={navItemStyle(["manual", "review", "pdf"])} hover={navHover} onClick={voltarParaMontagem}>
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="2.5" width="12" height="12" rx="2" />
               <path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" />
@@ -711,7 +800,10 @@ export default function Home() {
       {/* ============ MAIN ============ */}
       <main className="ies-scroll" style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden", position: "relative" }}>
         {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} />}
-        {screen === "manual" && <ManualScreen onMontar={aplicarScopeManual} prefill={manualPrefill} />}
+        {/* Sempre montada, escondida fora de foco: é o rascunho vivo (ver builderKey). */}
+        <div style={{ display: screen === "manual" ? "contents" : "none" }}>
+          <ManualScreen key={builderKey} onMontar={aplicarScopeManual} prefill={manualPrefill} scopeParaEditar={scopeParaEditar} />
+        </div>
         {screen === "importar" && <ImportarOrcamentoScreen onMontar={aplicarScopeManual} />}
         {screen === "review" && scope && (
           <ReviewScreen
@@ -724,6 +816,7 @@ export default function Home() {
             onComandoChat={aplicarComandoChat}
             refining={refining}
             goToManual={novaProposta}
+            onVoltarEditar={voltarParaMontagem}
             goToPDF={() => setScreen("pdf")}
           />
         )}
@@ -749,7 +842,13 @@ export default function Home() {
             erro={propostasErro}
             goToManual={novaProposta}
             onReabrir={reabrirProposta}
+            onEditar={editarProposta}
             onStatus={mudarStatus}
+            verArquivadas={verArquivadas}
+            onVerArquivadas={(v) => {
+              setVerArquivadas(v);
+              setPropostas(null); // muda o filtro → refetch com o novo recorte
+            }}
           />
         )}
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
@@ -1107,16 +1206,32 @@ function MeuPerfilScreen() {
 // Monta proposta SEM IA: o vendedor escolhe direto do catálogo e define quantidades.
 // Preço vem SEMPRE do catálogo (constituição §1.1). POST /api/montar-estruturado devolve
 // o MESMO PropostaScope da via IA → cai no fluxo de revisão/PDF existente.
-function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => void; prefill?: { razaoSocial: string; segmento: string | null } | null }) {
+function ManualScreen({
+  onMontar,
+  prefill,
+  scopeParaEditar,
+}: {
+  onMontar: (s: PropostaScope) => void;
+  prefill?: { razaoSocial: string; segmento: string | null } | null;
+  // Proposta existente (reaberta do histórico) para EDITAR: hidrata a tela inteira e
+  // faz a remontagem regravar o mesmo registro, sem duplicar (spec Item 4).
+  scopeParaEditar?: PropostaScope | null;
+}) {
   const [catalogo, setCatalogo] = useState<Produto[] | null>(null);
   const [erroCat, setErroCat] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [linhaFiltro, setLinhaFiltro] = useState<string>("todas");
-  const [razaoSocial, setRazaoSocial] = useState(prefill?.razaoSocial ?? "");
-  const [cnpj, setCnpj] = useState("");
-  const [segmentos, setSegmentos] = useState<string[]>(prefill?.segmento ? prefill.segmento.split(",").map((s) => s.trim()).filter(Boolean) : []);
-  const [responsavel, setResponsavel] = useState("");
-  const [tipo, setTipo] = useState<TipoProposta>("consolidada");
+  const [razaoSocial, setRazaoSocial] = useState(scopeParaEditar?.cliente.razaoSocial ?? prefill?.razaoSocial ?? "");
+  const [cnpj, setCnpj] = useState(scopeParaEditar?.cliente.cnpj ?? "");
+  const [segmentos, setSegmentos] = useState<string[]>(
+    (scopeParaEditar?.cliente.segmento ?? prefill?.segmento ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+  );
+  const [responsavel, setResponsavel] = useState(scopeParaEditar?.cliente.responsavel ?? "");
+  const [tipo, setTipo] = useState<TipoProposta>((scopeParaEditar?.tipo as TipoProposta) ?? "consolidada");
+  // Id da proposta que está sendo montada. Nasce da que foi reaberta para edição e,
+  // depois da primeira montagem, passa a ser o id do scope gerado — assim "voltar e
+  // editar" seguido de "Montar" regrava a MESMA proposta, nunca cria outra.
+  const [idProposta, setIdProposta] = useState<string | null>(scopeParaEditar?.id ?? null);
   // SELEÇÃO chaveada por produto + TAMANHO ("PRIMMAX-DT#1"), não só pelo código: o mesmo
   // produto pode entrar na proposta em mais de uma embalagem — 5 L e 20 L viram dois itens,
   // cada um com seu preço, diluição e quantidade (pedido do Gustavo, 25/07).
@@ -1145,7 +1260,9 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
   const [precoManual, setPrecoManual] = useState<Record<string, string>>({});
   // Condições comerciais da proposta (modelo Consolidada) — começam nos defaults e são
   // editáveis já aqui, sem passar pelos "Ajustes" da Revisão.
-  const [condicoes, setCondicoes] = useState(() => consolidadaDefaults().condicoes.itens);
+  const [condicoes, setCondicoes] = useState(
+    () => scopeParaEditar?.consolidada?.condicoes.itens ?? consolidadaDefaults().condicoes.itens,
+  );
   const [draft, setDraft] = useState<{ nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; diluicao: string }>({ nome: "", tamanho: "", unidade: "L", preco: "", diluicao: "" });
   const [showCustom, setShowCustom] = useState(false);
   const nextId = useRef(1);
@@ -1158,6 +1275,53 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
       .then((d: { produtos: Produto[] }) => setCatalogo(d.produtos))
       .catch((e) => setErroCat(e instanceof Error ? e.message : "Erro ao carregar o catálogo."));
   }, []);
+
+  // Hidrata a seleção a partir de uma proposta reaberta para edição. Só roda quando o
+  // catálogo já chegou (precisamos do produto para saber QUAL tamanho estava cotado) e
+  // uma única vez por montagem da tela — a chave `key` no chamador garante isso.
+  // Item que não existe mais no catálogo (ou item próprio) volta como item próprio, com
+  // o mesmo preço/diluição: editar uma proposta antiga nunca perde linha em silêncio.
+  const hidratado = useRef(false);
+  useEffect(() => {
+    if (!scopeParaEditar || !catalogo || hidratado.current) return;
+    hidratado.current = true;
+    const qtds: Record<string, number> = {};
+    const tams: Record<string, number> = {};
+    const dils: Record<string, string> = {};
+    const nDil: Record<string, boolean> = {};
+    const precos: Record<string, string> = {};
+    const proprios: typeof custom = [];
+    for (const it of scopeParaEditar.itens) {
+      const cotada = it.embalagens[0];
+      if (!cotada) continue;
+      const p = catalogo.find((x) => x.codigo === it.codigo);
+      const idx = p?.embalagens.findIndex((e) => e.tamanho === cotada.tamanho && e.unidade === cotada.unidade) ?? -1;
+      if (!p || idx < 0) {
+        proprios.push({
+          id: nextId.current++,
+          nome: it.nome,
+          tamanho: String(cotada.tamanho),
+          unidade: cotada.unidade,
+          preco: cotada.preco,
+          diluicao: cotada.diluicaoMax ?? "",
+          qtd: it.quantidade,
+        });
+        continue;
+      }
+      const k = chave(p.codigo, idx);
+      qtds[k] = it.quantidade;
+      tams[p.codigo] = idx;
+      precos[k] = cotada.preco;
+      if (cotada.diluicaoMax) dils[k] = cotada.diluicaoMax;
+      else nDil[k] = true; // sem diluição na cotada = "não dilui" marcado na montagem
+    }
+    setItens(qtds);
+    setTamanhos(tams);
+    setDiluicoes(dils);
+    setNaoDilui(nDil);
+    setPrecoManual(precos);
+    setCustom(proprios);
+  }, [scopeParaEditar, catalogo]);
 
   const campoLabel: CSSProperties = { fontSize: "11.5px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "5px" };
   const campoInput: CSSProperties = { width: "100%", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", fontSize: "13.5px", color: "var(--text-strong)", fontFamily: "var(--font-sans)", outline: "none" };
@@ -1231,13 +1395,6 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
     setShowCustom(false);
   }
 
-  // Reordena embalagens colocando o tamanho escolhido em [0] — mantém a convenção
-  // universal do app de que embalagens[0] é sempre a cotada, sem exigir mudança de
-  // schema em PropostaItem nem nos demais pontos que já leem embalagens[0].
-  function comEscolhidoPrimeiro<E>(embalagens: E[], escolhido: E): E[] {
-    return [escolhido, ...embalagens.filter((e) => e !== escolhido)];
-  }
-
   async function montar() {
     if (montando) return;
     if (!razaoSocial.trim()) {
@@ -1267,6 +1424,9 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
     try {
       const body = {
         tipo,
+        // Editando uma proposta que já existe → mesmo id, e o auto-save regrava o
+        // registro em vez de criar duplicata no histórico (spec Item 4).
+        ...(idProposta ? { id: idProposta } : {}),
         cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmentos.join(", ") || null, responsavel: responsavel.trim() || null },
         // Só faz sentido no modelo Consolidada (é o bloco que ele renderiza).
         ...(tipo === "consolidada" ? { condicoesConsolidada: condicoes } : {}),
@@ -1278,55 +1438,33 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
             // diluído". Sobrepõe o diluicaoMax do catálogo (decisão do Gustavo 25/07).
             const naoDil = !!naoDilui[x.k];
             const dil = naoDil ? null : normalizaDiluicao(diluicoes[x.k] ?? "");
-            // Aplica na cotada ([0]) e zera o custoDiluido (recalculado no render):
+            // Aplica na cotada e zera o custoDiluido (recalculado no render):
             //  - "não dilui" → força diluicaoMax null (some o "valor por litro diluído");
             //  - diluição do consultor → sobrepõe a do catálogo;
             //  - nenhum dos dois (consultor não mexeu) → mantém o diluicaoMax do catálogo.
-            const comDiluicao = <E extends { diluicaoMax: string | null; custoDiluido: string | null }>(embs: E[]): E[] => {
-              if (!embs.length) return embs;
-              if (naoDil) return [{ ...embs[0], diluicaoMax: null, custoDiluido: null }, ...embs.slice(1)];
-              if (dil) return [{ ...embs[0], diluicaoMax: dil, custoDiluido: null }, ...embs.slice(1)];
-              return embs;
-            };
-            // Catálogo sem preço (produto arquivado): manda TODOS os tamanhos do
-            // catálogo (não só o escolhido — produto pode vir em 5/20/50L, cada um
-            // com foto/preço próprio no fornecedor) com o preço digitado pelo
-            // vendedor (nunca inventado pela IA) — mesmo preço unitário aplicado a
-            // todos por ora (preço por tamanho fica pra uma tela dedicada depois).
-            // O tamanho escolhido vai em [0] (convenção "cotada" do resto do app).
-            if (embEscolhido?.preco == null) {
-              const preco = precoDe(x.produto, x.idx);
-              return {
-                codigo: x.produto.codigo,
-                quantidade: x.qtd,
-                embalagens: comDiluicao(comEscolhidoPrimeiro(x.produto.embalagens, embEscolhido).map((e) => ({
-                  tamanho: e.tamanho,
-                  unidade: e.unidade,
-                  preco: (preco ?? 0).toFixed(2),
-                  diluicaoMax: e.diluicaoMax,
-                  custoDiluido: null,
-                }))),
-              };
-            }
-            // Com preço no catálogo: se o tamanho escolhido já é o primeiro do
-            // catálogo, comportamento de hoje (só o código, preço/tamanhos vêm de
-            // lá). Senão, manda a lista reordenada (só os tamanhos com preço real —
-            // igual ao filtro que o catálogo já aplica pro caso padrão).
-            const comPreco = x.produto.embalagens.filter((e) => e.preco != null);
-            // Atalho "só o código" (preço/tamanhos vêm do catálogo) só vale quando NÃO há
-            // diluição do consultor — com ela, precisamos mandar a embalagem cotada pra
-            // carregar o diluicaoMax digitado.
-            if (comPreco[0] === embEscolhido && !dil && !naoDil) return { codigo: x.produto.codigo, quantidade: x.qtd };
+            const comDiluicao = <E extends { diluicaoMax: string | null; custoDiluido: string | null }>(emb: E): E =>
+              naoDil ? { ...emb, diluicaoMax: null, custoDiluido: null } : dil ? { ...emb, diluicaoMax: dil, custoDiluido: null } : emb;
+            // UMA embalagem: exatamente a que o consultor escolheu no seletor de tamanho,
+            // com o preço daquele tamanho. Antes iam TODOS os tamanhos do produto — no
+            // ramo sem preço replicando o mesmo valor digitado em cada um. O consultor
+            // marcava "200 kg" e a proposta persistia 200 kg E 20 kg a R$ 77,00 (áudio do
+            // Matheus 24/07; spec Item 3). Quem quer o mesmo produto em dois tamanhos
+            // adiciona os dois — a seleção é chaveada por produto+tamanho e cada linha
+            // tem preço, diluição e quantidade próprios. Os demais tamanhos continuam
+            // visíveis na ficha, sem preço, via `tamanhosDisponiveis` (montar.ts).
+            const precoCotado = embEscolhido?.preco ?? (precoDe(x.produto, x.idx) ?? 0).toFixed(2);
             return {
               codigo: x.produto.codigo,
               quantidade: x.qtd,
-              embalagens: comDiluicao(comEscolhidoPrimeiro(comPreco, embEscolhido).map((e) => ({
-                tamanho: e.tamanho,
-                unidade: e.unidade,
-                preco: e.preco!,
-                diluicaoMax: e.diluicaoMax,
-                custoDiluido: e.custoDiluido,
-              }))),
+              embalagens: [
+                comDiluicao({
+                  tamanho: embEscolhido.tamanho,
+                  unidade: embEscolhido.unidade,
+                  preco: precoCotado,
+                  diluicaoMax: embEscolhido.diluicaoMax,
+                  custoDiluido: embEscolhido.preco ? embEscolhido.custoDiluido : null,
+                }),
+              ],
             };
           }),
           ...custom.map((c) => ({ nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: normalizaDiluicao(c.diluicao), custoDiluido: null }], quantidade: c.qtd })),
@@ -1336,6 +1474,9 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
       if (!r.ok) throw new Error(`Falha ao montar a proposta (${r.status}).`);
       const scope = await r.json();
       if (!scope || !Array.isArray(scope.itens)) throw new Error("Resposta inesperada do servidor.");
+      // Guarda o id da proposta montada: se o consultor voltar para editar a seleção e
+      // montar de novo, cai no MESMO registro em vez de duplicar (spec Item 4).
+      setIdProposta((scope as PropostaScope).id);
       onMontar(scope as PropostaScope);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Erro ao montar a proposta.");
@@ -1382,7 +1523,10 @@ function ManualScreen({ onMontar, prefill }: { onMontar: (s: PropostaScope) => v
               </div>
             )}
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "flex-end" }}>
+          {/* alinhamento pelo TOPO: o campo de Segmento cresce (tags + dica do rótulo de
+              linha) e, ancorado pela base, empurrava Razão social/CNPJ para baixo — os
+              rótulos desalinhavam a cada tag adicionada. */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px 18px", alignItems: "flex-start" }}>
             <label style={{ flex: "1 1 240px", minWidth: 0 }}>
               <div style={campoLabel}>Razão social *</div>
               <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Ex.: Laticínio São João Ltda" style={campoInput} />
@@ -1917,7 +2061,8 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
             {/* Cliente + tipo */}
             <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", animation: "popIn .3s ease both" }}>
             <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)", marginBottom: "14px" }}>Dados do cliente</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "flex-end" }}>
+            {/* topo, não base — mesma razão da tela manual (o Segmento cresce com as tags) */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px 18px", alignItems: "flex-start" }}>
               <label style={{ flex: "1 1 220px", minWidth: 0 }}>
                 <div style={campoLabel}>Razão social *</div>
                 <input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Ex.: Laticínio São João Ltda" style={campoInput} />
@@ -2014,6 +2159,7 @@ function ReviewScreen({
   onComandoChat,
   refining,
   goToManual,
+  onVoltarEditar,
   goToPDF,
 }: {
   reviewVariant: "A" | "B";
@@ -2032,7 +2178,8 @@ function ReviewScreen({
   onDefinirTeto: (teto: number) => void;
   onComandoChat: (r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null }) => string | void;
   refining: boolean;
-  goToManual: () => void;
+  goToManual: () => void; // nova proposta (descarta a seleção — confirmado no clique)
+  onVoltarEditar: () => void; // volta pra montagem preservando 100% do rascunho
   goToPDF: () => void;
 }) {
   const vTab = (v: "A" | "B"): CSSProperties => ({
@@ -2072,10 +2219,22 @@ function ReviewScreen({
         sub={`${scope.cliente.razaoSocial} · ${includedItems.length} produtos selecionados`}
         right={
           <>
-            <button onClick={goToManual} title="Nova proposta" style={{ display: "flex", alignItems: "center", gap: "5px", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", cursor: "pointer", fontSize: "13px", color: "var(--text-muted)" }}>
+            {/* A seta agora faz o que a seta promete: volta pra montagem com TUDO no
+                lugar. Antes este botão dizia "Nova" e zerava a seleção — quem se
+                arrependia de um item recomeçava a proposta inteira (spec Item 4). */}
+            <button onClick={onVoltarEditar} title="Voltar e editar a seleção (mantém tudo)" style={{ display: "flex", alignItems: "center", gap: "5px", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", cursor: "pointer", fontSize: "13px", color: "var(--text-muted)" }}>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M8 2L3 6.5 8 11" />
               </svg>
+              Voltar e editar
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("Começar uma proposta nova? A seleção atual é descartada.")) goToManual();
+              }}
+              title="Começar uma proposta do zero"
+              style={{ height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", cursor: "pointer", fontSize: "13px", color: "var(--text-muted)" }}
+            >
               Nova
             </button>
             <div style={{ display: "flex", background: "var(--surface-muted)", borderRadius: "10px", padding: "3px", gap: "2px" }}>
@@ -2279,9 +2438,17 @@ function ReviewScreen({
                     <span style={{ fontSize: "11px", color: "var(--gray-500)", fontWeight: 500 }}>{procLabel(p.procedenciaSelecao)}</span>
                     <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--gray-400)", background: "var(--gray-100)", padding: "2px 7px", borderRadius: "4px" }}>{p.codigo}</span>
                   </div>
-                  <div style={{ width: "100%", height: "90px", background: "#fff", border: "1px solid var(--gray-100)", borderRadius: "8px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                  <div style={{ width: "100%", height: "90px", background: "#fff", border: "1px solid var(--gray-100)", borderRadius: "8px", marginBottom: "12px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} onError={(e) => ((e.currentTarget.style.display = "none"))} />
+                    {/* Produto sem foto de estúdio: o que está ali é a ARTE do recipiente
+                        (galão/balde/tonel/frasco). O consultor precisa saber disso ANTES de
+                        mandar o PDF — a ficha impressa também avisa (spec Item 1). */}
+                    {imagemEhIlustrativa(p.imagemPath) && (
+                      <span style={{ position: "absolute", bottom: "4px", right: "5px", fontSize: "9.5px", fontWeight: 600, letterSpacing: ".02em", color: "var(--gray-500)", background: "var(--gray-100)", borderRadius: "4px", padding: "1px 5px" }}>
+                        imagem ilustrativa
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)", marginBottom: "4px", lineHeight: 1.3 }}>{p.nome}</div>
                   <div style={{ fontSize: "12.5px", color: "var(--gray-500)", lineHeight: 1.5, marginBottom: "12px", flex: 1 }}>{p.descricaoUso}</div>
@@ -2514,7 +2681,7 @@ function PdfScreen({
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--blue-800)" }}>{scope.cliente.razaoSocial}</div>
             {scope.cliente.cnpj && <div style={{ fontSize: "10.5px", color: "var(--gray-500)", marginTop: "3px" }}>CNPJ: {scope.cliente.cnpj}</div>}
-            {scope.cliente.segmento && <div style={{ fontSize: "10.5px", color: "var(--gray-500)", marginTop: "3px", textTransform: "capitalize" }}>{scope.cliente.segmento.replace(/_/g, " ")}</div>}
+            {scope.cliente.segmento && <div style={{ fontSize: "10.5px", color: "var(--gray-500)", marginTop: "3px" }}>{segmentosLegiveis(scope.cliente.segmento)}</div>}
             {scope.cliente.responsavel && <div style={{ fontSize: "10.5px", color: "var(--gray-500)", marginTop: "3px" }}>A/C: {scope.cliente.responsavel}</div>}
           </div>
           <div style={{ width: "210px", flex: "none", borderLeft: "1px solid var(--gray-200)", paddingLeft: "16px" }}>
@@ -2629,6 +2796,9 @@ function ImplantacaoPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
               <div style={{ textAlign: "center", marginBottom: "12px" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "220px", maxHeight: "230px", objectFit: "contain" }} onError={(ev) => (ev.currentTarget.style.display = "none")} />
+                {imagemEhIlustrativa(p.imagemPath) && (
+                  <div style={{ fontSize: "10px", color: "var(--gray-400)", marginTop: "4px", textTransform: "uppercase", letterSpacing: ".04em" }}>Imagem ilustrativa da embalagem</div>
+                )}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderRadius: "6px", padding: "9px 14px", fontSize: "12px" }}><span style={{ color: "var(--orange-500)", fontWeight: 800, marginRight: "6px" }}>o</span> Valor embalagem de <b>{e?.tamanho} {e?.unidade}</b> R$: <b style={{ color: "var(--blue-800)" }}>{dec(precoUnit(p))}</b></div>
@@ -2815,13 +2985,19 @@ function HistoryScreen({
   erro,
   goToManual,
   onReabrir,
+  onEditar,
   onStatus,
+  verArquivadas,
+  onVerArquivadas,
 }: {
   propostas: PropostaLog[] | null;
   erro: string | null;
   goToManual: () => void;
   onReabrir: (id: string) => void;
+  onEditar: (id: string) => void; // reabre na MONTAGEM para alterar a seleção
   onStatus: (id: string, status: StatusProposta) => void;
+  verArquivadas: boolean;
+  onVerArquivadas: (v: boolean) => void;
 }) {
   const cols = "1.7fr 1fr 80px 130px 80px 110px 150px";
   const lista = propostas ?? [];
@@ -2857,6 +3033,16 @@ function HistoryScreen({
           }
         />
       </div>
+
+      {/* Arquivadas ficam fora por padrão — o filtro é do servidor, então alternar
+          refaz o fetch em vez de esconder linha no cliente. */}
+      <label
+        style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "16px", fontSize: "12.5px", color: "var(--gray-500)", cursor: "pointer", width: "fit-content" }}
+        title="Propostas arquivadas não aparecem na lista nem contam nos totais"
+      >
+        <input type="checkbox" checked={verArquivadas} onChange={(e) => onVerArquivadas(e.target.checked)} style={{ cursor: "pointer" }} />
+        Mostrar arquivadas
+      </label>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "14px", marginBottom: "24px" }}>
         {stats.map((s) => (
@@ -2905,7 +3091,7 @@ function HistoryScreen({
                 hover={{ background: "var(--gray-50)" }}
               >
                 <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-900)" }}>{p.cliente}</div>
-                <div style={{ fontSize: "13px", color: "var(--gray-500)", textTransform: "capitalize" }}>{p.segmento ? p.segmento.replace(/_/g, " ") : "—"}</div>
+                <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>{p.segmento ? segmentosLegiveis(p.segmento) : "—"}</div>
                 <div style={{ fontSize: "13px", color: "var(--gray-400)" }}>{data}</div>
                 <div style={{ display: "flex", justifyContent: "center" }}>
                   {/* Status comercial editável: muda direto na lista (PATCH otimista). */}
@@ -2927,6 +3113,15 @@ function HistoryScreen({
                     style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", background: "white", border: "1px solid var(--gray-200)", borderRadius: "7px", cursor: "pointer" }}
                   >
                     Abrir
+                  </button>
+                  {/* "Abrir" leva à revisão (ver/gerar PDF); "Editar" leva à MONTAGEM,
+                      com a seleção hidratada — e regrava a mesma proposta, sem duplicar. */}
+                  <button
+                    onClick={() => onEditar(p.id)}
+                    title="Editar a seleção desta proposta (atualiza a mesma, não cria outra)"
+                    style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", background: "white", border: "1px solid var(--gray-200)", borderRadius: "7px", cursor: "pointer" }}
+                  >
+                    Editar
                   </button>
                 </div>
               </Hoverable>

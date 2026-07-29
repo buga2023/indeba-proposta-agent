@@ -20,6 +20,11 @@ export const ItemEntrada = z
 export type ItemEntrada = z.infer<typeof ItemEntrada>;
 
 export const EntradaEstruturada = z.object({
+  // Id de uma proposta que já existe: a montagem REGRAVA esse registro em vez de criar
+  // outro (upsert por id em salvarProposta). É o que sustenta "voltar e editar" e
+  // "editar uma proposta salva" sem encher o histórico de duplicatas (spec Item 4).
+  // Ausente = proposta nova (id sorteado na montagem).
+  id: z.string().min(1).optional(),
   tipo: Tipo.optional(),
   cliente: z.object({
     razaoSocial: z.string().min(1),

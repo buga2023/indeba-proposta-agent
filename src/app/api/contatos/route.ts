@@ -23,7 +23,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const { erro } = await exigirGestor(req);
   if (erro) return erro;
-  const { cliente, email } = (await req.json()) as { cliente?: string; email?: string };
+  // req.json() lança em body vazio/malformado; sem o catch virava 500 opaco em vez
+  // da validação de campo logo abaixo (mesmo idioma de cobranca/disparar).
+  const { cliente, email } = (await req.json().catch(() => ({}))) as { cliente?: string; email?: string };
   if (!cliente?.trim() || !email || !EMAIL_RE.test(email)) {
     return NextResponse.json({ erro: "Informe cliente e um e-mail válido." }, { status: 400 });
   }

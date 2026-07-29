@@ -1,6 +1,8 @@
 import type { PropostaItem, PropostaScope } from "../contracts";
 import { consolidadaDefaults } from "../consolidada-defaults";
 import { custoLitroDiluido } from "../diluicao";
+import { linhaDoSegmento, segmentosLegiveis } from "../segmento";
+import { imagemEhIlustrativa } from "../imagem-produto";
 
 export const esc = (s: string) =>
   String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -110,19 +112,32 @@ export function paginaProduto(
   logoWhite?: string,
   siteUrl = "",
   totalPag?: number,
+  segmento?: string | null,
 ): string {
   const f = item.ficha ?? null;
   const titulo = esc(item.nome); // nome comercial real — sempre bate com a ficha técnica em PDF (nunca a categoria de marketing)
   const categoria = f?.titulo && f.titulo !== item.nome ? `<div class="pp-eyebrow-cat">${esc(f.titulo)}</div>` : "";
   const subtitulo = f?.subtitulo ? `<div class="pp-sub">${esc(f.subtitulo)}</div>` : "";
-  const eyebrow = f?.linhaLabel ? `<div class="pp-eyebrow">LINHA<b>${esc(f.linhaLabel)}</b></div>` : ""; // sem linha → sem eyebrow vazio
+  // LINHA = o SEGMENTO do cliente, não mais o `ficha.linhaLabel` estático do produto.
+  // O linhaLabel era fixo por produto e inconsistente (KITCHEN/AUTO/LAUNDRY, metade em
+  // inglês): uma proposta de lavanderia saía com "LINHA KITCHEN" na ficha. Sem segmento
+  // informado → sem eyebrow (nunca cai de volta no rótulo antigo) — spec Item 2.
+  const linha = linhaDoSegmento(segmento);
+  const eyebrow = linha ? `<div class="pp-eyebrow">LINHA<b>${esc(linha)}</b></div>` : "";
   const descricao = esc(f?.descricao || item.descricaoUso || "");
+  // Embalagem cotada = SEMPRE embalagens[0] (convenção do app — ver a zona de Valor
+  // mais abaixo). Todo dado de diluição desta página sai DELA.
+  const cotada = item.embalagens[0];
   // Diluição: a ficha rica (indicadoPara/benefícios/características/rendimento) é dado de
   // catálogo que só existe pra alguns produtos (Primmax Plus/DGClor) — não inventamos pros
   // outros. Mas a EMBALAGEM já carrega diluicaoMax/custoDiluido pra vários produtos "simples"
   // (ex.: Primmax LDF, Primmax Hort) e o template não lia isso — dado real, só não estava sendo
   // usado aqui (é lido em template.ts pro modelo Express).
-  const diluicaoEmbalagem = item.embalagens.find((e) => e.diluicaoMax);
+  // Só a COTADA vale: a montagem grava a diluição do consultor em embalagens[0] e deixa as
+  // outras com o diluicaoMax do catálogo (page.tsx, `comDiluicao`). Um `find` pela primeira
+  // embalagem com diluição pegava a de outro tamanho — o consultor marcava "não dilui" e o
+  // painel continuava anunciando a diluição de catálogo do 20 L, contra o que ele informou.
+  const diluicaoEmbalagem = cotada?.diluicaoMax ? cotada : null;
   const simples = !f?.indicadoPara?.length && !f?.beneficios?.length && !f?.diluicoes?.length && !diluicaoEmbalagem && !f?.caracteristicas && !f?.rendimento;
   const semVenda = !simples && !f?.indicadoPara?.length && !f?.beneficios?.length;
 
@@ -179,24 +194,31 @@ export function paginaProduto(
   // Embalagem cotada = SEMPRE embalagens[0] (mesma convenção do resto do app —
   // preço/subtotal na revisão/dashboard também usam a primeira). "Disponíveis" lista
   // TODOS os tamanhos do produto (ficha técnica), incluindo a cotada, sem preço — spec
-  // §8, decisão final do cliente (áudio 16:24): repetir não é problema, pois a lista vem
+  // §4, decisão final do cliente (áudio 16:24): repetir não é problema, pois a lista vem
   // da ficha técnica; o único valor que aparece em qualquer lugar do card é o da cotada,
   // no bloco de Valor da rail. Ordenada por volume crescente (L convertido pra ml
   // equivalente, já que alguns produtos misturam L/ml nas embalagens — ex.: Letah Gel).
   // Ordena por volume equivalente em ml. kg conta como litro (produtos são líquidos/pó
   // com densidade ~1): sem isso "23 kg" (23) vinha antes de "5 L" (5000) e a lista saía
   // fora de ordem — 23 kg · 58 kg · 5 L.
-  const volumeOrdenacao = (e: (typeof item.embalagens)[number]) =>
+  const volumeOrdenacao = (e: { tamanho: number; unidade: string }) =>
     e.unidade === "L" || e.unidade === "kg" ? e.tamanho * 1000 : e.tamanho;
-  const disponiveis = item.embalagens.length > 1 ? [...item.embalagens].sort((a, b) => volumeOrdenacao(a) - volumeOrdenacao(b)) : [];
+  // A lista sai de `tamanhosDisponiveis` (os tamanhos que o produto TEM na ficha), não
+  // de `embalagens` — desde a spec Item 3 `embalagens` carrega só a COTADA, e ler daqui
+  // era o que fazia "escolhi 200 kg" imprimir também o 20 kg com o mesmo preço. Propostas
+  // antigas não têm o campo (default []): caem na lista de embalagens, como antes.
+  const doProduto = item.tamanhosDisponiveis?.length ? item.tamanhosDisponiveis : item.embalagens;
+  const disponiveis = doProduto.length > 1 ? [...doProduto].sort((a, b) => volumeOrdenacao(a) - volumeOrdenacao(b)) : [];
   // A cotada aparece na lista com selo "cotada" — a lista é informação da ficha
   // técnica (todos os tamanhos que o produto tem), e sem o selo o cliente lia os
   // outros tamanhos como se também estivessem sendo ofertados naquele preço
   // (áudio do Matheus 24/07: "marquei o de 5 litros, ele puxou a embalagem de 20").
+  const eCotada = (e: { tamanho: number; unidade: string }) =>
+    !!cotada && e.tamanho === cotada.tamanho && e.unidade === cotada.unidade;
   const embalagens = disponiveis.length
     ? `<div class="pp-panel"><h4>Embalagens disponíveis</h4><div class="pp-emb">${disponiveis
         .map((e) =>
-          e === item.embalagens[0]
+          eCotada(e)
             ? `<span class="pp-emb-chip pp-emb-cotada">${e.tamanho} ${esc(e.unidade)}<i>cotada</i></span>`
             : `<span class="pp-emb-chip">${e.tamanho} ${esc(e.unidade)}</span>`,
         )
@@ -209,9 +231,8 @@ export function paginaProduto(
         .join("")}</div></div>`
     : "";
 
-  // Zona de preço: só a embalagem cotada (embalagens[0]) — nunca lista os demais
-  // tamanhos com valor aqui (isso é o bloco "disponíveis" acima, sem preço).
-  const cotada = item.embalagens[0];
+  // Zona de preço: só a embalagem cotada (embalagens[0], resolvida no topo) — nunca
+  // lista os demais tamanhos com valor aqui (isso é o bloco "disponíveis" acima, sem preço).
   // Valor por litro DILUÍDO — calculado do preço cotado + a diluição da embalagem
   // cotada (lib/diluicao.ts). Na Proposta Manual essa diluição é a que o consultor
   // digita na montagem (decisão do Gustavo 25/07). É o argumento comercial de verdade
@@ -229,6 +250,14 @@ export function paginaProduto(
   // Link pra ficha técnica real (PDF em public/fichas-tecnicas/) — só quando o produto
   // tem uma cadastrada E siteUrl foi configurado (nunca gera link relativo/quebrado,
   // já que o PDF final é aberto fora do navegador).
+  // Produto sem foto de estúdio cai numa ARTE de recipiente (galão/balde/tonel/frasco,
+  // conforme o tamanho — ver imagem-produto.ts). A arte representa a embalagem, não o
+  // rótulo do produto, então a página diz isso em letra miúda: desenho nunca passa por
+  // foto do que o cliente vai receber (spec Item 1).
+  const ilustrativa = imagemEhIlustrativa(item.imagemPath)
+    ? `<div class="pp-ilustrativa">Imagem ilustrativa da embalagem</div>`
+    : "";
+
   const linkFicha = item.fichaTecnicaPath && siteUrl
     ? `<a class="pp-ficha-link" href="${esc(siteUrl)}${esc(item.fichaTecnicaPath)}" target="_blank" rel="noopener">Ver ficha técnica completa</a>`
     : "";
@@ -256,7 +285,7 @@ export function paginaProduto(
     <aside class="pp-rail">
       ${wm}
       ${eyebrow}
-      <div class="pp-figure"><div class="pp-imgcard"><img src="${dataUri}" alt="${titulo}"/></div></div>
+      <div class="pp-figure"><div class="pp-imgcard"><img src="${dataUri}" alt="${titulo}"/></div>${ilustrativa}</div>
       ${valores}
       ${linkFicha}
       ${railFoot}
@@ -332,7 +361,7 @@ export function consolidadaHtml(
     <div class="capa-card">
       ${capaRow("pessoa", "Cliente", cli.razaoSocial)}
       ${capaRow("pagamento", "CNPJ", cli.cnpj || "—")}
-      ${capaRow("prazo", "Segmento", cli.segmento || "—")}
+      ${capaRow("prazo", "Segmento", segmentosLegiveis(cli.segmento) || "—")}
       ${capaRow("pessoa", "Responsável", cli.responsavel || "—")}
     </div>
     <div class="capa-cons">
@@ -385,7 +414,9 @@ export function consolidadaHtml(
   const PRIMEIRO_PRODUTO = 4;
   const produtos = scope.itens
     .map((it, idx) =>
-      paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite, assets.siteUrl, total),
+      // `cli.segmento` alimenta o rótulo "LINHA {SEGMENTO}" da ficha (spec Item 2) —
+      // é o segmento que o consultor informou na montagem, não um rótulo do produto.
+      paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite, assets.siteUrl, total, cli.segmento),
     )
     .join("");
 
@@ -539,7 +570,10 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-wm-logo { height: 32px; width: auto; align-self: flex-start; display: block; }
 .pp-eyebrow { margin-top: 12px; font-size: 10px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-eyebrow b { color: ${ORANGE}; font-weight: 700; margin-left: 6px; }
-.pp-figure { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px 0; }
+.pp-figure { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 0; }
+/* Legenda de imagem ILUSTRATIVA (arte de recipiente, produto sem foto de estúdio).
+   Discreta de propósito: informa sem competir com a ficha. */
+.pp-ilustrativa { margin-top: 8px; font-size: 8.5px; letter-spacing: .6px; color: rgba(255,255,255,.5); text-transform: uppercase; }
 /* Card da foto: fundo BRANCO (não mais cinza) — a foto de produto (recorte com fundo
    removido) fica sobre branco, sem a "caixa cinza" que o Matheus apontou ("o meio ficou
    branco com cinza", áudio 24/07). A borda fina segura o card contra a rail navy. */

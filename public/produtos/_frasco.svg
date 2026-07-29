@@ -1,0 +1,26 @@
+<!-- Arte ILUSTRATIVA de recipiente — frasco (500 ml / 800 ml), embalagem de uso
+     direto do catálogo. Só para produto SEM foto de estúdio; UI e PDF marcam
+     "imagem ilustrativa". Fundo transparente. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="Frasco (ilustrativo)">
+  <defs>
+    <linearGradient id="f-corpo" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#dde5ee"/>
+      <stop offset="0.3" stop-color="#f8fbfd"/>
+      <stop offset="0.76" stop-color="#e2eaf2"/>
+      <stop offset="1" stop-color="#c6d1de"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="150" cy="262" rx="48" ry="8" fill="#0f2a44" opacity=".08"/>
+  <!-- tampa flip-top -->
+  <rect x="132" y="30" width="36" height="26" rx="6" fill="#8fa2b4"/>
+  <rect x="136" y="24" width="28" height="10" rx="5" fill="#a9b8c8"/>
+  <!-- gargalo -->
+  <rect x="136" y="54" width="28" height="16" fill="#ccd7e2"/>
+  <!-- corpo -->
+  <path d="M120 70h60a22 22 0 0 1 22 22v152a14 14 0 0 1-14 14h-76a14 14 0 0 1-14-14V92a22 22 0 0 1 22-22z" fill="url(#f-corpo)" stroke="#b3c0cd" stroke-width="2"/>
+  <!-- rótulo -->
+  <rect x="106" y="120" width="88" height="86" rx="6" fill="#ffffff" stroke="#dde5ee" stroke-width="2"/>
+  <rect x="106" y="120" width="88" height="9" rx="4" fill="#F07A22"/>
+  <path d="M118 150h64M118 162h44M118 174h58M118 186h38" stroke="#c9d3de" stroke-width="5" stroke-linecap="round"/>
+  <text x="150" y="234" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#7b8b9c" text-anchor="middle">ml</text>
+</svg>

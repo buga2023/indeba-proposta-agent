@@ -10,18 +10,20 @@ describe("catálogo — fonte da verdade dos preços", () => {
 
   it("valida contra o Zod e traz os 9 produtos ativos da Proposta GVA", () => {
     // Catálogo cresceu com a base técnica INDEBA/PRATT (fichas técnicas + fotos),
-    // mas os produtos novos entram ativo:false até alguém definir preço real —
-    // preço nunca nasce da IA (constituição §1.2). Os 9 originais continuam ativos.
+    // mas o `ativo` é sobre o produto estar em linha — não sobre ter preço.
     expect(catalogo.produtos.filter((p) => p.ativo).length).toBe(9);
-    const plus = catalogo.produtos.find((p) => p.codigo === "PRIMMAX-PLUS");
-    expect(plus?.embalagens[0].preco).toBe("130.00"); // valor real do PDF
+    expect(catalogo.produtos.find((p) => p.codigo === "PRIMMAX-PLUS")).toBeDefined();
   });
 
-  it("todo preço do catálogo é decimal string (nunca float) ou null (produto ainda sem preço)", () => {
+  // O catálogo é a fonte da verdade de PRODUTO (nome/ficha/foto/embalagens), não de preço:
+  // preço é do consultor, digitado na montagem ou vindo do orçamento importado, e viaja no
+  // PropostaScope. Guardião: nenhum preço volta a ser fixado aqui — foi justamente isso que
+  // deixava o app anunciar valor defasado sem ninguém ter cotado.
+  it("GUARDIÃO: o catálogo não carrega preço — nenhum preco/custoDiluido fixo", () => {
     for (const p of catalogo.produtos) {
       for (const e of p.embalagens) {
-        if (e.preco === null) continue; // produto novo (ativo:false) aguardando preço real
-        expect(e.preco).toMatch(/^\d+\.\d{2}$/);
+        expect(e.preco).toBeNull();
+        expect(e.custoDiluido).toBeNull();
       }
     }
   });

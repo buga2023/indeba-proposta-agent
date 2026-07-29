@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 const Body = z.object({ email: z.string().email().max(200), senha: z.string().min(1).max(200) });
 
 export async function POST(req: NextRequest) {
-  const parsed = Body.safeParse(await req.json());
+  const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ erro: "Dados inválidos." }, { status: 400 });
 
   const usuario = await validarCredenciais(parsed.data.email, parsed.data.senha);

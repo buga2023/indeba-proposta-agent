@@ -42,7 +42,7 @@ de check e espaçamento — para o painel não ficar desequilibrado.
 - Título "VANTAGENS DO COMODATO": 13 px, `letter-spacing` 1,8 px
 - Círculo do check: 30 px; `gap` do grid: 18 px; `padding` do painel: 26/28 px
 
-Onde: `.adv`, `.adv h4`, `.adv-grid`, `.av` em [template-consolidada.ts:476-485](src/lib/pdf/template-consolidada.ts#L476-L485).
+Onde: `.adv`, `.adv h4`, `.adv-grid`, `.av` em [template-consolidada.ts:482-492](src/lib/pdf/template-consolidada.ts#L482-L492).
 
 ## 3. Faixa branca no rodapé de todas as páginas
 
@@ -72,13 +72,13 @@ que o produto **tem** (informação da ficha técnica).
   subtotal e revisão no resto do app. O tamanho escolhido na montagem é movido para
   a posição 0 ([page.tsx:1296](src/app/page.tsx#L1296)).
 - A **zona de Valor** da rail mostra só a cotada. Nenhum outro tamanho recebe preço
-  em lugar nenhum do card — [template-consolidada.ts:212-227](src/lib/pdf/template-consolidada.ts#L212-L227).
+  em lugar nenhum do card — [template-consolidada.ts:218-233](src/lib/pdf/template-consolidada.ts#L218-L233).
 - "Embalagens disponíveis" lista todos os tamanhos, **sem preço**, e marca a cotada
   com um selo laranja `cotada`. Sem o selo, o cliente lia os demais tamanhos como se
-  também estivessem sendo ofertados àquele preço — [template-consolidada.ts:196-204](src/lib/pdf/template-consolidada.ts#L196-L204).
+  também estivessem sendo ofertados àquele preço — [template-consolidada.ts:203-211](src/lib/pdf/template-consolidada.ts#L203-L211).
 - Ordenação por volume equivalente em ml, com **kg contando como litro** (produtos
   são líquidos/pó de densidade ~1). Sem isso a lista saía "23 kg · 58 kg · 5 L" —
-  [template-consolidada.ts:189-191](src/lib/pdf/template-consolidada.ts#L189-L191).
+  [template-consolidada.ts:196-198](src/lib/pdf/template-consolidada.ts#L196-L198).
 
 Consequência de contrato: o mesmo produto em dois tamanhos são **itens distintos** da
 proposta, e a edição passa a ser por posição, não por código.
@@ -91,8 +91,21 @@ também — antes o regex só cobria `.jpg/.jpeg`, e como quase todo produto do 
 `.png`, o recorte nunca era aplicado: a foto de estúdio entrava com fundo branco opaco
 colidindo com o card.
 
-Dois produtos ficam sem cutout de propósito — **Candall Cosmetic WR** e **Spar HT-3**:
-a embalagem translúcida corrói no flood-fill. Ambos caem no fallback da foto original.
+O gerador vive em [scripts/gerar-cutouts.mjs](scripts/gerar-cutouts.mjs) — antes era
+ad-hoc e não versionado, o que deixou 6 fotos sem recorte sem ninguém perceber. `node
+scripts/gerar-cutouts.mjs` cobre só o que falta; `--forcar` regenera.
+
+Dois motivos legítimos para um produto **não** ter `-cutout.png`:
+
+- **Embalagem translúcida** — o fundo vaza pra dentro do produto e o flood-fill o corrói:
+  **Candall Cosmetic WR** e **Spar HT3**. Ficam na lista `EXCECOES` do script para que uma
+  regeneração futura não os estrague de novo.
+- **Foto que já vem transparente do fornecedor** — **Soft's Concentrado** e **Spar HT-8
+  Oxy**. Um cutout aqui seria cópia idêntica; o script detecta pela borda e pula.
+
+Nos dois casos o render cai no fallback da foto original (`resolverImagemProduto`,
+[render.ts:67-74](src/lib/pdf/render.ts#L67-L74)), que ali já está correta. Fora desses
+quatro, todo produto do catálogo tem recorte — é o que o gerador garante.
 
 ## 6. Valor por litro diluído — "o principal"
 
@@ -108,6 +121,15 @@ a diluição na montagem (ou marca "não dilui", produto pronto para uso). A dil
 automática da ficha técnica **não** é mais a fonte deste número — a ficha continua
 descrevendo o modo de diluição no painel, mas não alimenta o cálculo.
 
+**A cotada fala sozinha — no cálculo e no painel.** A montagem grava a diluição do
+consultor só em `embalagens[0]`; os demais tamanhos seguem com o `diluicaoMax` do
+catálogo ([page.tsx:1276-1290](src/app/page.tsx#L1276-L1290), `comDiluicao`). O painel
+*Modo de diluição* lia a **primeira embalagem que tivesse diluição** — então o consultor
+marcava "não dilui", o valor por litro diluído sumia (correto) e o painel continuava
+anunciando a diluição de catálogo do 20 L, contradizendo o que ele informou. Hoje toda a
+diluição da página sai da cotada ([template-consolidada.ts:120-132](src/lib/pdf/template-consolidada.ts#L120-L132)).
+Coberto por dois testes em `pagina-produto.test.ts` ("não dilui" e "segue a COTADA").
+
 **Regras de exibição.**
 
 - Sem diluição informada na embalagem cotada → o bloco não aparece. Nunca estimar.
@@ -122,13 +144,13 @@ Formas de diluição que o parser reconhece (`fatoresDiluicao`): `1:250`, `2 par
 até 100 partes`, `de 0,10% a 0,30%`, `100 mL para 10 litros`.
 
 Onde: [diluicao.ts](src/lib/diluicao.ts) · render do bloco em
-[template-consolidada.ts:220-226](src/lib/pdf/template-consolidada.ts#L220-L226).
+[template-consolidada.ts:226-232](src/lib/pdf/template-consolidada.ts#L226-L232).
 
 ## 7. Link da ficha técnica
 
 Aprovado como está. Mantida a regra: o link só é gerado quando o produto tem PDF
 cadastrado **e** `siteUrl` está configurado — nunca um link relativo, já que o PDF
-final é aberto fora do navegador. [template-consolidada.ts:232-234](src/lib/pdf/template-consolidada.ts#L232-L234)
+final é aberto fora do navegador. [template-consolidada.ts:238-240](src/lib/pdf/template-consolidada.ts#L238-L240)
 
 ## 8. Produtos sem imagem
 
@@ -152,11 +174,11 @@ Dois problemas de layout descobertos ao varrer o catálogo inteiro:
   Primmax DGCLOR virava um bloco serrilhado de 4 linhas. Passou a grid de colunas
   fixas, instrução alinhada à esquerda, fio separando finalidades. Quando a ficha traz
   `comoAplicar`, vira a tabela de 3 colunas *Modo de uso*
-  ([template-consolidada.ts:168-175](src/lib/pdf/template-consolidada.ts#L168-L175)).
+  ([template-consolidada.ts:175-182](src/lib/pdf/template-consolidada.ts#L175-L182)).
 - **Página estourada.** A ficha do Primmax Sanap não cabia no A4 e o overflow cortava o
   último painel e o rodapé de contato. Solução: **modo denso automático** por peso de
   texto — `pesoFicha > 1100` liga a classe `prodpg-denso`
-  ([template-consolidada.ts:139](src/lib/pdf/template-consolidada.ts#L139)).
+  ([template-consolidada.ts:146](src/lib/pdf/template-consolidada.ts#L146)).
 
 ## 10. Verificação
 

@@ -1,13 +1,24 @@
 import { describe, it, expect } from "vitest";
 import { montarPropostaEstruturada } from "@/lib/montar";
 
+// O catálogo não carrega mais preço (todo preco/custoDiluido é null): quem cota é o
+// consultor, e a tela manda as embalagens com o valor digitado (page.tsx, ramo
+// "catálogo sem preço"). Estes testes são sobre o BLOCO consolidada, não sobre preço —
+// então mandam a embalagem cotada explícita, igual ao que a UI real envia.
+const item = (over: Record<string, unknown> = {}) => ({
+  codigo: "PRIMMAX-PLUS",
+  quantidade: 1,
+  embalagens: [{ tamanho: 5, unidade: "L" as const, preco: "130.00", diluicaoMax: "1:100", custoDiluido: null }],
+  ...over,
+});
+
 describe("montarPropostaEstruturada — consolidada", () => {
   it("injeta bloco consolidada e copia ficha do catálogo por item", async () => {
     const scope = await montarPropostaEstruturada({
       cliente: { razaoSocial: "Sua Empresa", cnpj: null, segmento: null, responsavel: null },
       tipo: "consolidada",
       textoApresentacao: "texto manual (sem IA)",
-      itens: [{ codigo: "PRIMMAX-PLUS", quantidade: 1 }],
+      itens: [item()],
     });
     expect(scope.tipo).toBe("consolidada");
     expect(scope.consolidada).toBeDefined();
@@ -25,7 +36,7 @@ describe("montarPropostaEstruturada — consolidada", () => {
       cliente: { razaoSocial: "Sua Empresa", cnpj: null, segmento: null, responsavel: null },
       tipo: "consolidada",
       textoApresentacao: "t",
-      itens: [{ codigo: "PRIMMAX-PLUS", quantidade: 1 }],
+      itens: [item()],
       condicoesConsolidada: itens,
     });
     expect(scope.consolidada?.condicoes.itens).toEqual(itens);
@@ -37,7 +48,7 @@ describe("montarPropostaEstruturada — consolidada", () => {
       cliente: { razaoSocial: "Sua Empresa", cnpj: null, segmento: null, responsavel: null },
       tipo: "consolidada",
       textoApresentacao: "t",
-      itens: [{ codigo: "PRIMMAX-PLUS", quantidade: 1 }],
+      itens: [item()],
     });
     expect(scope.consolidada?.condicoes.itens.length).toBe(7);
   });
@@ -65,7 +76,7 @@ describe("montarPropostaEstruturada — consolidada", () => {
       cliente: { razaoSocial: "X", cnpj: null, segmento: null, responsavel: null },
       tipo: "orcamento",
       textoApresentacao: "t",
-      itens: [{ codigo: "PRIMMAX-PLUS", quantidade: 1 }],
+      itens: [item()],
     });
     expect(scope.consolidada ?? null).toBe(null);
   });

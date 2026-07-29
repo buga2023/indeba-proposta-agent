@@ -37,7 +37,7 @@ const TIPOS_OPCOES = (["orcamento", "implantacao", "comercial"] as const).map((t
 // Se o tipo de proposta não vier e não for detectável no prompt, NÃO chuta:
 // responde { precisaTipo: true } pra UI perguntar (melhor perguntar do que errar).
 export async function POST(req: NextRequest) {
-  const parsed = Body.safeParse(await req.json());
+  const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }

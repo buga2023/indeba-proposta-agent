@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
-  const parsed = ChamadoCreate.safeParse(await req.json());
+  const parsed = ChamadoCreate.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   try {
     const chamado = await criarChamado(usuario.email, parsed.data);

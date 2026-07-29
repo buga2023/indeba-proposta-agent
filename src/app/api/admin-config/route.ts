@@ -18,7 +18,9 @@ export async function PUT(req: NextRequest) {
   const u = await usuarioAtual(req);
   if (!u) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   if (u.papel !== "admin") return NextResponse.json({ erro: "Só o gestor." }, { status: 403 });
-  const { gestorEmail } = (await req.json()) as { gestorEmail?: string };
+  // req.json() lança em body vazio/malformado; sem o catch virava 500 opaco em vez
+  // da validação de campo logo abaixo (mesmo idioma de cobranca/disparar).
+  const { gestorEmail } = (await req.json().catch(() => ({}))) as { gestorEmail?: string };
   if (!gestorEmail || !EMAIL_RE.test(gestorEmail)) {
     return NextResponse.json({ erro: "E-mail do gestor inválido." }, { status: 400 });
   }

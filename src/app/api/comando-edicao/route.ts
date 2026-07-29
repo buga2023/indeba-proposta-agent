@@ -24,7 +24,7 @@ const Body = z.object({
 // catálogo real). Não aplica nada no scope: quem aplica é o cliente, com os mesmos
 // setters que os controles manuais da Revisão já usam.
 export async function POST(req: NextRequest) {
-  const parsed = Body.safeParse(await req.json());
+  const parsed = Body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }
