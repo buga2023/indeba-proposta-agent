@@ -7,7 +7,9 @@
 
 import * as React from "react";
 
-export type PaletteItem = { key: string; label: string; hint?: string };
+// `busca`: texto extra que casa na filtragem sem aparecer na linha (ex.: o SKU do
+// produto, pra "DGCLOR" achar o item mesmo o rótulo sendo o nome comercial).
+export type PaletteItem = { key: string; label: string; hint?: string; busca?: string };
 
 export function CommandPalette({
   open,
@@ -33,9 +35,13 @@ export function CommandPalette({
 
   if (!open) return null;
 
-  const filtered = q.trim()
-    ? items.filter((i) => i.label.toLowerCase().includes(q.toLowerCase()))
-    : items;
+  // Sem acento e por SKU também: "sanquat" acha "Primmax Sanquat", "dgclor" acha pelo
+  // código. Sem termo, só as telas — a lista inteira com 150 produtos não ajuda ninguém.
+  const semAcento = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const termo = semAcento(q.trim());
+  const filtered = termo
+    ? items.filter((i) => semAcento(`${i.label} ${i.busca ?? ""}`).includes(termo))
+    : items.filter((i) => !i.key.startsWith("produto:"));
 
   return (
     <div
@@ -54,7 +60,7 @@ export function CommandPalette({
             if (e.key === "Escape") onClose();
             else if (e.key === "Enter" && filtered[0]) onGo(filtered[0].key);
           }}
-          placeholder="Ir para… (digite o nome da tela)"
+          placeholder="Ir para… (tela, produto ou código)"
           style={{ width: "100%", boxSizing: "border-box", border: "none", borderBottom: "1px solid var(--gray-100)", padding: "16px 20px", fontSize: 15, outline: "none", fontFamily: "var(--font-sans), sans-serif", color: "var(--gray-900)" }}
         />
         <div className="ies-scroll" style={{ maxHeight: 340, overflowY: "auto", padding: 8 }}>

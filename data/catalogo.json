@@ -8493,6 +8493,13 @@
       "ativo": true,
       "embalagens": [
         {
+          "tamanho": 5,
+          "unidade": "L",
+          "preco": null,
+          "diluicaoMax": null,
+          "custoDiluido": null
+        },
+        {
           "tamanho": 800,
           "unidade": "ml",
           "preco": null,

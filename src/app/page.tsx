@@ -369,8 +369,10 @@ export default function Home() {
   }, []);
 
   // Carrega catálogo / histórico sob demanda (uma vez por entrada na tela).
+  // A paleta (⌘K) também busca produtos, então precisa do catálogo mesmo fora da tela
+  // de Catálogo — sem isso ela só encontraria telas, que era a queixa do QA.
   useEffect(() => {
-    if (screen === "catalog" && catalogo === null) {
+    if ((screen === "catalog" || palette) && catalogo === null) {
       fetch("/api/catalogo")
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
         .then((d: { produtos: Produto[] }) => setCatalogo(d.produtos))
@@ -383,7 +385,7 @@ export default function Home() {
         .then((d: { propostas: PropostaLog[] }) => setPropostas(d.propostas))
         .catch((e) => setPropostasErro(e instanceof Error ? e.message : "Erro"));
     }
-  }, [screen, catalogo, propostas, verArquivadas]);
+  }, [screen, catalogo, propostas, verArquivadas, palette]);
 
   // Item é identificado pela POSIÇÃO em scope.itens, não pelo código: o mesmo produto
   // pode estar na proposta duas vezes em embalagens diferentes (5 L e 20 L) e cada linha
@@ -874,7 +876,32 @@ export default function Home() {
       </main>
 
       {/* Command palette (Ctrl/Cmd+K) */}
-      <CommandPalette open={palette} onClose={() => setPalette(false)} items={CMD_ITEMS} onGo={(k) => { setScreen(k as Screen); setPalette(false); }} />
+      {/* O botão do header promete "Buscar telas, produtos…" mas a paleta só indexava
+          telas: buscar "Sanquat" dava "Nada encontrado". Produtos entram com a chave
+          `produto:<codigo>` e caem no Catálogo já filtrado pela linha do produto. */}
+      <CommandPalette
+        open={palette}
+        onClose={() => setPalette(false)}
+        items={[
+          ...CMD_ITEMS,
+          ...(catalogo ?? []).map((p) => ({
+            key: `produto:${p.codigo}`,
+            label: p.nome,
+            hint: `${humaniza(p.linha)}${p.ativo ? "" : " · arquivado"}`,
+            busca: p.codigo, // casa também por SKU, não só pelo nome
+          })),
+        ]}
+        onGo={(k) => {
+          setPalette(false);
+          if (k.startsWith("produto:")) {
+            const p = (catalogo ?? []).find((x) => x.codigo === k.slice("produto:".length));
+            setCatFilter(p && !p.ativo ? "Arquivados" : p ? humaniza(p.linha) : "Todos");
+            setScreen("catalog");
+            return;
+          }
+          setScreen(k as Screen);
+        }}
+      />
 
       {/* Assistente de ajuda — overlay global (canto inferior direito) */}
       <AjudaChat />
@@ -1652,8 +1679,13 @@ function ManualScreen({
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nome}</div>
                       <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{p.codigo} · {humaniza(p.linha)}{!p.ativo && " · arquivado"}{outrosTamanhos > 0 && ` · ${outrosTamanhos} ${outrosTamanhos === 1 ? "outro tamanho" : "outros tamanhos"} na proposta`}</div>
-                      {p.embalagens.length > 1 && (
-                        <div style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                      {/* A embalagem aparece SEMPRE, mesmo com um tamanho só. Antes o bloco
+                          inteiro sumia quando `embalagens.length === 1` (108 dos 150
+                          produtos), e o consultor incluía o item sem ver em que embalagem
+                          estava cotando — só descobria no preview do PDF. Com um tamanho
+                          vira rótulo fixo; com mais de um, o seletor de sempre. */}
+                      <div style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                        {p.embalagens.length > 1 ? (
                           <select
                             value={idx}
                             onChange={(e) => setTamanho(p.codigo, Number(e.target.value))}
@@ -1664,9 +1696,20 @@ function ManualScreen({
                               <option key={i} value={i}>{e.tamanho}{e.unidade}</option>
                             ))}
                           </select>
-                          {semPrecoCatalogo && <span style={{ fontSize: "10.5px", color: "var(--text-subtle)" }}>mesmo preço p/ todos</span>}
-                        </div>
-                      )}
+                        ) : (
+                          p.embalagens[0] && (
+                            <span
+                              title="Embalagem única deste produto, conforme a ficha técnica"
+                              style={{ fontSize: "10.5px", color: "var(--text-subtle)", border: "1px solid var(--border)", borderRadius: "6px", padding: "1px 6px", background: "var(--surface-muted)" }}
+                            >
+                              {p.embalagens[0].tamanho}{p.embalagens[0].unidade}
+                            </span>
+                          )
+                        )}
+                        {semPrecoCatalogo && p.embalagens.length > 1 && (
+                          <span style={{ fontSize: "10.5px", color: "var(--text-subtle)" }}>mesmo preço p/ todos</span>
+                        )}
+                      </div>
                       {/* Diluição de trabalho: o consultor informa (ex.: 1:20) OU marca "não
                           dilui" (produto pronto pra uso). É o que gera o "valor por litro
                           diluído" na proposta. Editável mesmo após incluir, pra poder corrigir. */}
