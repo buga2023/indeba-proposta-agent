@@ -66,9 +66,12 @@ PDF de proposta entra num log append-only.
 | Rate limit / log | Upstash Redis em produção; JSONL local em dev |
 | Testes | Vitest |
 
-O catálogo continua sendo um arquivo (`data/catalogo.json`) — é a fonte de preço e ficha,
-versionada junto com o código. O Postgres guarda o que muda no tempo: a base da Receita
-para prospecção, o store de propostas, os chamados, os e-mails aprendidos e a config.
+O catálogo continua sendo um arquivo (`data/catalogo.json`) — fonte de produto, ficha,
+embalagem e imagem, versionada junto com o código. **Preço não mora ali**: todo `preco` é
+`null` e quem cota é o consultor, na montagem, ou o orçamento importado. O que o catálogo
+garante é que nome, ficha e tamanho de embalagem nunca são inventados. O Postgres guarda o
+que muda no tempo: a base da Receita para prospecção, o store de propostas, os chamados,
+os e-mails aprendidos e a config.
 
 ## Rotas de API
 
@@ -129,7 +132,7 @@ src/
 prisma/
   schema.prisma             modelos + seed (importa data/catalogo.json e a base Receita)
 data/
-  catalogo.json             catálogo — fonte de preço e ficha
+  catalogo.json             catálogo — produto, ficha e embalagem (sem preço)
 docs/                       spec, guia e templates de apoio
 ```
 
@@ -182,8 +185,9 @@ pnpm test
 ```
 
 Cada área entrega o seu teste-guardião. Os dois principais: o preço que sai no PDF é
-sempre igual ao do catálogo, mesmo com a IA no fluxo; e, na prospecção, sem fonte web que
-case, o contato não sai e o prospect fica como estimado.
+sempre o que o humano informou — nunca um valor emitido pelo modelo, e o catálogo não
+carrega preço nenhum pra vazar; e, na prospecção, sem fonte web que case, o contato não
+sai e o prospect fica como estimado.
 
 ## Deploy
 

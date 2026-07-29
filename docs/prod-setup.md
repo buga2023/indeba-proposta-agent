@@ -108,3 +108,46 @@ pnpm rag:index                   # indexa data/catalogo.json no Qdrant local
 pnpm dev                         # http://127.0.0.1:3000
 ```
 Local usa `QDRANT_URL=http://localhost:6333` (sem key) e `OLLAMA_BASE_URL=http://localhost:11434`.
+
+> ⚠️ **`vercel env pull` sobrescreve o `.env.local` inteiro** — foi assim que o
+> `DATABASE_URL` local sumiu em jul/2026, derrubando toda rota que toca o banco.
+> Faça backup antes. E ele **não traz vars marcadas como *Sensitive***: grava a string
+> `[SENSITIVE]` no lugar. O `DATABASE_URL` de produção é uma delas, então a connection
+> string só sai do Supabase (*Project Settings → Database → Connection string*).
+> O ambiente **Development** da Vercel está vazio: as vars locais são locais.
+
+## Banco: propostas
+
+`Proposta.status` é `String` livre no Postgres (sem CHECK), validado só pelo Zod
+(`StatusProposta`). Isso já mordeu: alguém arquivou 32 propostas direto no banco com
+`status = "arquivada"`, valor que o enum não tinha — o `parse` lançava dentro do `map` e
+**o histórico inteiro voltava 500**. Duas defesas desde então:
+
+- `listarPropostas` é tolerante: status fora do enum vira `rascunho` com `console.warn`, e
+  linha que quebra o contrato em qualquer outro campo é pulada em vez de derrubar a lista.
+- `arquivada` entrou no enum. Propostas arquivadas ficam **fora da listagem e dos totais**
+  (corte no `WHERE`, não no cliente), com o checkbox "Mostrar arquivadas" pra reexibir —
+  `GET /api/propostas?arquivadas=1`.
+
+Ao adicionar status novo, mexa nos dois lados: `StatusProposta`
+(`src/lib/contracts/proposta.ts`) e o `STATUS_UI` de `page.tsx`. O `Record<StatusProposta,…>`
+quebra o build se faltar um — desde que a UI **importe** o tipo do contrato em vez de
+redeclarar a união à mão, que foi exatamente o que deixou os dois lados divergirem.
+
+Para limpar propostas de teste: `scripts/zerar-propostas.mts` (dump antes, `--confirmar`
+pra apagar). Prefira arquivar — é reversível.
+
+## Catálogo: contrato do payload
+
+`data/catalogo.json` **não guarda preço**. Todo `preco`/`custoDiluido` é `null`: quem cota
+é o consultor, na montagem (ou o orçamento importado). Há teste-guardião em
+`tests/unit/catalogo.test.ts` pra preço não voltar a ser fixado ali. Os **tamanhos**, sim,
+são do catálogo e batem com a seção `EMBALAGEM` das fichas em `public/fichas-tecnicas/` —
+auditado produto a produto em jul/2026.
+
+`GET /api/catalogo` não devolve a ficha completa: só `titulo` e `descricao`. A ficha rica
+existe pro PDF, que é montado **no servidor** (`montar.ts` copia direto pro
+`PropostaScope`) — mandá-la pro browser era 104 KB por request que nenhuma tela abria.
+A resposta usa `Cache-Control: private, no-cache` + **ETag**: o browser sempre revalida e
+recebe 304 vazio quando nada mudou. Não troque por `max-age`: com janela de tempo o
+catálogo fica obsoleto depois de um deploy (aconteceu, com 5 min de atraso).
