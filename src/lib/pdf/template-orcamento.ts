@@ -1,5 +1,6 @@
 import type { PropostaScope } from "../contracts";
 import { segmentosLegiveis } from "../segmento";
+import { tamanhoLegivel } from "../embalagem";
 
 // Tipo "orcamento" — saída ERP, FIEL ao modelo real (ref: GVA_ALIMENTOS_..._Orcamento_9572,
 // docs/estrutura-modelos.md "Orçamento (ERP)"): topo data/nº · cabeçalho da empresa com logo
@@ -32,7 +33,7 @@ export function orcamentoHtml(scope: PropostaScope): string {
       const unit = e ? Number(e.preco) : 0;
       const sub = unit * it.quantidade;
       total += sub;
-      const emb = e ? ` <span class="emb">· emb. ${e.tamanho} ${e.unidade}</span>` : "";
+      const emb = e ? ` <span class="emb">· emb. ${esc(tamanhoLegivel(e.tamanho, e.unidade))}</span>` : "";
       return `<tr>
         <td class="qt">${it.quantidade}</td>
         <td class="prod"><span class="cod">${esc(it.codigo)}</span> - <strong>${esc(it.nome)}</strong></td>

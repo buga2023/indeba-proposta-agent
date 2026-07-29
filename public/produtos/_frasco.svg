@@ -22,5 +22,4 @@
   <rect x="106" y="120" width="88" height="86" rx="6" fill="#ffffff" stroke="#dde5ee" stroke-width="2"/>
   <rect x="106" y="120" width="88" height="9" rx="4" fill="#F07A22"/>
   <path d="M118 150h64M118 162h44M118 174h58M118 186h38" stroke="#c9d3de" stroke-width="5" stroke-linecap="round"/>
-  <text x="150" y="234" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#7b8b9c" text-anchor="middle">ml</text>
 </svg>

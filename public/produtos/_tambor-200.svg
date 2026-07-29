@@ -1,0 +1,36 @@
+<!-- Arte ILUSTRATIVA de recipiente — tambor de 200 (kg ou L). Extensão da convenção de
+     embalagem do catálogo (5 galão, 20 balde, 50 bombona) para o granel da linha
+     automotiva/lavanderia, onde o produto sai em tambor: Autocar 1000 Plus e Autocar
+     Plus em 200 kg, City T Líquido em 220 kg. Antes esses caíam na bombona de 50 —
+     tamanho cotado grande com desenho de embalagem pequena (Gustavo, jul/2026).
+     Só para produto SEM foto de estúdio da embalagem cotada; UI e PDF marcam
+     "imagem ilustrativa". Sem número no desenho. Fundo transparente. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="Tambor de 200 litros (ilustrativo)">
+  <defs>
+    <linearGradient id="tb-corpo" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0f3358"/>
+      <stop offset="0.22" stop-color="#2b72b6"/>
+      <stop offset="0.58" stop-color="#1b5b9b"/>
+      <stop offset="1" stop-color="#0b2b4a"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="150" cy="268" rx="70" ry="10" fill="#0f2a44" opacity=".10"/>
+  <!-- corpo cilíndrico alto -->
+  <path d="M86 54h128v198a12 12 0 0 1-12 12H98a12 12 0 0 1-12-12z" fill="url(#tb-corpo)"/>
+  <!-- tampa -->
+  <ellipse cx="150" cy="54" rx="64" ry="15" fill="#3a83c6"/>
+  <ellipse cx="150" cy="54" rx="52" ry="11" fill="#2a6ba9"/>
+  <!-- bujões -->
+  <ellipse cx="126" cy="51" rx="10" ry="5" fill="#0e3358"/>
+  <ellipse cx="172" cy="56" rx="7" ry="4" fill="#0e3358"/>
+  <!-- aros de rolamento (a assinatura do tambor de 200) -->
+  <rect x="86" y="92" width="128" height="16" fill="#0d4576" opacity=".6"/>
+  <rect x="86" y="176" width="128" height="16" fill="#0d4576" opacity=".6"/>
+  <rect x="86" y="230" width="128" height="12" fill="#0d4576" opacity=".45"/>
+  <!-- brilho -->
+  <path d="M104 74v170" stroke="#6aa8dd" stroke-width="8" stroke-linecap="round" opacity=".35"/>
+  <!-- rótulo -->
+  <rect x="102" y="122" width="96" height="46" rx="5" fill="#ffffff" opacity=".97"/>
+  <rect x="102" y="122" width="96" height="8" rx="4" fill="#F07A22"/>
+  <path d="M114 146h72M114 157h46" stroke="#c9d3de" stroke-width="5" stroke-linecap="round"/>
+</svg>

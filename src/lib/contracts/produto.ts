@@ -45,8 +45,10 @@ export const Embalagem = z.object({
   diluicaoMax: z.string().nullable(),
   custoDiluido: z.string().nullable(),
   // Alguns produtos mudam de embalagem física por tamanho (garrafa/galão/tambor) —
-  // foto diferente por tamanho. Opcional: ausente cai no imagemPath do produto (1 foto
-  // só, comportamento de sempre). Nenhum tamanho tem essa foto cadastrada ainda.
+  // foto diferente por tamanho, e é essa que vale para o tamanho cotado. Cadastrada nos
+  // que têm as duas fotos de estúdio (City T em 5 L, Primmax CIP DT em 7,5 kg, Primmax
+  // CIP Nitro em 6,6 kg, Primmax Sanap em 5 kg, Texspar Degrease em 5 L). Ausente: cai no
+  // `fotoEmbalagem`/arte de recipiente do produto — ver lib/imagem-produto.ts.
   imagemPath: z.string().nullable().optional(),
 });
 export type Embalagem = z.infer<typeof Embalagem>;
@@ -100,6 +102,15 @@ export const Produto = z.object({
   funcoes: z.array(Funcao),
   metodos: z.array(Metodo),
   imagemPath: z.string(),
+  // Qual recipiente a foto de estúdio mostra. A foto é UMA, e um produto vendido em
+  // 20 L e 50 L só tem foto de um dos dois: sem essa marcação, cotar 20 L de Texspar DSA
+  // exibia a bombona de 50 L da foto (lista do Gustavo, jul/2026). Com ela,
+  // `imagemDaEmbalagem` (lib/imagem-produto.ts) troca por arte do recipiente cotado.
+  // Ausente = foto vale para qualquer tamanho (produto de tamanho único, ou não auditado).
+  fotoEmbalagem: z
+    .object({ tamanho: z.number().positive(), unidade: Embalagem.shape.unidade })
+    .nullable()
+    .optional(),
   fichaTecnicaPath: z.string().nullable(),
   ativo: z.boolean(),
   embalagens: z.array(EmbalagemCatalogo).min(1),

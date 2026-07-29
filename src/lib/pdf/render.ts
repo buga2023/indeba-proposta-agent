@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 import type { Browser } from "playwright-core";
 import type { PropostaScope } from "../contracts";
+import { chaveImagem } from "../imagem-produto";
 import { documentoHtml } from "./template";
 import { orcamentoHtml } from "./template-orcamento";
 import { comercialHtml } from "./template-comercial";
@@ -59,18 +60,50 @@ function dataUri(relPath: string): string {
   }
 }
 
+// A foto de estúdio vem com MUITA margem transparente em volta: o recorte preserva a
+// tela original do fotógrafo (750x900), e o recipiente ocupa só ~1/3 dela. Como o card
+// da ficha escala o ARQUIVO (object-fit), essa moldura vazia virava branco morto dentro
+// do card e o produto saía minúsculo. Aqui o arquivo é recortado na caixa do que
+// realmente tem pixel — daí o card enquadra o produto, não a tela do fotógrafo.
+//
+// `trim()` usa o pixel do canto como fundo: em PNG recortado isso é o transparente, e o
+// threshold baixo preserva sombra/reflexo (que fazem parte da foto). Qualquer falha do
+// sharp devolve o arquivo original — imagem sempre sai, no pior caso do jeito antigo.
+async function recortarMargem(buf: Buffer): Promise<Buffer> {
+  try {
+    const sharp = (await import("sharp")).default;
+    return await sharp(buf).trim({ threshold: 10 }).png({ compressionLevel: 9 }).toBuffer();
+  } catch {
+    return buf;
+  }
+}
+
+// Recorte é caro (decodifica + reencoda PNG) e o mesmo produto reaparece em propostas
+// diferentes: cache por caminho, vivo enquanto o processo viver.
+const cacheRecorte = new Map<string, string>();
+
 // Fotos com fundo removido (recorte automático + revisão visual, jul/2026) vivem ao
 // lado do original, mesmo nome + sufixo "-cutout.png" — usadas no card claro da ficha
 // de produto (consolidada) pra evitar a "caixa branca" do fundo de estúdio original
 // colidindo com o card. Nem toda foto tem uma boa (bordas translúcidas corroem no
 // recorte) — cai pro original nesse caso, sem quebrar.
-function resolverImagemProduto(imagemPath: string): string {
+export async function resolverImagemProduto(imagemPath: string): Promise<string> {
   const cutoutPath = imagemPath.replace(/\.(jpe?g|png)$/i, "-cutout.png");
-  if (cutoutPath !== imagemPath) {
-    const uri = dataUri(cutoutPath);
-    if (uri) return uri;
+  if (cutoutPath === imagemPath) return "";
+  const cacheado = cacheRecorte.get(cutoutPath);
+  if (cacheado !== undefined) return cacheado;
+
+  const abs = dentroDePublic(cutoutPath);
+  let uri = "";
+  if (abs) {
+    try {
+      uri = "data:image/png;base64," + (await recortarMargem(readFileSync(abs))).toString("base64");
+    } catch {
+      uri = ""; // sem cutout no disco: o chamador cai na imagem original
+    }
   }
-  return "";
+  cacheRecorte.set(cutoutPath, uri);
+  return uri;
 }
 
 // Rodapé institucional repetido em toda página (Playwright footerTemplate).
@@ -149,7 +182,7 @@ export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
   const generico = dataUri("/produtos/_generico.svg");
   const imagens: Record<string, string> = {};
   for (const item of scope.itens) {
-    imagens[item.codigo] = resolverImagemProduto(item.imagemPath) || dataUri(item.imagemPath) || generico;
+    imagens[chaveImagem(item)] = (await resolverImagemProduto(item.imagemPath)) || dataUri(item.imagemPath) || generico;
   }
   const banner = dataUri("/marca/header-ies.png");
 

@@ -18,6 +18,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/autocar-1000-plus.png",
+      "fotoEmbalagem": {
+        "tamanho": 20,
+        "unidade": "kg"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/autocar-1000-plus.pdf",
       "ativo": false,
       "embalagens": [
@@ -33,7 +37,8 @@
           "unidade": "kg",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/autocar-1000-plus-tambor.png"
         }
       ],
       "ficha": {
@@ -95,6 +100,10 @@
         "pulverizacao"
       ],
       "imagemPath": "/produtos/autocar-plus.png",
+      "fotoEmbalagem": {
+        "tamanho": 20,
+        "unidade": "kg"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/autocar-plus.pdf",
       "ativo": false,
       "embalagens": [
@@ -110,7 +119,8 @@
           "unidade": "kg",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/autocar-plus-tambor.png"
         }
       ],
       "ficha": {
@@ -216,6 +226,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/city-t-liquido.png",
+      "fotoEmbalagem": {
+        "tamanho": 22,
+        "unidade": "kg"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/city-t-liquido.pdf",
       "ativo": false,
       "embalagens": [
@@ -224,7 +238,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/city-t-liquido-galao.png"
         },
         {
           "tamanho": 22,
@@ -238,7 +253,8 @@
           "unidade": "kg",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/city-t-liquido-tambor.png"
         }
       ],
       "ficha": {
@@ -400,6 +416,10 @@
         "pulverizacao"
       ],
       "imagemPath": "/produtos/primmax-alclor.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-alclor.pdf",
       "ativo": false,
       "embalagens": [
@@ -415,7 +435,8 @@
           "unidade": "kg",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-alclor-balde.png"
         }
       ],
       "ficha": {
@@ -525,6 +546,10 @@
         "imersao"
       ],
       "imagemPath": "/produtos/primmax-cip-dt.png",
+      "fotoEmbalagem": {
+        "tamanho": 75,
+        "unidade": "kg"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-dt.pdf",
       "ativo": false,
       "embalagens": [
@@ -540,7 +565,8 @@
           "unidade": "kg",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-cip-dt-galao.png"
         }
       ],
       "ficha": {
@@ -601,7 +627,7 @@
         "circulacao_cip",
         "imersao"
       ],
-      "imagemPath": "/produtos/primmax-cip-dtx.jpg",
+      "imagemPath": "/produtos/_ibc-1000.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-dtx.pdf",
       "ativo": false,
       "embalagens": [
@@ -684,6 +710,10 @@
         "circulacao_cip"
       ],
       "imagemPath": "/produtos/primmax-cip-nitro.png",
+      "fotoEmbalagem": {
+        "tamanho": 66,
+        "unidade": "kg"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-nitro.pdf",
       "ativo": false,
       "embalagens": [
@@ -699,7 +729,8 @@
           "unidade": "kg",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-cip-nitro-galao.png"
         }
       ],
       "ficha": {
@@ -809,6 +840,10 @@
         "circulacao_cip"
       ],
       "imagemPath": "/produtos/primmax-cl.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cl.pdf",
       "ativo": false,
       "embalagens": [
@@ -824,7 +859,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-cl-balde.png"
         }
       ],
       "ficha": {
@@ -940,6 +976,10 @@
         "pulverizacao"
       ],
       "imagemPath": "/produtos/primmax-dga.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-dga.pdf",
       "ativo": false,
       "embalagens": [
@@ -955,14 +995,16 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-dga-tonel.png"
         },
         {
           "tamanho": 20,
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-dga-balde.png"
         }
       ],
       "ficha": {
@@ -1005,6 +1047,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/primmax-dgclor.png",
+      "fotoEmbalagem": {
+        "tamanho": 23,
+        "unidade": "kg"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-dgclor.pdf",
       "ativo": true,
       "embalagens": [
@@ -1013,7 +1059,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": "1:100",
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-dgclor-galao.png"
         },
         {
           "tamanho": 23,
@@ -1027,7 +1074,8 @@
           "unidade": "kg",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-dgclor-tonel.png"
         }
       ],
       "ficha": {
@@ -1092,6 +1140,10 @@
         "circulacao_cip"
       ],
       "imagemPath": "/produtos/primmax-dt.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-dt.pdf",
       "ativo": false,
       "embalagens": [
@@ -1107,7 +1159,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-dt-balde.png"
         }
       ],
       "ficha": {
@@ -1644,6 +1697,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/primmax-plus.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-plus.pdf",
       "ativo": true,
       "embalagens": [
@@ -1659,14 +1716,16 @@
           "unidade": "kg",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-plus-tonel.png"
         },
         {
           "tamanho": 21,
           "unidade": "kg",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-plus-balde.png"
         }
       ],
       "ficha": {
@@ -1797,6 +1856,10 @@
         "pulverizacao"
       ],
       "imagemPath": "/produtos/primmax-sanap.png",
+      "fotoEmbalagem": {
+        "tamanho": 20,
+        "unidade": "kg"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sanap.pdf",
       "ativo": false,
       "embalagens": [
@@ -1805,7 +1868,8 @@
           "unidade": "kg",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-sanap-galao.png"
         },
         {
           "tamanho": 20,
@@ -2109,6 +2173,10 @@
         "pulverizacao"
       ],
       "imagemPath": "/produtos/primmax-sanquat.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sanquat.pdf",
       "ativo": true,
       "embalagens": [
@@ -2189,6 +2257,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/primmax-sec.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sec.pdf",
       "ativo": false,
       "embalagens": [
@@ -2204,7 +2276,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-sec-balde.png"
         }
       ],
       "ficha": {
@@ -2246,6 +2319,10 @@
         "imersao"
       ],
       "imagemPath": "/produtos/primmax-sol-plus.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sol-plus.pdf",
       "ativo": false,
       "embalagens": [
@@ -2261,7 +2338,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": "1:140",
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/primmax-sol-plus-balde.png"
         }
       ],
       "ficha": {
@@ -2483,6 +2561,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/letah-gel.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/letah-gel.pdf",
       "ativo": false,
       "embalagens": [
@@ -2931,6 +3013,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/dermol-bacter-plus.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/dermol-bacter-plus.pdf",
       "ativo": true,
       "embalagens": [
@@ -2992,6 +3078,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/dermol-classic.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/dermol-classic.pdf",
       "ativo": false,
       "embalagens": [
@@ -3921,6 +4011,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/softs-max-karicia.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/softs-max-karicia.pdf",
       "ativo": false,
       "embalagens": [
@@ -3982,6 +4076,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/softs-concentrado.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/softs-concentrado.pdf",
       "ativo": false,
       "embalagens": [
@@ -3997,7 +4095,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/soft-s-concentrado-balde.png"
         }
       ],
       "ficha": {
@@ -4299,6 +4398,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/texspar-degrease.png",
+      "fotoEmbalagem": {
+        "tamanho": 50,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-degrease.pdf",
       "ativo": false,
       "embalagens": [
@@ -4307,7 +4410,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/texspar-degrease-galao.png"
         },
         {
           "tamanho": 50,
@@ -4362,6 +4466,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/texspar-dsa.png",
+      "fotoEmbalagem": {
+        "tamanho": 50,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dsa.pdf",
       "ativo": false,
       "embalagens": [
@@ -4370,7 +4478,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/texspar-dsa-balde.png"
         },
         {
           "tamanho": 50,
@@ -4422,6 +4531,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/texspar-dta.png",
+      "fotoEmbalagem": {
+        "tamanho": 50,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dta.pdf",
       "ativo": false,
       "embalagens": [
@@ -4430,7 +4543,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/texspar-dta-balde.png"
         },
         {
           "tamanho": 50,
@@ -4477,6 +4591,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/texspar-dtc.jpg",
+      "fotoEmbalagem": {
+        "tamanho": 50,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtc.pdf",
       "ativo": false,
       "embalagens": [
@@ -4536,6 +4654,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/texspar-dtk.png",
+      "fotoEmbalagem": {
+        "tamanho": 20,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtk.pdf",
       "ativo": false,
       "embalagens": [
@@ -4597,6 +4719,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/texspar-dtn.png",
+      "fotoEmbalagem": {
+        "tamanho": 50,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtn.pdf",
       "ativo": false,
       "embalagens": [
@@ -4605,7 +4731,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/texspar-dtn-balde.png"
         },
         {
           "tamanho": 50,
@@ -4659,6 +4786,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/texspar-dts.png",
+      "fotoEmbalagem": {
+        "tamanho": 50,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dts.pdf",
       "ativo": false,
       "embalagens": [
@@ -4667,7 +4798,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/texspar-dts-balde.png"
         },
         {
           "tamanho": 50,
@@ -4780,6 +4912,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/texspar-dtz.png",
+      "fotoEmbalagem": {
+        "tamanho": 50,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtz.pdf",
       "ativo": false,
       "embalagens": [
@@ -4788,7 +4924,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/texspar-dtz-balde.png"
         },
         {
           "tamanho": 50,
@@ -4839,6 +4976,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/texspar-dxa.png",
+      "fotoEmbalagem": {
+        "tamanho": 20,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxa.pdf",
       "ativo": false,
       "embalagens": [
@@ -4891,6 +5032,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/texspar-dxg-amon.png",
+      "fotoEmbalagem": {
+        "tamanho": 50,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxg-amon.pdf",
       "ativo": false,
       "embalagens": [
@@ -4954,6 +5099,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/texspar-dxg.png",
+      "fotoEmbalagem": {
+        "tamanho": 20,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxg.pdf",
       "ativo": false,
       "embalagens": [
@@ -5014,6 +5163,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/texspar-dxz.png",
+      "fotoEmbalagem": {
+        "tamanho": 50,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxz.pdf",
       "ativo": false,
       "embalagens": [
@@ -5022,7 +5175,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": null,
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/texspar-dxz-balde.png"
         },
         {
           "tamanho": 50,
@@ -5076,6 +5230,10 @@
         "diluidor_automatico"
       ],
       "imagemPath": "/produtos/texspar-pe.png",
+      "fotoEmbalagem": {
+        "tamanho": 65,
+        "unidade": "kg"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-pe.pdf",
       "ativo": false,
       "embalagens": [
@@ -5716,6 +5874,10 @@
         "imersao"
       ],
       "imagemPath": "/produtos/candall-tmi.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/candall-tmi.pdf",
       "ativo": false,
       "embalagens": [
@@ -5724,7 +5886,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": "1:10",
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/candall-tmi-balde.png"
         },
         {
           "tamanho": 5,
@@ -5783,6 +5946,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/emulsoil-130.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/emulsoil-130.pdf",
       "ativo": false,
       "embalagens": [
@@ -5798,7 +5965,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": "1:100",
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/emulsoil-130-balde.png"
         }
       ],
       "ficha": {
@@ -6027,7 +6195,7 @@
         "diluidor_automatico",
         "manual"
       ],
-      "imagemPath": "/produtos/_galao-5l.svg",
+      "imagemPath": "/produtos/spar-floor-plus.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-floor-plus.pdf",
       "ativo": false,
       "embalagens": [
@@ -6073,6 +6241,10 @@
             "razao": "diluir 1 parte do produto para até 100 partes de solução."
           }
         ]
+      },
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
       }
     },
     {
@@ -6639,6 +6811,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/spar-lg.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/spar-lg.pdf",
       "ativo": false,
       "embalagens": [
@@ -6654,7 +6830,8 @@
           "unidade": "L",
           "preco": null,
           "diluicaoMax": "1:150",
-          "custoDiluido": null
+          "custoDiluido": null,
+          "imagemPath": "/produtos/spar-lg-balde.png"
         }
       ],
       "ficha": {
@@ -7190,6 +7367,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/pratt-alcool-gel-70.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-alcool-gel-70.pdf",
       "ativo": false,
       "embalagens": [
@@ -7583,6 +7764,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/pratt-desinfetante-floral.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-floral.pdf",
       "ativo": false,
       "embalagens": [
@@ -7646,6 +7831,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/pratt-desinfetante-lavanda.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-lavanda.pdf",
       "ativo": false,
       "embalagens": [
@@ -8268,6 +8457,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/pratt-sabonete-espuma.png",
+      "fotoEmbalagem": {
+        "tamanho": 5,
+        "unidade": "L"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-sabonete-espuma.pdf",
       "ativo": false,
       "embalagens": [
@@ -8489,6 +8682,10 @@
         "manual"
       ],
       "imagemPath": "/produtos/pratt-alcool-gel.png",
+      "fotoEmbalagem": {
+        "tamanho": 800,
+        "unidade": "ml"
+      },
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-alcool-gel-70.pdf",
       "ativo": true,
       "embalagens": [

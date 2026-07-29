@@ -7,6 +7,7 @@
 
 import { useState, type CSSProperties, type ReactNode } from "react";
 import type { PropostaItem } from "@/lib/contracts";
+import { tamanhoLegivel } from "@/lib/embalagem";
 
 /* ───────────────────────── helpers ───────────────────────── */
 
@@ -18,7 +19,7 @@ export const numeroDoc = (id: string) => String((parseInt(id.replace(/[^0-9a-f]/
 export const precoUnit = (it: PropostaItem) => Number(it.embalagens[0]?.preco ?? 0);
 export const unidadeDe = (it: PropostaItem) => {
   const e = it.embalagens[0];
-  return e ? `${e.tamanho} ${e.unidade}` : "—";
+  return e ? tamanhoLegivel(e.tamanho, e.unidade) : "—";
 };
 
 // Procedência (dado real do item) no lugar da "categoria" do mock.

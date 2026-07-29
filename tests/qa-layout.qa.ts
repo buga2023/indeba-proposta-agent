@@ -13,7 +13,7 @@
 import { describe, it } from "vitest";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { montarDocumento, renderPdf } from "@/lib/pdf/render";
+import { montarDocumento, renderPdf, resolverImagemProduto } from "@/lib/pdf/render";
 import { carregarCatalogo } from "@/lib/catalogo";
 import { consolidadaDefaults } from "@/lib/consolidada-defaults";
 import type { PropostaScope, PropostaItem } from "@/lib/contracts";
@@ -69,8 +69,8 @@ describe("QA do catálogo completo", () => {
 
     const imagens: Record<string, string> = {};
     for (const it of scope.itens) {
-      const cut = it.imagemPath.replace(/\.(jpe?g|png)$/i, "-cutout.png");
-      imagens[it.codigo] = (cut !== it.imagemPath ? dataUri(cut) : "") || dataUri(it.imagemPath) || dataUri("/produtos/_generico.svg");
+      // mesmo caminho do render de produção (inclui o recorte da margem transparente)
+      imagens[it.codigo] = (await resolverImagemProduto(it.imagemPath)) || dataUri(it.imagemPath) || dataUri("/produtos/_generico.svg");
     }
     const { html } = montarDocumento(scope, imagens, "", dataUri);
 

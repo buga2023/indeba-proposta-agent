@@ -1,4 +1,6 @@
 import type { PropostaScope, PropostaItem } from "../contracts";
+import { tamanhoLegivel } from "../embalagem";
+import { chaveImagem } from "../imagem-produto";
 
 // Tipo "comercial" — formato Indeba fabricante (ref: Proposta Dengo). Estrutura
 // FIEL ao modelo (docs/estrutura-modelos.md), sem inventar: capa + páginas
@@ -13,7 +15,7 @@ const brl = (v: string) =>
 
 function produto(item: PropostaItem, dataUri: string): string {
   const unid = item.embalagens[0]?.unidade === "kg" ? "kg" : "litro";
-  const emb = item.embalagens.map((e) => `<div class="v">${e.tamanho} ${e.unidade}</div>`).join("");
+  const emb = item.embalagens.map((e) => `<div class="v">${esc(tamanhoLegivel(e.tamanho, e.unidade))}</div>`).join("");
   const prc = item.embalagens.map((e) => `<div class="v">${brl(e.preco)}</div>`).join("");
   const cst = item.embalagens
     .map((e) => `<div class="v">${e.custoDiluido ? brl(e.custoDiluido) : "—"}${e.diluicaoMax ? ` <span class="dil">até ${esc(e.diluicaoMax)}</span>` : ""}</div>`)
@@ -35,7 +37,7 @@ function produto(item: PropostaItem, dataUri: string): string {
 export function comercialHtml(scope: PropostaScope, imagens: Record<string, string>, a: Assets): string {
   const navy = "#0b4f8a";
   const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-  const itens = scope.itens.map((it) => produto(it, imagens[it.codigo] ?? "")).join("");
+  const itens = scope.itens.map((it) => produto(it, imagens[chaveImagem(it)] ?? "")).join("");
   const c = scope.condicoesComerciais;
 
   return `<html lang="pt-BR"><head><meta charset="utf-8"/><style>

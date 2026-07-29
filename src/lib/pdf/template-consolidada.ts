@@ -2,7 +2,8 @@ import type { PropostaItem, PropostaScope } from "../contracts";
 import { consolidadaDefaults } from "../consolidada-defaults";
 import { custoLitroDiluido } from "../diluicao";
 import { linhaDoSegmento, segmentosLegiveis } from "../segmento";
-import { imagemEhIlustrativa } from "../imagem-produto";
+import { chaveImagem, imagemEhIlustrativa } from "../imagem-produto";
+import { tamanhoLegivel } from "../embalagem";
 
 export const esc = (s: string) =>
   String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -208,19 +209,26 @@ export function paginaProduto(
   // era o que fazia "escolhi 200 kg" imprimir também o 20 kg com o mesmo preço. Propostas
   // antigas não têm o campo (default []): caem na lista de embalagens, como antes.
   const doProduto = item.tamanhosDisponiveis?.length ? item.tamanhosDisponiveis : item.embalagens;
-  const disponiveis = doProduto.length > 1 ? [...doProduto].sort((a, b) => volumeOrdenacao(a) - volumeOrdenacao(b)) : [];
+  // Painel também sai com UM tamanho só (era `> 1`): produto de tamanho único — Primmax
+  // Hort FLV (5,3 kg), Pratt Desincrustante (5 L) — ficava sem painel nenhum, e com isso
+  // a página inteira não dizia em lugar nenhum que aquela embalagem é a COTADA; o tamanho
+  // aparecia só no bloco de Valor da rail (pedido do Matheus, 29/07: "adc em alguns casos
+  // a informação de embalagem cotada"). Com um tamanho só o título vira "Embalagem
+  // cotada" — "disponíveis" no plural, para uma linha só, lê mal.
+  const disponiveis = [...doProduto].sort((a, b) => volumeOrdenacao(a) - volumeOrdenacao(b));
   // A cotada aparece na lista com selo "cotada" — a lista é informação da ficha
   // técnica (todos os tamanhos que o produto tem), e sem o selo o cliente lia os
   // outros tamanhos como se também estivessem sendo ofertados naquele preço
   // (áudio do Matheus 24/07: "marquei o de 5 litros, ele puxou a embalagem de 20").
   const eCotada = (e: { tamanho: number; unidade: string }) =>
     !!cotada && e.tamanho === cotada.tamanho && e.unidade === cotada.unidade;
+  const soACotada = disponiveis.length === 1 && eCotada(disponiveis[0]);
   const embalagens = disponiveis.length
-    ? `<div class="pp-panel"><h4>Embalagens disponíveis</h4><div class="pp-emb">${disponiveis
+    ? `<div class="pp-panel"><h4>${soACotada ? "Embalagem cotada" : "Embalagens disponíveis"}</h4><div class="pp-emb">${disponiveis
         .map((e) =>
           eCotada(e)
-            ? `<span class="pp-emb-chip pp-emb-cotada">${e.tamanho} ${esc(e.unidade)}<i>cotada</i></span>`
-            : `<span class="pp-emb-chip">${e.tamanho} ${esc(e.unidade)}</span>`,
+            ? `<span class="pp-emb-chip pp-emb-cotada">${esc(tamanhoLegivel(e.tamanho, e.unidade))}<i>cotada</i></span>`
+            : `<span class="pp-emb-chip">${esc(tamanhoLegivel(e.tamanho, e.unidade))}</span>`,
         )
         .join("")}</div></div>`
     : "";
@@ -240,7 +248,7 @@ export function paginaProduto(
   // de uso. Sem diluição informada → não aparece (produto pronto pra uso).
   const diluido = cotada ? custoLitroDiluido(item.embalagens) : null;
   const valores = cotada
-    ? `<div class="pp-price"><div class="pp-v-label">Valor</div><div class="pp-v-row"><span class="pp-v-size">${cotada.tamanho} ${esc(cotada.unidade)}</span><span class="pp-v-price">${brl(cotada.preco)}</span></div>${
+    ? `<div class="pp-price"><div class="pp-v-label">Valor</div><div class="pp-v-row"><span class="pp-v-size">${esc(tamanhoLegivel(cotada.tamanho, cotada.unidade))}</span><span class="pp-v-price">${brl(cotada.preco)}</span></div>${
         diluido
           ? `<div class="pp-diluido"><div class="pp-d-label">Valor por litro diluído</div><div class="pp-d-row"><span class="pp-d-price">${esc(diluido.texto)}</span><span class="pp-d-rat">diluição de ${esc(diluido.rotulo)}</span></div></div>`
           : ""
@@ -416,7 +424,7 @@ export function consolidadaHtml(
     .map((it, idx) =>
       // `cli.segmento` alimenta o rótulo "LINHA {SEGMENTO}" da ficha (spec Item 2) —
       // é o segmento que o consultor informou na montagem, não um rótulo do produto.
-      paginaProduto(it, imagens[it.codigo] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite, assets.siteUrl, total, cli.segmento),
+      paginaProduto(it, imagens[chaveImagem(it)] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite, assets.siteUrl, total, cli.segmento),
     )
     .join("");
 
@@ -577,8 +585,17 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 /* Card da foto: fundo BRANCO (não mais cinza) — a foto de produto (recorte com fundo
    removido) fica sobre branco, sem a "caixa cinza" que o Matheus apontou ("o meio ficou
    branco com cinza", áudio 24/07). A borda fina segura o card contra a rail navy. */
-.pp-imgcard { width: 240px; height: 460px; background: #fff; border: 1px solid #e6ebf2; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px -14px rgba(0,0,0,.35); }
-.pp-imgcard img { max-width: 208px; max-height: 428px; object-fit: contain; }
+/* Altura do card ERA 460px com a foto limitada a 208px de largura: como o recipiente é
+   sempre mais alto que largo (proporção ~0,75), a foto travava na LARGURA e desenhava
+   208x250 — 47% do card, com ~200px de branco morto embaixo e em cima. Somando a
+   moldura transparente que a foto de estúdio traz (o produto ocupa ~1/3 da tela do
+   arquivo), o produto saía com ~110x150px numa rail de 79mm: o "ajustar as imagens aos
+   tamanhos" do Matheus (29/07). Agora a margem transparente é recortada no render
+   (recortarMargem em pdf/render.ts) e o card acompanha a foto — mesma largura, altura
+   colada no que a imagem realmente usa. Card FIXO (não auto): mantém as fichas do
+   documento inteiro com a mesma caixa, independentemente da proporção de cada foto. */
+.pp-imgcard { width: 240px; height: 330px; background: #fff; border: 1px solid #e6ebf2; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px -14px rgba(0,0,0,.35); }
+.pp-imgcard img { max-width: 216px; max-height: 300px; object-fit: contain; }
 .pp-price { border-top: 1px solid rgba(255,255,255,.16); padding-top: 16px; }
 .pp-v-label { font-size: 9.5px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-v-row { display: flex; align-items: baseline; gap: 10px; margin-top: 7px; }

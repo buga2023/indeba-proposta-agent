@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { montarPropostaEstruturada } from "@/lib/montar";
 import { carregarCatalogo } from "@/lib/catalogo";
 import { rotuloSegmento, linhaDoSegmento } from "@/lib/segmento";
-import { imagemEhIlustrativa, arteDoRecipiente } from "@/lib/imagem-produto";
+import { imagemEhIlustrativa, arteDoRecipiente, imagemDaEmbalagem, chaveImagem } from "@/lib/imagem-produto";
 
 // Spec de ajustes da montagem (jul/2026), Itens 1 a 3. Os três nasceram do mesmo QA:
 // o consultor escolhia 200 kg e a proposta saía com 200 kg E 20 kg ao mesmo preço, a
@@ -125,5 +125,79 @@ describe("Item 1 — imagem coerente com a embalagem, e marcada como ilustrativa
       const e = p.embalagens[0];
       expect(p.imagemPath).toBe(arteDoRecipiente(e.tamanho, e.unidade));
     }
+  });
+});
+
+// Lista de QA do Gustavo (29/07): 26 produtos em que "a embalagem cotada é 20 L e aparece
+// a de 50 L". A causa é estrutural — o produto tem UMA foto de estúdio, de UM recipiente,
+// e era ela que ia pra ficha em qualquer tamanho cotado. `fotoEmbalagem` (catálogo) diz
+// qual recipiente a foto mostra; `imagemDaEmbalagem` troca por arte quando não é o cotado.
+describe("imagem segue a EMBALAGEM COTADA, não a foto fixa do produto", () => {
+  const comFoto = { imagemPath: "/produtos/texspar-dsa.png", fotoEmbalagem: { tamanho: 50, unidade: "L" as const } };
+
+  it("recipiente cotado é o da foto → sai a FOTO", () => {
+    expect(imagemDaEmbalagem(comFoto, { tamanho: 50, unidade: "L" })).toBe("/produtos/texspar-dsa.png");
+  });
+
+  it("recipiente cotado é OUTRO → sai a arte do recipiente cotado, nunca a foto errada", () => {
+    expect(imagemDaEmbalagem(comFoto, { tamanho: 20, unidade: "L" })).toContain("balde");
+    expect(imagemDaEmbalagem(comFoto, { tamanho: 5, unidade: "L" })).toContain("galao");
+  });
+
+  it("kg equivalente conta como o MESMO recipiente: 58 kg é a bombona de 50 L da foto", () => {
+    expect(imagemDaEmbalagem(comFoto, { tamanho: 58, unidade: "kg" })).toBe("/produtos/texspar-dsa.png");
+  });
+
+  it("granel ganhou arte própria: 200 kg é tambor e 1000 L é IBC, não a bombona de 50", () => {
+    // "auto car 1000 plus (nao aparece 200 kg)": a foto é o balde de 20 kg.
+    const autocar = { imagemPath: "/produtos/autocar-1000-plus.png", fotoEmbalagem: { tamanho: 20, unidade: "kg" as const } };
+    expect(imagemDaEmbalagem(autocar, { tamanho: 200, unidade: "kg" })).toContain("tambor");
+    expect(arteDoRecipiente(1000, "L")).toContain("ibc");
+    expect(arteDoRecipiente(1240, "kg")).toBe(arteDoRecipiente(1000, "L"));
+  });
+
+  it("foto do próprio tamanho, quando cadastrada, vence tudo", () => {
+    expect(imagemDaEmbalagem(comFoto, { tamanho: 20, unidade: "L", imagemPath: "/produtos/x-20l.png" })).toBe("/produtos/x-20l.png");
+  });
+
+  it("produto sem fotoEmbalagem mantém o comportamento antigo (foto do produto)", () => {
+    expect(imagemDaEmbalagem({ imagemPath: "/produtos/spar-lg.png" }, { tamanho: 20, unidade: "L" })).toBe("/produtos/spar-lg.png");
+  });
+
+  it("produto que já era arte segue o tamanho cotado, não a arte fixa do catálogo", () => {
+    // Texspar DTT está cadastrado com _balde-20.svg e é vendido em 20 L e 50 L.
+    expect(imagemDaEmbalagem({ imagemPath: "/produtos/_balde-20.svg" }, { tamanho: 50, unidade: "L" })).toContain("tonel");
+  });
+
+  it("nenhuma arte de recipiente escreve tamanho no desenho (contradiria o cotado)", async () => {
+    const { readFileSync, readdirSync } = await import("node:fs");
+    // _generico.svg fica fora: ele não é recipiente de tamanho nenhum (é o "Item manual",
+    // produto de fora do catálogo), então o texto dele não pode contradizer embalagem.
+    const artes = readdirSync("public/produtos").filter((f) => /^_.*\.svg$/.test(f) && f !== "_generico.svg");
+    expect(artes.length).toBeGreaterThan(4);
+    for (const arte of artes) {
+      expect(readFileSync(`public/produtos/${arte}`, "utf8"), arte).not.toMatch(/<text/);
+    }
+  });
+
+  it("catálogo: fotoEmbalagem sempre aponta pra um tamanho que o produto realmente tem", () => {
+    for (const p of carregarCatalogo().produtos) {
+      if (!p.fotoEmbalagem) continue;
+      const tem = p.embalagens.some((e) => e.tamanho === p.fotoEmbalagem!.tamanho && e.unidade === p.fotoEmbalagem!.unidade);
+      expect(tem, `${p.codigo}: fotoEmbalagem ${p.fotoEmbalagem.tamanho}${p.fotoEmbalagem.unidade} não está nas embalagens`).toBe(true);
+    }
+  });
+
+  it("GUARDIÃO: todo produto multi-embalagem COM foto declara qual recipiente ela mostra", () => {
+    const semAuditoria = carregarCatalogo()
+      .produtos.filter((p) => p.embalagens.length > 1 && !imagemEhIlustrativa(p.imagemPath) && !p.fotoEmbalagem)
+      .map((p) => p.codigo);
+    expect(semAuditoria).toEqual([]);
+  });
+
+  it("mesmo produto em dois tamanhos são duas imagens diferentes no PDF (chave por embalagem)", () => {
+    const base = { codigo: "PRIMMAX-CL", embalagens: [{ tamanho: 5, unidade: "L" }] };
+    const outro = { codigo: "PRIMMAX-CL", embalagens: [{ tamanho: 20, unidade: "L" }] };
+    expect(chaveImagem(base)).not.toBe(chaveImagem(outro));
   });
 });

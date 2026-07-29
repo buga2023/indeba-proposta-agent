@@ -21,6 +21,7 @@ import { consolidadaDefaults } from "@/lib/consolidada-defaults";
 import { mascaraCnpj, erroCnpj } from "@/lib/cnpj";
 import { SEGMENTOS, rotuloSegmento, linhaDoSegmento, segmentosLegiveis } from "@/lib/segmento";
 import { imagemEhIlustrativa } from "@/lib/imagem-produto";
+import { tamanhoLegivel } from "@/lib/embalagem";
 import { AjudaChat } from "@/components/ajuda-chat";
 import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
@@ -57,7 +58,7 @@ const numeroDoc = (id: string) => String((parseInt(id.replace(/[^0-9a-f]/gi, "")
 const precoUnit = (it: PropostaItem) => Number(it.embalagens[0]?.preco ?? 0);
 const unidadeDe = (it: PropostaItem) => {
   const e = it.embalagens[0];
-  return e ? `${e.tamanho} ${e.unidade}` : "—";
+  return e ? tamanhoLegivel(e.tamanho, e.unidade) : "—";
 };
 
 // Procedência (dado real do item) no lugar da "categoria" do mock.
@@ -1389,7 +1390,7 @@ function ManualScreen({
       const preco = precoDe(x.produto, x.idx) ?? 0;
       const emb = x.produto.embalagens[x.idx];
       const semPreco = emb?.preco == null;
-      const tam = emb ? `${emb.tamanho} ${emb.unidade} · ` : "";
+      const tam = emb ? `${tamanhoLegivel(emb.tamanho, emb.unidade)} · ` : "";
       return { key: x.k, nome: x.produto.nome, sub: `${tam}${fmt(preco)} un. · ${semPreco ? "preço digitado" : "catálogo"}`, preco, qtd: x.qtd, onQtd: (q: number) => setQtd(x.k, q) };
     }),
     ...custom.map((c) => ({ key: `c${c.id}`, nome: c.nome, sub: `${fmt(Number(c.preco) || 0)} un. · ${c.tamanho}${c.unidade} · manual`, preco: Number(c.preco) || 0, qtd: c.qtd, onQtd: (q: number) => setCustomQtd(c.id, q) })),
@@ -1710,7 +1711,7 @@ function ManualScreen({
                             style={{ fontSize: "10.5px", color: "var(--text-subtle)", border: "1px solid var(--border)", borderRadius: "6px", padding: "1px 4px", background: "var(--surface)" }}
                           >
                             {p.embalagens.map((e, i) => (
-                              <option key={i} value={i}>{e.tamanho}{e.unidade}</option>
+                              <option key={i} value={i}>{tamanhoLegivel(e.tamanho, e.unidade)}</option>
                             ))}
                           </select>
                         ) : (
@@ -1719,7 +1720,7 @@ function ManualScreen({
                               title="Embalagem única deste produto, conforme a ficha técnica"
                               style={{ fontSize: "10.5px", color: "var(--text-subtle)", border: "1px solid var(--border)", borderRadius: "6px", padding: "1px 6px", background: "var(--surface-muted)" }}
                             >
-                              {p.embalagens[0].tamanho}{p.embalagens[0].unidade}
+                              {tamanhoLegivel(p.embalagens[0].tamanho, p.embalagens[0].unidade)}
                             </span>
                           )
                         )}
@@ -2790,7 +2791,7 @@ function PdfScreen({
               </div>
               <div style={{ padding: "0 5px", fontSize: "9.5px", color: "var(--gray-500)", lineHeight: 1.45 }}>
                 {p.descricaoUso}
-                {e && <span style={{ color: "var(--gray-400)" }}> · emb. {e.tamanho} {e.unidade}</span>}
+                {e && <span style={{ color: "var(--gray-400)" }}> · emb. {tamanhoLegivel(e.tamanho, e.unidade)}</span>}
               </div>
               <div style={{ textAlign: "right", padding: "0 5px" }}>{dec(precoUnit(p))}</div>
               <div style={{ textAlign: "right", padding: "0 5px" }}>{dec(precoUnit(p) * p.quantidade)}</div>
@@ -2871,7 +2872,7 @@ function ImplantacaoPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
                 )}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderRadius: "6px", padding: "9px 14px", fontSize: "12px" }}><span style={{ color: "var(--orange-500)", fontWeight: 800, marginRight: "6px" }}>o</span> Valor embalagem de <b>{e?.tamanho} {e?.unidade}</b> R$: <b style={{ color: "var(--blue-800)" }}>{dec(precoUnit(p))}</b></div>
+                <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderRadius: "6px", padding: "9px 14px", fontSize: "12px" }}><span style={{ color: "var(--orange-500)", fontWeight: 800, marginRight: "6px" }}>o</span> Valor embalagem de <b>{e ? tamanhoLegivel(e.tamanho, e.unidade) : "—"}</b> R$: <b style={{ color: "var(--blue-800)" }}>{dec(precoUnit(p))}</b></div>
                 {custoLitroDiluido(p.embalagens) && (
                   <div style={{ background: creme, border: `1px solid ${cremeBorda}`, borderRadius: "6px", padding: "9px 14px", fontSize: "12px" }}><span style={{ color: "var(--orange-500)", fontWeight: 800, marginRight: "6px" }}>o</span> Valor por litro diluído (Diluição de <b>{custoLitroDiluido(p.embalagens)!.rotulo}</b>) R$: <b style={{ color: "var(--blue-800)" }}>{custoLitroDiluido(p.embalagens)!.texto.replace("R$ ", "")}</b></div>
                 )}
@@ -2937,7 +2938,7 @@ function ComercialPreview({ scope, itens }: { scope: PropostaScope; itens: Propo
               <div style={{ color: navy, fontSize: "13.5px", fontWeight: 800 }}>{p.nome}</div>
               <div style={{ fontSize: "11px", color: "#5a6878", lineHeight: 1.45, margin: "4px 0 10px" }}>{p.descricaoUso}</div>
               <div style={{ display: "flex", gap: "10px" }}>
-                {box("Embalagem", e ? `${e.tamanho} ${e.unidade}` : "—")}
+                {box("Embalagem", e ? tamanhoLegivel(e.tamanho, e.unidade) : "—")}
                 {box("Preço", fmt(precoUnit(p)))}
                 {box("Custo final por litro diluído", custoLitroDiluido(p.embalagens)?.texto ?? "—", custoLitroDiluido(p.embalagens) ? `diluição ${custoLitroDiluido(p.embalagens)!.rotulo}` : undefined)}
               </div>
@@ -3015,7 +3016,7 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
               <div style={{ color: navy, fontSize: "13.5px", fontWeight: 800 }}>{p.ficha?.titulo ?? p.nome}</div>
               <div style={{ fontSize: "11px", color: "#5a6878", lineHeight: 1.45, margin: "4px 0 10px" }}>{p.ficha?.descricao ?? p.descricaoUso}</div>
               <div style={{ display: "flex", gap: "10px" }}>
-                {box("Embalagem", e ? `${e.tamanho} ${e.unidade}` : "—")}
+                {box("Embalagem", e ? tamanhoLegivel(e.tamanho, e.unidade) : "—")}
                 {box("Preço", fmt(precoUnit(p)))}
                 {box("Custo final por litro diluído", custoLitroDiluido(p.embalagens)?.texto ?? "—", custoLitroDiluido(p.embalagens) ? `diluição ${custoLitroDiluido(p.embalagens)!.rotulo}` : undefined)}
               </div>

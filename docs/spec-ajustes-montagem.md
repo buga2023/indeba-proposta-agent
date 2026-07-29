@@ -118,11 +118,44 @@ linha com `status` fora do enum derrubava `PropostaResumo.parse` e, com ele, a *
 inteira** — uma proposta ruim escondia todo o histórico. Agora normaliza o status e pula
 linha fora do contrato, registrando.
 
+## Rodada 29/07 — ficha de produto (WhatsApp do Matheus sobre a proposta do Farid)
+
+Três pontos, todos medidos na própria proposta antes de mexer em código. (Os outros dois
+pedidos da mensagem — diluição do Pratt Desincrustante e tela de edição — o Matheus
+retirou no mesmo fio: a diluição tinha sido digitada errada e a edição já estava no ar.)
+
+**Imagem no tamanho do card.** O card da foto tinha 240x460 px e a foto travava em 208 px
+de LARGURA (o recipiente é sempre mais alto que largo), desenhando 208x250 — 47% do card,
+com ~200 px de branco morto. Pior: o arquivo de estúdio traz uma moldura transparente
+enorme (o produto ocupa ~1/3 dos 750x900 do arquivo), então o produto saía com ~110x150 px
+de verdade. Agora o render recorta a margem transparente (`recortarMargem` em
+[render.ts](src/lib/pdf/render.ts), com cache e fallback pro arquivo original se o sharp
+falhar) e o card virou 240x330 — o produto passou a ocupar **~80% do card**, contra ~16%.
+
+**Embalagem cotada sempre visível.** O painel de embalagens só saía com 2+ tamanhos, então
+produto de tamanho único (Primmax Hort FLV 5,3 kg, Pratt Desincrustante 5 L) não dizia em
+lugar nenhum da página que aquela era a embalagem cotada. Agora sai com um tamanho
+também, e nesse caso o título é **"Embalagem cotada"** em vez de "Embalagens disponíveis".
+
+**Tamanho com vírgula.** `${e.tamanho}` interpolado direto imprimia o separador decimal do
+JavaScript: "5.3 kg" na proposta do cliente. [embalagem.ts](src/lib/embalagem.ts)
+centraliza o rótulo (`5 L`, `5,3 kg`, `1.240 kg`) e é usado nos quatro templates de PDF e
+nos rótulos de embalagem da tela.
+
+Junto, do mesmo print: os rótulos de "Indicado para" saíam **crus** para o cliente
+(`packing_house`, `cozinha_comercial`). 45 rótulos de 15 produtos normalizados em
+`data/catalogo-ficha-rascunho.json` para a grafia que o próprio arquivo já usava
+("Packing House", "Cozinha Industrial") — mesmo defeito que o Item 2 corrigiu no segmento.
+
 ## Verificação
 
 - `pnpm test` — inclui [embalagem-e-linha.test.ts](tests/unit/embalagem-e-linha.test.ts)
   (12 testes: cotada única, tamanhos disponíveis, id preservado, normalização de
   segmento, recipiente por volume equivalente, nenhum genérico no catálogo).
+- `pnpm test` — inclui
+  [ficha-embalagem-cotada.test.ts](tests/unit/ficha-embalagem-cotada.test.ts) (6 testes
+  da rodada 29/07: rótulo de tamanho em pt-BR, painel de tamanho único com selo de
+  cotada, guardião contra ponto decimal na página).
 - `pnpm exec vitest run --config vitest.qa.config.ts tests/qa-proposta.qa.ts` — monta
   uma proposta real (3 produtos, um deles cotado num tamanho que **não** é o primeiro do
   catálogo), gera o PDF pelo mesmo `renderPdf` da rota e confere item a item.

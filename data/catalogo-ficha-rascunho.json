@@ -285,15 +285,15 @@
     "linhaLabel": "HORTIFRUTI",
     "indicadoPara": [
       {
-        "label": "packing_house",
+        "label": "Packing House",
         "icone": "selo"
       },
       {
-        "label": "cozinha",
+        "label": "Cozinha",
         "icone": "dispenser"
       },
       {
-        "label": "hotel",
+        "label": "Hotel",
         "icone": "limpeza"
       }
     ],
@@ -416,15 +416,15 @@
     "linhaLabel": "HORTIFRUTI",
     "indicadoPara": [
       {
-        "label": "packing_house",
+        "label": "Packing House",
         "icone": "selo"
       },
       {
-        "label": "cozinha_comercial",
+        "label": "Cozinha Comercial",
         "icone": "cozinha"
       },
       {
-        "label": "restaurante",
+        "label": "Restaurante",
         "icone": "restaurante"
       }
     ],
@@ -533,15 +533,15 @@
     "linhaLabel": "INDUSTRIA",
     "indicadoPara": [
       {
-        "label": "industria_alimentos_bebidas",
+        "label": "Indústria de Alimentos e Bebidas",
         "icone": "selo"
       },
       {
-        "label": "multiuso",
+        "label": "Multiuso",
         "icone": "diluidor"
       },
       {
-        "label": "reducao_de_consumo",
+        "label": "Redução de Consumo",
         "icone": "suporte"
       }
     ],
@@ -741,19 +741,19 @@
     "linhaLabel": "FOOD",
     "indicadoPara": [
       {
-        "label": "indústria alimentícia",
+        "label": "Indústria Alimentícia",
         "icone": "selo"
       },
       {
-        "label": "cozinha industrial",
+        "label": "Cozinha Industrial",
         "icone": "cozinha"
       },
       {
-        "label": "linhas de produção",
+        "label": "Linhas de Produção",
         "icone": "restaurante"
       },
       {
-        "label": "tratamento de vísceras",
+        "label": "Tratamento de Vísceras",
         "icone": "pessoa"
       }
     ],
@@ -973,15 +973,15 @@
     "linhaLabel": "HOSPITALAR",
     "indicadoPara": [
       {
-        "label": "hospital",
+        "label": "Hospital",
         "icone": "pessoa"
       },
       {
-        "label": "quarto de hospital",
+        "label": "Quarto de Hospital",
         "icone": "limpeza"
       },
       {
-        "label": "ambulatório",
+        "label": "Ambulatório",
         "icone": "diluidor"
       }
     ],
@@ -2493,15 +2493,15 @@
     "linhaLabel": "INDUSTRIAL",
     "indicadoPara": [
       {
-        "label": "indústria",
+        "label": "Indústria",
         "icone": "automotivo"
       },
       {
-        "label": "manutenção",
+        "label": "Manutenção",
         "icone": "diluidor"
       },
       {
-        "label": "limpeza pesada",
+        "label": "Limpeza Pesada",
         "icone": "limpeza"
       }
     ],
@@ -2624,15 +2624,15 @@
     "linhaLabel": "FLOOR",
     "indicadoPara": [
       {
-        "label": "indústria",
+        "label": "Indústria",
         "icone": "piso"
       },
       {
-        "label": "cozinha industrial",
+        "label": "Cozinha Industrial",
         "icone": "piso"
       },
       {
-        "label": "áreas comerciais",
+        "label": "Áreas Comerciais",
         "icone": "piso"
       }
     ],
@@ -2960,19 +2960,19 @@
     "linhaLabel": "PRO",
     "indicadoPara": [
       {
-        "label": "indústria",
+        "label": "Indústria",
         "icone": "selo"
       },
       {
-        "label": "comércio",
+        "label": "Comércio",
         "icone": "pessoa"
       },
       {
-        "label": "vias públicas",
+        "label": "Vias Públicas",
         "icone": "lixeira"
       },
       {
-        "label": "equipamentos",
+        "label": "Equipamentos",
         "icone": "diluidor"
       }
     ],
@@ -3106,19 +3106,19 @@
     "linhaLabel": "FLOOR",
     "indicadoPara": [
       {
-        "label": "restaurante",
+        "label": "Restaurante",
         "icone": "restaurante"
       },
       {
-        "label": "hotel",
+        "label": "Hotel",
         "icone": "hotel"
       },
       {
-        "label": "churrascaria",
+        "label": "Churrascaria",
         "icone": "churrascaria"
       },
       {
-        "label": "piso",
+        "label": "Piso",
         "icone": "piso"
       }
     ],
@@ -3189,19 +3189,19 @@
     "linhaLabel": "HAND",
     "indicadoPara": [
       {
-        "label": "hospital",
+        "label": "Hospital",
         "icone": "pessoa"
       },
       {
-        "label": "lavanderia",
+        "label": "Lavanderia",
         "icone": "dispenser"
       },
       {
-        "label": "cozinha_industrial",
+        "label": "Cozinha Industrial",
         "icone": "restaurante"
       },
       {
-        "label": "administrativo",
+        "label": "Administrativo",
         "icone": "contrato"
       }
     ],
@@ -3379,15 +3379,15 @@
     "linhaLabel": "SANITARY",
     "indicadoPara": [
       {
-        "label": "banheiro",
+        "label": "Banheiro",
         "icone": "pessoa"
       },
       {
-        "label": "superfícies",
+        "label": "Superfícies",
         "icone": "limpeza"
       },
       {
-        "label": "diluidor",
+        "label": "Diluidor",
         "icone": "diluidor"
       }
     ],
@@ -3480,15 +3480,15 @@
     "linhaLabel": "INDUSTRIAL",
     "indicadoPara": [
       {
-        "label": "indústria",
+        "label": "Indústria",
         "icone": "selo"
       },
       {
-        "label": "cozinha industrial",
+        "label": "Cozinha Industrial",
         "icone": "restaurante"
       },
       {
-        "label": "limpeza pesada",
+        "label": "Limpeza Pesada",
         "icone": "limpeza"
       }
     ],
@@ -3619,15 +3619,15 @@
     "linhaLabel": "CLEAN",
     "indicadoPara": [
       {
-        "label": "hotel",
+        "label": "Hotel",
         "icone": "hotel"
       },
       {
-        "label": "hospital",
+        "label": "Hospital",
         "icone": "pessoa"
       },
       {
-        "label": "condominio",
+        "label": "Condomínio",
         "icone": "limpeza"
       }
     ],
@@ -3671,11 +3671,11 @@
     "linhaLabel": "POSTWORK",
     "indicadoPara": [
       {
-        "label": "industrial",
+        "label": "Industrial",
         "icone": "automotivo"
       },
       {
-        "label": "tratamento_pisos",
+        "label": "Tratamento de Pisos",
         "icone": "piso"
       }
     ],

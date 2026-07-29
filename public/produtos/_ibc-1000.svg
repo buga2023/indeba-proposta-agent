@@ -1,0 +1,37 @@
+<!-- Arte ILUSTRATIVA de recipiente — IBC/contêiner de 1000 (kg ou L), o granel do
+     catálogo: Primmax Sanquat em 1000 L e Primmax CIP DTX em 1240 kg. Antes caíam na
+     bombona de 50 — o cliente via um desenho de embalagem 20x menor que a cotada
+     (Gustavo, jul/2026). Só para produto SEM foto de estúdio da embalagem cotada; UI e
+     PDF marcam "imagem ilustrativa". Sem número no desenho. Fundo transparente. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="Contêiner IBC de 1000 litros (ilustrativo)">
+  <defs>
+    <linearGradient id="ibc-corpo" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#dbe4ed"/>
+      <stop offset="0.3" stop-color="#f4f8fb"/>
+      <stop offset="0.75" stop-color="#e0e8f0"/>
+      <stop offset="1" stop-color="#c3cfdb"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="150" cy="266" rx="82" ry="9" fill="#0f2a44" opacity=".10"/>
+  <!-- palete de base -->
+  <rect x="62" y="240" width="176" height="14" rx="3" fill="#8fa2b4"/>
+  <rect x="70" y="254" width="24" height="10" rx="2" fill="#7d90a2"/>
+  <rect x="138" y="254" width="24" height="10" rx="2" fill="#7d90a2"/>
+  <rect x="206" y="254" width="24" height="10" rx="2" fill="#7d90a2"/>
+  <!-- corpo cúbico -->
+  <rect x="70" y="66" width="160" height="176" rx="10" fill="url(#ibc-corpo)" stroke="#b3c0cd" stroke-width="2"/>
+  <!-- gaiola metálica: a assinatura do IBC -->
+  <g stroke="#8fa2b4" stroke-width="5" stroke-linecap="round" opacity=".9">
+    <path d="M70 100h160M70 138h160M70 176h160M70 214h160"/>
+    <path d="M110 66v176M150 66v176M190 66v176"/>
+  </g>
+  <!-- boca superior -->
+  <rect x="128" y="46" width="44" height="22" rx="5" fill="#ccd7e2" stroke="#b3c0cd" stroke-width="2"/>
+  <rect x="122" y="34" width="56" height="16" rx="7" fill="#8fa2b4"/>
+  <!-- torneira de descarga -->
+  <rect x="140" y="242" width="20" height="8" fill="#7d90a2"/>
+  <!-- rótulo -->
+  <rect x="112" y="112" width="76" height="60" rx="5" fill="#ffffff" stroke="#dde5ee" stroke-width="2"/>
+  <rect x="112" y="112" width="76" height="9" rx="4" fill="#F07A22"/>
+  <path d="M124 140h52M124 152h34" stroke="#c9d3de" stroke-width="5" stroke-linecap="round"/>
+</svg>

@@ -1,5 +1,7 @@
 import type { PropostaScope, PropostaItem } from "../contracts";
 import { capaExpressHtml, capaExpressCss } from "./capa-express";
+import { tamanhoLegivel } from "../embalagem";
+import { chaveImagem } from "../imagem-produto";
 
 // Tipo "implantacao" — Indeba Express, visual da spec da capa
 // (Especificacao_Capa_Proposta_Indeba_Express.md): branco premium, azul
@@ -46,7 +48,7 @@ const linhaValor = (m: Marca, paths: string, rotulo: string, valor: string) =>
 function produtoPagina(item: PropostaItem, idx: number, dataUri: string, m: Marca, primeiro: boolean): string {
   const linhas = item.embalagens
     .map((emb) => {
-      const valor = linhaValor(m, P_CAIXA, `Valor da embalagem de ${emb.tamanho} ${emb.unidade}`, `R$ ${dec(emb.preco)}`);
+      const valor = linhaValor(m, P_CAIXA, `Valor da embalagem de ${esc(tamanhoLegivel(emb.tamanho, emb.unidade))}`, `R$ ${dec(emb.preco)}`);
       const dil =
         emb.custoDiluido && emb.diluicaoMax
           ? linhaValor(m, P_GOTA, `Valor por litro diluído — diluição de até ${esc(emb.diluicaoMax)}`, `R$ ${dec(emb.custoDiluido)}`)
@@ -92,7 +94,7 @@ export function documentoHtml(
         ? `<img class="banner" src="${banner}" alt="${m.nome}"/>`
         : `<div class="banner-txt">${m.nome}</div>`;
 
-  const itens = scope.itens.map((it, i) => produtoPagina(it, i, imagens[it.codigo] ?? "", m, i === 0)).join("");
+  const itens = scope.itens.map((it, i) => produtoPagina(it, i, imagens[chaveImagem(it)] ?? "", m, i === 0)).join("");
 
   // Capa "Proposta de Solução" (spec da capa Express) — só para a marca Express.
   const capa = express ? capaExpressHtml(scope, { logo: assets.logoExpress, simbolo: assets.simboloExpress }) : "";
