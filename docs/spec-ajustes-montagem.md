@@ -132,6 +132,13 @@ de verdade. Agora o render recorta a margem transparente (`recortarMargem` em
 [render.ts](src/lib/pdf/render.ts), com cache e fallback pro arquivo original se o sharp
 falhar) e o card virou 240x330 — o produto passou a ocupar **~80% do card**, contra ~16%.
 
+**Zona de Valor +25%.** Segundo print do mesmo dia: a caixa que o cliente lê primeiro
+(VALOR · preço · valor por litro diluído · nota de maiores volumes · link da ficha ·
+rodapé da página) vinha em corpo de nota de rodapé, 8,5-9,5 px. Toda a caixa subiu 25%,
+linha a linha, para a hierarquia não mudar: 9,5→11,9 · 12→15 · 27→33,8 · 17→21,3 ·
+9→11,3 · 8,5→10,6. Cabe na rail sem espremer a foto — o card segue em 240x330 e a
+varredura do catálogo inteiro continua em 0 problemas.
+
 **Embalagem cotada sempre visível.** O painel de embalagens só saía com 2+ tamanhos, então
 produto de tamanho único (Primmax Hort FLV 5,3 kg, Pratt Desincrustante 5 L) não dizia em
 lugar nenhum da página que aquela era a embalagem cotada. Agora sai com um tamanho
@@ -141,6 +148,25 @@ também, e nesse caso o título é **"Embalagem cotada"** em vez de "Embalagens 
 JavaScript: "5.3 kg" na proposta do cliente. [embalagem.ts](src/lib/embalagem.ts)
 centraliza o rótulo (`5 L`, `5,3 kg`, `1.240 kg`) e é usado nos quatro templates de PDF e
 nos rótulos de embalagem da tela.
+
+**Arte de recipiente na mesma escala da foto.** Com a imagem passando a seguir a
+embalagem cotada (commit anterior), muita ficha caiu na arte do recipiente — e as seis
+artes eram desenhos verticais dentro de uma `viewBox` QUADRADA de 300x300, com metade da
+largura vazia. No card, o SVG entrava como quadrado e o desenho ficava com ~95x168 px,
+contra 216x290 de uma foto recortada. A `viewBox` (e o width/height) de cada arte foi
+apertada na caixa do desenho — só a moldura, nenhum traço redesenhado: galão 0,58 ·
+balde 0,65 · bombona 0,57 · tambor 0,60 · IBC 0,74 · frasco 0,44 de proporção.
+
+**Diluição da ficha como sugestão.** Fecha o último ponto do áudio de 24/07 ("não me deu
+o principal, que é o valor por litro diluído, na diluição que a ficha técnica puxa" — era
+o Primmax DT). Em 22 produtos a diluição só existe no texto da ficha, não no
+`diluicaoMax` da embalagem: o campo da montagem abria vazio e, como diluição é
+obrigatória (Item 3 acima), o consultor tinha que abrir o PDF da ficha e digitar. Agora
+aparece um botão **"ficha: até 1:N"** ao lado do campo, que preenche num clique
+(`diluicaoSugeridaDaFicha` em [diluicao.ts](src/lib/diluicao.ts)). Continua sendo
+sugestão: nada entra na proposta sem o consultor clicar, porque o número da ficha é a
+diluição máxima TEÓRICA — no Farid o Matheus cotou o DT a 1:500, e a ficha diz até
+1:1000. A decisão de 25/07 ("a diluição é sempre do consultor") segue valendo.
 
 Junto, do mesmo print: os rótulos de "Indicado para" saíam **crus** para o cliente
 (`packing_house`, `cozinha_comercial`). 45 rótulos de 15 produtos normalizados em

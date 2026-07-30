@@ -70,6 +70,22 @@ export type CustoDiluido = { valor: number; fator: number; rotulo: string; texto
 // cotada → sem valor por litro diluído (produto pronto pra uso, ou o consultor não
 // informou). A ficha continua descrevendo o modo de diluição (painel do template),
 // mas não é mais a fonte deste número.
+// Diluição descrita na FICHA TÉCNICA, no formato do campo da montagem ("1:1000").
+// É SUGESTÃO, nunca valor: o número que sai na proposta continua sendo o que o
+// consultor deixa no campo (decisão do Gustavo 25/07). Existe porque em 22 produtos do
+// catálogo a diluição só mora no texto da ficha — o `diluicaoMax` da embalagem é null e
+// o campo abria vazio, obrigando o consultor a abrir o PDF da ficha e digitar na mão.
+// Era esse o "não me deu o principal, que é o valor por litro diluído, na diluição que a
+// ficha técnica puxa" do áudio do Matheus (24/07), no Primmax DT.
+// O fator é o MAIOR que a ficha descreve — a diluição máxima, teórica; por isso a tela
+// mostra "ficha: até 1:N", e não um número já aplicado.
+export function diluicaoSugeridaDaFicha(ficha: FichaProduto | null | undefined): string | null {
+  const fatores = (ficha?.diluicoes ?? []).flatMap((d) => fatoresDiluicao(`${d.uso} ${d.razao}`));
+  if (!fatores.length) return null;
+  const f = Math.max(...fatores);
+  return `1:${f >= 10 ? Math.round(f) : f.toFixed(1).replace(".", ",")}`;
+}
+
 export function custoLitroDiluido(embalagens: Embalagem[]): CustoDiluido | null {
   const cotada = embalagens[0];
   if (!cotada?.diluicaoMax) return null;

@@ -5,7 +5,7 @@
      "imagem ilustrativa". Sem número no desenho: o tamanho cotado (58 kg, 66 kg, 75 kg…)
      é o que aparece no texto ao lado — arte nenhuma pode contradizer a embalagem cotada.
      Fundo transparente. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="Bombona azul de 50 litros (ilustrativo)">
+<svg xmlns="http://www.w3.org/2000/svg" width="129" height="225" viewBox="86 51 129 225" role="img" aria-label="Bombona azul de 50 litros (ilustrativo)">
   <defs>
     <linearGradient id="t-corpo" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#123f6e"/>

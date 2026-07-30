@@ -1323,7 +1323,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/primmax-inox.png",
+      "imagemPath": "/produtos/_frasco.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-inox.pdf",
       "ativo": false,
       "embalagens": [
@@ -6589,7 +6589,7 @@
       "metodos": [
         "manual"
       ],
-      "imagemPath": "/produtos/spar-ht-6.png",
+      "imagemPath": "/produtos/_frasco.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-6.pdf",
       "ativo": false,
       "embalagens": [

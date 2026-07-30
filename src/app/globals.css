@@ -121,7 +121,11 @@
   --gray-100: #eef3f8;
   --gray-200: #e3ebf3;
   --gray-300: #cbd7e3;
-  --gray-400: #94a6b8;
+  /* Era #94a6b8 (~3.0:1 no branco, reprova AA). Nas telas o gray-400 NUNCA é
+     borda nem stroke — são 44 usos, todos cor de TEXTO, e em conteúdo que
+     importa: data da proposta, SKU, chave de acesso da NF-e, rótulos de campo
+     do PDF. Escurecido para ~3.9:1 mantendo o cinza azulado da marca. */
+  --gray-400: #6f8497;
   --gray-500: #5b6e7d;
   --gray-600: #45596a;
   --gray-700: #324657;
@@ -146,7 +150,9 @@
   --text-strong: #0f1b2d;
   --text-body: #1d3142;
   --text-muted: #5b6e7d;
-  --text-subtle: #94a6b8;
+  /* Idem: era #94a6b8. Sobe para 4.66:1 (AA de texto normal) — o --text-subtle
+     carrega legenda de card, contagem de itens e dica de campo. */
+  --text-subtle: #62778b;
   --text-on-brand: #ffffff;
   --border-strong: #cbd7e3;
 
@@ -306,12 +312,43 @@ body {
 }
 
 /* ───────────────────────────────────────────────────────────
-   Responsivo — tela estreita / mobile
-   A sidebar (estilos inline) colapsa numa trilha de ícones: font-size:0 some
-   com os rótulos do nav e mantém os SVGs; textos de marca/usuário escondidos.
+   Acessibilidade: anel de foco visível (token --ring do design).
+   As telas são estilizadas inline e nenhum controle tinha estado de foco —
+   quem navega por teclado não sabia onde estava.
    ─────────────────────────────────────────────────────────── */
-@media (max-width: 760px) {
-  .ies-sidebar { width: 60px !important; }
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+/* Dentro da sidebar navy o anel azul desaparece no fundo — usa o laranja da marca. */
+.ies-sidebar :focus-visible { outline-color: var(--accent); }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVO
+   As telas usam `style={{}}` inline (não dá media query lá dentro), então a
+   adaptação vive aqui: classes semânticas `ies-*` que o TSX aplica e que
+   sobrepõem o inline com !important. Mesma tática das regras da sidebar que
+   já existiam — só generalizada para o resto do app.
+
+   Faixas (alinhadas aos --container-* do design system):
+     > 1024px  sidebar completa (248px) com rótulos
+     761–1024  sidebar vira trilha de ícones (60px) — regra do design system
+     ≤ 760px   sidebar vira GAVETA sobreposta, com rótulos de volta
+   ═══════════════════════════════════════════════════════════ */
+
+/* Alturas: 100dvh acompanha a barra do navegador no celular (100vh corta o
+   rodapé). Navegador sem suporte a dvh ignora a regra e fica no inline 100vh. */
+.ies-shell, .ies-main, .ies-fullcol { height: 100dvh !important; }
+.ies-sidebar { height: 100dvh !important; }
+
+/* Filhos de grid/flex precisam poder encolher, senão texto longo estoura a coluna. */
+.ies-split > *, .ies-kpi > *, .ies-fields > * { min-width: 0; }
+
+/* Faixa de tablet/notebook estreito: trilha de ícones (comportamento do design
+   system). Os itens do nav ganharam title/aria-label no TSX — sem rótulo visível,
+   o ícone sozinho precisa de nome acessível. */
+@media (min-width: 761px) and (max-width: 1024px) {
+  .ies-sidebar { width: var(--sidebar-collapsed) !important; }
   .ies-side-text { display: none !important; }
   .ies-sidebar > div:first-child { padding-left: 4px !important; padding-right: 4px !important; }
   .ies-sidebar nav > button {
@@ -326,5 +363,154 @@ body {
     gap: 8px !important;
     padding-left: 4px !important;
     padding-right: 4px !important;
+  }
+}
+
+/* Celular: gaveta sobreposta em vez da trilha de 60px. Numa tela de 360px a
+   trilha comia 1/6 da largura e ainda deixava o vendedor adivinhando ícones —
+   na gaveta os rótulos voltam e o conteúdo usa a tela inteira. */
+@media (max-width: 760px) {
+  .ies-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 268px !important;
+    max-width: 82vw !important;
+    z-index: 60 !important;
+    transform: translateX(-100%);
+    transition: transform var(--duration-base) var(--ease-out);
+    box-shadow: var(--shadow-xl);
+  }
+  /* Fechada ela fica fora da tela mas ainda no DOM: sem esconder, o Tab entrava
+     num menu invisível. `visibility` sai na hora ao abrir e só depois da
+     animação ao fechar, então o slide-out continua visível. */
+  .ies-sidebar[data-open="false"] {
+    visibility: hidden;
+    transition: transform var(--duration-base) var(--ease-out), visibility 0s linear var(--duration-base);
+  }
+  .ies-sidebar[data-open="true"] { transform: translateX(0); visibility: visible; }
+  .ies-menu-btn { display: flex !important; }
+}
+
+/* Acima de 760 a gaveta não existe: sidebar volta ao fluxo, véu e botões de
+   menu somem — mesmo que o estado de "aberta" tenha ficado ligado antes do
+   resize. A regra que ESCONDE o hambúrguer tem que morar aqui dentro: solta,
+   ela vinha depois da media query com o mesmo !important e ganhava por ordem,
+   deixando o botão invisível justo na faixa em que ele é a única navegação. */
+@media (min-width: 761px) {
+  .ies-scrim { display: none !important; }
+  .ies-sidebar[data-open="true"] { transform: none; }
+  .ies-menu-btn { display: none !important; }
+}
+
+/* ── Cabeçalho de tela (ScreenHead) ── */
+/* A busca global ("Buscar telas, produtos… ⌘K") tem 210px de largura mínima e
+   era a primeira coisa a empurrar o CTA principal fora da tela. Vira botão de
+   lupa antes disso acontecer. */
+@media (max-width: 1180px) {
+  .ies-head-search { min-width: 0 !important; width: 38px !important; padding: 0 !important; justify-content: center !important; }
+  .ies-head-search > span { display: none !important; }
+}
+@media (max-width: 860px) {
+  .ies-head {
+    height: auto !important;
+    min-height: 58px;
+    flex-wrap: wrap !important;
+    padding: 10px 14px !important;
+    row-gap: 8px !important;
+  }
+  /* O espaçador flex:1 quebraria linha sozinho e jogaria as ações pra baixo. */
+  .ies-head-spacer { flex-basis: 100% !important; height: 0 !important; }
+  .ies-head-actions { flex-wrap: wrap !important; width: 100% !important; }
+}
+@media (max-width: 640px) {
+  .ies-hide-sm { display: none !important; }
+}
+
+/* ── Corpo das telas ── */
+@media (max-width: 860px) {
+  .ies-pad { padding: 18px 16px 36px !important; }
+}
+@media (max-width: 520px) {
+  .ies-pad { padding: 14px 12px 32px !important; }
+}
+
+/* Propostas e Catálogo aplicam padding no container e "desfazem" com margem
+   negativa para o ScreenHead sangrar até a borda. Os dois valores têm que andar
+   juntos, senão o cabeçalho vaza a tela. */
+@media (max-width: 860px) {
+  .ies-pad28 { padding: 16px !important; }
+  .ies-headwrap { margin: -16px -16px 18px !important; }
+}
+@media (max-width: 520px) {
+  .ies-pad28 { padding: 12px !important; }
+  .ies-headwrap { margin: -12px -12px 16px !important; }
+}
+
+/* Tela de PDF: a "mesa" cinza em volta da folha e a própria folha A4. A folha
+   tem 820px de largura máxima e padding interno de 44px — num celular sobrava
+   pouco para o conteúdo, e as grades que espelham a tabela do PDF (largura
+   mínima real) vazavam. Aqui a folha ganha rolagem horizontal própria, então o
+   preview continua fiel ao documento em vez de se deformar. */
+@media (max-width: 860px) {
+  .ies-doc-shell { padding: 16px 12px !important; }
+  .ies-doc { padding: 22px 18px !important; overflow-x: auto; }
+}
+
+/* Sub-navegação em coluna fixa dentro de uma tela (lista de planilhas do
+   Financeiro): deita e vira faixa rolável no topo. */
+@media (max-width: 900px) {
+  .ies-subnav {
+    width: auto !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+  .ies-subnav-row { flex-direction: column !important; }
+}
+
+/* Divisão principal (catálogo|selecionados, atividade|financeiro, doc|resumo):
+   empilha, e o painel lateral sticky vira estático — grudado no topo dentro de
+   uma coluna única ele cobriria o conteúdo. */
+@media (max-width: 1180px) {
+  .ies-split { grid-template-columns: 1fr !important; }
+  .ies-side-panel { position: static !important; top: auto !important; }
+}
+
+/* KPIs: 4 → 2 → 1. Com repeat(4,1fr) fixo, "R$ 1.234.567,89" em 1/4 de 700px
+   virava três linhas dentro do card. */
+@media (max-width: 1024px) { .ies-kpi { grid-template-columns: repeat(2, 1fr) !important; } }
+@media (max-width: 600px) { .ies-kpi { grid-template-columns: 1fr !important; } }
+
+/* Grades de campos em duas colunas (dados do cliente, condições comerciais). */
+@media (max-width: 680px) { .ies-fields { grid-template-columns: 1fr !important; } }
+
+/* Tabelas em grid com minWidth: rolam na horizontal em vez de esmagar coluna. */
+.ies-tablewrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.ies-tablewrap::-webkit-scrollbar { height: 8px; }
+.ies-tablewrap::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 9999px; }
+.ies-tablewrap::-webkit-scrollbar-track { background: transparent; }
+
+/* Faixa hero (dashboard): número gigante à direita empilha sob o texto. */
+@media (max-width: 900px) {
+  .ies-hero { flex-direction: column !important; align-items: flex-start !important; padding: 22px 20px !important; gap: 18px !important; }
+  .ies-hero-stat { text-align: left !important; }
+}
+
+/* Overlays flutuantes (assistente, toast, paleta) não podem ser mais largos
+   que a tela do celular. */
+@media (max-width: 520px) {
+  .ies-float-panel {
+    width: auto !important;
+    max-width: none !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
   }
 }

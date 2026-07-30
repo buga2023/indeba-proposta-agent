@@ -4,6 +4,8 @@
 // (lib/log.ts) segue como auditoria imutável de cada PDF emitido (constituição §8).
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { produtoPorCodigo } from "@/lib/catalogo";
+import { imagemDaCotada } from "@/lib/imagem-produto";
 import {
   PropostaResumo,
   PropostaRegistro,
@@ -65,10 +67,34 @@ function baseResumo(row: Row) {
   };
 }
 
+// A imagem do item é um SNAPSHOT resolvido na montagem — e proposta salva antes do fix de
+// 29/07 congelou a ARTE ilustrativa em pares que têm foto do recipiente cotado (a tela não
+// reenviava a `imagemPath` do tamanho; ver imagemDaCotada em imagem-produto.ts). Corrigir o
+// código não desfaz o que está no banco: quem reabre uma proposta antiga continuaria vendo
+// o desenho no preview e no PDF. Então a leitura recalcula a imagem a partir do CATÁLOGO —
+// mesma cura que `statusDaLinha` faz com status inválido, e coerente com a constituição §1
+// (dado crítico vem sempre do catálogo). O auto-save da próxima edição regrava o registro.
+// Item próprio (fora do catálogo) e produto que saiu do catálogo ficam como estão: a
+// imagem deles não é derivável.
+export function comImagensDoCatalogo(scope: PropostaScope): PropostaScope {
+  let mudou = false;
+  const itens = scope.itens.map((it) => {
+    const p = produtoPorCodigo(it.codigo);
+    if (!p) return it;
+    const imagemPath = imagemDaCotada(p, it.embalagens[0]);
+    if (imagemPath === it.imagemPath) return it;
+    mudou = true;
+    return { ...it, imagemPath };
+  });
+  return mudou ? { ...scope, itens } : scope;
+}
+
 // Valida via Zod ao mapear — garante que o que sai do banco respeita o contrato.
 const mapearResumo = (row: Row): PropostaResumo => PropostaResumo.parse(baseResumo(row));
-const mapearRegistro = (row: Row): PropostaRegistro =>
-  PropostaRegistro.parse({ ...baseResumo(row), scope: row.scope });
+const mapearRegistro = (row: Row): PropostaRegistro => {
+  const registro = PropostaRegistro.parse({ ...baseResumo(row), scope: row.scope });
+  return { ...registro, scope: comImagensDoCatalogo(registro.scope) };
+};
 
 // Auto-save da proposta gerada/editada (upsert pelo id do scope). Na criação entra como
 // `rascunho`; em updates o status é PRESERVADO (só muda por atualizarStatusProposta) e o

@@ -103,3 +103,21 @@ export function imagemDaEmbalagem(produto: ProdutoImagem, embalagem: EmbalagemIm
     ? produto.imagemPath
     : arteDoRecipiente(embalagem.tamanho, embalagem.unidade);
 }
+
+export type ProdutoComEmbalagens = ProdutoImagem & { embalagens: EmbalagemImagem[] };
+
+/**
+ * Imagem da embalagem cotada quando a cotada NÃO vem do catálogo — é o caso de todo mundo
+ * que monta proposta: a tela manual e o orçamento importado mandam tamanho, preço e
+ * diluição, e não a `imagemPath` daquele tamanho, que é dado do catálogo e não tem por que
+ * voltar no payload. Sem re-hidratar, a regra 1 de `imagemDaEmbalagem` ("foto do próprio
+ * tamanho vence tudo") nunca disparava por esses caminhos e 29 pares que TÊM foto do
+ * recipiente certo (Texspar DSA 20 L, Autocar Plus 200 kg, City T Líquido 5 L…) saíam com a
+ * arte ilustrativa — desenho no lugar da foto do que o cliente vai receber (QA de
+ * navegador, 29/07). Casa por tamanho+unidade, que é a chave da embalagem no catálogo.
+ */
+export function imagemDaCotada(produto: ProdutoComEmbalagens, cotada: EmbalagemImagem | undefined): string {
+  if (!cotada || cotada.imagemPath) return imagemDaEmbalagem(produto, cotada);
+  const doCatalogo = produto.embalagens.find((c) => c.tamanho === cotada.tamanho && c.unidade === cotada.unidade);
+  return imagemDaEmbalagem(produto, doCatalogo?.imagemPath ? { ...cotada, imagemPath: doCatalogo.imagemPath } : cotada);
+}

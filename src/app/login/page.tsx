@@ -27,7 +27,12 @@ export default function Login() {
       });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
-        throw new Error(d.erro || "Credenciais inválidas — use sua conta Indeba.");
+        // Só 401 é credencial errada. Antes QUALQUER falha caía no mesmo texto: com
+        // o DATABASE_URL ausente o /api/login estourava 500 e a tela dizia
+        // "credenciais inválidas", mandando o usuário conferir e-mail e senha por
+        // um problema de infraestrutura que ele não tem como resolver ali.
+        if (r.status >= 500) throw new Error("O servidor não conseguiu processar o login. Não é a sua senha — avise o time técnico.");
+        throw new Error(d.erro || (r.status === 401 ? "E-mail ou senha inválidos." : `Falha no login (HTTP ${r.status}).`));
       }
       router.push("/");
       router.refresh();

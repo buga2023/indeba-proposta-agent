@@ -61,7 +61,9 @@ export function EdicaoChat({
 
   return (
     <div style={caixa}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "9px 14px", borderBottom: "1px solid var(--gray-200)" }}>
+      {/* Três itens numa flex row sem wrap: em coluna estreita a legenda dos campos
+          editáveis vazava o card. */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", padding: "9px 14px", borderBottom: "1px solid var(--gray-200)" }}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue-500)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}>
           <path d="M21 11.4c0 4.3-4 7.6-9 7.6-1.1 0-2.2-.16-3.2-.46L3.2 20.4l1.2-3.7C3.5 15.3 3 13.4 3 11.4 3 7.1 7 3.8 12 3.8s9 3.3 9 7.6z" />
         </svg>

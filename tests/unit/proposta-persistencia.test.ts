@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { StatusProposta, PropostaResumo, PropostaRegistro, type PropostaScope } from "@/lib/contracts";
-import { totalDaProposta } from "@/lib/propostas";
+import { totalDaProposta, comImagensDoCatalogo } from "@/lib/propostas";
 
 // Persistência da proposta: status comercial + registro com o scope canônico.
 // O contrato Zod é a fonte única de validação (constituição §3).
@@ -67,5 +67,37 @@ describe("contrato de persistência da proposta", () => {
       itens: [{ ...scopeBase.itens[0], motivo: "preço promocional R$ 1,00", quantidade: 2 }],
     };
     expect(totalDaProposta(adulterado)).toBe("100.00"); // 50.00 × 2, não R$ 1,00
+  });
+});
+
+// Propostas salvas antes do fix de 29/07 congelaram a ARTE ilustrativa em pares que têm
+// foto do recipiente cotado — reabrir uma delas mostrava desenho no lugar da foto. A
+// leitura recalcula a imagem a partir do catálogo (constituição §1: dado crítico vem do
+// catálogo, não do snapshot).
+describe("proposta reaberta: a imagem é recalculada do catálogo", () => {
+  const comItem = (codigo: string, imagemPath: string, tamanho: number, unidade: "L" | "kg" | "un"): PropostaScope => ({
+    ...scopeBase,
+    itens: [{
+      ...scopeBase.itens[0],
+      codigo,
+      imagemPath,
+      embalagens: [{ tamanho, unidade, preco: "100.00", diluicaoMax: null, custoDiluido: null }],
+    }],
+  });
+
+  it("proposta antiga com arte onde existe foto do tamanho sai curada", () => {
+    // Texspar DSA 20 L: o catálogo tem texspar-dsa-balde.png; o snapshot antigo tem a arte.
+    const antiga = comItem("TEXSPAR-DSA", "/produtos/_balde-20.svg", 20, "L");
+    expect(comImagensDoCatalogo(antiga).itens[0].imagemPath).toBe("/produtos/texspar-dsa-balde.png");
+  });
+
+  it("proposta correta passa intacta — o objeto nem é reconstruído", () => {
+    const ok = comItem("TEXSPAR-DSA", "/produtos/texspar-dsa-balde.png", 20, "L");
+    expect(comImagensDoCatalogo(ok)).toBe(ok);
+  });
+
+  it("item próprio (fora do catálogo) mantém a imagem do vendedor", () => {
+    const proprio = comItem("BOTA-PVC-DO-VENDEDOR", "/produtos/_generico.svg", 1, "un");
+    expect(comImagensDoCatalogo(proprio).itens[0].imagemPath).toBe("/produtos/_generico.svg");
   });
 });

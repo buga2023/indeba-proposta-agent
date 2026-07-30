@@ -102,6 +102,37 @@ HT-5, Iguatemi, Spar 24, Dermol Classic — 19 arquivos), produto fora do catál
 180; `Primmax CL_50L.png` é de um tamanho que o Primmax CL não tem cadastrado) e o
 `ALIAS`/`IGNORAR` com o motivo de cada caso.
 
+### A foto por tamanho não chegava na montagem (achado do QA de navegador, 29/07)
+
+As fotos por tamanho acima só valem se a **regra 1** (`embalagens[].imagemPath` vence tudo)
+disparar — e ela não disparava em nenhum caminho de montagem real. A tela manual monta o
+body do `/api/montar-estruturado` com a embalagem cotada em tamanho, preço e diluição, sem
+a `imagemPath`: é dado do catálogo, e a UI não tem por que devolver. `montar.ts` usava a
+embalagem do item como veio, então **29 dos 198 pares** saíam com a arte ilustrativa mesmo
+tendo foto real do recipiente cotado (Texspar DSA 20 L, Autocar Plus 200 kg, City T Líquido
+5 L e 220 kg, Primmax CL 20 L, Primmax DGA nos dois, Texspar Degrease 5 L…). Recipiente
+certo, foto perdida — o consultor via desenho onde havia foto do que o cliente recebe.
+
+**Correção** — `imagemDaCotada()` em `src/lib/imagem-produto.ts`: re-hidrata a foto do
+próprio tamanho pelo par (tamanho, unidade) antes de aplicar `imagemDaEmbalagem`. É por onde
+`montar.ts` passa nos três caminhos (seleção por IA, montagem estruturada e `itemDoCatalogo`),
+então tela manual e orçamento importado ganham juntos. Guardião em
+`tests/unit/embalagem-e-linha.test.ts`: monta os pares com foto cadastrada exatamente como a
+tela manda e exige que **todos** saiam com a foto.
+
+Proposta já salva guardou o `imagemPath` resolvido — corrigir o código não desfaz o
+snapshot. `comImagensDoCatalogo()` (`src/lib/propostas.ts`) recalcula a imagem na leitura do
+registro, então reabrir uma proposta antiga já mostra a foto certa e o auto-save regrava
+(mesma cura que `statusDaLinha` faz com status inválido). Para reescrever o banco de uma vez:
+
+```
+node --env-file=.env.local scripts/corrigir-imagem-propostas.mjs            # plano
+node --env-file=.env.local scripts/corrigir-imagem-propostas.mjs --gravar   # aplica
+```
+
+O roteiro que achou isso está em `docs/spec-qa-navegador-imagem-embalagem.md` (QA de
+navegador, catálogo inteiro em 4 camadas).
+
 ### Chave do mapa de imagens do PDF
 
 `chaveImagem(item)` = `codigo#tamanhounidade`. O mesmo produto pode estar na proposta duas
@@ -117,6 +148,35 @@ embalagem cotada, chavear só por código faria a segunda linha sobrescrever a p
 - **Primmax DGClor:** as embalagens cadastradas (5 L, 23 kg, 58 kg) conferem com a ficha
   técnica oficial ("baldes plásticos lacrados contendo 23 kg, bombonas de 5L e 58 kg"). O
   que estava errado era a imagem, agora resolvida.
+- **Spar HT-6 e Primmax Inox (500 ml) usavam a foto do galão de 5 L** — resolvido. Achado
+  da folha de contato do QA de navegador (29/07): produto de tamanho único não passa pela
+  auditoria de `fotoEmbalagem` (com um tamanho só não há o que declarar), e os dois
+  apontavam para o mock-up genérico de 5 L da linha — o rótulo nem texto real tem ("NONONO
+  NONO"). A **ficha técnica** decidiu quem estava errado: *"O SPAR HT-6 é apresentado em
+  borrifadores plásticos de 500ml"* (idem Primmax Inox). Cadastro certo, foto errada — os
+  dois foram reapontados para `_frasco.svg`, como o Primmax CIP DTX. `fotoEmbalagem` não
+  servia aqui: ela precisa apontar para um tamanho que o produto TEM, e nenhum dos dois tem
+  5 L. Guardião novo: produto de tamanho único em ml/≤1 L não aponta para foto de estúdio
+  (`tests/unit/embalagem-e-linha.test.ts`).
+
+### A embalagem cadastrada bate com a ficha técnica? (150/150)
+
+`scripts/conferir-embalagem-ficha.mjs` extrai a frase *"é apresentado em …"* das 150 fichas
+em `public/fichas-tecnicas/` e compara com `embalagens[]` do catálogo. **Rodada de 29/07:
+150 conferem, 0 divergências.** A ficha é o documento oficial: quando as duas discordarem,
+é ela que manda (constituição §1).
+
+```
+node scripts/conferir-embalagem-ficha.mjs            # só as divergências
+node scripts/conferir-embalagem-ficha.mjs --todos    # lista todos
+node scripts/ler-ficha.mjs <slug> --embalagem        # uma ficha, à mão
+```
+
+Fica fora da suíte (abrir 150 PDFs leva ~2 min) — é checagem de dado, para rodar quando o
+catálogo mudar. Armadilhas já tratadas no parser: `EMBALAGEM` é com **M** (`EMBALAGENS?` não
+casa nada), o título some nas fichas Pratt, o PDF quebra a unidade (`20k g`), o milhar vem
+com ponto (`1.240 kg`), as fichas escrevem `04 quilos`/`05 litros` e a do Metalic 5 SI tem
+o typo "apresentado **e** bombonas".
 - **Produtos de tamanho único não foram auditados.** Sem `fotoEmbalagem` eles mantêm o
   comportamento antigo (a foto do catálogo em qualquer caso). Se alguma dessas fotos for de
   recipiente diferente do tamanho cadastrado, o sintoma continua — a auditoria visual das

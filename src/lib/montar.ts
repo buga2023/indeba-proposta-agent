@@ -5,7 +5,7 @@ import { extrairPedido } from "./llm/extrair-pedido";
 import { escreverApresentacao } from "./llm/escrever-texto";
 import { PropostaScope, type PropostaItem, type EntradaEstruturada, type Tipo, type Produto } from "./contracts";
 import { consolidadaDefaults } from "./consolidada-defaults";
-import { ARTE_GENERICA, imagemDaEmbalagem } from "./imagem-produto";
+import { ARTE_GENERICA, imagemDaCotada } from "./imagem-produto";
 
 // Tamanhos que o produto TEM (ficha técnica), sem preço — o bloco "Embalagens
 // disponíveis" da ficha sai daqui, e não da lista de cotadas. Inclui tamanho ainda
@@ -87,7 +87,7 @@ export async function montarProposta(
       descricaoUso: p.descricaoUso,
       // Imagem da embalagem COTADA, não "a imagem do produto": produto com uma foto só
       // e vários tamanhos mostrava o recipiente errado (imagem-produto.ts).
-      imagemPath: imagemDaEmbalagem(p, embalagens[0]),
+      imagemPath: imagemDaCotada(p, embalagens[0]),
       embalagens, // [CATÁLOGO] — preço nunca vem da IA
       tamanhosDisponiveis: tamanhosDoProduto(p),
       ficha: p.ficha ?? null, // [CATÁLOGO] snapshot p/ página de produto (consolidada)
@@ -151,8 +151,9 @@ export async function montarPropostaEstruturada(
         nome: p.nome,
         descricaoUso: p.descricaoUso,
         // Segue a embalagem cotada (a escolhida na tela / a do orçamento importado), não
-        // a foto fixa do produto — ver imagemDaEmbalagem em imagem-produto.ts.
-        imagemPath: imagemDaEmbalagem(p, embalagens[0]),
+        // a foto fixa do produto. `imagemDaCotada` re-hidrata a foto do próprio tamanho:
+        // ela é dado do catálogo e não volta no payload da tela (imagem-produto.ts).
+        imagemPath: imagemDaCotada(p, embalagens[0]),
         embalagens,
         tamanhosDisponiveis: tamanhosDoProduto(p),
         ficha: p.ficha ?? null, // [CATÁLOGO] snapshot p/ página de produto (consolidada)
@@ -232,7 +233,7 @@ export function itemDoCatalogo(codigo: string, quantidade = 1): PropostaItem {
     codigo: p.codigo,
     nome: p.nome,
     descricaoUso: p.descricaoUso,
-    imagemPath: imagemDaEmbalagem(p, embalagens[0]),
+    imagemPath: imagemDaCotada(p, embalagens[0]),
     embalagens,
     tamanhosDisponiveis: tamanhosDoProduto(p),
     ficha: p.ficha ?? null,

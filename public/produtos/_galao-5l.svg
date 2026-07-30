@@ -3,7 +3,7 @@
      "imagem ilustrativa" (ver imagemEhIlustrativa em src/lib/imagem-produto.ts).
      Convenção de embalagem do catálogo (Gustavo, jul/2026): 5 = galão, 20 = balde,
      50 = tonel azul. Fundo transparente: cai limpo no card branco da ficha. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="Galão de 5 litros (ilustrativo)">
+<svg xmlns="http://www.w3.org/2000/svg" width="138" height="239" viewBox="81 31 138 239" role="img" aria-label="Galão de 5 litros (ilustrativo)">
   <defs>
     <linearGradient id="g-corpo" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#dfe6ee"/>

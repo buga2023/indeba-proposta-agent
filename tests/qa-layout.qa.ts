@@ -15,6 +15,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { montarDocumento, renderPdf, resolverImagemProduto } from "@/lib/pdf/render";
 import { carregarCatalogo } from "@/lib/catalogo";
+import { chaveImagem } from "@/lib/imagem-produto";
 import { consolidadaDefaults } from "@/lib/consolidada-defaults";
 import type { PropostaScope, PropostaItem } from "@/lib/contracts";
 
@@ -69,8 +70,10 @@ describe("QA do catálogo completo", () => {
 
     const imagens: Record<string, string> = {};
     for (const it of scope.itens) {
-      // mesmo caminho do render de produção (inclui o recorte da margem transparente)
-      imagens[it.codigo] = (await resolverImagemProduto(it.imagemPath)) || dataUri(it.imagemPath) || dataUri("/produtos/_generico.svg");
+      // mesma chave e mesmo caminho do render de produção (chaveImagem + recorte da
+      // margem transparente) — com a chave antiga (só `codigo`) o template não achava
+      // a imagem e a varredura acusava as 150 páginas com "imagem-quebrada".
+      imagens[chaveImagem(it)] = (await resolverImagemProduto(it.imagemPath)) || dataUri(it.imagemPath) || dataUri("/produtos/_generico.svg");
     }
     const { html } = montarDocumento(scope, imagens, "", dataUri);
 

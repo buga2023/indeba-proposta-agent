@@ -16,7 +16,7 @@ import { createContext, useContext, useEffect, useRef, useState, type CSSPropert
 import type { StatusProposta, PropostaScope, PropostaItem, Produto, Funcao, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
 import type { Usuario } from "@/lib/auth";
 import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo } from "@/lib/proposta-edit";
-import { custoLitroDiluido } from "@/lib/diluicao";
+import { custoLitroDiluido, diluicaoSugeridaDaFicha } from "@/lib/diluicao";
 import { consolidadaDefaults } from "@/lib/consolidada-defaults";
 import { mascaraCnpj, erroCnpj } from "@/lib/cnpj";
 import { SEGMENTOS, rotuloSegmento, linhaDoSegmento, segmentosLegiveis } from "@/lib/segmento";
@@ -88,6 +88,10 @@ function Hoverable({
   onClick,
   title,
   disabled,
+  ariaLabel,
+  // As telas são estilizadas inline, então media query só alcança este elemento
+  // por classe (ver a camada `ies-*` em globals.css).
+  className,
   children,
 }: {
   as?: "button" | "div";
@@ -97,6 +101,8 @@ function Hoverable({
   onClick?: () => void;
   title?: string;
   disabled?: boolean;
+  ariaLabel?: string;
+  className?: string;
   children?: ReactNode;
 }) {
   const [h, setH] = useState(false);
@@ -117,8 +123,10 @@ function Hoverable({
     return (
       <div
         style={style}
+        className={className}
         onClick={onClick}
         title={title}
+        aria-label={ariaLabel}
         role={clicavel ? "button" : undefined}
         tabIndex={clicavel ? 0 : undefined}
         onKeyDown={
@@ -138,7 +146,7 @@ function Hoverable({
     );
   }
   return (
-    <button style={style} onClick={onClick} title={title} disabled={disabled} {...handlers}>
+    <button style={style} className={className} onClick={onClick} title={title} aria-label={ariaLabel} disabled={disabled} {...handlers}>
       {children}
     </button>
   );
@@ -262,10 +270,14 @@ const ChromeContext = createContext<{
   openPalette: () => void;
   openAssistant: () => void;
   goTo: (s: string) => void;
+  // Em tela estreita a sidebar vira gaveta: o botão que a abre vive no ScreenHead
+  // (que é irmão da <aside>, não filho), então o estado passa por aqui.
+  openNav: () => void;
 }>({
   openPalette: () => {},
   openAssistant: () => {},
   goTo: () => {},
+  openNav: () => {},
 });
 
 /* tipo do registro do histórico (espelha EventoProposta da API, sem importar node) */
@@ -328,6 +340,9 @@ export default function Home() {
   const [screen, setScreen] = useState<Screen>("dashboard");
   const toast = useToast();
   const [palette, setPalette] = useState(false);
+  // Gaveta de navegação (≤760px). Acima disso o CSS ignora este estado e a
+  // sidebar volta a ocupar a coluna fixa de sempre.
+  const [navOpen, setNavOpen] = useState(false);
   const [reviewVariant, setReviewVariant] = useState<"A" | "B">("A");
   const [downloading, setDownloading] = useState(false);
   const [refining, setRefining] = useState(false);
@@ -636,6 +651,11 @@ export default function Home() {
   }
 
   /* navegação da sidebar */
+  // Usado pelos itens do nav: fecha a gaveta antes de trocar de tela.
+  function irPara(s: Screen) {
+    setNavOpen(false);
+    setScreen(s);
+  }
   function navItemStyle(screens: Screen[]): CSSProperties {
     const activeNav = screens.includes(screen);
     return {
@@ -699,8 +719,18 @@ export default function Home() {
     }
   }
 
+  useEffect(() => {
+    if (!navOpen) return;
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setNavOpen(false);
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [navOpen]);
+
   const chrome = {
     openPalette: () => setPalette(true),
+    openNav: () => setNavOpen(true),
     // O Assistente (AjudaChat) é um overlay independente; o header pede a abertura via evento.
     openAssistant: () => window.dispatchEvent(new CustomEvent("ies:assistente")),
     goTo: (s: string) => setScreen(s as Screen),
@@ -708,26 +738,47 @@ export default function Home() {
 
   return (
     <ChromeContext.Provider value={chrome}>
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--gray-50)", fontFamily: "var(--font-sans), sans-serif", color: "var(--gray-900)" }}>
+    <div className="ies-shell" style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--gray-50)", fontFamily: "var(--font-sans), sans-serif", color: "var(--gray-900)" }}>
+      {/* Véu da gaveta — só existe em tela estreita (o CSS o esconde acima de 760px). */}
+      {navOpen && (
+        <div
+          className="ies-scrim"
+          onClick={() => setNavOpen(false)}
+          aria-hidden
+          style={{ position: "fixed", inset: 0, background: "rgba(15,26,36,.45)", zIndex: 55, animation: "overlay-in var(--duration-fast) var(--ease-out) both" }}
+        />
+      )}
       {/* ============ SIDEBAR ============ */}
-      <aside className="ies-sidebar" style={{ width: "248px", flex: "none", height: "100vh", background: "var(--gradient-hero)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <aside className="ies-sidebar" data-open={navOpen ? "true" : "false"} style={{ width: "248px", flex: "none", height: "100vh", background: "var(--gradient-hero)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", boxShadow: "0 2px 8px rgba(30,107,184,.5)" }}>
               <span style={{ color: "white", fontWeight: 700, fontSize: "13px", letterSpacing: "-.5px" }}>ies</span>
             </div>
-            <div className="ies-side-text">
+            <div className="ies-side-text" style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: "14px", fontWeight: 700, color: "white", lineHeight: 1.1 }}>
                 indeba <span style={{ color: "var(--accent)" }}>express</span>
               </div>
               <div style={{ fontSize: "11px", color: "rgba(255,255,255,.45)", marginTop: "2px" }}>Plataforma de IA</div>
             </div>
+            {/* Fechar a gaveta. Só aparece na faixa em que ela existe (≤760px). */}
+            <button
+              className="ies-menu-btn"
+              onClick={() => setNavOpen(false)}
+              aria-label="Fechar menu"
+              title="Fechar menu"
+              style={{ width: "34px", height: "34px", flex: "none", alignItems: "center", justifyContent: "center", borderRadius: "9px", border: "1px solid rgba(255,255,255,.16)", background: "rgba(255,255,255,.06)", color: "#fff", cursor: "pointer" }}
+            >
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round">
+                <path d="M3.5 3.5l8 8M11.5 3.5l-8 8" />
+              </svg>
+            </button>
           </div>
         </div>
 
         <nav style={{ padding: "6px 8px 8px", flex: 1, display: "flex", flexDirection: "column", gap: "1px", overflowY: "auto" }}>
           <div className="ies-side-text" style={navSection}>Visão geral</div>
-          <Hoverable base={navItemStyle(["dashboard"])} hover={navHover} onClick={() => setScreen("dashboard")}>
+          <Hoverable base={navItemStyle(["dashboard"])} hover={navHover} onClick={() => irPara("dashboard")} title="Dashboard — visão geral">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1" />
               <rect x="9" y="2.5" width="5.5" height="3.5" rx="1" />
@@ -738,27 +789,27 @@ export default function Home() {
           </Hoverable>
           <div className="ies-side-text" style={navSection}>Criar proposta</div>
           {/* Volta pro rascunho, não reseta: era exatamente aqui que a seleção sumia. */}
-          <Hoverable base={navItemStyle(["manual", "review", "pdf"])} hover={navHover} onClick={voltarParaMontagem}>
+          <Hoverable base={navItemStyle(["manual", "review", "pdf"])} hover={navHover} onClick={() => { setNavOpen(false); voltarParaMontagem(); }} title="Proposta manual — monte direto do catálogo">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="2.5" width="12" height="12" rx="2" />
               <path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" />
             </svg>
             Proposta manual
           </Hoverable>
-          <Hoverable base={navItemStyle(["importar"])} hover={navHover} onClick={() => setScreen("importar")}>
+          <Hoverable base={navItemStyle(["importar"])} hover={navHover} onClick={() => irPara("importar")} title="Importar orçamento — suba um PDF do ERP">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M8.5 10.5V3M5.5 6l3-3 3 3" />
               <path d="M3 11v2a1 1 0 001 1h9a1 1 0 001-1v-2" />
             </svg>
             Importar orçamento
           </Hoverable>
-          <Hoverable base={navItemStyle(["history"])} hover={navHover} onClick={() => setScreen("history")}>
+          <Hoverable base={navItemStyle(["history"])} hover={navHover} onClick={() => irPara("history")} title="Propostas — histórico">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
               <path d="M3 4.5h11M3 8.5h11M3 12.5h7" />
             </svg>
             Propostas
           </Hoverable>
-          <Hoverable base={navItemStyle(["catalog"])} hover={navHover} onClick={() => setScreen("catalog")}>
+          <Hoverable base={navItemStyle(["catalog"])} hover={navHover} onClick={() => irPara("catalog")} title="Catálogo de produtos">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="2.5" width="5" height="5" rx="1" />
               <rect x="9.5" y="2.5" width="5" height="5" rx="1" />
@@ -769,7 +820,7 @@ export default function Home() {
           </Hoverable>
 
           <div className="ies-side-text" style={navSection}>Sistema</div>
-          <Hoverable base={navItemStyle(["config"])} hover={navHover} onClick={() => setScreen("config")}>
+          <Hoverable base={navItemStyle(["config"])} hover={navHover} onClick={() => irPara("config")} title="Configurações">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <circle cx="8.5" cy="8.5" r="2.25" />
               <path d="M8.5 2.5v1M8.5 13v1.5M2.5 8.5h1M13 8.5h1.5M4.5 4.5l.7.7M11.8 11.8l.7.7M4.5 12.5l.7-.7M11.8 5.2l.7-.7" />
@@ -780,7 +831,7 @@ export default function Home() {
 
         <div className="ies-side-foot" style={{ padding: "14px 14px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: "10px" }}>
           <Hoverable
-            onClick={() => setScreen("perfil")}
+            onClick={() => irPara("perfil")}
             title="Meu perfil"
             base={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px", borderRadius: "10px", textAlign: "left" }}
             hover={{ background: "rgba(255,255,255,.06)" }}
@@ -808,7 +859,7 @@ export default function Home() {
       </aside>
 
       {/* ============ MAIN ============ */}
-      <main className="ies-scroll" style={{ flex: 1, height: "100vh", overflowY: "auto", overflowX: "hidden", position: "relative" }}>
+      <main className="ies-scroll ies-main" style={{ flex: 1, minWidth: 0, height: "100vh", overflowY: "auto", overflowX: "hidden", position: "relative" }}>
         {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} />}
         {/* Sempre montada, escondida fora de foco: é o rascunho vivo (ver builderKey). */}
         <div style={{ display: screen === "manual" ? "contents" : "none" }}>
@@ -986,9 +1037,9 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
   return (
     <div style={{ background: "var(--background)", minHeight: "100vh" }}>
       <ScreenHead title="Dashboard" sub={primeiroNome ? `${saudacao}, ${primeiroNome} — visão geral` : `${saudacao} — visão geral`} />
-      <div style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "20px", animation: "fadeUp var(--duration-slow) var(--ease-out) both" }}>
+      <div className="ies-pad" style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "20px", animation: "fadeUp var(--duration-slow) var(--ease-out) both" }}>
         {/* ── Hero ── */}
-        <div style={{ borderRadius: "18px", background: "var(--gradient-hero)", color: "#fff", padding: "26px 30px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "24px", position: "relative", overflow: "hidden", boxShadow: "var(--shadow-lg)" }}>
+        <div className="ies-hero" style={{ borderRadius: "18px", background: "var(--gradient-hero)", color: "#fff", padding: "26px 30px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "24px", position: "relative", overflow: "hidden", boxShadow: "var(--shadow-lg)" }}>
           <div style={{ position: "absolute", right: "-60px", top: "-70px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle,rgba(247,130,27,.28),transparent 68%)" }} />
           <div style={{ position: "absolute", right: "80px", bottom: "-120px", width: "260px", height: "260px", borderRadius: "50%", background: "radial-gradient(circle,rgba(30,107,184,.45),transparent 70%)" }} />
           <div style={{ position: "relative", zIndex: 1, maxWidth: "560px" }}>
@@ -1001,7 +1052,7 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
               </Hoverable>
             </div>
           </div>
-          <div style={{ position: "relative", zIndex: 1, textAlign: "right", flex: "none" }}>
+          <div className="ies-hero-stat" style={{ position: "relative", zIndex: 1, textAlign: "right", flex: "none" }}>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,.6)", fontWeight: 600 }}>PROPOSTAS REGISTRADAS</div>
             <div style={{ fontSize: "52px", fontWeight: 900, letterSpacing: "-.03em", lineHeight: 1, fontFamily: "var(--font-mono)" }}>{propostas == null ? "—" : totalProp}</div>
             <div style={{ fontSize: "12.5px", color: "#7ee2a8", fontWeight: 700, marginTop: "4px" }}>{aprovadas} aprovada{aprovadas === 1 ? "" : "s"}</div>
@@ -1030,7 +1081,7 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
         )}
 
         {/* ── KPIs ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px" }}>
+        <div className="ies-kpi" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px" }}>
           {KPIS.map((k, i) => (
             <Hoverable as="div" key={k.label} base={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderTop: `3px solid ${k.cor}`, borderRadius: "14px", padding: "17px 19px", minWidth: 0, boxShadow: "var(--shadow-sm)", transition: "transform var(--duration-base) var(--ease-out),box-shadow var(--duration-base) var(--ease-standard)", animation: `popIn .4s var(--ease-spring) ${i * 0.05}s both` }} hover={{ transform: "translateY(-3px)", boxShadow: "var(--shadow-lg)" }}>
               <div style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500, marginBottom: "9px" }}>{k.label}</div>
@@ -1040,7 +1091,7 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
         </div>
 
         {/* ── Gráficos reais (status / tipo) ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.45fr 1fr", gap: "16px" }}>
+        <div className="ies-split" style={{ display: "grid", gridTemplateColumns: "1.45fr 1fr", gap: "16px" }}>
           {/* Barras: por tipo */}
           <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)" }}>
             <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Propostas por tipo</div>
@@ -1085,7 +1136,7 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
         </div>
 
         {/* ── Atividade recente + Financeiro ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.45fr 1fr", gap: "16px", alignItems: "start" }}>
+        <div className="ies-split" style={{ display: "grid", gridTemplateColumns: "1.45fr 1fr", gap: "16px", alignItems: "start" }}>
           <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
               <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Atividade recente</div>
@@ -1201,7 +1252,7 @@ function MeuPerfilScreen() {
   return (
     <div style={{ background: "var(--background)", minHeight: "100vh" }}>
       <ScreenHead title="Meu perfil" sub="Seus dados de contato como colaborador" />
-      <div style={{ padding: "24px 28px 44px", maxWidth: "520px" }}>
+      <div className="ies-pad" style={{ padding: "24px 28px 44px", maxWidth: "520px" }}>
         {carregando ? (
           <div style={{ fontSize: "13px", color: "var(--text-subtle)" }}>Carregando…</div>
         ) : !perfil ? (
@@ -1541,7 +1592,7 @@ function ManualScreen({
           </div>
         }
       />
-      <div style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "18px" }}>
+      <div className="ies-pad" style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "18px" }}>
         {/* Cliente + tipo */}
         <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
@@ -1641,7 +1692,7 @@ function ManualScreen({
 
         {erro && <div style={{ padding: "11px 14px", background: "var(--danger-soft)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
 
-        <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "18px", alignItems: "start" }}>
+        <div className="ies-split" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "18px", alignItems: "start" }}>
           {/* Catálogo */}
           <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
@@ -1692,9 +1743,9 @@ function ManualScreen({
                 const preco = precoDe(p, idx);
                 const podeAdicionar = preco != null;
                 return (
-                  <div key={p.codigo} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "10px", border: "1px solid var(--border)", background: incluido ? "var(--info-soft)" : "var(--surface)" }}>
+                  <div key={p.codigo} style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", padding: "10px 12px", borderRadius: "10px", border: "1px solid var(--border)", background: incluido ? "var(--info-soft)" : "var(--surface)" }}>
                     <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: linhaCor(p.linha), flex: "none" }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ flex: "1 1 190px", minWidth: 0 }}>
                       <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.nome}</div>
                       <div style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>{p.codigo} · {humaniza(p.linha)}{!p.ativo && " · arquivado"}{outrosTamanhos > 0 && ` · ${outrosTamanhos} ${outrosTamanhos === 1 ? "outro tamanho" : "outros tamanhos"} na proposta`}</div>
                       {/* A embalagem aparece SEMPRE, mesmo com um tamanho só. Antes o bloco
@@ -1745,6 +1796,26 @@ function ManualScreen({
                           <input type="checkbox" checked={Boolean(naoDilui[k])} onChange={(e) => toggleNaoDilui(k, e.target.checked)} style={{ cursor: "pointer" }} />
                           não dilui
                         </label>
+                        {/* Sugestão da ficha técnica: só aparece quando o campo está vazio,
+                            o produto não está marcado como "não dilui" e a ficha descreve
+                            uma diluição que o catálogo não traz na embalagem (22 produtos —
+                            Primmax DT, Sec, Sanap…). Um clique preenche; o valor continua
+                            sendo do consultor, que pode trocar. "até" porque o número é a
+                            diluição MÁXIMA da ficha, teórica. */}
+                        {(() => {
+                          const sugestao = diluicaoSugeridaDaFicha(p.ficha);
+                          const vazio = !(diluicoes[k] ?? p.embalagens[idx]?.diluicaoMax ?? "");
+                          if (!sugestao || naoDilui[k] || !vazio) return null;
+                          return (
+                            <button
+                              onClick={() => setDiluicao(k, sugestao)}
+                              title="Diluição máxima descrita na ficha técnica deste produto — clique para usar; é teórica, ajuste para a diluição de trabalho se for outra"
+                              style={{ fontSize: "10.5px", color: "var(--orange-600)", background: "transparent", border: "1px dashed var(--border-strong)", borderRadius: "6px", padding: "0 7px", height: "22px", cursor: "pointer" }}
+                            >
+                              ficha: até {sugestao}
+                            </button>
+                          );
+                        })()}
                       </div>
                     </div>
                     {semPrecoCatalogo ? (
@@ -1759,7 +1830,7 @@ function ManualScreen({
                     ) : (
                       <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--primary)", fontSize: "13px", whiteSpace: "nowrap" }}>{fmt(preco ?? 0)}</span>
                     )}
-                    <button onClick={() => add(p.codigo, idx)} disabled={incluido || !podeAdicionar} title={incluido ? "Este tamanho já está na proposta — troque o tamanho para incluir outro" : podeAdicionar ? "Adicionar" : "Digite o preço primeiro"} style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--border-strong)", background: incluido || !podeAdicionar ? "var(--surface-muted)" : "var(--surface)", cursor: incluido || !podeAdicionar ? "default" : "pointer", color: incluido || !podeAdicionar ? "var(--text-subtle)" : "var(--primary)", fontSize: "18px", lineHeight: 1, flex: "none" }}>+</button>
+                    <button onClick={() => add(p.codigo, idx)} disabled={incluido || !podeAdicionar} aria-label={incluido ? `${p.nome} já está na proposta neste tamanho` : `Adicionar ${p.nome} à proposta`} title={incluido ? "Este tamanho já está na proposta — troque o tamanho para incluir outro" : podeAdicionar ? "Adicionar à proposta" : "Digite o preço primeiro para poder adicionar"} style={{ width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--border-strong)", background: incluido || !podeAdicionar ? "var(--surface-muted)" : "var(--surface)", cursor: incluido || !podeAdicionar ? "default" : "pointer", color: incluido || !podeAdicionar ? "var(--text-subtle)" : "var(--primary)", fontSize: "18px", lineHeight: 1, flex: "none" }}>+</button>
                   </div>
                 );
               })}
@@ -1776,7 +1847,7 @@ function ManualScreen({
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-strong)" }}>Item próprio — preço digitado (MANUAL)</div>
                   <input value={draft.nome} onChange={(e) => setDraft((d) => ({ ...d, nome: e.target.value }))} placeholder="Nome do produto" style={campoInput} />
-                  <div style={{ display: "flex", gap: "8px" }}>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                     <input value={draft.tamanho} onChange={(e) => setDraft((d) => ({ ...d, tamanho: e.target.value }))} inputMode="decimal" placeholder="Tam." style={{ ...campoInput, width: "70px", flex: "none" }} />
                     <select value={draft.unidade} onChange={(e) => setDraft((d) => ({ ...d, unidade: e.target.value as "L" | "kg" | "un" | "ml" }))} style={{ ...campoInput, width: "74px", flex: "none", padding: "0 8px", cursor: "pointer" }}>
                       <option value="L">L</option>
@@ -1797,7 +1868,7 @@ function ManualScreen({
           </div>
 
           {/* Selecionados */}
-          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", position: "sticky", top: "78px" }}>
+          <div className="ies-side-panel" style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", position: "sticky", top: "78px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "14px" }}>
               <span style={{ width: "26px", height: "26px", borderRadius: "8px", background: "var(--success-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--success)", flex: "none" }}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 7.5l3 3 6-6.5" /></svg>
@@ -2044,7 +2115,7 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
           ) : undefined
         }
       />
-      <div style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "980px" }}>
+      <div className="ies-pad" style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "980px" }}>
         {/* Upload */}
         <div
           onClick={() => !arquivo && fileInputRef.current?.click()}
@@ -2284,7 +2355,7 @@ function ReviewScreen({
   const [tetoInput, setTetoInput] = useState("");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--gray-50)" }}>
+    <div className="ies-fullcol" style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--gray-50)" }}>
       <ScreenHead
         title="Revisão da proposta"
         sub={`${scope.cliente.razaoSocial} · ${includedItems.length} produtos selecionados`}
@@ -2347,7 +2418,7 @@ function ReviewScreen({
       {/* Edição e refino pelo funcionário (antes do PDF final): texto editável + refino por IA.
           Colapsado por padrão — expandido ele sozinho já preenche a viewport inteira em telas de
           notebook comuns, escondendo os produtos (o que mais importa revisar) sem rolar a tela. */}
-      <div style={{ flex: "none", padding: "14px 28px 0" }}>
+      <div className="ies-pad" style={{ flex: "none", padding: "14px 28px 0" }}>
         <button
           onClick={() => setAjustesAbertos((v) => !v)}
           style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", height: "40px", padding: "0 14px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", boxShadow: "var(--shadow-sm)", cursor: "pointer", fontFamily: "var(--font-sans), sans-serif" }}
@@ -2415,7 +2486,7 @@ function ReviewScreen({
                 condições comerciais logo abaixo. */}
             <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
               <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginBottom: "8px" }}>Dados do cliente</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
+              <div className="ies-fields" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
                 {(
                   [
                     ["razaoSocial", "Razão social"],
@@ -2446,7 +2517,7 @@ function ReviewScreen({
             {scope.consolidada && (
               <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
                 <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginBottom: "8px" }}>Condições comerciais</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
+                <div className="ies-fields" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
                   {scope.consolidada.condicoes.itens.map((item, i) => (
                     <label key={i}>
                       <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "4px" }}>{item.titulo}</div>
@@ -2492,7 +2563,7 @@ function ReviewScreen({
         )}
       </div>
 
-      <div className="ies-scroll" style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
+      <div className="ies-scroll ies-pad" style={{ flex: 1, overflowY: "auto", padding: "20px 28px" }}>
         {reviewVariant === "A" ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "16px" }}>
             {scope.itens.map((p, pos) => {
@@ -2559,7 +2630,7 @@ function ReviewScreen({
             })}
           </div>
         ) : (
-          <div style={{ background: "white", borderRadius: "12px", border: "1px solid var(--gray-200)", overflowX: "auto", boxShadow: "var(--shadow-sm)" }}>
+          <div className="ies-tablewrap" style={{ background: "white", borderRadius: "12px", border: "1px solid var(--gray-200)", overflowX: "auto", boxShadow: "var(--shadow-sm)" }}>
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 80px 110px 110px 100px", minWidth: "640px", padding: "11px 20px", background: "var(--gray-100)", borderBottom: "1px solid var(--gray-200)" }}>
               {["Produto", "Origem", "Qtd", "Preço unit.", "Total", "Status"].map((h, i) => (
                 <div key={h} style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".05em", textAlign: i === 2 || i === 5 ? "center" : i === 3 || i === 4 ? "right" : "left" }}>{h}</div>
@@ -2656,9 +2727,9 @@ function PdfScreen({
   const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR");
 
   return (
-    <div style={{ background: "#DDE1E7", minHeight: "100vh", padding: "28px 48px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+    <div className="ies-doc-shell" style={{ background: "#DDE1E7", minHeight: "100vh", padding: "28px 48px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "24px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
           <button onClick={goToReview} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "8px", border: "1px solid #B0BAC5", background: "white", cursor: "pointer", fontSize: "13px", color: "var(--gray-500)" }}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M8 2L3 6.5 8 11" />
@@ -2684,7 +2755,7 @@ function PdfScreen({
             </div>
           )}
         </div>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
           {error && <span style={{ fontSize: "12px", color: "#DC2626", maxWidth: "260px" }}>{error}</span>}
           <Hoverable
             base={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", borderWidth: "1px", borderStyle: "solid", borderColor: "var(--gray-200)", background: "white", cursor: downloading ? "wait" : "pointer", fontSize: "14px", fontWeight: 500, color: "var(--gray-900)", opacity: downloading ? 0.7 : 1 }}
@@ -2697,12 +2768,13 @@ function PdfScreen({
             </svg>
             {downloading ? "Gerando…" : "Baixar PDF"}
           </Hoverable>
-          <button style={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", border: "1px solid var(--blue-500)", background: "var(--blue-500)", cursor: "not-allowed", fontSize: "14px", fontWeight: 600, color: "white", opacity: 0.55 }} title="Envio por e-mail — em breve">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+          <button disabled title="Envio por e-mail — ainda não disponível. Baixe o PDF e anexe no seu e-mail." style={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", border: "1px solid var(--gray-300)", background: "var(--gray-100)", cursor: "not-allowed", fontSize: "14px", fontWeight: 600, color: "var(--gray-500)" }}>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
               <path d="M13 7.5A5.5 5.5 0 112 7.5" />
               <path d="M7.5 1.5v5M5 4l2.5 2.5L10 4" />
             </svg>
             Enviar por e-mail
+            <span style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em", padding: "2px 6px", borderRadius: "5px", background: "var(--surface)", border: "1px solid var(--gray-300)", color: "var(--gray-500)" }}>em breve</span>
           </button>
           <Hoverable
             base={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", border: "none", background: "var(--orange-500)", cursor: downloading ? "wait" : "pointer", fontSize: "14px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(236,122,28,.35)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease", opacity: downloading ? 0.8 : 1 }}
@@ -2723,7 +2795,7 @@ function PdfScreen({
 
       {/* Documento A4 — espelha o template do servidor por tipo (§4: o que vê = o que sai) */}
       {scope.tipo === "orcamento" && (
-      <div style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", padding: "40px 44px", color: "#25303f", fontSize: "12px" }}>
+      <div className="ies-doc" style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", padding: "40px 44px", color: "#25303f", fontSize: "12px" }}>
         {/* topo: data / nº */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", color: "var(--gray-500)", paddingBottom: "10px" }}>
           <span>{data}</span>
@@ -2770,7 +2842,7 @@ function PdfScreen({
         <div style={{ fontSize: "10.5px", color: "var(--gray-500)", margin: "8px 0 14px" }}>Contrato de comodato 12 meses</div>
 
         {/* tabela ERP */}
-        <div style={{ display: "grid", gridTemplateColumns: "40px 2.1fr 3fr 92px 92px", padding: "9px 4px", background: "#f1f4f8", borderBottom: "1px solid #d8e0ea" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "40px 2.1fr 3fr 92px 92px", minWidth: "620px", padding: "9px 4px", background: "#f1f4f8", borderBottom: "1px solid #d8e0ea" }}>
           {[
             { t: "Qt.", a: "center" },
             { t: "Produto/Serviço", a: "left" },
@@ -2784,7 +2856,7 @@ function PdfScreen({
         {includedItems.map((p, i) => {
           const e = p.embalagens[0];
           return (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "40px 2.1fr 3fr 92px 92px", padding: "9px 4px", borderBottom: "1px solid #eef2f7", alignItems: "start" }}>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "40px 2.1fr 3fr 92px 92px", minWidth: "620px", padding: "9px 4px", borderBottom: "1px solid #eef2f7", alignItems: "start" }}>
               <div style={{ textAlign: "center", padding: "0 5px" }}>{p.quantidade}</div>
               <div style={{ padding: "0 5px", lineHeight: 1.35 }}>
                 <span style={{ color: "var(--gray-400)" }}>{p.codigo}</span> - <strong style={{ color: "#25303f" }}>{p.nome}</strong>
@@ -2902,7 +2974,7 @@ function ComercialPreview({ scope, itens }: { scope: PropostaScope; itens: Propo
   );
   const etapas = ["Pré-lavagem", "Limpeza", "Enxágue", "Desinfecção", "Materiais de Comunicação"];
   return (
-    <div style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", padding: "36px 44px", color: "#25303f" }}>
+    <div className="ies-doc" style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", padding: "36px 44px", color: "#25303f" }}>
       {/* capa compacta */}
       <div style={{ textAlign: "center", paddingBottom: "20px", borderBottom: "2px solid #e6ecf4", marginBottom: "18px" }}>
         <div style={{ fontSize: "26px", fontWeight: 800, color: navy, letterSpacing: "-.5px" }}>Indeba</div>
@@ -2986,7 +3058,7 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
     </div>
   );
   return (
-    <div style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", padding: "36px 44px", color: "#25303f" }}>
+    <div className="ies-doc" style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", padding: "36px 44px", color: "#25303f" }}>
       {/* capa compacta */}
       <div style={{ textAlign: "center", paddingBottom: "18px", borderBottom: "2px solid #e5ebf2", marginBottom: "18px" }}>
         <div style={{ fontSize: "20px", fontWeight: 800, color: navy, letterSpacing: "3px" }}>PROPOSTA DE SOLUÇÃO</div>
@@ -3008,9 +3080,20 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
         const e = p.embalagens[0];
         return (
           <div key={i} style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "16px" }}>
-            <div style={{ flex: "0 0 90px", height: "100px", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #eef2f7", borderRadius: "8px", overflow: "hidden" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "82px", maxHeight: "92px", objectFit: "contain" }} onError={(ev) => (ev.currentTarget.style.display = "none")} />
+            <div style={{ flex: "0 0 90px" }}>
+              <div style={{ height: "100px", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #eef2f7", borderRadius: "8px", overflow: "hidden" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.imagemPath} alt={p.nome} style={{ maxWidth: "82px", maxHeight: "92px", objectFit: "contain" }} onError={(ev) => (ev.currentTarget.style.display = "none")} />
+              </div>
+              {/* O PDF imprime "Imagem ilustrativa da embalagem" sob a foto quando o item
+                  está em arte de recipiente (template-consolidada.ts) e a Revisão marca o
+                  card. Este preview não marcava — e é justamente a tela do "o que vê é o
+                  que sai" (§4). QA de navegador 29/07: 3 itens em arte, 0 legendas. */}
+              {imagemEhIlustrativa(p.imagemPath) && (
+                <div style={{ marginTop: "5px", fontSize: "8.5px", letterSpacing: ".04em", textTransform: "uppercase", color: "#8a97a6", textAlign: "center", lineHeight: 1.25 }}>
+                  Imagem ilustrativa da embalagem
+                </div>
+              )}
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ color: navy, fontSize: "13.5px", fontWeight: 800 }}>{p.ficha?.titulo ?? p.nome}</div>
@@ -3084,8 +3167,8 @@ function HistoryScreen({
   ];
 
   return (
-    <div style={{ padding: "28px" }}>
-      <div style={{ margin: "-28px -28px 24px" }}>
+    <div className="ies-pad28" style={{ padding: "28px" }}>
+      <div className="ies-headwrap" style={{ margin: "-28px -28px 24px" }}>
         <ScreenHead
           title="Propostas"
           sub={propostas === null ? "Carregando…" : `${lista.length} proposta(s) gerada(s)`}
@@ -3137,7 +3220,7 @@ function HistoryScreen({
           <p style={{ fontSize: "14px", color: "var(--gray-500)" }}>Gere a primeira proposta para ela aparecer aqui.</p>
         </div>
       ) : (
-        <div style={{ background: "white", borderRadius: "12px", border: "1px solid var(--gray-200)", overflowX: "auto", boxShadow: "var(--shadow-sm)" }}>
+        <div className="ies-tablewrap" style={{ background: "white", borderRadius: "12px", border: "1px solid var(--gray-200)", overflowX: "auto", boxShadow: "var(--shadow-sm)" }}>
           <div style={{ display: "grid", gridTemplateColumns: cols, minWidth: "720px", padding: "11px 20px", background: "var(--gray-100)", borderBottom: "1px solid var(--gray-200)" }}>
             {[
               { t: "Cliente", a: "left" },
@@ -3241,8 +3324,8 @@ function CatalogScreen({
   const filtered = (q ? porMarca.filter((p) => `${p.nome} ${p.codigo}`.toLowerCase().includes(q)) : porMarca).sort((a, b) => a.nome.localeCompare(b.nome));
 
   return (
-    <div style={{ padding: "28px" }}>
-      <div style={{ margin: "-28px -28px 22px" }}>
+    <div className="ies-pad28" style={{ padding: "28px" }}>
+      <div className="ies-headwrap" style={{ margin: "-28px -28px 22px" }}>
         <ScreenHead
           title="Catálogo"
           sub={catalogo === null ? "Carregando…" : `${filtered.length} produtos · Higiene & Limpeza`}
@@ -3324,8 +3407,8 @@ function CatalogScreen({
           <p style={{ fontSize: "14px", color: "var(--gray-500)" }}>{q ? `Nenhum resultado para "${busca}". Tente outro termo ou filtro.` : "Tente outro filtro ou adicione um produto ao catálogo."}</p>
         </div>
       ) : (
-        <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 84px 150px 1fr 100px 40px 92px", gap: "12px", alignItems: "center", padding: "10px 16px", background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)", fontSize: "11px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".03em" }}>
+        <div className="ies-tablewrap" style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", boxShadow: "var(--shadow-sm)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 84px 150px 1fr 100px 40px 92px", gap: "12px", minWidth: "880px", alignItems: "center", padding: "10px 16px", background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)", fontSize: "11px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".03em" }}>
             <span />
             <span>Produto</span>
             <span>Marca</span>
@@ -3341,7 +3424,7 @@ function CatalogScreen({
               <Hoverable
                 key={item.codigo}
                 as="div"
-                base={{ display: "grid", gridTemplateColumns: "44px 1fr 84px 150px 1fr 100px 40px 92px", gap: "12px", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--gray-100)", transition: "background .15s ease" }}
+                base={{ display: "grid", gridTemplateColumns: "44px 1fr 84px 150px 1fr 100px 40px 92px", gap: "12px", minWidth: "880px", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--gray-100)", transition: "background .15s ease" }}
                 hover={{ background: "var(--gray-50)" }}
               >
                 <div style={{ width: "40px", height: "40px", background: "#fff", border: "1px solid var(--gray-100)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flex: "none" }}>
@@ -4330,20 +4413,39 @@ function abrirRelatorio(titulo: string, subtitulo: string, blocos: BlocoRelatori
 
 /* Cabeçalho de tela (design app.html) — barra branca fixa com título + subtítulo + ação. */
 function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) {
-  const { openPalette, openAssistant, goTo } = useContext(ChromeContext);
+  const { openPalette, openAssistant, goTo, openNav } = useContext(ChromeContext);
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "0 24px", height: "62px", background: "var(--surface)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 20, flex: "none" }}>
+    <div className="ies-head" style={{ display: "flex", alignItems: "center", gap: "14px", padding: "0 24px", height: "62px", background: "var(--surface)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 20, flex: "none" }}>
+      {/* Abre a gaveta de navegação. Só existe na faixa em que a sidebar sai do
+          fluxo (≤760px) — o CSS controla, o TSX não precisa medir a tela. */}
+      <button
+        className="ies-menu-btn"
+        onClick={openNav}
+        aria-label="Abrir menu de navegação"
+        title="Menu"
+        style={{ width: "38px", height: "38px", flex: "none", alignItems: "center", justifyContent: "center", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", color: "var(--text-body)", cursor: "pointer" }}
+      >
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round">
+          <path d="M2.5 4.5h12M2.5 8.5h12M2.5 12.5h12" />
+        </svg>
+      </button>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-strong)", letterSpacing: "-.01em", lineHeight: 1.15 }}>{title}</div>
         {sub && <div style={{ fontSize: "12.5px", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sub}</div>}
       </div>
-      <div style={{ flex: 1 }} />
+      <div className="ies-head-spacer" style={{ flex: 1 }} />
+      {/* Ações agrupadas: em linha única de 62px o conjunto (ação da tela + busca de
+          210px + sino + Assistente) passava de 380px fixos e empurrava o CTA
+          principal fora da tela. Agrupado, ele quebra pra segunda linha. */}
+      <div className="ies-head-actions" style={{ display: "flex", alignItems: "center", gap: "10px", flex: "none" }}>
       {right}
       {/* Busca global → abre a command palette (Ctrl/Cmd+K) */}
       <Hoverable
+        className="ies-head-search"
         onClick={openPalette}
-        title="Buscar (Ctrl/Cmd+K)"
-        base={{ display: "flex", alignItems: "center", gap: "9px", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface-sunken)", color: "var(--text-subtle)", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "13px", minWidth: "210px" }}
+        title="Buscar telas e produtos (Ctrl/Cmd+K)"
+        ariaLabel="Buscar telas e produtos"
+        base={{ display: "flex", alignItems: "center", gap: "9px", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface-sunken)", color: "var(--text-subtle)", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "13px", minWidth: "210px", flex: "none" }}
         hover={{ background: "var(--surface-muted)" }}
       >
         <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5l4 4" /></svg>
@@ -4356,6 +4458,7 @@ function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?
       <Hoverable
         onClick={() => goTo("cobranca")}
         title="Notificações — cobranças e inadimplência"
+        ariaLabel="Notificações — cobranças e inadimplência"
         base={{ position: "relative", width: "38px", height: "38px", borderRadius: "10px", border: "1px solid var(--border)", background: "var(--surface)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}
         hover={{ background: "var(--surface-muted)" }}
       >
@@ -4366,12 +4469,14 @@ function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?
       <Hoverable
         onClick={openAssistant}
         title="Assistente"
+        ariaLabel="Abrir assistente"
         base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 14px", borderRadius: "10px", border: "none", background: "var(--primary)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "13px", fontWeight: 600, boxShadow: "var(--shadow-sm)" }}
         hover={{ background: "var(--primary-hover)" }}
       >
         <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 2.2l1.5 3.3 3.3 1.5-3.3 1.5L8.5 12 7 8l-3.3-1.5L7 5z" /></svg>
-        Assistente
+        <span className="ies-hide-sm">Assistente</span>
       </Hoverable>
+      </div>
     </div>
   );
 }

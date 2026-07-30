@@ -596,21 +596,27 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
    documento inteiro com a mesma caixa, independentemente da proporção de cada foto. */
 .pp-imgcard { width: 240px; height: 330px; background: #fff; border: 1px solid #e6ebf2; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 30px -14px rgba(0,0,0,.35); }
 .pp-imgcard img { max-width: 216px; max-height: 300px; object-fit: contain; }
+/* Zona de Valor da rail (do rótulo VALOR ao rodapé de página): tipografia +25% em toda
+   a caixa — print do Matheus, 29/07. É o bloco que o cliente lê primeiro e vinha em
+   corpo de nota de rodapé (8,5-9,5px). Escala aplicada linha a linha, para o valor
+   grande e a letra miúda crescerem juntos e a hierarquia continuar a mesma:
+   9,5→11,9 · 12→15 · 27→33,8 · 9→11,3 · 8,5→10,6. A nota de "maiores volumes" ganha
+   largura na mesma proporção (200→250px), senão a fonte maior só a faz quebrar mais. */
 .pp-price { border-top: 1px solid rgba(255,255,255,.16); padding-top: 16px; }
-.pp-v-label { font-size: 9.5px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
+.pp-v-label { font-size: 11.9px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-v-row { display: flex; align-items: baseline; gap: 10px; margin-top: 7px; }
-.pp-v-size { font-size: 12px; font-weight: 700; color: ${ORANGE}; letter-spacing: .5px; }
-.pp-v-price { font-family: "Geist Mono", monospace; font-size: 27px; font-weight: 700; letter-spacing: .3px; }
-.pp-v-note { font-size: 9px; line-height: 1.4; color: rgba(255,255,255,.5); margin-top: 8px; max-width: 200px; }
+.pp-v-size { font-size: 15px; font-weight: 700; color: ${ORANGE}; letter-spacing: .5px; }
+.pp-v-price { font-family: "Geist Mono", monospace; font-size: 33.8px; font-weight: 700; letter-spacing: .3px; }
+.pp-v-note { font-size: 11.3px; line-height: 1.4; color: rgba(255,255,255,.5); margin-top: 8px; max-width: 250px; }
 /* Valor por litro diluído — segundo destaque da rail (o preço da embalagem manda
    no tamanho; este manda na cor). Fio superior separa do preço sem virar outro card. */
 .pp-diluido { margin-top: 12px; padding-top: 11px; border-top: 1px dashed rgba(255,255,255,.22); }
-.pp-d-label { font-size: 9px; letter-spacing: 1.6px; color: rgba(255,255,255,.55); text-transform: uppercase; }
+.pp-d-label { font-size: 11.3px; letter-spacing: 1.6px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-d-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 5px; }
-.pp-d-price { font-family: "Geist Mono", monospace; font-size: 17px; font-weight: 700; color: ${ORANGE}; }
-.pp-d-rat { font-size: 8.5px; color: rgba(255,255,255,.6); }
-.pp-ficha-link { display: inline-block; margin-top: 12px; font-size: 9px; font-weight: 700; color: ${ORANGE}; text-decoration: underline; }
-.pp-railfoot { margin-top: 14px; font-size: 8.5px; letter-spacing: 1.2px; color: rgba(255,255,255,.4); text-transform: uppercase; }
+.pp-d-price { font-family: "Geist Mono", monospace; font-size: 21.3px; font-weight: 700; color: ${ORANGE}; }
+.pp-d-rat { font-size: 10.6px; color: rgba(255,255,255,.6); }
+.pp-ficha-link { display: inline-block; margin-top: 12px; font-size: 11.3px; font-weight: 700; color: ${ORANGE}; text-decoration: underline; }
+.pp-railfoot { margin-top: 14px; font-size: 10.6px; letter-spacing: 1.2px; color: rgba(255,255,255,.4); text-transform: uppercase; }
 /* Coluna de conteúdo: centraliza o bloco principal verticalmente — sem isso,
    produtos com pouca ficha (sem indicado-para/benefícios) deixavam a metade de
    baixo vazia. Contato fica ancorado no fim da página. */

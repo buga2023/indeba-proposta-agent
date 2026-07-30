@@ -32,6 +32,9 @@ export default function Cadastro() {
       });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
+        // Mesma armadilha do login: falha de servidor não deve parecer erro de
+        // preenchimento, senão o usuário fica corrigindo o formulário em vão.
+        if (r.status >= 500) throw new Error("O servidor não conseguiu criar a conta. Não é o que você preencheu — avise o time técnico.");
         throw new Error(d.erro || "Não foi possível criar a conta.");
       }
       router.push("/");
