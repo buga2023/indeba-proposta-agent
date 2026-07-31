@@ -551,12 +551,12 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .capa-cal { margin-top: 22px; } .capa-cal svg { width: 20px; height: 20px; }
 .cc-cidade { color: #6b7787; font-size: 11px; margin-top: 13px; }
 /* Condições — grid 2 colunas de itens + fechamento navy (mensagem + assinatura) */
-.conds { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-top: 18px; }
-.condi { display: flex; gap: 12px; align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid #e5ebf2; }
+.conds { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin-top: 16px; }
+.condi { display: flex; gap: 11px; align-items: flex-start; padding-bottom: 10px; border-bottom: 1px solid #e5ebf2; }
 .condi .ci { width: 34px; height: 34px; flex: none; border-radius: 10px; background: #eef2f7; display: flex; align-items: center; justify-content: center; }
 .condi .ci svg { width: 17px; height: 17px; }
-.condi h3 { color: ${NAVY}; font-weight: 700; font-size: 11.5px; }
-.condi p { color: #6b7787; font-size: 9.5px; line-height: 1.45; margin-top: 3px; }
+.condi h3 { color: ${NAVY}; font-weight: 700; font-size: 13.5px; }
+.condi p { color: #6b7787; font-size: 11.5px; line-height: 1.4; margin-top: 3px; }
 .closing { background: ${NAVY}; border-radius: 16px; padding: 22px 26px; color: #fff; display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-top: 22px; }
 .closing .msg { font-size: 11px; line-height: 1.6; color: rgba(255,255,255,.8); max-width: 290px; }
 .closing .msg em { color: #fff; font-style: normal; display: block; margin-top: 8px; font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; opacity: .7; }
