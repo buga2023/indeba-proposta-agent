@@ -173,6 +173,40 @@ Junto, do mesmo print: os rótulos de "Indicado para" saíam **crus** para o cli
 `data/catalogo-ficha-rascunho.json` para a grafia que o próprio arquivo já usava
 ("Packing House", "Cozinha Industrial") — mesmo defeito que o Item 2 corrigiu no segmento.
 
+## Rodada 30/07 — ordem dos produtos por arrasto
+
+**Era:** a ordem em que os produtos saem no PDF não tinha controle nenhum. Ela era um
+efeito colateral: ordem de inserção das chaves do `Record` de seleção, com os **itens
+próprios sempre empurrados para o fim** do payload, mesmo tendo sido adicionados primeiro.
+Zerar a quantidade de um item e readicioná-lo mandava ele para o fim. Para pôr o carro-chefe
+na primeira página, o consultor tinha que remover tudo e readicionar na sequência desejada.
+
+Isso importa porque `scope.itens` é o **único portador de ordem** — não existe campo
+`ordem` no contrato. Na Consolidada cada item é uma página A4, e o índice do array vira o
+número impresso no header e a paginação; no Orçamento, a sequência das linhas da tabela.
+
+**Ficou:** o painel "Selecionados" tem **alça de arrasto** e numeração visível (1, 2, 3…).
+Arrastar reordena, e a lista se reorganiza embaixo do cursor — o que se vê arrastando já é
+o resultado. Item próprio arrasta junto com os do catálogo, para qualquer posição. Reabrir
+uma proposta salva para editar devolve a lista na ordem gravada.
+
+Duas decisões que valem registro:
+
+- **Ponteiro, não a API HTML5 de drag-and-drop.** A HTML5 é inerte no toque, e a tela desce
+  até o layout de celular — a alça ficaria morta lá, sem nem sinalizar. Eventos de ponteiro
+  cobrem mouse e dedo no mesmo caminho. Sem biblioteca nova: o projeto não tem nenhuma de
+  DnD e não passou a ter.
+- **Mover e soltar são ouvidos na janela, não na alça.** Com `setPointerCapture` na alça o
+  arrasto travava depois de UMA posição: ao reordenar, o React move o nó da linha no DOM, o
+  navegador solta a captura e os `pointermove` seguintes iam para outro elemento. Quem
+  arrastasse do 1º para o 4º lugar parava no 2º. Pego pelo QA de navegador, não a olho.
+
+A alça também é operável por **teclado** (↑ ↓ com ela em foco) — sem mouse e sem toque,
+ninguém fica sem reordenar.
+
+Onde: `ordem` / `selecionadas` em [page.tsx](src/app/page.tsx) — a mesma lista ordenada
+alimenta o painel **e** o payload de `montar()`, para tela e PDF não discordarem.
+
 ## Verificação
 
 - `pnpm test` — inclui [embalagem-e-linha.test.ts](tests/unit/embalagem-e-linha.test.ts)
@@ -182,6 +216,16 @@ Junto, do mesmo print: os rótulos de "Indicado para" saíam **crus** para o cli
   [ficha-embalagem-cotada.test.ts](tests/unit/ficha-embalagem-cotada.test.ts) (6 testes
   da rodada 29/07: rótulo de tamanho em pt-BR, painel de tamanho único com selo de
   cotada, guardião contra ponto decimal na página).
+- `pnpm test` — inclui [ordem-itens.test.ts](tests/unit/ordem-itens.test.ts) (4 testes da
+  rodada 30/07: `montarPropostaEstruturada` preserva a ordem do payload com item próprio no
+  MEIO; a mesma seleção em ordem diferente sai em ordem diferente; Consolidada e Orçamento
+  emitem os itens na ordem do array).
+- `pnpm exec vitest run --config vitest.qa.config.ts tests/qa-ordem-arrastar.qa.ts` — QA de
+  navegador da reordenação: sobe um `next dev` próprio (AUTH_ENABLED=false), abre o
+  Chromium e arrasta com **mouse de verdade**. 6 testes: arrasto para cima e para baixo,
+  arrasto longo de 3 posições (o guardião da captura de ponteiro), ↑/↓ pelo teclado, item
+  próprio reordenando junto, e a ordem da tela batendo com o payload de
+  `/api/montar-estruturado`. Nenhum outro `next dev` pode estar rodando no diretório.
 - `pnpm exec vitest run --config vitest.qa.config.ts tests/qa-proposta.qa.ts` — monta
   uma proposta real (3 produtos, um deles cotado num tamanho que **não** é o primeiro do
   catálogo), gera o PDF pelo mesmo `renderPdf` da rota e confere item a item.

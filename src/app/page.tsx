@@ -53,6 +53,13 @@ const parseChave = (k: string) => {
   const i = k.lastIndexOf("#");
   return { codigo: k.slice(0, i), idx: Number(k.slice(i + 1)) || 0 };
 };
+// Item fora do catálogo, digitado na montagem. Chave na lista de selecionados: "c<id>"
+// — não colide com a do catálogo, que sempre tem "#".
+type ItemProprio = { id: number; nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; diluicao: string; qtd: number };
+const chavePropria = (id: number) => `c${id}`;
+type SelCatalogo = { k: string; idx: number; qtd: number; produto: Produto };
+/** Linha da lista de selecionados, já na ordem escolhida: ou é do catálogo, ou é própria. */
+type LinhaSel = { key: string; cat: SelCatalogo; own?: undefined } | { key: string; cat?: undefined; own: ItemProprio };
 // Nº do orçamento derivado do id (mesma lógica do template-orcamento.ts).
 const numeroDoc = (id: string) => String((parseInt(id.replace(/[^0-9a-f]/gi, "").slice(0, 6) || "0", 16) % 9000) + 1000);
 const precoUnit = (it: PropostaItem) => Number(it.embalagens[0]?.preco ?? 0);
@@ -1322,6 +1329,12 @@ function ManualScreen({
   // produto pode entrar na proposta em mais de uma embalagem — 5 L e 20 L viram dois itens,
   // cada um com seu preço, diluição e quantidade (pedido do Gustavo, 25/07).
   const [itens, setItens] = useState<Record<string, number>>({}); // chave(codigo, idx) → quantidade
+  // ORDEM dos selecionados, arrastável no painel da direita. É a ordem que sai no PDF:
+  // na Consolidada cada item é uma página (o índice vira o número impresso e a paginação),
+  // no Orçamento é a sequência das linhas da tabela. Antes a ordem era implícita — ordem de
+  // inserção das chaves de `itens`, com os itens próprios sempre empurrados para o fim — e
+  // não havia como mudar sem remover e readicionar tudo na sequência desejada.
+  const [ordem, setOrdem] = useState<string[]>([]);
   const [tamanhos, setTamanhos] = useState<Record<string, number>>({}); // codigo → índice em foco no seletor da lista
   const tamanhoIdx = (codigo: string) => tamanhos[codigo] ?? 0;
   const setTamanho = (codigo: string, idx: number) => setTamanhos((m) => ({ ...m, [codigo]: idx }));
@@ -1339,7 +1352,7 @@ function ManualScreen({
   // não mexeu, o diluicaoMax do catálogo daquela embalagem (o mesmo que o campo pré-preenche).
   const diluicaoEfetiva = (k: string, fallbackDil: string | null) => diluicoes[k] ?? fallbackDil ?? "";
   // Itens próprios (fora do catálogo): preço digitado por humano → procedência MANUAL.
-  const [custom, setCustom] = useState<{ id: number; nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; diluicao: string; qtd: number }[]>([]);
+  const [custom, setCustom] = useState<ItemProprio[]>([]);
   // Produto do catálogo SEM preço (arquivado, aguardando precificação) → preço digitado
   // por humano na hora de adicionar (chave produto+tamanho → texto digitado, já que cada
   // embalagem tem seu preço). Nunca vem da IA.
@@ -1354,6 +1367,13 @@ function ManualScreen({
   const nextId = useRef(1);
   const [montando, setMontando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  // Arrasto do painel de selecionados, por eventos de PONTEIRO — não pela API HTML5 de
+  // drag-and-drop, que é inerte no toque (a tela desce até o layout de celular, e lá a
+  // alça ficaria morta, sem nem sinalizar). Ponteiro cobre mouse e dedo no mesmo caminho.
+  // O arrasto só começa pela alça, então quantidade e remover seguem clicáveis.
+  const [arrastando, setArrastando] = useState<string | null>(null);
+  // Retângulo de cada linha, para saber sobre quem o ponteiro está.
+  const linhasRef = useRef(new Map<string, HTMLDivElement>());
 
   useEffect(() => {
     fetch("/api/catalogo")
@@ -1376,15 +1396,19 @@ function ManualScreen({
     const dils: Record<string, string> = {};
     const nDil: Record<string, boolean> = {};
     const precos: Record<string, string> = {};
-    const proprios: typeof custom = [];
+    const proprios: ItemProprio[] = [];
+    // A ordem gravada na proposta é a ordem do PDF: reabrir para editar tem que devolver
+    // a lista na MESMA sequência, item próprio incluído no lugar onde ele estava.
+    const ords: string[] = [];
     for (const it of scopeParaEditar.itens) {
       const cotada = it.embalagens[0];
       if (!cotada) continue;
       const p = catalogo.find((x) => x.codigo === it.codigo);
       const idx = p?.embalagens.findIndex((e) => e.tamanho === cotada.tamanho && e.unidade === cotada.unidade) ?? -1;
       if (!p || idx < 0) {
+        const id = nextId.current++;
         proprios.push({
-          id: nextId.current++,
+          id,
           nome: it.nome,
           tamanho: String(cotada.tamanho),
           unidade: cotada.unidade,
@@ -1392,9 +1416,11 @@ function ManualScreen({
           diluicao: cotada.diluicaoMax ?? "",
           qtd: it.quantidade,
         });
+        ords.push(chavePropria(id));
         continue;
       }
       const k = chave(p.codigo, idx);
+      ords.push(k);
       qtds[k] = it.quantidade;
       tams[p.codigo] = idx;
       precos[k] = cotada.preco;
@@ -1402,6 +1428,7 @@ function ManualScreen({
       else nDil[k] = true; // sem diluição na cotada = "não dilui" marcado na montagem
     }
     setItens(qtds);
+    setOrdem(ords);
     setTamanhos(tams);
     setDiluicoes(dils);
     setNaoDilui(nDil);
@@ -1434,18 +1461,32 @@ function ManualScreen({
       const { codigo, idx } = parseChave(k);
       return { k, idx, qtd, produto: disponiveis.find((p) => p.codigo === codigo) };
     })
-    .filter((x): x is { k: string; idx: number; qtd: number; produto: Produto } => Boolean(x.produto));
-  // Linhas unificadas (catálogo + próprias) para render e total.
-  const rows: { key: string; nome: string; sub: string; preco: number; qtd: number; onQtd: (q: number) => void }[] = [
-    ...selCat.map((x) => {
+    .filter((x): x is SelCatalogo => Boolean(x.produto));
+  // Seleção unificada (catálogo + próprias) NA ORDEM arrastada. Fonte única de ordem da
+  // tela: alimenta o painel E o payload de `montar()`, para o que o consultor vê na lista
+  // e a sequência de páginas do PDF nunca discordarem.
+  const posNaOrdem = new Map(ordem.map((k, i) => [k, i]));
+  const selecionadas: LinhaSel[] = [
+    ...selCat.map((cat): LinhaSel => ({ key: cat.k, cat })),
+    ...custom.map((own): LinhaSel => ({ key: chavePropria(own.id), own })),
+  ]
+    // Chave sem registro em `ordem` (proposta antiga, estado de sessão anterior a este
+    // campo) cai no fim, na ordem de inserção — nenhuma linha some nem embaralha.
+    .map((l, i) => ({ l, pos: posNaOrdem.get(l.key) ?? ordem.length + i }))
+    .sort((a, b) => a.pos - b.pos)
+    .map((e) => e.l);
+  const rows: { key: string; nome: string; sub: string; preco: number; qtd: number; onQtd: (q: number) => void }[] = selecionadas.map((l) => {
+    if (l.cat) {
+      const x = l.cat;
       const preco = precoDe(x.produto, x.idx) ?? 0;
       const emb = x.produto.embalagens[x.idx];
       const semPreco = emb?.preco == null;
       const tam = emb ? `${tamanhoLegivel(emb.tamanho, emb.unidade)} · ` : "";
       return { key: x.k, nome: x.produto.nome, sub: `${tam}${fmt(preco)} un. · ${semPreco ? "preço digitado" : "catálogo"}`, preco, qtd: x.qtd, onQtd: (q: number) => setQtd(x.k, q) };
-    }),
-    ...custom.map((c) => ({ key: `c${c.id}`, nome: c.nome, sub: `${fmt(Number(c.preco) || 0)} un. · ${c.tamanho}${c.unidade} · manual`, preco: Number(c.preco) || 0, qtd: c.qtd, onQtd: (q: number) => setCustomQtd(c.id, q) })),
-  ];
+    }
+    const c = l.own;
+    return { key: chavePropria(c.id), nome: c.nome, sub: `${fmt(Number(c.preco) || 0)} un. · ${c.tamanho}${c.unidade} · manual`, preco: Number(c.preco) || 0, qtd: c.qtd, onQtd: (q: number) => setCustomQtd(c.id, q) };
+  });
   const total = rows.reduce((s, r) => s + r.preco * r.qtd, 0);
 
   function add(codigo: string, idx: number) {
@@ -1453,6 +1494,7 @@ function ManualScreen({
     if (p && precoDe(p, idx) == null) return; // arquivado sem preço digitado ainda — botão fica desabilitado
     const k = chave(codigo, idx);
     setItens((m) => (m[k] ? m : { ...m, [k]: 1 }));
+    setOrdem((o) => (o.includes(k) ? o : [...o, k])); // entra no fim da lista
   }
   function setQtd(k: string, q: number) {
     setItens((m) => {
@@ -1463,9 +1505,11 @@ function ManualScreen({
       }
       return { ...m, [k]: q };
     });
+    if (q <= 0) setOrdem((o) => o.filter((x) => x !== k));
   }
   function setCustomQtd(id: number, q: number) {
     setCustom((cs) => (q <= 0 ? cs.filter((c) => c.id !== id) : cs.map((c) => (c.id === id ? { ...c, qtd: q } : c))));
+    if (q <= 0) setOrdem((o) => o.filter((x) => x !== chavePropria(id)));
   }
   function addCustom() {
     const nome = draft.nome.trim();
@@ -1476,10 +1520,55 @@ function ManualScreen({
       return;
     }
     setErro(null);
-    setCustom((cs) => [...cs, { id: nextId.current++, nome, tamanho: draft.tamanho, unidade: draft.unidade, preco: preco.toFixed(2), diluicao: draft.diluicao, qtd: 1 }]);
+    const id = nextId.current++;
+    setCustom((cs) => [...cs, { id, nome, tamanho: draft.tamanho, unidade: draft.unidade, preco: preco.toFixed(2), diluicao: draft.diluicao, qtd: 1 }]);
+    setOrdem((o) => [...o, chavePropria(id)]);
     setDraft({ nome: "", tamanho: "", unidade: "L", preco: "", diluicao: "" });
     setShowCustom(false);
   }
+
+  // Reordenação. Opera sobre as chaves VISÍVEIS (`rows`) e não sobre `ordem` crua: item que
+  // ainda não tem registro em `ordem` também precisa poder se mover, e o resultado já sai
+  // como a ordem completa e normalizada.
+  function moverPara(k: string, destino: number) {
+    const atual = rows.map((r) => r.key);
+    const de = atual.indexOf(k);
+    if (de < 0 || destino < 0 || destino >= atual.length || de === destino) return;
+    const [movido] = atual.splice(de, 1);
+    atual.splice(destino, 0, movido);
+    setOrdem(atual);
+  }
+  // Mover e soltar são ouvidos na JANELA, não na alça. Com setPointerCapture na alça o
+  // arrasto travava depois de UMA posição: ao reordenar, o React move o nó da linha no
+  // DOM, o navegador solta a captura e os pointermove seguintes iam para outro elemento —
+  // quem arrastasse do 1º para o 4º lugar parava no 2º.
+  useEffect(() => {
+    if (!arrastando) return;
+    const mover = (e: PointerEvent) => {
+      // A ordem visível é lida do próprio DOM a cada movimento. Assim o listener não
+      // depende do `rows` do render que o registrou, e a lista se reorganiza embaixo do
+      // cursor/dedo: o que se vê arrastando já é o resultado final.
+      const visiveis = [...linhasRef.current.entries()]
+        .map(([key, el]) => ({ key, cx: el.getBoundingClientRect() }))
+        .sort((a, b) => a.cx.top - b.cx.top);
+      const de = visiveis.findIndex((v) => v.key === arrastando);
+      const sobre = visiveis.findIndex((v) => e.clientY >= v.cx.top && e.clientY <= v.cx.bottom);
+      if (de < 0 || sobre < 0 || sobre === de) return;
+      const atual = visiveis.map((v) => v.key);
+      const [movido] = atual.splice(de, 1);
+      atual.splice(sobre, 0, movido);
+      setOrdem(atual);
+    };
+    const soltar = () => setArrastando(null);
+    window.addEventListener("pointermove", mover);
+    window.addEventListener("pointerup", soltar);
+    window.addEventListener("pointercancel", soltar);
+    return () => {
+      window.removeEventListener("pointermove", mover);
+      window.removeEventListener("pointerup", soltar);
+      window.removeEventListener("pointercancel", soltar);
+    };
+  }, [arrastando]);
 
   async function montar() {
     if (montando) return;
@@ -1516,8 +1605,13 @@ function ManualScreen({
         cliente: { razaoSocial: razaoSocial.trim(), cnpj: cnpj.trim() || null, segmento: segmentos.join(", ") || null, responsavel: responsavel.trim() || null },
         // Só faz sentido no modelo Consolidada (é o bloco que ele renderiza).
         ...(tipo === "consolidada" ? { condicoesConsolidada: condicoes } : {}),
-        itens: [
-          ...selCat.map((x) => {
+        // NA ORDEM da lista de selecionados — é ela que vira a sequência de páginas do PDF
+        // (`scope.itens` é o único portador de ordem; o índice do item vira o número
+        // impresso do produto e a paginação da Consolidada). Antes era catálogo primeiro e
+        // itens próprios sempre no fim, independente de quando entraram.
+        itens: selecionadas.map((l) => {
+          if (l.cat) {
+            const x = l.cat;
             const embEscolhido = x.produto.embalagens[x.idx];
             // Diluição digitada pelo consultor → grava no diluicaoMax da embalagem COTADA
             // (embalagens[0]) do payload; é de lá que o template tira o "valor por litro
@@ -1552,9 +1646,10 @@ function ManualScreen({
                 }),
               ],
             };
-          }),
-          ...custom.map((c) => ({ nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: normalizaDiluicao(c.diluicao), custoDiluido: null }], quantidade: c.qtd })),
-        ],
+          }
+          const c = l.own;
+          return { nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: normalizaDiluicao(c.diluicao), custoDiluido: null }], quantidade: c.qtd };
+        }),
       };
       const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!r.ok) throw new Error(`Falha ao montar a proposta (${r.status}).`);
@@ -1875,6 +1970,11 @@ function ManualScreen({
               </span>
               <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)" }}>Selecionados ({rows.length})</span>
             </div>
+            {rows.length > 1 && (
+              <div style={{ fontSize: "11px", lineHeight: 1.4, color: "var(--text-subtle)", marginTop: "-8px", marginBottom: "12px" }}>
+                Arraste pela alça para mudar a ordem — é a mesma ordem em que os produtos saem no PDF.
+              </div>
+            )}
             {rows.length === 0 ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", padding: "26px 0", textAlign: "center" }}>
                 <span style={{ width: "38px", height: "38px", borderRadius: "10px", background: "var(--surface-muted)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-subtle)" }}>
@@ -1883,21 +1983,70 @@ function ManualScreen({
                 <div style={{ fontSize: "13px", color: "var(--text-subtle)", maxWidth: "180px" }}>Adicione produtos do catálogo (ou um item próprio) ao lado.</div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {rows.map((r) => (
-                  <div key={r.key} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.nome}</div>
-                      <div style={{ fontSize: "11.5px", color: "var(--text-subtle)", fontFamily: "var(--font-mono)" }}>{r.sub}</div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                  // Durante o arrasto, senão o mouse sai selecionando os nomes das linhas.
+                  userSelect: arrastando ? "none" : undefined,
+                }}
+              >
+                {rows.map((r, i) => {
+                  const emMovimento = arrastando === r.key;
+                  return (
+                    <div
+                      key={r.key}
+                      ref={(el) => {
+                        if (el) linhasRef.current.set(r.key, el);
+                        else linhasRef.current.delete(r.key);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "3px 5px",
+                        margin: "0 -5px",
+                        borderRadius: "9px",
+                        background: emMovimento ? "var(--surface-muted)" : "transparent",
+                        boxShadow: emMovimento ? "var(--shadow-sm)" : "none",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        aria-label={`Reordenar ${r.nome} — posição ${i + 1} de ${rows.length}`}
+                        title="Arraste para mudar a ordem no PDF (ou ↑ ↓ com a alça em foco)"
+                        // Só marca quem está sendo arrastado; mover e soltar são ouvidos na
+                        // janela (ver o efeito acima), que sobrevive à linha trocar de lugar.
+                        onPointerDown={() => setArrastando(r.key)}
+                        // Teclado: a alça em foco move o item, para quem não usa mouse.
+                        onKeyDown={(e) => {
+                          if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+                          e.preventDefault();
+                          moverPara(r.key, i + (e.key === "ArrowUp" ? -1 : 1));
+                        }}
+                        // touchAction none: no celular o dedo na alça arrasta o item em vez
+                        // de rolar a página.
+                        style={{ display: "flex", alignItems: "center", gap: "4px", flex: "none", padding: 0, border: "none", background: "transparent", cursor: emMovimento ? "grabbing" : "grab", color: emMovimento ? "var(--primary)" : "var(--text-subtle)", fontFamily: "var(--font-mono)", fontSize: "11px", touchAction: "none" }}
+                      >
+                        <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
+                          <circle cx="3" cy="3" r="1.1" /><circle cx="7" cy="3" r="1.1" /><circle cx="3" cy="7" r="1.1" /><circle cx="7" cy="7" r="1.1" /><circle cx="3" cy="11" r="1.1" /><circle cx="7" cy="11" r="1.1" />
+                        </svg>
+                        <span style={{ minWidth: "11px", textAlign: "right" }}>{i + 1}</span>
+                      </button>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.nome}</div>
+                        <div style={{ fontSize: "11.5px", color: "var(--text-subtle)", fontFamily: "var(--font-mono)" }}>{r.sub}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: "none" }}>
+                        <button onClick={() => r.onQtd(r.qtd - 1)} style={qtdBtn}>−</button>
+                        <span style={{ minWidth: "22px", textAlign: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "13px" }}>{r.qtd}</span>
+                        <button onClick={() => r.onQtd(r.qtd + 1)} style={qtdBtn}>+</button>
+                      </div>
+                      <button onClick={() => r.onQtd(0)} title="Remover" style={{ ...qtdBtn, color: "var(--danger)", borderColor: "transparent", background: "transparent" }}>×</button>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: "none" }}>
-                      <button onClick={() => r.onQtd(r.qtd - 1)} style={qtdBtn}>−</button>
-                      <span style={{ minWidth: "22px", textAlign: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "13px" }}>{r.qtd}</span>
-                      <button onClick={() => r.onQtd(r.qtd + 1)} style={qtdBtn}>+</button>
-                    </div>
-                    <button onClick={() => r.onQtd(0)} title="Remover" style={{ ...qtdBtn, color: "var(--danger)", borderColor: "transparent", background: "transparent" }}>×</button>
-                  </div>
-                ))}
+                  );
+                })}
                 <div style={{ borderTop: "1px solid var(--border)", marginTop: "4px", paddingTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                   <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-muted)" }}>Total</span>
                   <span style={{ fontSize: "18px", fontWeight: 800, color: "var(--primary)", fontFamily: "var(--font-mono)" }}>{fmt(total)}</span>
