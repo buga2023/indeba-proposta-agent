@@ -21,7 +21,21 @@ if (!url) {
   console.error("DATABASE_URL ausente — rode com: node --env-file=.env.local scripts/promover-gestor.mts");
   process.exit(1);
 }
-console.log(`banco: ${new URL(url).host}\n`);
+
+// Um `new URL()` cru aqui cospe stack trace de node:internal/url quando a string não é uma
+// URL — e o caso mais comum não é digitação: é colar o texto do exemplo (<string-do-...>)
+// achando que é o valor. O erro tem que dizer isso.
+let host: string;
+try {
+  host = new URL(url).host;
+} catch {
+  console.error(`DATABASE_URL não é uma URL de banco válida: ${url}\n`);
+  console.error("Ela precisa ser a connection string de verdade, começando com postgresql://");
+  console.error("  local .....: node --env-file=.env.local scripts/promover-gestor.mts");
+  console.error("  produção ..: pegue em Supabase → Project Settings → Database → Connection string");
+  process.exit(1);
+}
+console.log(`banco: ${host}\n`);
 
 const prisma = new PrismaClient({ datasources: { db: { url } } });
 
