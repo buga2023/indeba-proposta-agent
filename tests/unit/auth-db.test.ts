@@ -3,8 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Mocka só o acesso ao banco — o foco é a REGRA de papel/duplicidade, não o Prisma.
 const findUnique = vi.fn();
 const create = vi.fn();
+const update = vi.fn();
 vi.mock("@/lib/db", () => ({
-  prisma: { usuario: { findUnique: (a: unknown) => findUnique(a), create: (a: unknown) => create(a) } },
+  prisma: { usuario: { findUnique: (a: unknown) => findUnique(a), create: (a: unknown) => create(a), update: (a: unknown) => update(a) } },
 }));
 
 import { criarUsuario, validarCredenciais, AcessoPendenteError, EmailEmUsoError } from "@/lib/auth-db";
@@ -13,6 +14,7 @@ import { gerarCredencial } from "@/lib/auth";
 beforeEach(() => {
   findUnique.mockReset();
   create.mockReset();
+  update.mockReset();
   delete process.env.ADMIN_EMAILS;
 });
 
@@ -68,6 +70,48 @@ describe("auth-db — cadastro próprio e login (banco)", () => {
     const credencial = await gerarCredencial("senha12345");
     findUnique.mockResolvedValue({ email: "ex@indeba.com", nome: "Ex", credencial, papel: "user", acesso: "bloqueado" });
     await expect(validarCredenciais("ex@indeba.com", "senha12345")).rejects.toBeInstanceOf(AcessoPendenteError);
+  });
+
+  // Bootstrap do primeiro gestor: quem aprova e promove é o gestor, e o painel só abre para
+  // gestor. Conta criada antes de ADMIN_EMAILS existir nasce `user` e ficaria sem saída.
+  it("ADMIN_EMAILS promove no LOGIN uma conta que já existia como vendedor", async () => {
+    process.env.ADMIN_EMAILS = "dono@indeba.example";
+    const credencial = await gerarCredencial("senha12345");
+    findUnique.mockResolvedValue({ email: "dono@indeba.example", nome: "Dono", credencial, papel: "user", acesso: "aprovado" });
+
+    const u = await validarCredenciais("dono@indeba.example", "senha12345");
+    expect(u?.papel).toBe("admin");
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { papel: "admin", acesso: "aprovado" } }),
+    );
+  });
+
+  it("e destranca também quem estava pendente (não há quem aprove o primeiro gestor)", async () => {
+    process.env.ADMIN_EMAILS = "dono@indeba.example";
+    const credencial = await gerarCredencial("senha12345");
+    findUnique.mockResolvedValue({ email: "dono@indeba.example", nome: "Dono", credencial, papel: "user", acesso: "pendente" });
+    expect((await validarCredenciais("dono@indeba.example", "senha12345"))?.papel).toBe("admin");
+  });
+
+  // GUARDIÃO do bug que quase entrou: a primeira versão REBAIXAVA quem não estava na env.
+  // Com ADMIN_EMAILS contendo só o dono, todo gestor promovido no painel voltaria a vendedor
+  // sozinho no login seguinte — desfazendo em silêncio a feature de "Tornar gestor".
+  it("GUARDIÃO: quem virou gestor pelo PAINEL não é rebaixado por não estar em ADMIN_EMAILS", async () => {
+    process.env.ADMIN_EMAILS = "dono@indeba.example";
+    const credencial = await gerarCredencial("senha12345");
+    findUnique.mockResolvedValue({ email: "promovido@indeba.example", nome: "Promovido", credencial, papel: "admin", acesso: "aprovado" });
+
+    const u = await validarCredenciais("promovido@indeba.example", "senha12345");
+    expect(u?.papel, "continua gestor").toBe("admin");
+    expect(update, "e o banco não é tocado").not.toHaveBeenCalled();
+  });
+
+  it("sem ADMIN_EMAILS, o login não mexe em papel nenhum", async () => {
+    delete process.env.ADMIN_EMAILS;
+    const credencial = await gerarCredencial("senha12345");
+    findUnique.mockResolvedValue({ email: "z@indeba.example", nome: "Z", credencial, papel: "user", acesso: "aprovado" });
+    expect((await validarCredenciais("z@indeba.example", "senha12345"))?.papel).toBe("user");
+    expect(update).not.toHaveBeenCalled();
   });
 
   it("criarUsuario: colaborador nasce PENDENTE; o gestor de ADMIN_EMAILS já nasce aprovado", async () => {

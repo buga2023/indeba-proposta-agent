@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validarSessao } from "@/lib/auth";
+import { authAtiva, validarSessao } from "@/lib/auth";
 import { acessoDe } from "@/lib/auth-db";
 
 export const runtime = "nodejs";
@@ -8,6 +8,13 @@ export const runtime = "nodejs";
 // (nome/papel vêm do cookie assinado, sem tocar banco).
 export async function GET(req: NextRequest) {
   const usuario = await validarSessao(req.cookies.get("sessao")?.value);
+
+  // Dev local (AUTH_ENABLED=false): não há cookie para validar, e o middleware já deixa
+  // passar. Sem este ramo o 401 daqui manda a tela para /login — e como não há login em
+  // modo local, o app fica inalcançável na própria máquina.
+  if (!usuario && !authAtiva()) {
+    return NextResponse.json({ email: "local", nome: "Local", papel: "admin" });
+  }
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
 
   // O cookie é autocontido e vale 8h sem tocar o banco — ótimo para não consultar Postgres

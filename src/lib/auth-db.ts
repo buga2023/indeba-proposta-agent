@@ -23,12 +23,16 @@ export class AcessoPendenteError extends Error {
   }
 }
 
-function papelPara(email: string): Papel {
+function ehAdminPorEnv(email: string): boolean {
   const admins = (process.env.ADMIN_EMAILS ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
-  return admins.includes(email.toLowerCase()) ? "admin" : "user";
+  return admins.includes(email.toLowerCase());
+}
+
+function papelPara(email: string): Papel {
+  return ehAdminPorEnv(email) ? "admin" : "user";
 }
 
 // Cadastro é aberto, entrada não é: a conta nasce PENDENTE e o gestor libera no painel.
@@ -51,6 +55,22 @@ export async function validarCredenciais(email: string, senha: string): Promise<
   const u = await prisma.usuario.findUnique({ where: { email } });
   if (!u) return null;
   if (!(await validarHash(senha, u.credencial))) return null;
+
+  // ADMIN_EMAILS vale no LOGIN, não só na criação da conta. Sem isto o dono do sistema fica
+  // trancado fora do próprio painel: quem aprova e promove é o gestor, o painel só abre para
+  // gestor, e `papelPara()` só roda uma vez, no cadastro — então uma conta criada antes de a
+  // variável existir (o caso da produção da Indeba, onde ADMIN_EMAILS nunca foi definida)
+  // nasce `user` e não há por onde se promover pela interface.
+  //
+  // Só PROMOVE, nunca rebaixa — e a diferença aqui não é detalhe. Rebaixar quem saiu da lista
+  // desfaria, no login seguinte, cada "Tornar gestor" que o painel concedeu: com a env
+  // contendo só o dono, todo gestor que ele promovesse voltaria a vendedor sozinho. A env é
+  // a chave-mestra que destranca o primeiro gestor; quem manda em papel depois é o painel.
+  if (ehAdminPorEnv(u.email) && (u.papel !== "admin" || u.acesso !== "aprovado")) {
+    await prisma.usuario.update({ where: { email: u.email }, data: { papel: "admin", acesso: "aprovado" } });
+    return { email: u.email, nome: u.nome, papel: "admin" };
+  }
+
   if (u.acesso !== "aprovado") throw new AcessoPendenteError(u.acesso as Acesso);
   return { email: u.email, nome: u.nome, papel: u.papel as Papel };
 }
@@ -79,15 +99,24 @@ const mapear = (u: LinhaUsuario): Colaborador => ({
   criadoEm: u.criadoEm.toISOString(),
 });
 
+// As colunas do Colaborador — e só elas. Sem `select`, o Prisma traz a linha inteira, o que
+// inclui `credencial` (o PBKDF2 "salt.hash" de cada senha): no painel do gestor isso é o
+// hash do time TODO saindo do Postgres e passando pela memória da função a cada abertura de
+// tela, para o `mapear` logo abaixo descartar. Nada vazava — mas o dado mais sensível da
+// tabela não tem por que sair do banco para ser jogado fora.
+const campos = { nome: true, email: true, papel: true, acesso: true, telefone: true, criadoEm: true } as const;
+
 export async function buscarColaborador(email: string): Promise<Colaborador | null> {
-  const u = await prisma.usuario.findUnique({ where: { email } });
+  const u = await prisma.usuario.findUnique({ where: { email }, select: campos });
   return u ? mapear(u) : null;
 }
 
 // Pendente primeiro: a fila de aprovação é o que o gestor abre o painel para resolver, e
-// ordenar só por nome esconderia um cadastro novo no meio da lista do time inteiro.
+// ordenar só por nome esconderia um cadastro novo no meio da lista do time inteiro. A ordem
+// final sai do comparador abaixo (acesso, depois nome), então o `orderBy` do banco é o nome
+// — pedir `criadoEm` ali era ordenar por um critério que o `sort` seguinte descartava.
 export async function listarColaboradores(): Promise<Colaborador[]> {
-  const us = await prisma.usuario.findMany({ orderBy: [{ criadoEm: "desc" }] });
+  const us = await prisma.usuario.findMany({ select: campos, orderBy: { nome: "asc" } });
   const ordem: Record<string, number> = { pendente: 0, aprovado: 1, bloqueado: 2 };
   return us
     .map(mapear)
@@ -98,5 +127,5 @@ export async function atualizarColaborador(
   email: string,
   dados: { nome?: string; telefone?: string | null; papel?: Papel; acesso?: Acesso },
 ): Promise<Colaborador> {
-  return mapear(await prisma.usuario.update({ where: { email }, data: dados }));
+  return mapear(await prisma.usuario.update({ where: { email }, data: dados, select: campos }));
 }
