@@ -158,6 +158,17 @@ export async function obterProposta(id: string): Promise<PropostaRegistro | null
   return row ? mapearRegistro(row) : null;
 }
 
+// Só o dono, sem carregar a proposta. O gate de autoria (ver /api/propostas e
+// /api/propostas/[id]) precisa de UMA string, mas vinha chamando `obterProposta`: isso traz
+// o `scope` inteiro do Postgres — o JSON com todos os itens da proposta —, roda o Zod em
+// cima dele e ainda recalcula a imagem de cada item pelo catálogo (`comImagensDoCatalogo`),
+// tudo para descartar o resultado e ler `.autor`. No auto-save é o caminho mais quente do
+// app. Aqui é a mesma busca por chave primária devolvendo uma coluna.
+export async function autorDaProposta(id: string): Promise<string | null> {
+  const row = await prisma.proposta.findUnique({ where: { id }, select: { autor: true } });
+  return row?.autor ?? null;
+}
+
 export async function atualizarStatusProposta(id: string, status: StatusProposta): Promise<PropostaRegistro> {
   const row = await prisma.proposta.update({ where: { id }, data: { status } });
   return mapearRegistro(row);

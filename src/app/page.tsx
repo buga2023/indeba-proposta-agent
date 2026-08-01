@@ -280,11 +280,17 @@ const ChromeContext = createContext<{
   // Em tela estreita a sidebar vira gaveta: o botão que a abre vive no ScreenHead
   // (que é irmão da <aside>, não filho), então o estado passa por aqui.
   openNav: () => void;
+  // O header também gateia por papel (o sino leva a Cobrança, que é tela de gestor), e o
+  // ScreenHead não é filho da <aside> que já conhece o papel — então vem por aqui.
+  // Default `false`: enquanto /api/me não responde, trata como vendedor. Mostrar a mais e
+  // recolher depois piscaria a tela do gestor para quem não é.
+  ehAdmin: boolean;
 }>({
   openPalette: () => {},
   openAssistant: () => {},
   goTo: () => {},
   openNav: () => {},
+  ehAdmin: false,
 });
 
 /* tipo do registro do histórico (espelha EventoProposta da API, sem importar node) */
@@ -768,6 +774,7 @@ export default function Home() {
     // O Assistente (AjudaChat) é um overlay independente; o header pede a abertura via evento.
     openAssistant: () => window.dispatchEvent(new CustomEvent("ies:assistente")),
     goTo: (s: string) => setScreen(s as Screen),
+    ehAdmin,
   };
 
   return (
@@ -4629,7 +4636,7 @@ function abrirRelatorio(titulo: string, subtitulo: string, blocos: BlocoRelatori
 
 /* Cabeçalho de tela (design app.html) — barra branca fixa com título + subtítulo + ação. */
 function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) {
-  const { openPalette, openAssistant, goTo, openNav } = useContext(ChromeContext);
+  const { openPalette, openAssistant, goTo, openNav, ehAdmin } = useContext(ChromeContext);
   return (
     <div className="ies-head" style={{ display: "flex", alignItems: "center", gap: "14px", padding: "0 24px", height: "62px", background: "var(--surface)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 20, flex: "none" }}>
       {/* Abre a gaveta de navegação. Só existe na faixa em que a sidebar sai do
@@ -4670,7 +4677,15 @@ function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?
       </Hoverable>
       {/* Notificações → atalho para Cobrança (régua/inadimplência). Estava chamando
           openPalette: o sino, com badge de não-lido, abria o "Ir para… (tela)" — o
-          handler não batia com o que o próprio comentário já dizia ser a intenção. */}
+          handler não batia com o que o próprio comentário já dizia ser a intenção.
+
+          Só para o gestor. Cobrança está fora do menu E fora da paleta (ver CMD_ITEMS):
+          este sino era a ÚNICA porta para a tela — e estava aberta para todo mundo. O
+          vendedor caía na régua de inadimplência da empresa, com nome de cliente e valor
+          devido, por uma tela que ninguém decidiu mostrar a ele. Mesma regra do item
+          Configurações no menu: some para quem não é gestor, em vez de levar a uma porta
+          trancada. É camada de UI — o gate de verdade tem que estar em /api/cobranca. */}
+      {ehAdmin && (
       <Hoverable
         onClick={() => goTo("cobranca")}
         title="Notificações — cobranças e inadimplência"
@@ -4679,8 +4694,13 @@ function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?
         hover={{ background: "var(--surface-muted)" }}
       >
         <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M5 7a3.5 3.5 0 017 0c0 3 1.5 4 1.5 4h-10S5 10 5 7z" /><path d="M7.3 13.5a1.4 1.4 0 002.4 0" /></svg>
-        <span style={{ position: "absolute", top: "7px", right: "8px", width: "7px", height: "7px", borderRadius: "50%", background: "var(--accent)", border: "1.5px solid var(--surface)" }} />
+        {/* O ponto de "não-lido" era fixo no JSX: nascia acesso, nunca apagava e não vinha
+            de contagem nenhuma — sinalizava novidade em toda tela, o dia inteiro, mesmo sem
+            nada para ver. Badge que só sabe mostrar um estado é o mesmo lixo visual do
+            gráfico de barras zeradas: não informa e ensina a ignorar o sino. Fora até
+            existir contagem real de cobrança vencida para acender. */}
       </Hoverable>
+      )}
       {/* Assistente → abre o overlay AjudaChat */}
       <Hoverable
         onClick={openAssistant}

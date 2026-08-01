@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CobrancaRequest } from "@/lib/contracts";
+import { usuarioAtual } from "@/lib/auth";
 import { processarCobranca } from "@/lib/cobranca/processar";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+// Só o gestor. A resposta é a régua de inadimplência da empresa — razão social e valor
+// devido de cada cliente —, o mesmo tipo de dado que o escopo por autor tirou da vista do
+// vendedor nas propostas. `/api/cobranca/disparar` já exigia admin, mas quem CALCULA a
+// lista é esta rota: barrar só o disparo protegia o envio do e-mail, não o dado.
 export async function POST(req: NextRequest) {
+  const usuario = await usuarioAtual(req);
+  if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
+  if (usuario.papel !== "admin") {
+    return NextResponse.json({ erro: "Só o gestor acessa a régua de cobrança." }, { status: 403 });
+  }
+
   const parsed = CobrancaRequest.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });

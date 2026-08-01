@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { carregarCatalogo } from "@/lib/catalogo";
-import { responder, preco } from "@/components/ajuda-chat-logic";
+import { responder, preco, SUGESTOES } from "@/components/ajuda-chat-logic";
 
 // O assistente é DETERMINÍSTICO e aterrado no catálogo. Garante: preço sempre real
 // (constituição §1.2), respostas batem com o catálogo, e quando não sabe → null
@@ -67,5 +67,40 @@ describe("assistente de ajuda — aterrado no catálogo", () => {
     // "não temos" ou null; o que não pode é devolver um produto que não existe
     const r = responder("vocês têm ração para gato?", produtos);
     if (r) expect(r).toMatch(/não temos|nao temos/i);
+  });
+
+  // O casamento do FAQ é "primeira entrada cuja palavra aparece no texto", e as entradas
+  // antigas abrem com termos larguíssimos ("como", "usar", "criar"). Uma pergunta nova
+  // colocada depois delas nunca é alcançada — o chip responde outra coisa e ninguém percebe,
+  // porque a resposta errada AINDA é uma resposta plausível.
+  it("todo chip de sugestão tem resposta — nenhum cai no 'não sei'", () => {
+    for (const s of SUGESTOES) expect(responder(s, produtos), `sugestão sem resposta: ${s}`).toBeTruthy();
+  });
+
+  it("FAQ: cadastro pendente explica que falta a liberação do gestor, não a senha", () => {
+    const r = responder("cadastrei e não consigo entrar", produtos)!;
+    expect(r).toMatch(/gestor/i);
+    expect(r).toMatch(/liberad|liberação|fila|aprova/i);
+  });
+
+  it("FAQ: 'só vejo as minhas propostas' explica a carteira — e que nada foi apagado", () => {
+    const r = responder("por que só vejo as minhas propostas?", produtos)!;
+    expect(r).toMatch(/carteira|você mesmo|voce mesmo/i);
+    expect(r).toMatch(/gestor/i);
+  });
+
+  // Com 147 produtos ativos, listar um por linha devolvia uma parede ilegível — e todas as
+  // linhas terminam iguais ("sob consulta"), já que preço saiu do catálogo.
+  it("'ver todos os produtos' resume por linha em vez de despejar o catálogo", () => {
+    const ativos = produtos.filter((p) => p.ativo);
+    const r = responder("ver todos os produtos", produtos)!;
+    expect(r).toContain(String(ativos.length)); // o total continua sendo dito
+    expect(r.split("\n").length).toBeLessThan(ativos.length);
+  });
+
+  it("pergunta genérica de preço explica que quem cota é o consultor", () => {
+    const r = responder("quais são os preços?", produtos)!;
+    expect(r).toMatch(/não guarda preço|nao guarda preco/i);
+    expect(r).not.toMatch(/R\$ \d/);
   });
 });

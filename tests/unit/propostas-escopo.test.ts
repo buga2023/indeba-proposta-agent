@@ -5,6 +5,7 @@ import type { NextRequest } from "next/server";
 const usuarioAtual = vi.fn();
 const listarPropostas = vi.fn();
 const obterProposta = vi.fn();
+const autorDaProposta = vi.fn();
 const atualizarStatusProposta = vi.fn();
 const salvarProposta = vi.fn();
 
@@ -12,11 +13,12 @@ vi.mock("@/lib/auth", () => ({ usuarioAtual: (req: NextRequest) => usuarioAtual(
 vi.mock("@/lib/propostas", () => ({
   listarPropostas: (...a: unknown[]) => listarPropostas(...a),
   obterProposta: (...a: unknown[]) => obterProposta(...a),
+  autorDaProposta: (...a: unknown[]) => autorDaProposta(...a),
   atualizarStatusProposta: (...a: unknown[]) => atualizarStatusProposta(...a),
   salvarProposta: (...a: unknown[]) => salvarProposta(...a),
 }));
 
-import { GET as LISTAR } from "@/app/api/propostas/route";
+import { GET as LISTAR, POST as SALVAR } from "@/app/api/propostas/route";
 import { GET as ABRIR, PATCH } from "@/app/api/propostas/[id]/route";
 
 const ADMIN = { email: "mateus@indeba.com", papel: "admin" };
@@ -35,7 +37,7 @@ const doOutro = {
 };
 
 beforeEach(() => {
-  for (const m of [usuarioAtual, listarPropostas, obterProposta, atualizarStatusProposta, salvarProposta]) m.mockReset();
+  for (const m of [usuarioAtual, listarPropostas, obterProposta, autorDaProposta, atualizarStatusProposta, salvarProposta]) m.mockReset();
   listarPropostas.mockResolvedValue([]);
 });
 
@@ -91,7 +93,7 @@ describe("PATCH /api/propostas/[id] — mudar status de proposta alheia", () => 
 
   it("vendedor A aprovando a proposta de B → 404 e nada é gravado", async () => {
     usuarioAtual.mockResolvedValue(VENDEDOR_A);
-    obterProposta.mockResolvedValue(doOutro);
+    autorDaProposta.mockResolvedValue("b@indeba.com");
     const r = await PATCH(req("aprovada"), params("p-do-b"));
     expect(r.status).toBe(404);
     expect(atualizarStatusProposta).not.toHaveBeenCalled();
@@ -99,9 +101,60 @@ describe("PATCH /api/propostas/[id] — mudar status de proposta alheia", () => 
 
   it("vendedor A na própria proposta → grava", async () => {
     usuarioAtual.mockResolvedValue(VENDEDOR_A);
-    obterProposta.mockResolvedValue({ ...doOutro, autor: "a@indeba.com" });
+    autorDaProposta.mockResolvedValue("a@indeba.com");
     atualizarStatusProposta.mockResolvedValue({ ...doOutro, autor: "a@indeba.com", status: "aprovada" });
     await PATCH(req("aprovada"), params("p-do-b"));
     expect(atualizarStatusProposta).toHaveBeenCalledWith("p-do-b", "aprovada");
+  });
+
+  // O gate confere o dono; carregar a proposta INTEIRA (scope + Zod + recálculo de imagem
+  // pelo catálogo) para ler uma string era o custo que `autorDaProposta` corta.
+  it("confere o dono sem carregar a proposta inteira", async () => {
+    usuarioAtual.mockResolvedValue(VENDEDOR_A);
+    autorDaProposta.mockResolvedValue("a@indeba.com");
+    atualizarStatusProposta.mockResolvedValue({ ...doOutro, autor: "a@indeba.com" });
+    await PATCH(req("aprovada"), params("p-do-b"));
+    expect(obterProposta).not.toHaveBeenCalled();
+  });
+});
+
+// O upsert do auto-save casa por `id`, e o `id` vem do cliente: sem este gate, reenviar o
+// scope com o id de um colega sobrescreve a proposta dele. Escopar leitura sem escopar
+// escrita não é isolamento — e até aqui só a leitura tinha teste.
+describe("POST /api/propostas — gravar por cima da proposta alheia", () => {
+  // Scope mínimo que passa no PropostaScope (Zod) — o foco aqui é o gate de autoria.
+  const scope = {
+    criadoEm: "2026-08-01T00:00:00.000Z",
+    status: "rascunho",
+    tipo: "orcamento",
+    template: "indeba",
+    cliente: { razaoSocial: "Frigorífico B", cnpj: null, segmento: null },
+    textoApresentacao: { conteudo: "texto", procedencia: "MANUAL" },
+    itens: [],
+    condicoesComerciais: { validade: "30 dias", prazoEntrega: "5 dias", pagamento: "28ddl", frete: "CIF" },
+  };
+  const req = (id: string) => ({ json: async () => ({ ...scope, id }) }) as unknown as NextRequest;
+
+  it("vendedor A reenviando o id de B → 404 e nada é gravado", async () => {
+    usuarioAtual.mockResolvedValue(VENDEDOR_A);
+    autorDaProposta.mockResolvedValue("b@indeba.com");
+    const r = await SALVAR(req("p-do-b"));
+    expect(r.status).toBe(404);
+    expect(salvarProposta).not.toHaveBeenCalled();
+  });
+
+  it("id que ainda não existe → grava normalmente, com A como autor", async () => {
+    usuarioAtual.mockResolvedValue(VENDEDOR_A);
+    autorDaProposta.mockResolvedValue(null);
+    salvarProposta.mockResolvedValue(doOutro);
+    await SALVAR(req("p-novo"));
+    expect(salvarProposta).toHaveBeenCalledWith(expect.objectContaining({ id: "p-novo" }), "a@indeba.com");
+  });
+
+  it("admin grava por cima de qualquer um", async () => {
+    usuarioAtual.mockResolvedValue(ADMIN);
+    autorDaProposta.mockResolvedValue("b@indeba.com");
+    salvarProposta.mockResolvedValue(doOutro);
+    expect((await SALVAR(req("p-do-b"))).status).toBe(201);
   });
 });

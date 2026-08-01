@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PropostaScope } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth";
-import { listarPropostas, obterProposta, salvarProposta } from "@/lib/propostas";
+import { listarPropostas, autorDaProposta, salvarProposta } from "@/lib/propostas";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
@@ -36,8 +36,12 @@ export async function POST(req: NextRequest) {
     // O upsert casa só por `id`, e o `id` vem do cliente: sem esta checagem, reenviar o
     // scope com o id de um colega SOBRESCREVE a proposta dele. Escopar a leitura sem
     // escopar a escrita não é isolamento. 404 e não 403 — não confirmar o que é do outro.
-    const existente = await obterProposta(parsed.data.id);
-    if (existente && usuario && usuario.papel !== "admin" && existente.autor !== usuario.email) {
+    //
+    // Só o `autor`, não a proposta inteira: este é o caminho do auto-save, dispara a cada
+    // edição, e carregar o `scope` do colega para ler uma string sairia caro no lugar mais
+    // quente do app.
+    const dono = await autorDaProposta(parsed.data.id);
+    if (dono && usuario && usuario.papel !== "admin" && dono !== usuario.email) {
       return NextResponse.json({ erro: "Proposta não encontrada." }, { status: 404 });
     }
     const registro = await salvarProposta(parsed.data, autor);
