@@ -3,7 +3,19 @@
 import { useEffect, useState } from "react";
 
 type Contato = { cliente: string; email: string; atualizadoEm: string };
-type Colaborador = { nome: string; email: string; papel: "admin" | "user"; telefone: string | null };
+type Acesso = "pendente" | "aprovado" | "bloqueado";
+type Colaborador = { nome: string; email: string; papel: "admin" | "user"; acesso: Acesso; telefone: string | null; criadoEm: string };
+
+const ACESSO_UI: Record<Acesso, { label: string; bg: string; fg: string }> = {
+  pendente: { label: "Aguardando", bg: "#FEF3C7", fg: "#B45309" },
+  aprovado: { label: "Liberado", bg: "#DCFCE7", fg: "#16A34A" },
+  bloqueado: { label: "Sem acesso", bg: "#FEE2E2", fg: "#DC2626" },
+};
+
+const dataCurta = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+};
 
 const inputStyle = {
   padding: "9px 12px",
@@ -109,6 +121,27 @@ export function AdminScreen() {
     await carregar();
   }
 
+  // Aprovar/revogar/promover: tudo é o mesmo PATCH. O servidor recusa o gestor mexer no
+  // próprio acesso ou papel (409) — a mensagem dele vale mais que uma genérica daqui.
+  async function mudarAcessoOuPapel(email: string, dados: { acesso?: Acesso; papel?: "admin" | "user" }, feito: string) {
+    setErro(null);
+    setAviso(null);
+    const r = await fetch("/api/colaboradores", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, ...dados }),
+    });
+    if (!r.ok) {
+      setErro((await r.json().catch(() => ({}))).erro ?? "Falha ao atualizar o acesso.");
+      return;
+    }
+    setAviso(feito);
+    await carregar();
+  }
+
+  const pendentes = colaboradores.filter((c) => c.acesso === "pendente");
+  const demais = colaboradores.filter((c) => c.acesso !== "pendente");
+
   if (semAcesso) {
     return (
       <div style={{ padding: "28px", maxWidth: "560px", color: "var(--gray-500)" }}>
@@ -161,16 +194,59 @@ export function AdminScreen() {
         </div>
       </section>
 
-      {/* Colaboradores (telefone) */}
-      <section style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", marginTop: "22px" }}>
-        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>Colaboradores · {colaboradores.length}</h3>
+      {/* Fila de aprovação — quem se cadastrou e ainda não entrou */}
+      <section
+        style={{
+          background: pendentes.length ? "#FFFBEB" : "white",
+          border: `1px solid ${pendentes.length ? "#FCD34D" : "var(--gray-200)"}`,
+          borderRadius: "16px", padding: "20px", marginTop: "22px",
+        }}
+      >
+        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>
+          Aguardando liberação{pendentes.length > 0 && ` · ${pendentes.length}`}
+        </h3>
         <div style={{ fontSize: "12.5px", color: "var(--gray-500)", marginBottom: "12px" }}>
-          Telefone de cada colaborador. Cada um também pode editar o próprio em &quot;Meu perfil&quot;.
+          Quem se cadastrou e ainda não consegue entrar. Só passa do login depois que você liberar.
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {colaboradores.length === 0 && <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Nenhum colaborador cadastrado ainda.</div>}
-          {colaboradores.map((c) => (
-            <LinhaColaborador key={c.email} colaborador={c} onSalvar={salvarTelefoneColaborador} />
+          {pendentes.length === 0 && (
+            <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Ninguém na fila — todo cadastro já foi resolvido.</div>
+          )}
+          {pendentes.map((c) => (
+            <div key={c.email} style={{ display: "flex", gap: "8px", alignItems: "center", padding: "9px 11px", borderRadius: "9px", background: "white", border: "1px solid #FDE68A" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--gray-900)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.nome}</div>
+                <div style={{ fontSize: "11.5px", color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {c.email} · cadastrou {dataCurta(c.criadoEm)}
+                </div>
+              </div>
+              <button style={btn("var(--success)")} onClick={() => mudarAcessoOuPapel(c.email, { acesso: "aprovado" }, `${c.nome} agora tem acesso.`)}>
+                Liberar
+              </button>
+              <button style={{ ...btn("#dc2626"), background: "white", color: "#dc2626", border: "1px solid #fecaca" }} onClick={() => mudarAcessoOuPapel(c.email, { acesso: "bloqueado" }, `Cadastro de ${c.nome} recusado.`)}>
+                Recusar
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Time — papel, acesso e telefone de quem já foi resolvido */}
+      <section style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", marginTop: "22px" }}>
+        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>Time · {demais.length}</h3>
+        <div style={{ fontSize: "12.5px", color: "var(--gray-500)", marginBottom: "12px" }}>
+          Quem entra, com que poder e o telefone. Gestor vê as propostas do time inteiro; vendedor vê só as dele.
+          Revogar é reversível — a conta e as propostas continuam lá.
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          {demais.length === 0 && <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Nenhum colaborador cadastrado ainda.</div>}
+          {demais.map((c) => (
+            <LinhaColaborador
+              key={c.email}
+              colaborador={c}
+              onSalvar={salvarTelefoneColaborador}
+              onMudar={mudarAcessoOuPapel}
+            />
           ))}
         </div>
       </section>
@@ -202,20 +278,62 @@ function LinhaContato({
 function LinhaColaborador({
   colaborador,
   onSalvar,
+  onMudar,
 }: {
   colaborador: Colaborador;
   onSalvar: (email: string, telefone: string) => void;
+  onMudar: (email: string, dados: { acesso?: Acesso; papel?: "admin" | "user" }, feito: string) => void;
 }) {
   const [telefone, setTelefone] = useState(colaborador.telefone ?? "");
   const mudou = telefone.trim() !== (colaborador.telefone ?? "");
+  const ui = ACESSO_UI[colaborador.acesso];
+  const ehGestor = colaborador.papel === "admin";
+  const liberado = colaborador.acesso === "aprovado";
+
   return (
-    <div style={{ display: "flex", gap: "8px", alignItems: "center", padding: "8px 10px", borderRadius: "9px", background: "var(--gray-50)" }}>
-      <div style={{ flex: 1.4, minWidth: 0 }}>
-        <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--gray-900)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{colaborador.nome}</div>
-        <div style={{ fontSize: "11.5px", color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{colaborador.email} · {colaborador.papel === "admin" ? "Administrador" : "Vendedor"}</div>
+    <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", padding: "9px 11px", borderRadius: "9px", background: "var(--gray-50)" }}>
+      <div style={{ flex: "1 1 190px", minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--gray-900)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{colaborador.nome}</span>
+          <span style={{ fontSize: "10.5px", fontWeight: 700, color: ui.fg, background: ui.bg, borderRadius: "999px", padding: "2px 8px", flex: "none" }}>{ui.label}</span>
+        </div>
+        <div style={{ fontSize: "11.5px", color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {colaborador.email} · {ehGestor ? "Gestor" : "Vendedor"}
+        </div>
       </div>
-      <input style={{ ...inputStyle, flex: 1, minWidth: "140px", padding: "6px 10px", fontSize: "13px" }} placeholder="Telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+
+      <input style={{ ...inputStyle, flex: "1 1 120px", minWidth: "110px", padding: "6px 10px", fontSize: "13px" }} placeholder="Telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
       <button style={btn("var(--blue-600)", mudou)} onClick={() => mudou && onSalvar(colaborador.email, telefone.trim())}>Salvar</button>
+
+      <button
+        style={{ ...btn("var(--blue-800)"), background: "white", color: "var(--blue-800)", border: "1px solid var(--gray-200)" }}
+        title={ehGestor ? "Passa a ver só as próprias propostas" : "Passa a ver as propostas do time e este painel"}
+        onClick={() =>
+          onMudar(
+            colaborador.email,
+            { papel: ehGestor ? "user" : "admin" },
+            ehGestor ? `${colaborador.nome} agora é vendedor.` : `${colaborador.nome} agora é gestor.`,
+          )
+        }
+      >
+        {ehGestor ? "Tornar vendedor" : "Tornar gestor"}
+      </button>
+
+      <button
+        style={liberado
+          ? { ...btn("#dc2626"), background: "white", color: "#dc2626", border: "1px solid #fecaca" }
+          : btn("var(--success)")}
+        title={liberado ? "A conta e as propostas continuam; só o acesso é encerrado" : "Devolve o acesso"}
+        onClick={() =>
+          onMudar(
+            colaborador.email,
+            { acesso: liberado ? "bloqueado" : "aprovado" },
+            liberado ? `Acesso de ${colaborador.nome} encerrado.` : `${colaborador.nome} voltou a ter acesso.`,
+          )
+        }
+      >
+        {liberado ? "Revogar" : "Liberar"}
+      </button>
     </div>
   );
 }

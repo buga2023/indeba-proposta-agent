@@ -95,12 +95,18 @@ model Config {
 /// de ADMIN_EMAILS (env) no momento do cadastro. Nome/e-mail alimentam a proposta
 /// (consultor/contato — ver src/lib/montar.ts). `telefone` é editável pelo próprio
 /// colaborador (/api/perfil) ou pelo gestor (/api/colaboradores, painel de admin).
+/// `acesso` é o portão de entrada, separado de `papel` (que é o que a pessoa pode fazer
+/// DEPOIS de entrar): cadastro próprio é aberto, então quem se cadastra nasce `pendente` e
+/// só passa do login quando o gestor aprova no painel de Configurações.
 model Usuario {
   id         String   @id @default(cuid())
   nome       String
   email      String   @unique
   credencial String
   papel      String   @default("user") // admin | user
+  acesso     String   @default("pendente") // pendente | aprovado | bloqueado
   telefone   String? // dígitos: DDD + número
   criadoEm   DateTime @default(now())
+
+  @@index([acesso])
 }

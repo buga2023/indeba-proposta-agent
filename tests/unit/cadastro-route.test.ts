@@ -31,9 +31,23 @@ describe("POST /api/cadastro — cadastro próprio (nome/e-mail/senha)", () => {
     expect(r.status).toBe(409);
   });
 
-  it("201 + cookie de sessão no cadastro bem-sucedido (já loga direto, sem passo extra)", async () => {
-    criarUsuario.mockResolvedValue({ email: "mateus@indeba.com", nome: "Mateus", papel: "user" });
-    const r = await POST(req({ nome: "Mateus", email: "mateus@indeba.com", senha: "senha12345" }));
+  // O cadastro é aberto — qualquer pessoa com o link cria conta. Desde 01/08/2026 ele NÃO
+  // loga mais direto: a conta nasce pendente e o gestor libera no painel. Se isto voltar a
+  // emitir cookie para colaborador, um cadastro de fora do time entra sozinho no sistema.
+  it("GUARDIÃO: colaborador pendente recebe 201 SEM cookie de sessão", async () => {
+    criarUsuario.mockResolvedValue({ email: "novo@indeba.com", nome: "Novo", papel: "user", acesso: "pendente" });
+    const r = await POST(req({ nome: "Novo", email: "novo@indeba.com", senha: "senha12345" }));
+    expect(r.status).toBe(201);
+    expect(r.cookies.get("sessao")?.value, "nenhuma sessão antes da aprovação").toBeFalsy();
+    const corpo = await r.json();
+    expect(corpo.pendente).toBe(true);
+    expect(corpo.mensagem).toMatch(/liberada pelo gestor/i);
+  });
+
+  // Exceção: o gestor de ADMIN_EMAILS nasce aprovado, porque não há quem o aprove.
+  it("gestor já nasce aprovado e entra na hora, com cookie", async () => {
+    criarUsuario.mockResolvedValue({ email: "gestor@indeba.com", nome: "Gestor", papel: "admin", acesso: "aprovado" });
+    const r = await POST(req({ nome: "Gestor", email: "gestor@indeba.com", senha: "senha12345" }));
     expect(r.status).toBe(201);
     expect(r.cookies.get("sessao")?.value).toBeTruthy();
   });

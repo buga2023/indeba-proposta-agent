@@ -11,6 +11,7 @@ export default function Cadastro() {
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const [pendente, setPendente] = useState(false);
 
   async function criarConta(e: React.FormEvent) {
     e.preventDefault();
@@ -36,6 +37,14 @@ export default function Cadastro() {
         // preenchimento, senão o usuário fica corrigindo o formulário em vão.
         if (r.status >= 500) throw new Error("O servidor não conseguiu criar a conta. Não é o que você preencheu — avise o time técnico.");
         throw new Error(d.erro || "Não foi possível criar a conta.");
+      }
+      // A conta nasce aguardando liberação do gestor — mandar para "/" só devolveria a
+      // pessoa ao login sem explicar por quê. Ela precisa saber que deu certo e que o
+      // passo que falta não é dela.
+      const d = await r.json().catch(() => ({}));
+      if (d.pendente) {
+        setPendente(true);
+        return;
       }
       router.push("/");
       router.refresh();
@@ -88,6 +97,26 @@ export default function Cadastro() {
             <div className="mt-1 text-[12.5px] text-[var(--text-muted)]">Criar conta de colaborador</div>
           </div>
 
+          {pendente ? (
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div
+                className="flex h-14 w-14 items-center justify-center rounded-full"
+                style={{ background: "var(--success-soft)", color: "var(--success)" }}
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </div>
+              <div className="text-[15px] font-bold text-[var(--text-strong)]">Conta criada!</div>
+              <div className="text-[13px] leading-relaxed text-[var(--text-muted)]">
+                Falta o gestor liberar seu acesso. Assim que ele aprovar, você entra normalmente
+                com o e-mail <b>{email}</b> e a senha que acabou de escolher.
+              </div>
+              <a href="/login" className="text-[13px] font-semibold" style={{ color: "var(--primary)" }}>
+                Voltar para o login
+              </a>
+            </div>
+          ) : (
           <form onSubmit={criarConta} className="flex flex-col gap-4">
             <div>
               <label className="mb-1.5 block text-[13px] font-semibold text-[var(--text-body)]">Nome</label>
@@ -149,6 +178,7 @@ export default function Cadastro() {
               )}
             </button>
           </form>
+          )}
 
           <p className="mt-5 text-center text-[11.5px] text-[var(--text-subtle)]">
             Já tem conta?{" "}

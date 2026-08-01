@@ -384,14 +384,33 @@ export default function Home() {
   // gestor para quem não é. As rotas de admin já barram por papel no servidor de qualquer
   // forma — isto aqui é a camada de UI, não a de autorização.
   const ehAdmin = usuario?.papel === "admin";
+  // Quantos esperam liberação de acesso — vira o badge no item Configurações.
+  const [pendentes, setPendentes] = useState(0);
 
-  // Usuário da sessão atual — personaliza saudação e sidebar.
+  // Usuário da sessão atual — personaliza saudação e sidebar. O /api/me também confere no
+  // banco se o acesso continua liberado: quem foi revogado cai aqui, com a sessão apagada.
   useEffect(() => {
     fetch("/api/me")
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
       .then((u: Usuario) => setUsuario(u))
-      .catch(() => setUsuario(null));
+      .catch(() => {
+        setUsuario(null);
+        // Sessão morta (expirou ou o acesso foi revogado) — volta para o login em vez de
+        // deixar a pessoa numa tela que vai dar 401 em toda ação que ela tentar.
+        if (window.location.pathname !== "/login") window.location.href = "/login";
+      });
   }, []);
+
+  // Fila de aprovação (só o gestor enxerga; a rota devolve 403 para o resto).
+  useEffect(() => {
+    if (!ehAdmin) return;
+    fetch("/api/colaboradores")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then((d: { colaboradores?: { acesso: string }[] }) =>
+        setPendentes((d.colaboradores ?? []).filter((c) => c.acesso === "pendente").length),
+      )
+      .catch(() => setPendentes(0));
+  }, [ehAdmin, screen]);
 
   // Command palette: Ctrl/Cmd+K alterna o overlay de navegação.
   useEffect(() => {
@@ -846,6 +865,16 @@ export default function Home() {
                   <path d="M8.5 2.5v1M8.5 13v1.5M2.5 8.5h1M13 8.5h1.5M4.5 4.5l.7.7M11.8 11.8l.7.7M4.5 12.5l.7-.7M11.8 5.2l.7-.7" />
                 </svg>
                 Configurações
+                {/* Cadastro novo não avisa por e-mail — quem avisa é este contador. Sem ele,
+                    alguém pode ficar dias esperando liberação sem que o gestor saiba. */}
+                {pendentes > 0 && (
+                  <span
+                    title={`${pendentes} ${pendentes === 1 ? "pessoa aguardando" : "pessoas aguardando"} liberação de acesso`}
+                    style={{ marginLeft: "auto", minWidth: "19px", height: "19px", padding: "0 6px", borderRadius: "999px", background: "var(--accent)", color: "#fff", fontSize: "11px", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}
+                  >
+                    {pendentes}
+                  </span>
+                )}
               </Hoverable>
             </>
           )}

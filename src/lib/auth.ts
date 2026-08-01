@@ -8,6 +8,13 @@
 export type Papel = "admin" | "user";
 export type Usuario = { email: string; nome: string; papel: Papel };
 
+// `papel` é o que a pessoa PODE FAZER depois de entrar; `acesso` é se ela ENTRA. Como o
+// cadastro é aberto (o colaborador cria a própria conta em /cadastro), quem se cadastra
+// nasce `pendente` e o gestor libera no painel. Nunca entra no cookie de sessão: sessão é
+// assinada e vale 8h sem tocar o banco, então um `acesso` carimbado ali envelheceria — a
+// revogação ficaria valendo só depois de expirar. O estado é sempre lido do banco.
+export type Acesso = "pendente" | "aprovado" | "bloqueado";
+
 const secret = () => process.env.AUTH_SESSION_SECRET || "dev-secret-trocar-em-producao";
 
 // Liga por padrão. Só desliga com AUTH_ENABLED=false explícito (uso local em 127.0.0.1

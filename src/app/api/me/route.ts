@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validarSessao } from "@/lib/auth";
+import { acessoDe } from "@/lib/auth-db";
 
 export const runtime = "nodejs";
 
@@ -8,5 +9,16 @@ export const runtime = "nodejs";
 export async function GET(req: NextRequest) {
   const usuario = await validarSessao(req.cookies.get("sessao")?.value);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
+
+  // O cookie é autocontido e vale 8h sem tocar o banco — ótimo para não consultar Postgres
+  // a cada request, ruim na hora de TIRAR acesso: revogar no painel não derrubaria quem já
+  // está logado, e a pessoa seguiria usando o sistema até a sessão expirar. Esta é a única
+  // consulta, uma por carregamento do app, e é ela que fecha a janela — quem perdeu o
+  // acesso cai no login na próxima navegação, com o cookie já apagado.
+  if ((await acessoDe(usuario.email)) !== "aprovado") {
+    const res = NextResponse.json({ erro: "Acesso não liberado." }, { status: 401 });
+    res.cookies.delete("sessao");
+    return res;
+  }
   return NextResponse.json(usuario);
 }

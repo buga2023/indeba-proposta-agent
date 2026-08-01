@@ -7,7 +7,7 @@ vi.mock("@/lib/db", () => ({
   prisma: { usuario: { findUnique: (a: unknown) => findUnique(a), create: (a: unknown) => create(a) } },
 }));
 
-import { criarUsuario, validarCredenciais, EmailEmUsoError } from "@/lib/auth-db";
+import { criarUsuario, validarCredenciais, AcessoPendenteError, EmailEmUsoError } from "@/lib/auth-db";
 import { gerarCredencial } from "@/lib/auth";
 
 beforeEach(() => {
@@ -46,11 +46,41 @@ describe("auth-db — cadastro próprio e login (banco)", () => {
 
   it("validarCredenciais: aceita senha certa, rejeita errada e e-mail inexistente", async () => {
     const credencial = await gerarCredencial("indeba@2026");
-    findUnique.mockResolvedValue({ email: "mateus@indeba.com", nome: "Mateus", credencial, papel: "user" });
+    findUnique.mockResolvedValue({ email: "mateus@indeba.com", nome: "Mateus", credencial, papel: "user", acesso: "aprovado" });
     expect((await validarCredenciais("mateus@indeba.com", "indeba@2026"))?.papel).toBe("user");
     expect(await validarCredenciais("mateus@indeba.com", "errada")).toBeNull();
 
     findUnique.mockResolvedValue(null);
     expect(await validarCredenciais("ninguem@x.com", "x")).toBeNull();
+  });
+
+  // Desde 01/08/2026 o cadastro é aberto mas a ENTRADA depende do gestor: a conta nasce
+  // pendente e o login só passa depois da liberação. Senha certa + acesso faltando é um
+  // caso distinto de senha errada, e por isso lança em vez de devolver null — a tela
+  // precisa dizer "aguardando liberação", não "e-mail ou senha inválidos".
+  it("validarCredenciais: senha certa mas conta PENDENTE não entra", async () => {
+    const credencial = await gerarCredencial("senha12345");
+    findUnique.mockResolvedValue({ email: "novo@indeba.com", nome: "Novo", credencial, papel: "user", acesso: "pendente" });
+    await expect(validarCredenciais("novo@indeba.com", "senha12345")).rejects.toBeInstanceOf(AcessoPendenteError);
+  });
+
+  it("validarCredenciais: acesso revogado também não entra", async () => {
+    const credencial = await gerarCredencial("senha12345");
+    findUnique.mockResolvedValue({ email: "ex@indeba.com", nome: "Ex", credencial, papel: "user", acesso: "bloqueado" });
+    await expect(validarCredenciais("ex@indeba.com", "senha12345")).rejects.toBeInstanceOf(AcessoPendenteError);
+  });
+
+  it("criarUsuario: colaborador nasce PENDENTE; o gestor de ADMIN_EMAILS já nasce aprovado", async () => {
+    process.env.ADMIN_EMAILS = "gestor@indeba.example";
+
+    findUnique.mockResolvedValue(null);
+    const colaborador = await criarUsuario("Vendedor", "vendedor@indeba.example", "senha12345");
+    expect(colaborador.acesso).toBe("pendente");
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ acesso: "pendente" }) }));
+
+    // O gestor não teria quem o aprovasse — seria um sistema trancado sem chave.
+    findUnique.mockResolvedValue(null);
+    const gestor = await criarUsuario("Gestor", "gestor@indeba.example", "senha12345");
+    expect(gestor.acesso).toBe("aprovado");
   });
 });

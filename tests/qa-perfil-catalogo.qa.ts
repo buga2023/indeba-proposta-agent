@@ -10,6 +10,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { chromium, type Browser, type Page } from "playwright";
 import { criarSessao } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const ORIGEM = new URL(BASE).origin;
@@ -41,10 +42,27 @@ async function api(u: typeof ADMIN, caminho: string, init: RequestInit = {}) {
 beforeAll(async () => {
   const r = await fetch(`${BASE}/api/login`, { method: "POST" }).catch(() => null);
   if (!r) throw new Error(`dev server fora do ar em ${BASE} — suba com "pnpm dev" antes`);
+
+  // Os três precisam EXISTIR e estar aprovados no banco. Desde o portão de aprovação
+  // (01/08/2026) o /api/me confere o acesso no Postgres a cada carregamento, então um
+  // cookie assinado para um e-mail que não existe é derrubado — que é o comportamento
+  // certo (conta apagada perde acesso na hora), mas exige semear o cenário aqui.
+  for (const u of [ADMIN, VENDEDOR_A, VENDEDOR_B]) {
+    await prisma.usuario.upsert({
+      where: { email: u.email },
+      create: { email: u.email, nome: u.nome, credencial: "qa", papel: u.papel, acesso: "aprovado" },
+      update: { papel: u.papel, acesso: "aprovado" },
+    });
+  }
   browser = await chromium.launch();
 }, 60_000);
 
-afterAll(async () => { await browser?.close(); });
+afterAll(async () => {
+  await prisma.proposta.deleteMany({ where: { autor: { endsWith: "@indeba.test" } } });
+  await prisma.usuario.deleteMany({ where: { email: { endsWith: "@indeba.test" } } });
+  await browser?.close();
+  await prisma.$disconnect();
+});
 
 // ── M1 + M6: o catálogo real inteiro está na tela ──────────────────────────────
 describe("Catálogo — o que o gestor reclamou que não aparecia", () => {
