@@ -23,7 +23,7 @@
         "unidade": "kg"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/autocar-1000-plus.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -105,7 +105,7 @@
         "unidade": "kg"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/autocar-plus.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -175,7 +175,7 @@
       ],
       "imagemPath": "/produtos/city-pan.png",
       "fichaTecnicaPath": "/fichas-tecnicas/city-pan.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -231,7 +231,7 @@
         "unidade": "kg"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/city-t-liquido.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -300,7 +300,7 @@
       ],
       "imagemPath": "/produtos/candall-cosmetic-wr.png",
       "fichaTecnicaPath": "/fichas-tecnicas/candall-cosmetic-wr.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -354,7 +354,7 @@
       ],
       "imagemPath": "/produtos/_frasco.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-ae-food-grade.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 500,
@@ -421,7 +421,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-alclor.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -489,7 +489,7 @@
       ],
       "imagemPath": "/produtos/primmax-cip-adt.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-adt.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 23,
@@ -551,7 +551,7 @@
         "unidade": "kg"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-dt.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 75,
@@ -629,7 +629,7 @@
       ],
       "imagemPath": "/produtos/_ibc-1000.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-dtx.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 1240,
@@ -715,7 +715,7 @@
         "unidade": "kg"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cip-nitro.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 66,
@@ -790,7 +790,7 @@
       ],
       "imagemPath": "/produtos/_balde-20.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-citrus.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -845,7 +845,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-cl.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -914,7 +914,7 @@
       ],
       "imagemPath": "/produtos/primmax-des.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-des.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 6.5,
@@ -981,7 +981,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-dga.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -1145,7 +1145,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-dt.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -1214,7 +1214,7 @@
       ],
       "imagemPath": "/produtos/primmax-hort-flv.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-hort-flv.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5.3,
@@ -1325,7 +1325,7 @@
       ],
       "imagemPath": "/produtos/_frasco.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-inox.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 500,
@@ -1373,7 +1373,7 @@
       ],
       "imagemPath": "/produtos/primmax-ldf-plus.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-ldf-plus.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -1491,7 +1491,7 @@
       ],
       "imagemPath": "/produtos/primmax-lubrick.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-lubrick.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -1541,7 +1541,7 @@
       ],
       "imagemPath": "/produtos/primmax-mangowash.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-mangowash.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -1597,7 +1597,7 @@
       ],
       "imagemPath": "/produtos/primmax-oil.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-oil.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -1641,7 +1641,7 @@
       ],
       "imagemPath": "/produtos/primmax-panclor.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-panclor.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 4,
@@ -1800,7 +1800,7 @@
       ],
       "imagemPath": "/produtos/primmax-rewax.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-rewax.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -1861,7 +1861,7 @@
         "unidade": "kg"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sanap.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -1950,7 +1950,7 @@
       ],
       "imagemPath": "/produtos/primmax-sanclor.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sanclor.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 60,
@@ -2020,7 +2020,7 @@
       ],
       "imagemPath": "/produtos/primmax-sandry.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sandry.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -2070,7 +2070,7 @@
       ],
       "imagemPath": "/produtos/primmax-sanper-50.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sanper-50.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 65,
@@ -2128,7 +2128,7 @@
       ],
       "imagemPath": "/produtos/primmax-sanper-food-grade.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sanper-food-grade.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 35,
@@ -2262,7 +2262,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sec.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -2324,7 +2324,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-sol-plus.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -2394,7 +2394,7 @@
       ],
       "imagemPath": "/produtos/primmax-subzero.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-subzero.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 4,
@@ -2451,7 +2451,7 @@
       ],
       "imagemPath": "/produtos/primmax-suncare-adt.png",
       "fichaTecnicaPath": "/fichas-tecnicas/primmax-suncare-adt.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -2508,7 +2508,7 @@
       ],
       "imagemPath": "/produtos/letah-diclor.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letah-diclor.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 4,
@@ -2566,7 +2566,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/letah-gel.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -2619,7 +2619,7 @@
       ],
       "imagemPath": "/produtos/letah-max.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letah-max.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -2677,7 +2677,7 @@
       ],
       "imagemPath": "/produtos/letah-oxy-cd.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letah-oxy-cd.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -2736,7 +2736,7 @@
       ],
       "imagemPath": "/produtos/letah-oxy-hpc.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letah-oxy-hpc.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -2801,7 +2801,7 @@
       ],
       "imagemPath": "/produtos/letah-plus.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letah-plus.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -2852,7 +2852,7 @@
       ],
       "imagemPath": "/produtos/letahclor-plus.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letahclor-plus.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -2902,7 +2902,7 @@
       ],
       "imagemPath": "/produtos/letahclor.png",
       "fichaTecnicaPath": "/fichas-tecnicas/letahclor.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -2957,7 +2957,7 @@
       ],
       "imagemPath": "/produtos/letahzyme-multienzimatico-5e.jpg",
       "fichaTecnicaPath": "/fichas-tecnicas/letahzyme-multienzimatico-5e.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -3083,7 +3083,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/dermol-classic.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -3145,7 +3145,7 @@
       ],
       "imagemPath": "/produtos/dermol-grease.png",
       "fichaTecnicaPath": "/fichas-tecnicas/dermol-grease.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -3192,7 +3192,7 @@
       ],
       "imagemPath": "/produtos/indeba-c.png",
       "fichaTecnicaPath": "/fichas-tecnicas/indeba-c.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -3243,7 +3243,7 @@
       ],
       "imagemPath": "/produtos/alvaclor-165.png",
       "fichaTecnicaPath": "/fichas-tecnicas/alvaclor-165.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -3296,7 +3296,7 @@
       ],
       "imagemPath": "/produtos/alvaclor-180-alvejante.png",
       "fichaTecnicaPath": "/fichas-tecnicas/alvaclor-180-alvejante.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -3352,7 +3352,7 @@
       ],
       "imagemPath": "/produtos/candall-pt.png",
       "fichaTecnicaPath": "/fichas-tecnicas/candall-pt.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -3402,7 +3402,7 @@
       ],
       "imagemPath": "/produtos/candall-rf.png",
       "fichaTecnicaPath": "/fichas-tecnicas/candall-rf.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -3457,7 +3457,7 @@
       ],
       "imagemPath": "/produtos/city-ac.png",
       "fichaTecnicaPath": "/fichas-tecnicas/city-ac.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -3511,7 +3511,7 @@
       ],
       "imagemPath": "/produtos/city-rh-900.png",
       "fichaTecnicaPath": "/fichas-tecnicas/city-rh-900.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -3558,7 +3558,7 @@
       ],
       "imagemPath": "/produtos/city-rh-concentrado.png",
       "fichaTecnicaPath": "/fichas-tecnicas/city-rh-concentrado.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -3616,7 +3616,7 @@
       ],
       "imagemPath": "/produtos/city-rh.png",
       "fichaTecnicaPath": "/fichas-tecnicas/city-rh.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -3664,7 +3664,7 @@
       ],
       "imagemPath": "/produtos/clarit-7000.png",
       "fichaTecnicaPath": "/fichas-tecnicas/clarit-7000.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -3718,7 +3718,7 @@
       ],
       "imagemPath": "/produtos/clarit-clor.png",
       "fichaTecnicaPath": "/fichas-tecnicas/clarit-clor.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -3766,7 +3766,7 @@
       ],
       "imagemPath": "/produtos/clarit-pasta.png",
       "fichaTecnicaPath": "/fichas-tecnicas/clarit-pasta.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -3812,7 +3812,7 @@
       ],
       "imagemPath": "/produtos/clarit-sour.png",
       "fichaTecnicaPath": "/fichas-tecnicas/clarit-sour.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -3862,7 +3862,7 @@
       ],
       "imagemPath": "/produtos/karicia.png",
       "fichaTecnicaPath": "/fichas-tecnicas/karicia.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -3915,7 +3915,7 @@
       ],
       "imagemPath": "/produtos/_balde-20.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/primma-oxy-s.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -3961,7 +3961,7 @@
       ],
       "imagemPath": "/produtos/softlin-concentrado.png",
       "fichaTecnicaPath": "/fichas-tecnicas/softlin-concentrado.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4016,7 +4016,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/softs-max-karicia.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -4081,7 +4081,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/softs-concentrado.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -4145,7 +4145,7 @@
       ],
       "imagemPath": "/produtos/softs.png",
       "fichaTecnicaPath": "/fichas-tecnicas/softs.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4195,7 +4195,7 @@
       ],
       "imagemPath": "/produtos/sparlav.png",
       "fichaTecnicaPath": "/fichas-tecnicas/sparlav.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4242,7 +4242,7 @@
       ],
       "imagemPath": "/produtos/spartex.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spartex.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4296,7 +4296,7 @@
       ],
       "imagemPath": "/produtos/texspar-ap.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-ap.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4343,7 +4343,7 @@
       ],
       "imagemPath": "/produtos/texspar-cl.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-cl.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 50,
@@ -4403,7 +4403,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-degrease.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -4471,7 +4471,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dsa.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4536,7 +4536,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dta.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4596,7 +4596,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtc.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4659,7 +4659,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtk.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4724,7 +4724,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtn.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4791,7 +4791,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dts.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4852,7 +4852,7 @@
       ],
       "imagemPath": "/produtos/_balde-20.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtt.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4917,7 +4917,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dtz.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -4981,7 +4981,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxa.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -5037,7 +5037,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxg-amon.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -5104,7 +5104,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxg.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -5168,7 +5168,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-dxz.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -5235,7 +5235,7 @@
         "unidade": "kg"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-pe.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 35,
@@ -5294,7 +5294,7 @@
       ],
       "imagemPath": "/produtos/texspar-pl.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-pl.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 32,
@@ -5345,7 +5345,7 @@
       ],
       "imagemPath": "/produtos/texspar-rha.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-rha.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 50,
@@ -5394,7 +5394,7 @@
       ],
       "imagemPath": "/produtos/texspar-rhc.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhc.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 50,
@@ -5443,7 +5443,7 @@
       ],
       "imagemPath": "/produtos/texspar-rhe.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhe.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 50,
@@ -5502,7 +5502,7 @@
       ],
       "imagemPath": "/produtos/texspar-rhk.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhk.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 50,
@@ -5556,7 +5556,7 @@
       ],
       "imagemPath": "/produtos/texspar-rhn.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhn.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 50,
@@ -5603,7 +5603,7 @@
       ],
       "imagemPath": "/produtos/texspar-rhs.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhs.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 50,
@@ -5652,7 +5652,7 @@
       ],
       "imagemPath": "/produtos/texspar-rht.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-rht.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 50,
@@ -5707,7 +5707,7 @@
       ],
       "imagemPath": "/produtos/texspar-rhz.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-rhz.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 50,
@@ -5762,7 +5762,7 @@
       ],
       "imagemPath": "/produtos/texspar-softlin-concentrado.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-softlin-concentrado.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 50,
@@ -5819,7 +5819,7 @@
       ],
       "imagemPath": "/produtos/texspar-softs-concentrado.png",
       "fichaTecnicaPath": "/fichas-tecnicas/texspar-softs-concentrado.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 50,
@@ -5879,7 +5879,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/candall-tmi.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -5951,7 +5951,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/emulsoil-130.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6011,7 +6011,7 @@
       ],
       "imagemPath": "/produtos/iguatemi.png",
       "fichaTecnicaPath": "/fichas-tecnicas/iguatemi.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6072,7 +6072,7 @@
       ],
       "imagemPath": "/produtos/indeba-t.png",
       "fichaTecnicaPath": "/fichas-tecnicas/indeba-t.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6134,7 +6134,7 @@
       ],
       "imagemPath": "/produtos/spar-24.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-24.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6197,7 +6197,7 @@
       ],
       "imagemPath": "/produtos/spar-floor-plus.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-floor-plus.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6265,7 +6265,7 @@
       ],
       "imagemPath": "/produtos/spar-ht-1.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-1.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6317,7 +6317,7 @@
       ],
       "imagemPath": "/produtos/spar-ht-2-dbq.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-2-dbq.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6369,7 +6369,7 @@
       ],
       "imagemPath": "/produtos/spar-ht-2.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-2.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6424,7 +6424,7 @@
       ],
       "imagemPath": "/produtos/spar-ht-3.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-3.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6479,7 +6479,7 @@
       ],
       "imagemPath": "/produtos/spar-ht-4.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-4.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6533,7 +6533,7 @@
       ],
       "imagemPath": "/produtos/spar-ht-5.jpg",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-5.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6591,7 +6591,7 @@
       ],
       "imagemPath": "/produtos/_frasco.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-6.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 500,
@@ -6635,7 +6635,7 @@
       ],
       "imagemPath": "/produtos/spar-ht-7.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-7.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6689,7 +6689,7 @@
       ],
       "imagemPath": "/produtos/spar-ht-8.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-8.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6749,7 +6749,7 @@
       ],
       "imagemPath": "/produtos/spar-ht-9.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-9.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6816,7 +6816,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/spar-lg.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -6881,7 +6881,7 @@
       ],
       "imagemPath": "/produtos/spar-p.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-p.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 20,
@@ -6938,7 +6938,7 @@
       ],
       "imagemPath": "/produtos/spartec-karicia.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spartec-karicia.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7007,7 +7007,7 @@
       ],
       "imagemPath": "/produtos/metalic-1-plus.png",
       "fichaTecnicaPath": "/fichas-tecnicas/metalic-1-plus.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7063,7 +7063,7 @@
       ],
       "imagemPath": "/produtos/metalic-1.png",
       "fichaTecnicaPath": "/fichas-tecnicas/metalic-1.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7114,7 +7114,7 @@
       ],
       "imagemPath": "/produtos/metalic-2-s.png",
       "fichaTecnicaPath": "/fichas-tecnicas/metalic-2-s.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7160,7 +7160,7 @@
       ],
       "imagemPath": "/produtos/metalic-3-si.png",
       "fichaTecnicaPath": "/fichas-tecnicas/metalic-3-si.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7215,7 +7215,7 @@
       ],
       "imagemPath": "/produtos/metalic-4-si.png",
       "fichaTecnicaPath": "/fichas-tecnicas/metalic-4-si.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7268,7 +7268,7 @@
       ],
       "imagemPath": "/produtos/metalic-5-si.png",
       "fichaTecnicaPath": "/fichas-tecnicas/metalic-5-si.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7320,7 +7320,7 @@
       ],
       "imagemPath": "/produtos/_galao-5l.svg",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-alcool-70.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7372,7 +7372,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-alcool-gel-70.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7425,7 +7425,7 @@
       ],
       "imagemPath": "/produtos/pratt-amaciante-premium.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-amaciante-premium.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7480,7 +7480,7 @@
       ],
       "imagemPath": "/produtos/pratt-amaciante.jpg",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-amaciante.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7535,7 +7535,7 @@
       ],
       "imagemPath": "/produtos/pratt-clor-2.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-clor-2.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7596,7 +7596,7 @@
       ],
       "imagemPath": "/produtos/pratt-desincrustante.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-desincrustante.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7652,7 +7652,7 @@
       ],
       "imagemPath": "/produtos/pratt-desinfetante-citronela.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-citronela.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7708,7 +7708,7 @@
       ],
       "imagemPath": "/produtos/pratt-desinfetante-citrico.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-citrico.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7769,7 +7769,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-floral.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7836,7 +7836,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-lavanda.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7899,7 +7899,7 @@
       ],
       "imagemPath": "/produtos/pratt-desinfetante-limao-do-bosque.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-desinfetante-limao-do-bosque.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -7958,7 +7958,7 @@
       ],
       "imagemPath": "/produtos/pratt-detergente-clorado.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-detergente-clorado.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8009,7 +8009,7 @@
       ],
       "imagemPath": "/produtos/pratt-detergente-neutro-floral.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-detergente-neutro-floral.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8067,7 +8067,7 @@
       ],
       "imagemPath": "/produtos/pratt-detergente-neutro.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-detergente-neutro.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8123,7 +8123,7 @@
       ],
       "imagemPath": "/produtos/pratt-hipoclorito-1.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-hipoclorito-1.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8183,7 +8183,7 @@
       ],
       "imagemPath": "/produtos/pratt-lava-roupas.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-lava-roupas.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8235,7 +8235,7 @@
       ],
       "imagemPath": "/produtos/pratt-multiuso.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-multiuso.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8296,7 +8296,7 @@
       ],
       "imagemPath": "/produtos/pratt-oxy.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-oxy.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8354,7 +8354,7 @@
       ],
       "imagemPath": "/produtos/pratt-pos-obra.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-pos-obra.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8411,7 +8411,7 @@
       ],
       "imagemPath": "/produtos/pratt-sabonete-erva-doce.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-sabonete-erva-doce.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8462,7 +8462,7 @@
         "unidade": "L"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-sabonete-espuma.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8518,7 +8518,7 @@
       ],
       "imagemPath": "/produtos/pratt-sabonete-perolizado.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-sabonete-perolizado.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8561,7 +8561,7 @@
       ],
       "imagemPath": "/produtos/pratt-ultra-gel.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-ultra-gel.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8622,7 +8622,7 @@
       ],
       "imagemPath": "/produtos/pratt-ultra.png",
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-ultra.pdf",
-      "ativo": false,
+      "ativo": true,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8687,7 +8687,7 @@
         "unidade": "ml"
       },
       "fichaTecnicaPath": "/fichas-tecnicas/pratt-alcool-gel-70.pdf",
-      "ativo": true,
+      "ativo": false,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8739,7 +8739,7 @@
       ],
       "imagemPath": "/produtos/spar-ht2.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-2.pdf",
-      "ativo": true,
+      "ativo": false,
       "embalagens": [
         {
           "tamanho": 5,
@@ -8791,7 +8791,7 @@
       ],
       "imagemPath": "/produtos/spar-ht3.png",
       "fichaTecnicaPath": "/fichas-tecnicas/spar-ht-3.pdf",
-      "ativo": true,
+      "ativo": false,
       "embalagens": [
         {
           "tamanho": 5,

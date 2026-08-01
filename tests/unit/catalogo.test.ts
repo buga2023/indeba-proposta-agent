@@ -8,11 +8,16 @@ import { porPalavraChave } from "@/lib/llm/extrair-pedido";
 describe("catálogo — fonte da verdade dos preços", () => {
   const catalogo = carregarCatalogo();
 
-  it("valida contra o Zod e traz os 9 produtos ativos da Proposta GVA", () => {
-    // Catálogo cresceu com a base técnica INDEBA/PRATT (fichas técnicas + fotos),
-    // mas o `ativo` é sobre o produto estar em linha — não sobre ter preço.
-    expect(catalogo.produtos.filter((p) => p.ativo).length).toBe(9);
-    expect(catalogo.produtos.find((p) => p.codigo === "PRIMMAX-PLUS")).toBeDefined();
+  // Até 01/08/2026 este teste travava em 9 ativos — e era esse número que o Mateus estava
+  // vendo na tela: 9 de 150. O `ativo: false` dos outros 141 era resquício de como a base
+  // INDEBA/PRATT foi importada, não decisão de negócio (ver scripts/ativar-catalogo.mjs).
+  // A asserção agora é sobre a REGRA, não sobre um número que envelhece a cada importação.
+  it("valida contra o Zod e mantém os produtos-piloto ativos", () => {
+    const ativos = catalogo.produtos.filter((p) => p.ativo);
+    expect(ativos.length).toBeGreaterThan(100);
+    for (const codigo of ["PRIMMAX-PLUS", "PRIMMAX-DGCLOR", "PRIMMAX-SANQUAT", "DERMOL-BACTER-PLUS"]) {
+      expect(ativos.find((p) => p.codigo === codigo)).toBeDefined();
+    }
   });
 
   // O catálogo é a fonte da verdade de PRODUTO (nome/ficha/foto/embalagens), não de preço:

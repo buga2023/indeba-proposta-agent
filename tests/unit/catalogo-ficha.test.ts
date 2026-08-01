@@ -3,8 +3,13 @@ import { carregarCatalogo } from "@/lib/catalogo";
 
 describe("catálogo — fichas dos produtos-piloto", () => {
   const cat = carregarCatalogo();
-  it("mantém os 9 produtos-piloto ativos (catálogo maior cresce arquivado)", () =>
-    expect(cat.produtos.filter((p) => p.ativo).length).toBe(9));
+  // O catálogo real inteiro está no ar desde 01/08/2026 (ver catalogo-assets.test.ts);
+  // aqui o que importa é que os produtos com ficha rica continuam em linha.
+  it("os produtos-piloto seguem ativos", () => {
+    const ativos = cat.produtos.filter((p) => p.ativo);
+    expect(ativos.find((p) => p.codigo === "PRIMMAX-PLUS")).toBeDefined();
+    expect(ativos.find((p) => p.codigo === "PRIMMAX-DGCLOR")).toBeDefined();
+  });
   it("PRIMMAX-PLUS tem ficha rica", () => {
     const p = cat.produtos.find((x) => x.codigo === "PRIMMAX-PLUS");
     expect(p?.ficha?.titulo).toBeTruthy();

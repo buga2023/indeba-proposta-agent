@@ -3440,6 +3440,13 @@ function HistoryScreen({
 
 const MARCA_LABEL: Record<string, string> = { indeba: "Indeba", pratt: "Pratt" };
 
+// Chave de busca: minúscula, sem acento e sem separador. O usuário digita o produto como
+// fala ("dg clor", "spar ht 2"), e o catálogo grava como código ("PRIMMAX-DGCLOR",
+// "SPAR-HT-2") — comparar as duas formas cruas não casa nunca, e o produto existente
+// parecia ausente. Colapsar espaço/hífen/ponto dos DOIS lados resolve.
+const chave = (s: string) =>
+  s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9]/g, "");
+
 function CatalogScreen({
   catalogo,
   erro,
@@ -3469,15 +3476,27 @@ function CatalogScreen({
         : ativos.filter((p) => humaniza(p.linha) === catFilter);
   const porFuncao = funcaoFiltro === "Todas" ? porLinha : porLinha.filter((p) => p.funcoes.includes(funcaoFiltro as Funcao));
   const porMarca = marcaFiltro === "Todas" ? porFuncao : porFuncao.filter((p) => p.marca === marcaFiltro);
-  const q = busca.trim().toLowerCase();
-  const filtered = (q ? porMarca.filter((p) => `${p.nome} ${p.codigo}`.toLowerCase().includes(q)) : porMarca).sort((a, b) => a.nome.localeCompare(b.nome));
+  const q = chave(busca);
+  // Busca por texto é intenção EXPLÍCITA: atravessa o filtro de arquivamento e parte de
+  // `todos`, não de `porMarca`. Sem isso, procurar um produto arquivado dentro de "Todos"
+  // nunca acha nada — foi o que fez o Mateus dizer "eu tava procurando e não tava
+  // aparecendo". O badge "Arquivado" da tabela identifica o resultado sem trabalho extra.
+  const filtered = (q ? todos.filter((p) => chave(`${p.nome} ${p.codigo}`).includes(q)) : porMarca).sort((a, b) => a.nome.localeCompare(b.nome));
 
   return (
     <div className="ies-pad28" style={{ padding: "28px" }}>
       <div className="ies-headwrap" style={{ margin: "-28px -28px 22px" }}>
         <ScreenHead
           title="Catálogo"
-          sub={catalogo === null ? "Carregando…" : `${filtered.length} produtos · Higiene & Limpeza`}
+          sub={
+            catalogo === null
+              ? "Carregando…"
+              : q
+                // Com busca, a contagem não é "produtos da categoria" — a busca cruza o
+                // filtro, então o subtítulo tem que dizer o que está mostrando de fato.
+                ? `${filtered.length} resultado${filtered.length === 1 ? "" : "s"} para “${busca.trim()}”`
+                : `${filtered.length} produtos · Higiene & Limpeza`
+          }
           right={
             <Hoverable
               base={{ display: "flex", alignItems: "center", gap: "8px", height: "38px", padding: "0 18px", background: "var(--blue-500)", border: "none", borderRadius: "10px", cursor: "not-allowed", fontSize: "13px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(30,107,184,.3)", opacity: 0.6 }}
@@ -3613,7 +3632,7 @@ function CatalogScreen({
                   <span style={{ fontSize: "11px", fontWeight: 600, color: "#16A34A" }}>Ativo</span>
                 ) : (
                   <span
-                    title="Sem preço cadastrado — ainda não entra em propostas"
+                    title="Fora de linha — não aparece nos filtros, mas continua encontrável pela busca"
                     style={{ fontSize: "10.5px", fontWeight: 700, color: "#94A6B8", background: "var(--gray-100)", borderRadius: "999px", padding: "2px 8px", width: "fit-content" }}
                   >
                     Arquivado

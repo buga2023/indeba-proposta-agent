@@ -51,9 +51,21 @@ describe("assistente de ajuda — aterrado no catálogo", () => {
     expect(responder("me conta uma piada", produtos)).toBeNull();
   });
 
-  it("necessidade sem produto no catálogo → diz que não tem, sem inventar", () => {
+  // Este teste garantia que lavanderia caísse no "não temos" — a premissa era que o MVP
+  // não tinha essa linha. Ela morreu em 01/08/2026: com o catálogo real no ar, lavanderia
+  // é a MAIOR linha (50 produtos). A garantia que continua valendo é a mesma de sempre —
+  // o que o assistente responde sai do catálogo, nunca da imaginação.
+  it("necessidade atendida → responde com produto REAL do catálogo", () => {
     const r = responder("tem produto para lavanderia de roupas?", produtos);
-    // catálogo do MVP não tem linha lavanderia; ou cai no 'não temos' ou no 'não sei'
+    expect(r).toBeTruthy();
+    const citados = produtos.filter((p) => p.ativo && r!.includes(p.nome));
+    expect(citados.length).toBeGreaterThan(0);
+    expect(r).not.toMatch(/R\$ \d/); // nenhum preço saiu do nada
+  });
+
+  it("HONESTIDADE: necessidade sem casamento no catálogo → não inventa produto", () => {
+    // "não temos" ou null; o que não pode é devolver um produto que não existe
+    const r = responder("vocês têm ração para gato?", produtos);
     if (r) expect(r).toMatch(/não temos|nao temos/i);
   });
 });
