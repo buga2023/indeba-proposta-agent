@@ -19,7 +19,6 @@ const base: PropostaScope = {
     embalagens: [{ tamanho: 5, unidade: "L", preco: "100.00", diluicaoMax: null, custoDiluido: null }],
     quantidade: 1, procedenciaSelecao: "MANUAL", motivo: "", tamanhosDisponiveis: [], fichaTecnicaPath: null, ficha: null }],
   condicoesComerciais: { validade: "30 dias", prazoEntrega: "15d", pagamento: "boleto", frete: "CIF" },
-  consolidada: null,
 };
 
 describe("proposta de tipo legado continua abrindo e exportando", () => {

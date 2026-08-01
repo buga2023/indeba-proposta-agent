@@ -77,3 +77,28 @@ describe("listarPropostas — arquivadas fora por padrão", () => {
     expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: undefined }));
   });
 });
+
+// Vendedor vê a própria carteira; gestor vê o time. O corte tem que ser no WHERE (índice
+// @@index([autor])): filtrar depois traria do banco e pela rede o histórico dos colegas —
+// nome de cliente e valor de cada proposta —, que é exatamente o que não pode sair daqui.
+describe("listarPropostas — recorte por autor", () => {
+  it("com autor, pede ao banco só as propostas dele", async () => {
+    findMany.mockResolvedValue([]);
+    await listarPropostas(200, false, "a@indeba.com");
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: { not: "arquivada" }, autor: "a@indeba.com" } }),
+    );
+  });
+
+  it("autor + arquivadas: sobra só o recorte de autor", async () => {
+    findMany.mockResolvedValue([]);
+    await listarPropostas(200, true, "a@indeba.com");
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { autor: "a@indeba.com" } }));
+  });
+
+  it("sem autor (admin), nenhum recorte é aplicado", async () => {
+    findMany.mockResolvedValue([]);
+    await listarPropostas(200, true, undefined);
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: undefined }));
+  });
+});

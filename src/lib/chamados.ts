@@ -1,18 +1,11 @@
-import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { authAtiva, validarSessao } from "@/lib/auth";
 import { Chamado, type ChamadoCreate, type ChamadoUpdate } from "@/lib/contracts";
 
-// Quem está pedindo: e-mail + papel (gestor = admin). Em dev local sem auth, vira admin
-// "local" pra não travar o uso. Com auth ativa e sem sessão válida → null (401 na rota).
-export type SessaoUsuario = { email: string; papel: "admin" | "user" };
-
-export async function usuarioAtual(req: NextRequest): Promise<SessaoUsuario | null> {
-  const u = await validarSessao(req.cookies.get("sessao")?.value);
-  if (u) return { email: u.email, papel: u.papel };
-  if (!authAtiva()) return { email: "local", papel: "admin" };
-  return null;
-}
+// `usuarioAtual`/`SessaoUsuario` moraram aqui até 01/08/2026, quando a listagem de propostas
+// passou a precisar do mesmo escopo por autor. São de autenticação, não de chamados — foram
+// para lib/auth.ts. O reexport mantém quem já importava daqui.
+export { usuarioAtual, type SessaoUsuario } from "@/lib/auth";
+import type { SessaoUsuario } from "@/lib/auth";
 
 // Linha do Prisma → contrato Chamado (datas em ISO; valida os enums via Zod).
 type ChamadoRow = {

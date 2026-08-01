@@ -119,12 +119,22 @@ export async function salvarProposta(scope: PropostaScope, autor: string): Promi
 // que o usuário peça. O corte é no WHERE (índice @@index([status]) do schema), não no
 // cliente: proposta arquivada não vira linha, não vira JSON e não trafega — o histórico
 // tinha 32 de 39 arquivadas, ou seja, 80% do payload era registro que ninguém queria ver.
+//
+// `autor` recorta a listagem para um vendedor só (undefined = sem recorte, o gestor vê o
+// time inteiro). Mesmo motivo do corte de arquivadas, e agora também por sigilo: até
+// 01/08/2026 qualquer sessão autenticada recebia o histórico da empresa inteira, com nome
+// de cliente e valor de cada proposta dos colegas. O filtro é no WHERE (índice
+// @@index([autor])) — proposta de outro vendedor não vira linha, não vira JSON e não trafega.
 export async function listarPropostas(
   limite = 200,
   incluirArquivadas = false,
+  autor?: string,
 ): Promise<PropostaResumo[]> {
+  const where: Prisma.PropostaWhereInput = {};
+  if (!incluirArquivadas) where.status = { not: "arquivada" };
+  if (autor) where.autor = autor;
   const rows = await prisma.proposta.findMany({
-    where: incluirArquivadas ? undefined : { status: { not: "arquivada" } },
+    where: Object.keys(where).length ? where : undefined,
     orderBy: { atualizadoEm: "desc" },
     take: limite,
   });

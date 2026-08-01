@@ -337,9 +337,12 @@ const CMD_ITEMS: PaletteItem[] = [
   { key: "importar", label: "Importar orçamento" },
   { key: "history", label: "Propostas" },
   { key: "catalog", label: "Catálogo" },
-  { key: "config", label: "Configurações" },
   { key: "perfil", label: "Meu perfil" },
 ];
+// Configurações é o painel do gestor (e-mails de cobrança, colaboradores). Fica fora da
+// lista base e entra só para admin — esconder no menu e deixar na paleta seria o mesmo que
+// não esconder: Ctrl+K chega na tela do mesmo jeito.
+const CMD_ITEM_CONFIG: PaletteItem = { key: "config", label: "Configurações" };
 
 /* ───────────────────────── componente principal ───────────────────────── */
 
@@ -376,6 +379,11 @@ export default function Home() {
   // Ver arquivadas é opt-in: alternar zera a lista pra forçar refetch com o outro filtro.
   const [verArquivadas, setVerArquivadas] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  // Gestor e vendedor navegam telas diferentes. Enquanto /api/me não responde, `usuario` é
+  // null e o app trata como vendedor: mostrar a mais e recolher depois piscaria a tela do
+  // gestor para quem não é. As rotas de admin já barram por papel no servidor de qualquer
+  // forma — isto aqui é a camada de UI, não a de autorização.
+  const ehAdmin = usuario?.papel === "admin";
 
   // Usuário da sessão atual — personaliza saudação e sidebar.
   useEffect(() => {
@@ -826,14 +834,21 @@ export default function Home() {
             Catálogo
           </Hoverable>
 
-          <div className="ies-side-text" style={navSection}>Sistema</div>
-          <Hoverable base={navItemStyle(["config"])} hover={navHover} onClick={() => irPara("config")} title="Configurações">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="8.5" cy="8.5" r="2.25" />
-              <path d="M8.5 2.5v1M8.5 13v1.5M2.5 8.5h1M13 8.5h1.5M4.5 4.5l.7.7M11.8 11.8l.7.7M4.5 12.5l.7-.7M11.8 5.2l.7-.7" />
-            </svg>
-            Configurações
-          </Hoverable>
+          {/* Configurações é o painel do gestor: e-mails de cobrança, GESTOR_EMAIL, cadastro
+              de colaboradores. As rotas já respondem 403 para quem não é admin — aqui a
+              seção some da navegação para o vendedor não esbarrar numa porta trancada. */}
+          {ehAdmin && (
+            <>
+              <div className="ies-side-text" style={navSection}>Sistema</div>
+              <Hoverable base={navItemStyle(["config"])} hover={navHover} onClick={() => irPara("config")} title="Configurações">
+                <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="8.5" cy="8.5" r="2.25" />
+                  <path d="M8.5 2.5v1M8.5 13v1.5M2.5 8.5h1M13 8.5h1.5M4.5 4.5l.7.7M11.8 11.8l.7.7M4.5 12.5l.7-.7M11.8 5.2l.7-.7" />
+                </svg>
+                Configurações
+              </Hoverable>
+            </>
+          )}
         </nav>
 
         <div className="ies-side-foot" style={{ padding: "14px 14px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: "10px" }}>
@@ -937,7 +952,9 @@ export default function Home() {
         {screen === "contrato" && <ContratoScreen scope={scope} onVerProposta={() => setScreen(scope ? "review" : "manual")} />}
         {screen === "atendimento" && <AtendimentoScreen />}
         {screen === "chamados" && <ChamadosScreen />}
-        {screen === "config" && <AdminScreen />}
+        {/* Segundo cadeado do painel do gestor: some do menu E não renderiza sem papel — quem
+            chegar por outro caminho cai no Dashboard em vez de ver a tela vazia/quebrada. */}
+        {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} />)}
         {screen === "perfil" && <MeuPerfilScreen />}
       </main>
 
@@ -950,6 +967,7 @@ export default function Home() {
         onClose={() => setPalette(false)}
         items={[
           ...CMD_ITEMS,
+          ...(ehAdmin ? [CMD_ITEM_CONFIG] : []),
           ...(catalogo ?? []).map((p) => ({
             key: `produto:${p.codigo}`,
             label: p.nome,
