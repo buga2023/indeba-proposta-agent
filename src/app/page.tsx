@@ -1008,6 +1008,11 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
   const totalProp = lista.length;
   const valorTotal = lista.reduce((s, p) => s + Number(p.total || 0), 0);
   const aprovadas = lista.filter((p) => p.status === "aprovada").length;
+  const recusadas = lista.filter((p) => p.status === "recusada").length;
+  // Gestor e vendedor veem painéis diferentes: o vendedor acompanha a própria carteira, o
+  // gestor acompanha o time. O papel já viaja no cookie de sessão desde sempre — até agora
+  // só era lido para escrever o rótulo "Vendedor" no rodapé da sidebar.
+  const ehAdmin = usuario?.papel === "admin";
 
   const statusCount = (Object.keys(STATUS_UI) as StatusProposta[])
     .map((k) => ({ k, n: lista.filter((p) => p.status === k).length, label: STATUS_UI[k].label, fg: STATUS_UI[k].fg }))
@@ -1024,14 +1029,19 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
     return `conic-gradient(${stops.join(",")})`;
   })();
 
-  const porTipo = TIPOS.map((t) => ({ label: t.label, n: lista.filter((p) => p.tipo === t.value).length }));
-  const maxTipo = Math.max(1, ...porTipo.map((t) => t.n));
-
+  // Os quatro números que o gestor pediu para o vendedor ver: "quantas propostas ele tem no
+  // login dele, qual o valor total, quantas são aprovadas, quantas recusadas". O status
+  // chama `recusada` (STATUS_UI) — não existe "reprovada" no sistema, e inventar o sinônimo
+  // aqui deixaria o card fora de sincronia com o badge e com o donut.
+  // "Produtos no catálogo" é métrica de gestão, não de carteira: fica só no admin.
   const KPIS = [
     { label: "Propostas", valor: String(totalProp), cor: "var(--blue-600)" },
     { label: "Valor total", valor: fmt(valorTotal), cor: "var(--success)" },
     { label: "Aprovadas", valor: String(aprovadas), cor: "var(--blue-800)" },
-    { label: "Produtos no catálogo", valor: catalogoCount == null ? "—" : String(catalogoCount), cor: "var(--orange-600)" },
+    { label: "Recusadas", valor: String(recusadas), cor: "var(--danger)" },
+    ...(ehAdmin
+      ? [{ label: "Produtos no catálogo", valor: catalogoCount == null ? "—" : String(catalogoCount), cor: "var(--orange-600)" }]
+      : []),
   ];
 
   // Widget financeiro — derivado das propostas reais (sem números inventados, constituição §1.2):
@@ -1088,7 +1098,7 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
         )}
 
         {/* ── KPIs ── */}
-        <div className="ies-kpi" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px" }}>
+        <div className="ies-kpi" style={{ display: "grid", gridTemplateColumns: `repeat(${KPIS.length},minmax(0,1fr))`, gap: "16px" }}>
           {KPIS.map((k, i) => (
             <Hoverable as="div" key={k.label} base={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderTop: `3px solid ${k.cor}`, borderRadius: "14px", padding: "17px 19px", minWidth: 0, boxShadow: "var(--shadow-sm)", transition: "transform var(--duration-base) var(--ease-out),box-shadow var(--duration-base) var(--ease-standard)", animation: `popIn .4s var(--ease-spring) ${i * 0.05}s both` }} hover={{ transform: "translateY(-3px)", boxShadow: "var(--shadow-lg)" }}>
               <div style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500, marginBottom: "9px" }}>{k.label}</div>
@@ -1097,23 +1107,12 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
           ))}
         </div>
 
-        {/* ── Gráficos reais (status / tipo) ── */}
-        <div className="ies-split" style={{ display: "grid", gridTemplateColumns: "1.45fr 1fr", gap: "16px" }}>
-          {/* Barras: por tipo */}
-          <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)" }}>
-            <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Propostas por tipo</div>
-            <div style={{ fontSize: "12px", color: "var(--text-subtle)", marginBottom: "14px" }}>Distribuição por estrutura de PDF</div>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: "20px", height: "150px", padding: "0 10px" }}>
-              {porTipo.map((t) => (
-                <div key={t.label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", height: "100%", justifyContent: "flex-end" }}>
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--blue-600)", fontFamily: "var(--font-mono)" }}>{t.n}</span>
-                  <div style={{ width: "100%", maxWidth: "56px", height: `${(t.n / maxTipo) * 100}%`, minHeight: "4px", background: "linear-gradient(180deg,var(--blue-500),var(--blue-700))", borderRadius: "8px 8px 0 0", transition: "height .4s var(--ease-out)" }} />
-                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{t.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
+        {/* ── Painel: status · atividade · financeiro ── */}
+        {/* O gráfico "Propostas por tipo" saiu daqui: só "Proposta de Solução" é oferecida na
+            criação desde jul/2026 (TIPOS_SELECIONAVEIS), então três das quatro barras eram
+            zero permanente — o gestor viu e pediu para tirar. Os tipos legados continuam
+            existindo no código: proposta antiga precisa abrir e exportar o PDF dela. */}
+        <div className="ies-split" style={{ display: "grid", gridTemplateColumns: ehAdmin ? "1fr 1.45fr 1fr" : "1fr 1fr", gap: "16px", alignItems: "start" }}>
           {/* Donut: status */}
           <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <div style={{ width: "100%", fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Propostas por status</div>
@@ -1140,10 +1139,10 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
               </>
             )}
           </div>
-        </div>
 
-        {/* ── Atividade recente + Financeiro ── */}
-        <div className="ies-split" style={{ display: "grid", gridTemplateColumns: "1.45fr 1fr", gap: "16px", alignItems: "start" }}>
+          {/* Atividade recente é do gestor: "isso aqui é bom aparecer pra mim; pros demais é
+              só tá tudo enxuto". O vendedor fica com status + o próprio financeiro. */}
+          {ehAdmin && (
           <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px 22px", boxShadow: "var(--shadow-sm)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
               <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Atividade recente</div>
@@ -1166,8 +1165,10 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
               ))
             )}
           </div>
+          )}
 
-          {/* Widget financeiro — derivado das propostas reais */}
+          {/* Widget financeiro — derivado das propostas reais. Fica para os dois papéis: com o
+              escopo por autor da API, o vendedor está vendo a própria carteira, não a do time. */}
           <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
               <span style={{ fontSize: "12.5px", color: "var(--text-muted)", fontWeight: 500 }}>Valor aprovado</span>
@@ -3444,7 +3445,7 @@ const MARCA_LABEL: Record<string, string> = { indeba: "Indeba", pratt: "Pratt" }
 // fala ("dg clor", "spar ht 2"), e o catálogo grava como código ("PRIMMAX-DGCLOR",
 // "SPAR-HT-2") — comparar as duas formas cruas não casa nunca, e o produto existente
 // parecia ausente. Colapsar espaço/hífen/ponto dos DOIS lados resolve.
-const chave = (s: string) =>
+const chaveBusca = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9]/g, "");
 
 function CatalogScreen({
@@ -3476,12 +3477,12 @@ function CatalogScreen({
         : ativos.filter((p) => humaniza(p.linha) === catFilter);
   const porFuncao = funcaoFiltro === "Todas" ? porLinha : porLinha.filter((p) => p.funcoes.includes(funcaoFiltro as Funcao));
   const porMarca = marcaFiltro === "Todas" ? porFuncao : porFuncao.filter((p) => p.marca === marcaFiltro);
-  const q = chave(busca);
+  const q = chaveBusca(busca);
   // Busca por texto é intenção EXPLÍCITA: atravessa o filtro de arquivamento e parte de
   // `todos`, não de `porMarca`. Sem isso, procurar um produto arquivado dentro de "Todos"
   // nunca acha nada — foi o que fez o Mateus dizer "eu tava procurando e não tava
   // aparecendo". O badge "Arquivado" da tabela identifica o resultado sem trabalho extra.
-  const filtered = (q ? todos.filter((p) => chave(`${p.nome} ${p.codigo}`).includes(q)) : porMarca).sort((a, b) => a.nome.localeCompare(b.nome));
+  const filtered = (q ? todos.filter((p) => chaveBusca(`${p.nome} ${p.codigo}`).includes(q)) : porMarca).sort((a, b) => a.nome.localeCompare(b.nome));
 
   return (
     <div className="ies-pad28" style={{ padding: "28px" }}>
