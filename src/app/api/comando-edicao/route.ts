@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { ComandoEdicao, PropostaScope, type PropostaItem } from "@/lib/contracts";
-import { carregarCatalogo } from "@/lib/catalogo";
+import { catalogoCompleto } from "@/lib/catalogo";
 import { itemDoCatalogo } from "@/lib/montar";
 import { interpretarComando } from "@/lib/llm/interpretar-comando";
 import { extrairPedido } from "@/lib/llm/extrair-pedido";
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   }
   const { mensagem, scope } = parsed.data;
   try {
-    const catalogo = carregarCatalogo();
+    const catalogo = await catalogoCompleto();
     const itensProposta = scope.itens.map((it) => ({ codigo: it.codigo, nome: it.nome }));
     const itensCatalogo = catalogo.produtos.filter((p) => p.ativo).map((p) => ({ codigo: p.codigo, nome: p.nome }));
     const comando = await interpretarComando(mensagem, itensProposta, itensCatalogo);

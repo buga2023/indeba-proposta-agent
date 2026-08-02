@@ -1,7 +1,7 @@
 // Indexação do corpus no Qdrant. Catálogo é a fonte base (produtos reais, do data/catalogo.json);
 // documentos avulsos (FAQ, políticas) podem ser anexados. Embeddings vêm do Ollama.
 import type { Produto, RagIndexResultado } from "../contracts";
-import { carregarCatalogo } from "../catalogo";
+import { catalogoCompleto } from "../catalogo";
 import { embed } from "./embed";
 import { chunk } from "./chunk";
 import { COLECAO, garantirColecao, recriarColecao, upsert, type Ponto } from "./qdrant";
@@ -23,7 +23,7 @@ export function textoProduto(p: Produto): string {
 
 // Reindexa o catálogo INTEIRO (coleção recriada do zero — sem duplicar).
 export async function indexarCatalogo(): Promise<RagIndexResultado> {
-  const produtos = carregarCatalogo().produtos.filter((p) => p.ativo);
+  const produtos = (await catalogoCompleto()).produtos.filter((p) => p.ativo);
   if (!produtos.length) return { ok: true, colecao: COLECAO, pontos: 0 };
 
   const textos = produtos.map(textoProduto);

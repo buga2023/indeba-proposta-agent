@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { carregarCatalogo, produtoPorCodigo } from "./catalogo";
+import { catalogoCompleto, produtoPorCodigo } from "./catalogo";
 import { selecionar } from "./selecao/matcher";
 import { extrairPedido } from "./llm/extrair-pedido";
 import { escreverApresentacao } from "./llm/escrever-texto";
@@ -64,7 +64,7 @@ export async function montarProposta(
   contexto?: ContextoProspeccao | null,
   consultor?: ConsultorInfo | null,
 ): Promise<PropostaScope> {
-  const catalogo = carregarCatalogo();
+  const catalogo = await catalogoCompleto();
 
   const linhasCatalogo = new Set(catalogo.produtos.map((p) => p.linha));
   const pedido = await extrairPedido(briefing, linhasCatalogo);
@@ -128,7 +128,7 @@ export async function montarPropostaEstruturada(
   entrada: EntradaEstruturada,
   consultor?: ConsultorInfo | null,
 ): Promise<PropostaScope> {
-  const catalogo = carregarCatalogo();
+  const catalogo = await catalogoCompleto();
 
   const itens: PropostaItem[] = entrada.itens.map((it) => {
     if (it.codigo) {

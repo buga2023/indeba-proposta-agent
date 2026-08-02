@@ -85,19 +85,21 @@ describe("proposta reaberta: a imagem é recalculada do catálogo", () => {
     }],
   });
 
-  it("proposta antiga com arte onde existe foto do tamanho sai curada", () => {
+  // Assíncrona desde que o catálogo passou a ter duas fontes (JSON + produto cadastrado
+  // pela tela, no Postgres) — ver docs/spec-cadastro-produto.md.
+  it("proposta antiga com arte onde existe foto do tamanho sai curada", async () => {
     // Texspar DSA 20 L: o catálogo tem texspar-dsa-balde.png; o snapshot antigo tem a arte.
     const antiga = comItem("TEXSPAR-DSA", "/produtos/_balde-20.svg", 20, "L");
-    expect(comImagensDoCatalogo(antiga).itens[0].imagemPath).toBe("/produtos/texspar-dsa-balde.png");
+    expect((await comImagensDoCatalogo(antiga)).itens[0].imagemPath).toBe("/produtos/texspar-dsa-balde.png");
   });
 
-  it("proposta correta passa intacta — o objeto nem é reconstruído", () => {
+  it("proposta correta passa intacta — o objeto nem é reconstruído", async () => {
     const ok = comItem("TEXSPAR-DSA", "/produtos/texspar-dsa-balde.png", 20, "L");
-    expect(comImagensDoCatalogo(ok)).toBe(ok);
+    expect(await comImagensDoCatalogo(ok)).toBe(ok);
   });
 
-  it("item próprio (fora do catálogo) mantém a imagem do vendedor", () => {
+  it("item próprio (fora do catálogo) mantém a imagem do vendedor", async () => {
     const proprio = comItem("BOTA-PVC-DO-VENDEDOR", "/produtos/_generico.svg", 1, "un");
-    expect(comImagensDoCatalogo(proprio).itens[0].imagemPath).toBe("/produtos/_generico.svg");
+    expect((await comImagensDoCatalogo(proprio)).itens[0].imagemPath).toBe("/produtos/_generico.svg");
   });
 });

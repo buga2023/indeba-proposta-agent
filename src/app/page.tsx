@@ -26,6 +26,7 @@ import { AjudaChat } from "@/components/ajuda-chat";
 import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
 import { AdminScreen } from "@/components/admin-screen";
+import { NovoProduto } from "@/components/novo-produto";
 import { useToast } from "./_app/toast";
 import { CommandPalette, type PaletteItem } from "./_app/command-palette";
 
@@ -970,7 +971,7 @@ export default function Home() {
             }}
           />
         )}
-        {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} />}
+        {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} ehAdmin={ehAdmin} onRecarregar={() => setCatalogo(null)} />}
         {screen === "prospeccao" && (
           <ProspeccaoScreen
             onGerarProposta={(d) => {
@@ -3507,12 +3508,17 @@ function CatalogScreen({
   erro,
   catFilter,
   setCatFilter,
+  ehAdmin,
+  onRecarregar,
 }: {
   catalogo: Produto[] | null;
   erro: string | null;
   catFilter: string;
   setCatFilter: (c: string) => void;
+  ehAdmin: boolean;
+  onRecarregar: () => void;
 }) {
+  const [novoAberto, setNovoAberto] = useState(false);
   const [busca, setBusca] = useState("");
   const [funcaoFiltro, setFuncaoFiltro] = useState("Todas");
   const [marcaFiltro, setMarcaFiltro] = useState("Todas");
@@ -3540,6 +3546,17 @@ function CatalogScreen({
 
   return (
     <div className="ies-pad28" style={{ padding: "28px" }}>
+      {novoAberto && (
+        <NovoProduto
+          onFechar={() => setNovoAberto(false)}
+          onCriado={() => {
+            setNovoAberto(false);
+            // Zera o catálogo em memória: o efeito da tela refaz o GET e o produto novo
+            // aparece na hora. Sem isto o gestor salvaria e não veria nada mudar.
+            onRecarregar();
+          }}
+        />
+      )}
       <div className="ies-headwrap" style={{ margin: "-28px -28px 22px" }}>
         <ScreenHead
           title="Catálogo"
@@ -3553,9 +3570,13 @@ function CatalogScreen({
                 : `${filtered.length} produtos · Higiene & Limpeza`
           }
           right={
+            // Catálogo é dado crítico — dele saem a ficha, a foto e o produto que vai na
+            // proposta. Quem cadastra é o gestor; a rota também barra por papel (403).
             <Hoverable
-              base={{ display: "flex", alignItems: "center", gap: "8px", height: "38px", padding: "0 18px", background: "var(--blue-500)", border: "none", borderRadius: "10px", cursor: "not-allowed", fontSize: "13px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(30,107,184,.3)", opacity: 0.6 }}
-              title="Cadastro de produto — em breve"
+              base={{ display: "flex", alignItems: "center", gap: "8px", height: "38px", padding: "0 18px", background: "var(--blue-500)", border: "none", borderRadius: "10px", cursor: ehAdmin ? "pointer" : "not-allowed", fontSize: "13px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(30,107,184,.3)", opacity: ehAdmin ? 1 : 0.6 }}
+              hover={ehAdmin ? { background: "var(--blue-600)" } : {}}
+              onClick={ehAdmin ? () => setNovoAberto(true) : undefined}
+              title={ehAdmin ? "Cadastrar um produto no catálogo" : "Só o gestor cadastra produto"}
             >
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round">
                 <path d="M7.5 1.5v12M1.5 7.5h12" />

@@ -21,3 +21,37 @@ export function carregarCatalogo(): Catalogo {
 export function produtoPorCodigo(codigo: string): Produto | undefined {
   return carregarCatalogo().produtos.find((p) => p.codigo === codigo);
 }
+
+// ── Catálogo completo: JSON + produtos cadastrados pela tela ──────────────────────
+//
+// `carregarCatalogo()` acima continua síncrono e só com o JSON de propósito — é o caminho
+// quente, chamado em loop pelo matcher e pelo template do PDF, e tornar TUDO assíncrono só
+// para acomodar a segunda fonte espalharia `await` por sete módulos sem ganho.
+//
+// Quem precisa ver o catálogo INTEIRO (a vitrine, a montagem, o RAG, a importação de
+// orçamento) usa as duas funções abaixo. Produto do banco entra depois do JSON e, em caso de
+// código repetido, o JSON vence: a base INDEBA/PRATT é a fonte histórica, e um cadastro novo
+// não pode sequestrar um código que já circula em proposta salva. O `@unique` da tabela
+// impede repetição dentro do banco; isto cobre a colisão ENTRE as fontes.
+export async function catalogoCompleto(): Promise<Catalogo> {
+  const base = carregarCatalogo();
+  const { listarProdutosCustom } = await import("./produto-custom");
+  let custom: Produto[] = [];
+  try {
+    custom = await listarProdutosCustom();
+  } catch (e) {
+    // Banco fora do ar não pode apagar o catálogo da tela: degrada para o JSON e registra.
+    console.error("[catalogo] produtos cadastrados indisponíveis — servindo só o JSON:", e);
+    return base;
+  }
+  const doJson = new Set(base.produtos.map((p) => p.codigo));
+  const novos = custom.filter((p) => !doJson.has(p.codigo));
+  return novos.length ? { ...base, produtos: [...base.produtos, ...novos] } : base;
+}
+
+export async function produtoPorCodigoCompleto(codigo: string): Promise<Produto | undefined> {
+  const doJson = produtoPorCodigo(codigo);
+  if (doJson) return doJson;
+  const { produtoCustomPorCodigo } = await import("./produto-custom");
+  return (await produtoCustomPorCodigo(codigo)) ?? undefined;
+}

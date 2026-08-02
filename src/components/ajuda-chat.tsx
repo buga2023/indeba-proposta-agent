@@ -11,6 +11,52 @@ import { responder, WELCOME, SUGESTOES, NAO_SEI } from "./ajuda-chat-logic";
 
 type Msg = { de: "bot" | "voce"; texto: string };
 
+// ── Renderização da resposta ──────────────────────────────────────────────────
+// A bolha imprimia `{m.texto}` cru: com `pre-wrap` as quebras apareciam, mas título de
+// ficha, rótulo de campo e item de lista chegavam todos como o MESMO texto de 13px. Num
+// balão de 372px isso vira massa cinzenta — a informação está lá e ninguém acha.
+//
+// Isto NÃO é um parser de Markdown, e não deve virar um: reconhece exatamente a convenção
+// que o cérebro emite (documentada em ajuda-chat-logic.ts). Sem dependência nova e sem
+// dangerouslySetInnerHTML — o texto fala de preço e produto, não passa por HTML de terceiro.
+
+// "a **b** c" → o split com grupo de captura devolve ["a ", "b", " c"]: os ÍMPARES são o
+// conteúdo capturado, ou seja, o que estava entre os asteriscos.
+function comNegrito(texto: string) {
+  return texto.split(/\*\*(.+?)\*\*/g).map((parte, i) => (i % 2 ? <strong key={i} style={forte}>{parte}</strong> : <span key={i}>{parte}</span>));
+}
+
+function Resposta({ texto }: { texto: string }) {
+  return (
+    <>
+      {texto.split("\n").map((linha, i) => {
+        // Linha vazia é respiro entre blocos — um <br> daria altura de linha inteira (~20px),
+        // que separa demais dentro de um balão pequeno.
+        if (!linha.trim()) return <div key={i} style={{ height: "7px" }} />;
+
+        // Linha inteiramente em negrito é título de bloco ("**📦 Nome**", "**Embalagens:**").
+        const titulo = /^\*\*(.+)\*\*$/.exec(linha);
+        if (titulo) return <div key={i} style={tituloBloco}>{titulo[1]}</div>;
+
+        // Item de lista: o marcador vai numa coluna própria, então a 2ª linha de um item
+        // longo alinha com a 1ª em vez de voltar à margem e se confundir com o próximo item.
+        const numerado = /^(\d+)\.\s+(.*)$/.exec(linha);
+        if (linha.startsWith("• ") || numerado) {
+          const marcador = numerado ? `${numerado[1]}.` : "•";
+          const conteudo = numerado ? numerado[2] : linha.slice(2);
+          return (
+            <div key={i} style={itemLista}>
+              <span style={numerado ? marcadorNumero : marcadorBullet}>{marcador}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>{comNegrito(conteudo)}</span>
+            </div>
+          );
+        }
+        return <div key={i} style={paragrafo}>{comNegrito(linha)}</div>;
+      })}
+    </>
+  );
+}
+
 export function AjudaChat() {
   const [aberto, setAberto] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([{ de: "bot", texto: WELCOME }]);
@@ -29,8 +75,16 @@ export function AjudaChat() {
   }, [aberto, produtos]);
 
   // Rola para a última mensagem.
+  //
+  // Atribuição direta, e não `scrollTo({ behavior: "smooth" })`: medido neste container no
+  // Chrome, "auto" chega ao alvo (654 de 654) e "smooth" deixa o scrollTop parado em 0 — a
+  // animação simplesmente não roda aqui. E falhava em SILÊNCIO: a resposta era montada,
+  // formatada, e nascia fora da área visível. Quem perguntava via a própria pergunta com um
+  // vazio embaixo e precisava rolar à mão para descobrir que havia resposta — o que é pior
+  // do que uma resposta mal formatada, porque parece que o assistente não respondeu.
   useEffect(() => {
-    corpoRef.current?.scrollTo({ top: corpoRef.current.scrollHeight, behavior: "smooth" });
+    const el = corpoRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [msgs]);
 
   // Abre o assistente quando o header global pede (botão "Assistente").
@@ -84,7 +138,12 @@ export function AjudaChat() {
           <div ref={corpoRef} style={corpo}>
             {msgs.map((m, i) => (
               <div key={i} style={{ display: "flex", justifyContent: m.de === "voce" ? "flex-end" : "flex-start" }}>
-                <div style={m.de === "voce" ? bolhaVoce : bolhaBot}>{m.texto}</div>
+                {/* Só a resposta do bot é formatada. O que a pessoa digitou vai como texto
+                    puro: interpretar marcação no input dela faria "**" sumir do que ela
+                    escreveu — e o balão dela nunca tem estrutura para exibir mesmo. */}
+                <div style={m.de === "voce" ? bolhaVoce : bolhaBot}>
+                  {m.de === "voce" ? m.texto : <Resposta texto={m.texto} />}
+                </div>
               </div>
             ))}
           </div>
@@ -114,10 +173,24 @@ const cabecalho: CSSProperties = { background: "var(--blue-800,#0e3a5f)", paddin
 const avatar: CSSProperties = { width: "34px", height: "34px", borderRadius: "50%", background: "var(--orange-500,#ec7a1c)", color: "#fff", fontWeight: 800, fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center" };
 const btnReiniciar: CSSProperties = { background: "rgba(255,255,255,.12)", border: "none", borderRadius: "8px", width: "30px", height: "30px", color: "rgba(255,255,255,.85)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" };
 const corpo: CSSProperties = { flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "10px", background: "var(--gray-50,#f7f9fc)" };
-const bolhaBase: CSSProperties = { maxWidth: "88%", padding: "10px 13px", borderRadius: "14px", fontSize: "13px", lineHeight: 1.5, whiteSpace: "pre-wrap" };
-const bolhaBot: CSSProperties = { ...bolhaBase, background: "#fff", color: "var(--gray-900,#12283a)", border: "1px solid var(--gray-200,#e3ebf3)", borderBottomLeftRadius: "4px" };
-const bolhaVoce: CSSProperties = { ...bolhaBase, background: "var(--blue-500,#1e6bb8)", color: "#fff", borderBottomRightRadius: "4px" };
-const chips: CSSProperties = { padding: "10px 12px", display: "flex", flexWrap: "wrap", gap: "7px", borderTop: "1px solid var(--gray-200,#e3ebf3)", background: "#fff", maxHeight: "120px", overflowY: "auto" };
+const bolhaBase: CSSProperties = { padding: "10px 13px", borderRadius: "14px", fontSize: "13px", lineHeight: 1.5 };
+// A bolha do bot é a que carrega ficha técnica e lista: 94% para a lista de embalagens não
+// quebrar em duas linhas por item. A da pessoa continua estreita — pergunta é curta, e a
+// assimetria é o que faz ler de relance quem falou.
+const bolhaBot: CSSProperties = { ...bolhaBase, maxWidth: "94%", background: "#fff", color: "var(--gray-900,#12283a)", border: "1px solid var(--gray-200,#e3ebf3)", borderBottomLeftRadius: "4px" };
+// `pre-wrap` fica só aqui: a resposta do bot é montada em <div> por linha pelo `Resposta`,
+// e manter pre-wrap lá somaria a quebra do \n à quebra do bloco (linha em branco dobrada).
+const bolhaVoce: CSSProperties = { ...bolhaBase, maxWidth: "88%", background: "var(--blue-500,#1e6bb8)", color: "#fff", borderBottomRightRadius: "4px", whiteSpace: "pre-wrap" };
+const forte: CSSProperties = { fontWeight: 650, color: "var(--blue-800,#0e3a5f)" };
+const tituloBloco: CSSProperties = { fontWeight: 700, fontSize: "13.5px", color: "var(--blue-800,#0e3a5f)", letterSpacing: "-.01em", marginBottom: "1px" };
+const paragrafo: CSSProperties = { marginBottom: "1px" };
+const itemLista: CSSProperties = { display: "flex", gap: "7px", alignItems: "baseline", marginBottom: "1px" };
+const marcadorBullet: CSSProperties = { color: "var(--orange-500,#ec7a1c)", fontWeight: 700, flex: "none", lineHeight: 1.5 };
+const marcadorNumero: CSSProperties = { color: "var(--orange-500,#ec7a1c)", fontWeight: 700, flex: "none", minWidth: "13px", fontSize: "12.5px", lineHeight: 1.55 };
+// 120px de sugestões (4 fileiras) num painel de 560px deixavam só 314px de leitura — menos
+// espaço para a RESPOSTA do que para os atalhos que levam a ela. Duas fileiras; o resto
+// continua acessível rolando, e a área de leitura ganha os 46px de volta.
+const chips: CSSProperties = { padding: "10px 12px", display: "flex", flexWrap: "wrap", gap: "7px", borderTop: "1px solid var(--gray-200,#e3ebf3)", background: "#fff", maxHeight: "74px", overflowY: "auto" };
 const chip: CSSProperties = { padding: "6px 11px", borderRadius: "999px", border: "1px solid var(--blue-200,#a8cbea)", background: "var(--blue-50,#eaf2fa)", color: "var(--blue-700,#134879)", fontSize: "12px", fontWeight: 500, cursor: "pointer", fontFamily: "inherit" };
 const formStyle: CSSProperties = { display: "flex", gap: "8px", padding: "10px 12px", borderTop: "1px solid var(--gray-200,#e3ebf3)", background: "#fff" };
 const inputBox: CSSProperties = { flex: 1, padding: "9px 12px", borderRadius: "10px", border: "1px solid var(--gray-300,#cbd7e3)", fontSize: "13px", fontFamily: "inherit", outline: "none", color: "var(--gray-900,#12283a)" };

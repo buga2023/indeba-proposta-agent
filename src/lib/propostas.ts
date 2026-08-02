@@ -4,7 +4,7 @@
 // (lib/log.ts) segue como auditoria imutável de cada PDF emitido (constituição §8).
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { produtoPorCodigo } from "@/lib/catalogo";
+import { produtoPorCodigoCompleto } from "@/lib/catalogo";
 import { imagemDaCotada } from "@/lib/imagem-produto";
 import {
   PropostaResumo,
@@ -76,24 +76,27 @@ function baseResumo(row: Row) {
 // (dado crítico vem sempre do catálogo). O auto-save da próxima edição regrava o registro.
 // Item próprio (fora do catálogo) e produto que saiu do catálogo ficam como estão: a
 // imagem deles não é derivável.
-export function comImagensDoCatalogo(scope: PropostaScope): PropostaScope {
+// Assíncrona desde o cadastro de produto pela tela: o catálogo tem duas fontes agora (JSON
+// versionado + Postgres), e produto cadastrado pela interface também precisa ter a imagem
+// recalculada — senão a proposta que o usa reabre com arte genérica.
+export async function comImagensDoCatalogo(scope: PropostaScope): Promise<PropostaScope> {
   let mudou = false;
-  const itens = scope.itens.map((it) => {
-    const p = produtoPorCodigo(it.codigo);
+  const itens = await Promise.all(scope.itens.map(async (it) => {
+    const p = await produtoPorCodigoCompleto(it.codigo);
     if (!p) return it;
     const imagemPath = imagemDaCotada(p, it.embalagens[0]);
     if (imagemPath === it.imagemPath) return it;
     mudou = true;
     return { ...it, imagemPath };
-  });
+  }));
   return mudou ? { ...scope, itens } : scope;
 }
 
 // Valida via Zod ao mapear — garante que o que sai do banco respeita o contrato.
 const mapearResumo = (row: Row): PropostaResumo => PropostaResumo.parse(baseResumo(row));
-const mapearRegistro = (row: Row): PropostaRegistro => {
+const mapearRegistro = async (row: Row): Promise<PropostaRegistro> => {
   const registro = PropostaRegistro.parse({ ...baseResumo(row), scope: row.scope });
-  return { ...registro, scope: comImagensDoCatalogo(registro.scope) };
+  return { ...registro, scope: await comImagensDoCatalogo(registro.scope) };
 };
 
 // Auto-save da proposta gerada/editada (upsert pelo id do scope). Na criação entra como
@@ -112,7 +115,7 @@ export async function salvarProposta(scope: PropostaScope, autor: string): Promi
     create: { id: scope.id, status: "rascunho", autor, ...dados },
     update: dados,
   });
-  return mapearRegistro(row);
+  return await mapearRegistro(row);
 }
 
 // Arquivada = tirada de circulação; não entra na listagem nem nos totais do painel a menos
@@ -155,7 +158,7 @@ export async function listarPropostas(
 
 export async function obterProposta(id: string): Promise<PropostaRegistro | null> {
   const row = await prisma.proposta.findUnique({ where: { id } });
-  return row ? mapearRegistro(row) : null;
+  return row ? await mapearRegistro(row) : null;
 }
 
 // Só o dono, sem carregar a proposta. O gate de autoria (ver /api/propostas e
@@ -171,5 +174,5 @@ export async function autorDaProposta(id: string): Promise<string | null> {
 
 export async function atualizarStatusProposta(id: string, status: StatusProposta): Promise<PropostaRegistro> {
   const row = await prisma.proposta.update({ where: { id }, data: { status } });
-  return mapearRegistro(row);
+  return await mapearRegistro(row);
 }

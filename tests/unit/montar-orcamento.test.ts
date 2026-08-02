@@ -3,8 +3,10 @@ import { montarPropostaEstruturada } from "@/lib/montar";
 import { EntradaEstruturada } from "@/lib/contracts";
 
 // Catálogo SEM preço (fonte de produto; o valor vem do orçamento importado).
-const { carregarCatalogo } = vi.hoisted(() => ({
-  carregarCatalogo: vi.fn(() => ({
+// `catalogoCompleto` é a leitura que une JSON + produtos cadastrados pela tela — é ela que
+// `montar.ts` usa desde o cadastro pela interface (docs/spec-cadastro-produto.md).
+const { catalogoCompleto } = vi.hoisted(() => ({
+  catalogoCompleto: vi.fn(async () => ({
     marca: "indeba_express" as const,
     produtos: [
       {
@@ -25,7 +27,7 @@ const { carregarCatalogo } = vi.hoisted(() => ({
     ],
   })),
 }));
-vi.mock("@/lib/catalogo", () => ({ carregarCatalogo }));
+vi.mock("@/lib/catalogo", () => ({ catalogoCompleto, produtoPorCodigo: () => undefined }));
 
 const entrada = (itens: unknown[]) =>
   EntradaEstruturada.parse({

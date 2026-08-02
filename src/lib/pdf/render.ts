@@ -176,13 +176,33 @@ export function montarDocumento(
   }
 }
 
+// Produto cadastrado pela tela guarda a foto no Postgres, não em public/ — o `imagemPath`
+// dele é a rota que serve os bytes. `dentroDePublic` (com razão) rejeita esse caminho, então
+// sem isto o produto novo sairia no PDF com a arte genérica, apesar de ter foto cadastrada.
+// O PDF é montado no servidor, então dá para ler do banco direto, sem passar pela rota.
+async function dataUriDoBanco(caminho: string): Promise<string> {
+  const { codigoDaRotaDeImagem, imagemDoProduto } = await import("@/lib/produto-custom");
+  const codigo = codigoDaRotaDeImagem(caminho);
+  if (!codigo) return "";
+  try {
+    const img = await imagemDoProduto(codigo);
+    return img ? `data:${img.mime};base64,` + img.bytes.toString("base64") : "";
+  } catch {
+    return ""; // banco fora do ar: cai no genérico, o PDF continua saindo
+  }
+}
+
 // PropostaScope → HTML → Chromium headless → PDF (motor estilo editorial-pdf).
 export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
   // Foto vem da base (catálogo). Enquanto faltar, cai no placeholder — nunca quebra.
   const generico = dataUri("/produtos/_generico.svg");
   const imagens: Record<string, string> = {};
   for (const item of scope.itens) {
-    imagens[chaveImagem(item)] = (await resolverImagemProduto(item.imagemPath)) || dataUri(item.imagemPath) || generico;
+    imagens[chaveImagem(item)] =
+      (await resolverImagemProduto(item.imagemPath)) ||
+      dataUri(item.imagemPath) ||
+      (await dataUriDoBanco(item.imagemPath)) ||
+      generico;
   }
   const banner = dataUri("/marca/header-ies.png");
 

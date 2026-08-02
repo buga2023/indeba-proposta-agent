@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extrairTextoContrato } from "@/lib/contrato/extrair-texto";
 import { estruturarOrcamento, matchCatalogo } from "@/lib/orcamento/importar";
-import { carregarCatalogo } from "@/lib/catalogo";
+import { catalogoCompleto } from "@/lib/catalogo";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     // fluxo NUNCA vem do catálogo — vem do próprio orçamento, já validado por
     // precoConstaNoTexto(). Filtrar por `ativo` só esconderia foto/ficha de produtos
     // reais (a maior parte do catálogo hoje) sem nenhum ganho de segurança de preço.
-    const produtos = carregarCatalogo().produtos;
+    const produtos = (await catalogoCompleto()).produtos;
     const itens = extraido.itens.map((it) => {
       const p = matchCatalogo(it.nome, produtos);
       return { ...it, codigoCatalogo: p?.codigo ?? null, nomeCatalogo: p?.nome ?? null };

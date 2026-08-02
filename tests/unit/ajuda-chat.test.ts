@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { carregarCatalogo } from "@/lib/catalogo";
-import { responder, preco, SUGESTOES } from "@/components/ajuda-chat-logic";
+import { responder, preco, SUGESTOES, FAQ, WELCOME, NAO_SEI } from "@/components/ajuda-chat-logic";
 
 // O assistente é DETERMINÍSTICO e aterrado no catálogo. Garante: preço sempre real
 // (constituição §1.2), respostas batem com o catálogo, e quando não sabe → null
@@ -102,5 +102,47 @@ describe("assistente de ajuda — aterrado no catálogo", () => {
     const r = responder("quais são os preços?", produtos)!;
     expect(r).toMatch(/não guarda preço|nao guarda preco/i);
     expect(r).not.toMatch(/R\$ \d/);
+  });
+});
+
+// A marcação (**negrito**, "• ", "1. ") é escrita à mão em dezenas de strings e desenhada
+// por `Resposta` em ajuda-chat.tsx. Um `**` sem par não quebra build nem teste de conteúdo:
+// vira DOIS ASTERISCOS LITERAIS na bolha, e só o vendedor descobre. Estes testes são o par
+// de olhos que ninguém tem na hora de editar uma resposta.
+describe("assistente de ajuda — marcação das respostas", () => {
+  const produtos = carregarCatalogo().produtos;
+  const emitidas = () => [
+    WELCOME,
+    NAO_SEI,
+    ...FAQ.map((f) => f.a),
+    responder("primmax plus", produtos)!, // ficha completa
+    responder("quanto custa o primmax plus?", produtos)!, // preço por embalagem
+    responder("ver todos os produtos", produtos)!, // resumo por linha
+    responder("algo para desengordurar louça", produtos)!, // lista por necessidade
+    responder("vocês têm ração para gato?", produtos) ?? "", // "não temos"
+  ];
+
+  it("todo ** tem par — nenhum asterisco vaza para a tela", () => {
+    for (const s of emitidas()) {
+      expect((s.match(/\*\*/g) ?? []).length % 2, `marcação ímpar em: ${s.slice(0, 60)}…`).toBe(0);
+    }
+  });
+
+  it("negrito nunca fica vazio nem atravessa quebra de linha", () => {
+    for (const s of emitidas()) {
+      expect(s, `negrito vazio em: ${s.slice(0, 60)}…`).not.toMatch(/\*\*\*\*/);
+      for (const linha of s.split("\n")) {
+        expect((linha.match(/\*\*/g) ?? []).length % 2, `negrito aberto e não fechado na linha: ${linha}`).toBe(0);
+      }
+    }
+  });
+
+  it("marcador de lista sempre vem com espaço — senão o renderizador não o reconhece", () => {
+    for (const s of emitidas()) {
+      for (const linha of s.split("\n")) {
+        if (linha.startsWith("•")) expect(linha, `bullet sem espaço: ${linha}`).toMatch(/^• \S/);
+        if (/^\d+\./.test(linha)) expect(linha, `item numerado sem espaço: ${linha}`).toMatch(/^\d+\. \S/);
+      }
+    }
   });
 });

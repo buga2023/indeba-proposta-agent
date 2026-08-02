@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { carregarCatalogo } from "@/lib/catalogo";
+import { catalogoCompleto } from "@/lib/catalogo";
+import { prisma } from "@/lib/db";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
@@ -13,10 +14,27 @@ export const runtime = "nodejs";
 // FichaProduto são opcionais, então o recorte continua válido no contrato.
 // Memoizado: `carregarCatalogo` já cacheia em processo, então o mapa roda uma vez por
 // instância, não a cada request. Nunca mutar o objeto do cache — daí o spread.
-let cache: { corpo: string; etag: string } | null = null;
-function catalogoParaCliente() {
-  if (cache) return cache;
-  const catalogo = carregarCatalogo();
+//
+// Com o cadastro pela tela o catálogo deixou de ser imutável entre deploys, e um cache
+// puro esconderia o produto recém-cadastrado até o próximo redeploy — o gestor salvaria,
+// não veria nada e cadastraria de novo. A chave é uma ASSINATURA barata da segunda fonte
+// (quantos produtos e quando o último mudou): uma agregação que o Postgres responde pelo
+// índice, e que muda a cada cadastro, edição ou remoção.
+let cache: { corpo: string; etag: string; assinatura: string } | null = null;
+
+async function assinaturaCustom(): Promise<string> {
+  try {
+    const r = await prisma.produtoCustom.aggregate({ _count: { _all: true }, _max: { atualizadoEm: true } });
+    return `${r._count._all}:${r._max.atualizadoEm?.getTime() ?? 0}`;
+  } catch {
+    return "indisponivel"; // banco fora: `catalogoCompleto` degrada para o JSON
+  }
+}
+
+async function catalogoParaCliente() {
+  const assinatura = await assinaturaCustom();
+  if (cache && cache.assinatura === assinatura) return cache;
+  const catalogo = await catalogoCompleto();
   const corpo = JSON.stringify({
     ...catalogo,
     produtos: catalogo.produtos.map((p) => ({
@@ -24,7 +42,7 @@ function catalogoParaCliente() {
       ficha: p.ficha ? { titulo: p.ficha.titulo, descricao: p.ficha.descricao } : p.ficha,
     })),
   });
-  cache = { corpo, etag: `"${createHash("sha1").update(corpo).digest("base64url")}"` };
+  cache = { corpo, etag: `"${createHash("sha1").update(corpo).digest("base64url")}"`, assinatura };
   return cache;
 }
 
@@ -32,7 +50,7 @@ function catalogoParaCliente() {
 // Leitura para a tela de Catálogo; preço/embalagem nunca vêm da IA (constituição §1).
 export async function GET(req: NextRequest) {
   try {
-    const { corpo, etag } = catalogoParaCliente();
+    const { corpo, etag } = await catalogoParaCliente();
 
     // Revalidação por ETag em vez de janela de tempo. A primeira tentativa foi
     // `max-age=300`, e ela mordeu na hora de validar um deploy: o catálogo mudou, o

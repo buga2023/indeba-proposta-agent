@@ -95,6 +95,29 @@ model Config {
 /// de ADMIN_EMAILS (env) no momento do cadastro. Nome/e-mail alimentam a proposta
 /// (consultor/contato — ver src/lib/montar.ts). `telefone` é editável pelo próprio
 /// colaborador (/api/perfil) ou pelo gestor (/api/colaboradores, painel de admin).
+/// Produto cadastrado PELA TELA (o gestor, em Catálogo → Novo produto). Os 150 produtos da
+/// base INDEBA/PRATT continuam em data/catalogo.json: a função da Vercel é somente-leitura,
+/// então gravar naquele arquivo em produção é impossível. `catalogoCompleto()` une as duas
+/// fontes — ver docs/spec-cadastro-produto.md.
+///
+/// `dados` é o contrato Produto (Zod) inteiro em JSON, validado na entrada e na leitura:
+/// mesmo formato do JSON, então todo consumidor (vitrine, matcher, RAG, PDF) trata igual.
+/// Foto e ficha vão como bytes na própria linha em vez de um serviço de storage — para
+/// dezenas de produtos é suficiente, e as rotas /api/produtos/<codigo>/imagem|ficha servem
+/// o conteúdo. Se o volume crescer, só estas colunas e aquelas rotas mudam.
+model ProdutoCustom {
+  id           String   @id @default(cuid())
+  codigo       String   @unique
+  dados        Json
+  imagem       Bytes
+  imagemMime   String
+  ficha        Bytes?
+  fichaMime    String?
+  autor        String // e-mail do gestor que cadastrou (dado crítico vem da sessão)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
+
 /// `acesso` é o portão de entrada, separado de `papel` (que é o que a pessoa pode fazer
 /// DEPOIS de entrar): cadastro próprio é aberto, então quem se cadastra nasce `pendente` e
 /// só passa do login quando o gestor aprova no painel de Configurações.
