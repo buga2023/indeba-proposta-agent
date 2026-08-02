@@ -1,5 +1,9 @@
 # Cadastro de produto pela interface — 01/08/2026
 
+> Documento de **projeto** (o porquê das decisões). Para o funcionamento na prática — como
+> cadastrar, o que cada campo faz, por onde o produto se propaga e o que já foi verificado —
+> ver [`como-funciona-catalogo-e-cadastro.md`](como-funciona-catalogo-e-cadastro.md).
+
 O botão "Novo produto" existia desabilitado desde o MVP (*"em breve"*). O Mateus pediu no
 vídeo de validação: *"nas configurações depois você vai abrir a questão de adicionar produto"*.
 

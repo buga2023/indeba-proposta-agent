@@ -200,6 +200,10 @@ corta a função em 60s, então geração pesada em CPU pode estourar o limite �
 robusto de verdade é hospedar tudo numa VPS. O skill `/deploy-prod` e os arquivos em
 `docs/` guardam o passo a passo e as armadilhas já resolvidas.
 
+O catálogo é o dado do qual saem preço, ficha, foto e o produto que vai na proposta — como
+ele funciona, como se cadastra produto novo pela tela e por onde ele se propaga está em
+[`docs/como-funciona-catalogo-e-cadastro.md`](docs/como-funciona-catalogo-e-cadastro.md).
+
 ## Princípios
 
 1. Backbone determinístico, IA como tempero.
@@ -210,5 +214,3 @@ robusto de verdade é hospedar tudo numa VPS. O skill `/deploy-prod` e os arquiv
 6. A IA é sempre revisável antes do export.
 7. Procedência em todo item.
 8. Log append-only de toda proposta gerada.
-</content>
-</invoke>
