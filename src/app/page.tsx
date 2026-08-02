@@ -350,10 +350,9 @@ const CMD_ITEMS: PaletteItem[] = [
 // lista base e entra só para admin — esconder no menu e deixar na paleta seria o mesmo que
 // não esconder: Ctrl+K chega na tela do mesmo jeito.
 const CMD_ITEM_CONFIG: PaletteItem = { key: "config", label: "Configurações" };
-// Cobrança segue a mesma regra: tela de gestor, então entra na paleta só para admin. Ficava
-// fora das duas listas porque a única porta era o sino do header — agora que ela tem item no
-// menu, deixá-la fora do ⌘K só faria o gestor não achar pelo caminho que ele mais usa.
-const CMD_ITEM_COBRANCA: PaletteItem = { key: "cobranca", label: "Cobrança" };
+// Cobrança fica fora da paleta também — ela não tem entrada nenhuma na interface (ver o
+// comentário na seção Sistema da sidebar). Deixá-la no ⌘K seria reabrir pela janela a porta
+// que se fechou.
 
 /* ───────────────────────── componente principal ───────────────────────── */
 
@@ -877,19 +876,11 @@ export default function Home() {
           {ehAdmin && (
             <>
               <div className="ies-side-text" style={navSection}>Sistema</div>
-              {/* Cobrança ganhou porta própria. Antes ela não estava no menu nem na paleta, e
-                  a única entrada era o sino de notificações do header — um ícone que promete
-                  "avisos" e entregava a régua de inadimplência. Quem clicava caía numa tela
-                  que não pediu, e quem PROCURAVA a tela não tinha onde clicar. Tela que existe
-                  precisa de porta com o nome dela. Só gestor, mesma regra de Configurações —
-                  o gate de verdade continua em /api/cobranca. */}
-              <Hoverable base={navItemStyle(["cobranca"])} hover={navHover} onClick={() => irPara("cobranca")} title="Cobrança — régua de inadimplência">
-                <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8.5 2.5v12" />
-                  <path d="M11.5 5H7a1.75 1.75 0 000 3.5h3a1.75 1.75 0 010 3.5H5" />
-                </svg>
-                Cobrança
-              </Hoverable>
+              {/* Cobrança NÃO tem entrada na interface (decisão do Gustavo, 02/08/2026). Teve
+                  item aqui por algumas horas, junto com a remoção do sino que era a porta
+                  antiga; ele pediu para tirar também. A tela e a rota continuam no código e
+                  funcionando — o que saiu foi o acesso pela navegação. Se voltar a ser usada,
+                  o item volta aqui dentro deste bloco de admin. */}
               <Hoverable base={navItemStyle(["config"])} hover={navHover} onClick={() => irPara("config")} title="Configurações">
                 <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="8.5" cy="8.5" r="2.25" />
@@ -1027,7 +1018,7 @@ export default function Home() {
         onClose={() => setPalette(false)}
         items={[
           ...CMD_ITEMS,
-          ...(ehAdmin ? [CMD_ITEM_CONFIG, CMD_ITEM_COBRANCA] : []),
+          ...(ehAdmin ? [CMD_ITEM_CONFIG] : []),
           ...(catalogo ?? []).map((p) => ({
             key: `produto:${p.codigo}`,
             label: p.nome,

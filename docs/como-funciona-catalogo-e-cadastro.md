@@ -151,5 +151,11 @@ não resolve: ninguém passa o mouse antes de clicar, e no celular não existe h
 **Ícone tem que corresponder ao destino.** O sino de notificações do header levava à régua
 de inadimplência e não notificava nada — existia só porque Cobrança não tinha entrada no
 menu. Uma tela sem porta com o nome dela empurra a navegação para o primeiro ícone
-disponível, e o ícone errado vira navegação oficial. Desde 02/08/2026 Cobrança é item da
-seção Sistema (gestor apenas, igual a Configurações) e o sino saiu.
+disponível, e o ícone errado vira navegação oficial.
+
+Em 02/08/2026 o sino saiu. Cobrança chegou a ganhar item próprio na seção Sistema, mas o
+Gustavo pediu para tirar também: hoje ela **não tem nenhuma entrada na interface** — nem
+menu, nem paleta ⌘K. A tela (`CobrancaScreen`) e as rotas (`/api/cobranca` e
+`/api/cobranca/disparar`, ambas exigindo admin) continuam no código e funcionando; o que
+não existe é caminho de clique até lá. Para reativar, basta devolver o item ao bloco
+`{ehAdmin && …}` da sidebar.
