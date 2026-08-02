@@ -108,9 +108,12 @@ recalcula enquanto o código existir.
 
 ## 6. Estado verificado em produção (02/08/2026)
 
-- Tabela `ProdutoCustom` **existe e está vazia** — `GET /api/produtos` responde 200 com
-  `{"produtos":[]}`. Se a migração não tivesse rodado, o Prisma quebraria e a rota daria
-  500. Ninguém cadastrou produto pela tela em produção ainda.
+- Tabela `ProdutoCustom` **existe e funciona** — `GET /api/produtos` responde 200. Se a
+  migração não tivesse rodado, o Prisma quebraria e a rota daria 500.
+- **O caminho de escrita foi exercitado em produção** (02/08/2026): cadastro completo pela
+  tela com foto e PDF (`ZZ-TESTE-CLAUDE`), catálogo 150 → 151, imagem e ficha servindo 200,
+  a tela de montagem enxergando o produto **sem F5**, e remoção depois — voltando a 150 e à
+  tabela vazia. O catálogo real não ficou com resíduo.
 - 150 produtos (todos do JSON), 13 propostas.
 - 9 pessoas: 2 gestores, 7 vendedores; 6 liberados, 3 revogados.
 - Todas as telas renderizam sem erro de JavaScript; todas as chamadas de API em 200.
@@ -144,3 +147,9 @@ Filtre por visibilidade ou pelo `title`.
 **Botão sem `onClick` é indistinguível de bug.** Foi o que gerou "o botão não está
 funcionando". Se um controle não pode agir, ele precisa dizer por quê no clique — `title`
 não resolve: ninguém passa o mouse antes de clicar, e no celular não existe hover.
+
+**Ícone tem que corresponder ao destino.** O sino de notificações do header levava à régua
+de inadimplência e não notificava nada — existia só porque Cobrança não tinha entrada no
+menu. Uma tela sem porta com o nome dela empurra a navegação para o primeiro ícone
+disponível, e o ícone errado vira navegação oficial. Desde 02/08/2026 Cobrança é item da
+seção Sistema (gestor apenas, igual a Configurações) e o sino saiu.
