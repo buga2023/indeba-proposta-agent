@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { StatusUpdate } from "@/lib/contracts";
-import { usuarioAtual } from "@/lib/auth";
+import { usuarioAtual } from "@/lib/auth-db";
 import { obterProposta, autorDaProposta, atualizarStatusProposta } from "@/lib/propostas";
 import { respostaErro } from "@/lib/erro";
 

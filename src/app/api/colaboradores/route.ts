@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { validarSessao } from "@/lib/auth";
+import { usuarioAtual } from "@/lib/auth-db";
 import { listarColaboradores, atualizarColaborador } from "@/lib/auth-db";
 
 export const runtime = "nodejs";
 
 // Lista/edita colaboradores (painel de admin) — só o gestor. Mesmo padrão de
 // autorização de /api/contatos.
+// `usuarioAtual` (auth-db) e não `validarSessao`: o papel vem do BANCO, não do cookie. Com
+// o cookie, quem acabou de ser promovido continuaria levando 403 aqui até sair e entrar de
+// novo — e é justamente este o painel onde a promoção acontece.
 async function exigirGestor(req: NextRequest) {
-  const sessao = await validarSessao(req.cookies.get("sessao")?.value);
+  const sessao = await usuarioAtual(req);
   if (!sessao) return { erro: NextResponse.json({ erro: "Não autenticado." }, { status: 401 }), sessao: null };
   if (sessao.papel !== "admin") return { erro: NextResponse.json({ erro: "Só o gestor acessa o cadastro." }, { status: 403 }), sessao: null };
   return { erro: null, sessao };

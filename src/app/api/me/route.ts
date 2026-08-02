@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authAtiva, validarSessao } from "@/lib/auth";
-import { acessoDe } from "@/lib/auth-db";
+import { estadoDaConta } from "@/lib/auth-db";
 
 export const runtime = "nodejs";
 
@@ -18,14 +18,19 @@ export async function GET(req: NextRequest) {
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
 
   // O cookie é autocontido e vale 8h sem tocar o banco — ótimo para não consultar Postgres
-  // a cada request, ruim na hora de TIRAR acesso: revogar no painel não derrubaria quem já
-  // está logado, e a pessoa seguiria usando o sistema até a sessão expirar. Esta é a única
-  // consulta, uma por carregamento do app, e é ela que fecha a janela — quem perdeu o
-  // acesso cai no login na próxima navegação, com o cookie já apagado.
-  if ((await acessoDe(usuario.email)) !== "aprovado") {
+  // a cada request, ruim quando o poder da pessoa MUDA no meio da sessão. Uma consulta por
+  // carregamento resolve as duas pontas:
+  //
+  //  - acesso revogado derruba na hora, em vez de valer até a sessão expirar;
+  //  - o PAPEL sai do banco, não do que o cookie carimbou no login. Sem isso, promover
+  //    alguém no painel (ou entrar em ADMIN_EMAILS) só surtia efeito depois de sair e
+  //    entrar de novo — e como sem ser gestor a pessoa não vê o painel nem o botão de
+  //    cadastrar produto, o sintoma era "não funciona", sem pista do que fazer.
+  const estado = await estadoDaConta(usuario.email);
+  if (!estado || estado.acesso !== "aprovado") {
     const res = NextResponse.json({ erro: "Acesso não liberado." }, { status: 401 });
     res.cookies.delete("sessao");
     return res;
   }
-  return NextResponse.json(usuario);
+  return NextResponse.json({ ...usuario, papel: estado.papel });
 }

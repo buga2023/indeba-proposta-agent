@@ -9,7 +9,7 @@ const autorDaProposta = vi.fn();
 const atualizarStatusProposta = vi.fn();
 const salvarProposta = vi.fn();
 
-vi.mock("@/lib/auth", () => ({ usuarioAtual: (req: NextRequest) => usuarioAtual(req) }));
+vi.mock("@/lib/auth-db", () => ({ usuarioAtual: (req: NextRequest) => usuarioAtual(req) }));
 vi.mock("@/lib/propostas", () => ({
   listarPropostas: (...a: unknown[]) => listarPropostas(...a),
   obterProposta: (...a: unknown[]) => obterProposta(...a),

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PropostaScope } from "@/lib/contracts";
-import { usuarioAtual } from "@/lib/auth";
+import { usuarioAtual } from "@/lib/auth-db";
 import { listarPropostas, autorDaProposta, salvarProposta } from "@/lib/propostas";
 import { respostaErro } from "@/lib/erro";
 

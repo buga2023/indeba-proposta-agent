@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { usuarioAtual } from "@/lib/auth";
+import { usuarioAtual } from "@/lib/auth-db";
 import { Produto } from "@/lib/contracts";
 import { prisma } from "@/lib/db";
 import { carregarCatalogo } from "@/lib/catalogo";

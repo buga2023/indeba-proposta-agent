@@ -149,3 +149,44 @@ describe("2. O gestor consegue dar poder de gestor a outra pessoa?", () => {
     expect(api.status).toBe(403);
   });
 });
+
+// REGRESSÃO (02/08/2026): em produção o gestor relatou que "Novo produto" não funcionava e
+// que não conseguia passar admin para ninguém. Os dois sintomas eram o mesmo: o papel vinha
+// do cookie assinado, que dura 8h — promover alguém (ou entrar em ADMIN_EMAILS) só valia
+// depois de sair e entrar de novo. E como sem ser gestor a pessoa não vê o painel nem o
+// botão, o sintoma era "não funciona", sem pista do que fazer. Agora o papel vem do banco.
+describe("3. Mudança de papel vale na MESMA sessão, sem relogar", () => {
+  it("promovido no banco vira gestor na próxima navegação, com o cookie ANTIGO de vendedor", async () => {
+    await prisma.usuario.update({ where: { email: VENDEDOR.email }, data: { papel: "admin" } });
+    try {
+      // cookie emitido como `user` — é o que a pessoa já tem no navegador
+      const page = await abrirComo(VENDEDOR);
+      await page.goto(BASE, { waitUntil: "networkidle" });
+      await page.locator("text=Administrador").first().waitFor({ timeout: 30_000 });
+      const corpo = await page.locator("body").innerText();
+      expect(corpo, "o painel do gestor aparece sem relogar").toContain("Configurações");
+      await page.close();
+
+      // e a API concorda com a tela — senão o botão apareceria e o pedido levaria 403
+      const r = await fetch(`${BASE}/api/colaboradores`, {
+        headers: { Cookie: `sessao=${await criarSessao(VENDEDOR)}` },
+      });
+      expect(r.status, "API e tela têm que dizer a mesma coisa").toBe(200);
+    } finally {
+      await prisma.usuario.update({ where: { email: VENDEDOR.email }, data: { papel: "user" } });
+    }
+  }, 60_000);
+
+  it("rebaixado perde o painel na próxima navegação, mesmo com cookie de admin", async () => {
+    const page = await abrirComo({ ...VENDEDOR, papel: "admin" }); // cookie diz admin
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.locator("text=Vendedor").first().waitFor({ timeout: 30_000 });
+    expect(await page.locator("body").innerText()).not.toContain("Configurações");
+    await page.close();
+
+    const r = await fetch(`${BASE}/api/produtos`, {
+      headers: { Cookie: `sessao=${await criarSessao({ ...VENDEDOR, papel: "admin" })}` },
+    });
+    expect(r.status, "cookie de admin não vale se o banco diz vendedor").toBe(403);
+  }, 60_000);
+});

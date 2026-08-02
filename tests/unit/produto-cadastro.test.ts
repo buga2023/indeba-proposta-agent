@@ -14,7 +14,7 @@ const { usuarioAtual, create, findMany, carregarCatalogo, listarProdutosCustom }
   listarProdutosCustom: vi.fn(),
 }));
 
-vi.mock("@/lib/auth", () => ({ usuarioAtual }));
+vi.mock("@/lib/auth-db", () => ({ usuarioAtual }));
 vi.mock("@/lib/db", () => ({ prisma: { produtoCustom: { create, findMany } } }));
 vi.mock("@/lib/catalogo", () => ({ carregarCatalogo }));
 vi.mock("@/lib/produto-custom", () => ({ listarProdutosCustom }));

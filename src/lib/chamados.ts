@@ -4,7 +4,8 @@ import { Chamado, type ChamadoCreate, type ChamadoUpdate } from "@/lib/contracts
 // `usuarioAtual`/`SessaoUsuario` moraram aqui até 01/08/2026, quando a listagem de propostas
 // passou a precisar do mesmo escopo por autor. São de autenticação, não de chamados — foram
 // para lib/auth.ts. O reexport mantém quem já importava daqui.
-export { usuarioAtual, type SessaoUsuario } from "@/lib/auth";
+export { usuarioAtual } from "@/lib/auth-db";
+export type { SessaoUsuario } from "@/lib/auth";
 import type { SessaoUsuario } from "@/lib/auth";
 
 // Linha do Prisma → contrato Chamado (datas em ISO; valida os enums via Zod).

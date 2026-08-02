@@ -2,7 +2,7 @@
 // próprio: o colaborador entra com nome/e-mail/senha (model Usuario, Prisma). O papel
 // (admin/user) é decidido aqui, na criação da conta, por ADMIN_EMAILS (env).
 import { prisma } from "@/lib/db";
-import { gerarCredencial, validarHash, type Acesso, type Papel, type Usuario } from "@/lib/auth";
+import { gerarCredencial, sessaoDoRequest, validarHash, type Acesso, type Papel, type SessaoUsuario, type Usuario } from "@/lib/auth";
 
 export class EmailEmUsoError extends Error {
   constructor() {
@@ -82,6 +82,46 @@ export async function validarCredenciais(email: string, senha: string): Promise<
 export async function acessoDe(email: string): Promise<Acesso | null> {
   const u = await prisma.usuario.findUnique({ where: { email }, select: { acesso: true } });
   return (u?.acesso as Acesso) ?? null;
+}
+
+// Estado ATUAL da conta, do banco — não o que o cookie carimbou na hora do login.
+//
+// O papel viaja assinado no cookie e vale 8h, e isso transformava toda mudança de poder em
+// "saia e entre de novo": promovido pelo painel continuava vendo tela de vendedor, e quem
+// entrou em ADMIN_EMAILS não virava gestor até relogar — com o agravante de que, sem ser
+// gestor, a pessoa não vê o painel nem o botão de cadastrar produto, então o sintoma é
+// "não funciona" sem pista nenhuma. Aqui o banco é a fonte da verdade, e /api/me devolve
+// isso a cada carregamento: mudou o papel, a próxima navegação já reflete.
+//
+// O bootstrap de ADMIN_EMAILS também roda aqui, e não só no login, pela mesma razão.
+// Quem está pedindo, AUTORITATIVO: identidade do cookie, papel do banco.
+//
+// É por aqui que toda rota que decide por papel deve entrar. O cookie é assinado e vale 8h,
+// então o papel carimbado nele envelhece: promover alguém no painel não teria efeito até a
+// pessoa sair e entrar de novo — e como sem ser gestor ela não vê o painel nem o botão de
+// cadastrar produto, o sintoma seria "não funciona", sem pista do que fazer.
+//
+// Custa uma busca por índice único por request. Vale: o preço de errar aqui é uma tela que
+// promete um poder que a API nega, ou o contrário.
+export async function usuarioAtual(
+  req: { cookies: { get(n: string): { value: string } | undefined } },
+): Promise<SessaoUsuario | null> {
+  const s = await sessaoDoRequest(req);
+  if (!s) return null;
+  const estado = await estadoDaConta(s.email).catch(() => null);
+  // Banco fora do ar ou conta ainda não persistida (dev local): mantém o papel do cookie em
+  // vez de derrubar o pedido — degradar para "menos poder" trancaria o gestor para fora.
+  return estado ? { email: s.email, papel: estado.papel } : s;
+}
+
+export async function estadoDaConta(email: string): Promise<{ papel: Papel; acesso: Acesso } | null> {
+  const u = await prisma.usuario.findUnique({ where: { email }, select: { papel: true, acesso: true } });
+  if (!u) return null;
+  if (ehAdminPorEnv(email) && (u.papel !== "admin" || u.acesso !== "aprovado")) {
+    await prisma.usuario.update({ where: { email }, data: { papel: "admin", acesso: "aprovado" } });
+    return { papel: "admin", acesso: "aprovado" };
+  }
+  return { papel: u.papel as Papel, acesso: u.acesso as Acesso };
 }
 
 export type Colaborador = { nome: string; email: string; papel: Papel; acesso: Acesso; telefone: string | null; criadoEm: string };

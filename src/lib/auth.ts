@@ -128,16 +128,16 @@ export async function validarSessao(cookie: string | undefined, agora = Date.now
   return { email: dados.email, nome: dados.nome ?? "", papel: dados.papel };
 }
 
-// Quem está pedindo: e-mail + papel (gestor = admin). Em dev local sem auth, vira admin
-// "local" pra não travar o uso. Com auth ativa e sem sessão válida → null (401 na rota).
+// Quem está pedindo, SEGUNDO O COOKIE. Em dev local sem auth, vira admin "local" pra não
+// travar o uso. Com auth ativa e sem sessão válida → null (401 na rota).
 //
-// Toda rota que decide POR PAPEL — autorizar o gestor, escopar a listagem por autor —
-// entra por aqui e não por validarSessao direto: `validarSessao` não conhece AUTH_ENABLED e
-// devolve null em dev local, e um gate escrito sobre esse null ou trava o dev inteiro ou
-// abre demais sem querer. Vivia em lib/chamados.ts, onde nunca teve nada a ver com chamados.
+// Edge-safe (este arquivo é importado pelo middleware, que não pode tocar o banco). Rota
+// que decide por papel deve usar `usuarioAtual` de lib/auth-db.ts, que confirma o papel no
+// banco: o cookie é assinado e vale 8h, então o papel gravado nele envelhece — promover
+// alguém no painel não valeria até a pessoa sair e entrar de novo.
 export type SessaoUsuario = { email: string; papel: Papel };
 
-export async function usuarioAtual(req: { cookies: { get(n: string): { value: string } | undefined } }): Promise<SessaoUsuario | null> {
+export async function sessaoDoRequest(req: { cookies: { get(n: string): { value: string } | undefined } }): Promise<SessaoUsuario | null> {
   const u = await validarSessao(req.cookies.get("sessao")?.value);
   if (u) return { email: u.email, papel: u.papel };
   if (!authAtiva()) return { email: "local", papel: "admin" };

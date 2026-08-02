@@ -10,6 +10,8 @@ import { AcessoPendenteError } from "@/lib/auth-db";
 const validarCredenciais = vi.fn();
 const acessoDe = vi.fn();
 const validarSessao = vi.fn();
+const estadoDaConta = vi.fn();
+const usuarioAtualDb = vi.fn();
 const listarColaboradores = vi.fn();
 const atualizarColaborador = vi.fn();
 
@@ -17,6 +19,10 @@ vi.mock("@/lib/auth-db", async (original) => ({
   ...(await original<typeof import("@/lib/auth-db")>()),
   validarCredenciais: (...a: unknown[]) => validarCredenciais(...a),
   acessoDe: (...a: unknown[]) => acessoDe(...a),
+  // papel/acesso vêm do BANCO desde 01/08/2026 — o cookie envelhecia e promoção só valia
+  // depois de relogar (ver estadoDaConta/usuarioAtual em lib/auth-db.ts).
+  estadoDaConta: (...a: unknown[]) => estadoDaConta(...a),
+  usuarioAtual: (...a: unknown[]) => usuarioAtualDb(...a),
   listarColaboradores: (...a: unknown[]) => listarColaboradores(...a),
   atualizarColaborador: (...a: unknown[]) => atualizarColaborador(...a),
 }));
@@ -37,7 +43,10 @@ const reqPatch = (body: unknown) =>
 const GESTOR = { email: "gestor@indeba.com", nome: "Gestor", papel: "admin" as const };
 
 beforeEach(() => {
-  for (const m of [validarCredenciais, acessoDe, validarSessao, listarColaboradores, atualizarColaborador]) m.mockReset();
+  for (const m of [validarCredenciais, acessoDe, validarSessao, estadoDaConta, usuarioAtualDb, listarColaboradores, atualizarColaborador]) m.mockReset();
+  // por padrão a conta existe, está aprovada e o papel é o da sessão
+  estadoDaConta.mockImplementation(async () => ({ papel: "user", acesso: "aprovado" }));
+  usuarioAtualDb.mockImplementation(async () => await validarSessao());
   process.env.AUTH_SESSION_SECRET = "segredo-de-teste";
 });
 
@@ -78,7 +87,7 @@ describe("login — sem liberação do gestor, ninguém entra", () => {
 describe("/api/me — revogar tem que derrubar quem já está logado", () => {
   it("401 e cookie apagado quando o acesso foi revogado durante a sessão", async () => {
     validarSessao.mockResolvedValue({ email: "a@indeba.com", nome: "A", papel: "user" });
-    acessoDe.mockResolvedValue("bloqueado");
+    estadoDaConta.mockResolvedValue({ papel: "user", acesso: "bloqueado" });
     const r = await ME(reqCookie());
     expect(r.status).toBe(401);
     expect(r.cookies.get("sessao")?.value, "o cookie tem que ser limpo").toBeFalsy();
@@ -86,13 +95,13 @@ describe("/api/me — revogar tem que derrubar quem já está logado", () => {
 
   it("401 quando a conta ainda está pendente", async () => {
     validarSessao.mockResolvedValue({ email: "novo@indeba.com", nome: "Novo", papel: "user" });
-    acessoDe.mockResolvedValue("pendente");
+    estadoDaConta.mockResolvedValue({ papel: "user", acesso: "pendente" });
     expect((await ME(reqCookie())).status).toBe(401);
   });
 
   it("200 com os dados da sessão quando o acesso está liberado", async () => {
     validarSessao.mockResolvedValue({ email: "a@indeba.com", nome: "A", papel: "user" });
-    acessoDe.mockResolvedValue("aprovado");
+    estadoDaConta.mockResolvedValue({ papel: "user", acesso: "aprovado" });
     const r = await ME(reqCookie());
     expect(r.status).toBe(200);
     expect(await r.json()).toEqual({ email: "a@indeba.com", nome: "A", papel: "user" });

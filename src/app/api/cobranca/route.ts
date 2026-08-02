@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CobrancaRequest } from "@/lib/contracts";
-import { usuarioAtual } from "@/lib/auth";
+import { usuarioAtual } from "@/lib/auth-db";
 import { processarCobranca } from "@/lib/cobranca/processar";
 import { respostaErro } from "@/lib/erro";
 
