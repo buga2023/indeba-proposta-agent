@@ -381,6 +381,12 @@ export default function Home() {
   const [catFilter, setCatFilter] = useState("Todos");
   const [catalogo, setCatalogo] = useState<Produto[] | null>(null);
   const [catalogoErro, setCatalogoErro] = useState<string | null>(null);
+  // Contador de "o catálogo mudou". A tela de montagem fica SEMPRE montada (é o rascunho
+  // vivo, ver o `display:none` no main) e por isso buscava o catálogo uma vez só, no
+  // carregamento da página: produto cadastrado depois entrava no Catálogo mas não existia
+  // na montagem até dar F5 — o gestor cadastrava e não conseguia usar o que acabou de criar.
+  // Zerar `catalogo` não alcança a montagem, que tem cópia própria; este número alcança.
+  const [catalogoVersao, setCatalogoVersao] = useState(0);
   const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
   const [propostasErro, setPropostasErro] = useState<string | null>(null);
   // Ver arquivadas é opt-in: alternar zera a lista pra forçar refetch com o outro filtro.
@@ -922,7 +928,7 @@ export default function Home() {
         {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} />}
         {/* Sempre montada, escondida fora de foco: é o rascunho vivo (ver builderKey). */}
         <div style={{ display: screen === "manual" ? "contents" : "none" }}>
-          <ManualScreen key={builderKey} onMontar={aplicarScopeManual} prefill={manualPrefill} scopeParaEditar={scopeParaEditar} />
+          <ManualScreen key={builderKey} onMontar={aplicarScopeManual} prefill={manualPrefill} scopeParaEditar={scopeParaEditar} catalogoVersao={catalogoVersao} />
         </div>
         {screen === "importar" && <ImportarOrcamentoScreen onMontar={aplicarScopeManual} />}
         {screen === "review" && scope && (
@@ -971,7 +977,7 @@ export default function Home() {
             }}
           />
         )}
-        {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} ehAdmin={ehAdmin} onRecarregar={() => setCatalogo(null)} />}
+        {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} ehAdmin={ehAdmin} onRecarregar={() => { setCatalogo(null); setCatalogoVersao((v) => v + 1); }} />}
         {screen === "prospeccao" && (
           <ProspeccaoScreen
             onGerarProposta={(d) => {
@@ -1359,9 +1365,14 @@ function ManualScreen({
   onMontar,
   prefill,
   scopeParaEditar,
+  catalogoVersao = 0,
 }: {
   onMontar: (s: PropostaScope) => void;
   prefill?: { razaoSocial: string; segmento: string | null } | null;
+  // Muda quando o catálogo ganha produto novo. Esta tela nunca desmonta (é o rascunho
+  // vivo), então sem este gatilho ela ficaria com a lista do carregamento da página para
+  // sempre — remontar por `key` traria o produto, mas jogaria fora a seleção em curso.
+  catalogoVersao?: number;
   // Proposta existente (reaberta do histórico) para EDITAR: hidrata a tela inteira e
   // faz a remontagem regravar o mesmo registro, sem duplicar (spec Item 4).
   scopeParaEditar?: PropostaScope | null;
@@ -1431,12 +1442,14 @@ function ManualScreen({
   // Retângulo de cada linha, para saber sobre quem o ponteiro está.
   const linhasRef = useRef(new Map<string, HTMLDivElement>());
 
+  // Rebusca a cada cadastro novo (`catalogoVersao`). Não zera a lista antes: a seleção em
+  // curso segue intacta e a tela não pisca "carregando" no meio de uma montagem.
   useEffect(() => {
     fetch("/api/catalogo")
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((d: { produtos: Produto[] }) => setCatalogo(d.produtos))
       .catch((e) => setErroCat(e instanceof Error ? e.message : "Erro ao carregar o catálogo."));
-  }, []);
+  }, [catalogoVersao]);
 
   // Hidrata a seleção a partir de uma proposta reaberta para edição. Só roda quando o
   // catálogo já chegou (precisamos do produto para saber QUAL tamanho estava cotado) e
@@ -3519,6 +3532,12 @@ function CatalogScreen({
   onRecarregar: () => void;
 }) {
   const [novoAberto, setNovoAberto] = useState(false);
+  // Por que um aviso e não só o `title`: sem gestor, o botão ficava com `onClick` undefined
+  // e o clique não fazia NADA — indistinguível de tela quebrada ("o botão de cadastrar
+  // produto não está funcionando"). Tooltip não resolve: ninguém passa o mouse antes de
+  // clicar, e no celular não existe hover. Quem não pode cadastrar precisa saber POR QUE e
+  // O QUE fazer, no mesmo clique.
+  const [avisoPapel, setAvisoPapel] = useState(false);
   const [busca, setBusca] = useState("");
   const [funcaoFiltro, setFuncaoFiltro] = useState("Todas");
   const [marcaFiltro, setMarcaFiltro] = useState("Todas");
@@ -3575,7 +3594,7 @@ function CatalogScreen({
             <Hoverable
               base={{ display: "flex", alignItems: "center", gap: "8px", height: "38px", padding: "0 18px", background: "var(--blue-500)", border: "none", borderRadius: "10px", cursor: ehAdmin ? "pointer" : "not-allowed", fontSize: "13px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(30,107,184,.3)", opacity: ehAdmin ? 1 : 0.6 }}
               hover={ehAdmin ? { background: "var(--blue-600)" } : {}}
-              onClick={ehAdmin ? () => setNovoAberto(true) : undefined}
+              onClick={ehAdmin ? () => setNovoAberto(true) : () => setAvisoPapel(true)}
               title={ehAdmin ? "Cadastrar um produto no catálogo" : "Só o gestor cadastra produto"}
             >
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round">
@@ -3586,6 +3605,24 @@ function CatalogScreen({
           }
         />
       </div>
+
+      {avisoPapel && (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", background: "var(--warning-soft, #FEF6E7)", border: "1px solid #F5D9A6", borderRadius: "10px", padding: "12px 14px", marginBottom: "18px", fontSize: "13px", color: "var(--text-body)" }}>
+          <div style={{ flex: 1 }}>
+            <strong style={{ fontWeight: 700 }}>Cadastrar produto é permissão de gestor.</strong>{" "}
+            Sua conta está como vendedor, por isso o formulário não abre. Peça a quem administra
+            o sistema para te promover em <strong>Configurações → Colaboradores</strong> — o novo
+            papel vale na próxima navegação, sem precisar sair e entrar de novo.
+          </div>
+          <button
+            onClick={() => setAvisoPapel(false)}
+            aria-label="Fechar aviso"
+            style={{ background: "none", border: "none", cursor: "pointer", fontSize: "17px", lineHeight: 1, color: "var(--text-subtle)", padding: 0 }}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px", flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "9px 14px", flex: 1, minWidth: "200px", maxWidth: "300px" }}>
