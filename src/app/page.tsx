@@ -350,6 +350,10 @@ const CMD_ITEMS: PaletteItem[] = [
 // lista base e entra só para admin — esconder no menu e deixar na paleta seria o mesmo que
 // não esconder: Ctrl+K chega na tela do mesmo jeito.
 const CMD_ITEM_CONFIG: PaletteItem = { key: "config", label: "Configurações" };
+// Cobrança segue a mesma regra: tela de gestor, então entra na paleta só para admin. Ficava
+// fora das duas listas porque a única porta era o sino do header — agora que ela tem item no
+// menu, deixá-la fora do ⌘K só faria o gestor não achar pelo caminho que ele mais usa.
+const CMD_ITEM_COBRANCA: PaletteItem = { key: "cobranca", label: "Cobrança" };
 
 /* ───────────────────────── componente principal ───────────────────────── */
 
@@ -873,6 +877,19 @@ export default function Home() {
           {ehAdmin && (
             <>
               <div className="ies-side-text" style={navSection}>Sistema</div>
+              {/* Cobrança ganhou porta própria. Antes ela não estava no menu nem na paleta, e
+                  a única entrada era o sino de notificações do header — um ícone que promete
+                  "avisos" e entregava a régua de inadimplência. Quem clicava caía numa tela
+                  que não pediu, e quem PROCURAVA a tela não tinha onde clicar. Tela que existe
+                  precisa de porta com o nome dela. Só gestor, mesma regra de Configurações —
+                  o gate de verdade continua em /api/cobranca. */}
+              <Hoverable base={navItemStyle(["cobranca"])} hover={navHover} onClick={() => irPara("cobranca")} title="Cobrança — régua de inadimplência">
+                <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8.5 2.5v12" />
+                  <path d="M11.5 5H7a1.75 1.75 0 000 3.5h3a1.75 1.75 0 010 3.5H5" />
+                </svg>
+                Cobrança
+              </Hoverable>
               <Hoverable base={navItemStyle(["config"])} hover={navHover} onClick={() => irPara("config")} title="Configurações">
                 <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="8.5" cy="8.5" r="2.25" />
@@ -1010,7 +1027,7 @@ export default function Home() {
         onClose={() => setPalette(false)}
         items={[
           ...CMD_ITEMS,
-          ...(ehAdmin ? [CMD_ITEM_CONFIG] : []),
+          ...(ehAdmin ? [CMD_ITEM_CONFIG, CMD_ITEM_COBRANCA] : []),
           ...(catalogo ?? []).map((p) => ({
             key: `produto:${p.codigo}`,
             label: p.nome,
@@ -4694,7 +4711,7 @@ function abrirRelatorio(titulo: string, subtitulo: string, blocos: BlocoRelatori
 
 /* Cabeçalho de tela (design app.html) — barra branca fixa com título + subtítulo + ação. */
 function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) {
-  const { openPalette, openAssistant, goTo, openNav, ehAdmin } = useContext(ChromeContext);
+  const { openPalette, openAssistant, openNav } = useContext(ChromeContext);
   return (
     <div className="ies-head" style={{ display: "flex", alignItems: "center", gap: "14px", padding: "0 24px", height: "62px", background: "var(--surface)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 20, flex: "none" }}>
       {/* Abre a gaveta de navegação. Só existe na faixa em que a sidebar sai do
@@ -4733,32 +4750,12 @@ function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?
         <span style={{ flex: 1, textAlign: "left" }}>Buscar telas, produtos…</span>
         <span style={{ fontSize: "10.5px", fontWeight: 700, padding: "2px 6px", borderRadius: "5px", background: "var(--surface-card)", border: "1px solid var(--border)", color: "var(--text-subtle)" }}>⌘K</span>
       </Hoverable>
-      {/* Notificações → atalho para Cobrança (régua/inadimplência). Estava chamando
-          openPalette: o sino, com badge de não-lido, abria o "Ir para… (tela)" — o
-          handler não batia com o que o próprio comentário já dizia ser a intenção.
-
-          Só para o gestor. Cobrança está fora do menu E fora da paleta (ver CMD_ITEMS):
-          este sino era a ÚNICA porta para a tela — e estava aberta para todo mundo. O
-          vendedor caía na régua de inadimplência da empresa, com nome de cliente e valor
-          devido, por uma tela que ninguém decidiu mostrar a ele. Mesma regra do item
-          Configurações no menu: some para quem não é gestor, em vez de levar a uma porta
-          trancada. É camada de UI — o gate de verdade tem que estar em /api/cobranca. */}
-      {ehAdmin && (
-      <Hoverable
-        onClick={() => goTo("cobranca")}
-        title="Notificações — cobranças e inadimplência"
-        ariaLabel="Notificações — cobranças e inadimplência"
-        base={{ position: "relative", width: "38px", height: "38px", borderRadius: "10px", border: "1px solid var(--border)", background: "var(--surface)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}
-        hover={{ background: "var(--surface-muted)" }}
-      >
-        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M5 7a3.5 3.5 0 017 0c0 3 1.5 4 1.5 4h-10S5 10 5 7z" /><path d="M7.3 13.5a1.4 1.4 0 002.4 0" /></svg>
-        {/* O ponto de "não-lido" era fixo no JSX: nascia acesso, nunca apagava e não vinha
-            de contagem nenhuma — sinalizava novidade em toda tela, o dia inteiro, mesmo sem
-            nada para ver. Badge que só sabe mostrar um estado é o mesmo lixo visual do
-            gráfico de barras zeradas: não informa e ensina a ignorar o sino. Fora até
-            existir contagem real de cobrança vencida para acender. */}
-      </Hoverable>
-      )}
+      {/* O sino de notificações saiu daqui (02/08/2026). Ele não notificava nada: o ponto de
+          "não-lido" já tinha sido removido por ser fixo no JSX, e o clique levava à régua de
+          inadimplência — ícone prometendo aviso e entregando outra tela. Existia só porque
+          Cobrança não tinha porta no menu; agora tem (ver a seção Sistema da sidebar), então
+          o sino virou porta duplicada e enganosa ao mesmo tempo. Se um dia houver contagem
+          real de cobrança vencida, um sino volta — apontando para o que ele conta. */}
       {/* Assistente → abre o overlay AjudaChat */}
       <Hoverable
         onClick={openAssistant}
