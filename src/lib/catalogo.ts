@@ -53,5 +53,13 @@ export async function produtoPorCodigoCompleto(codigo: string): Promise<Produto 
   const doJson = produtoPorCodigo(codigo);
   if (doJson) return doJson;
   const { produtoCustomPorCodigo } = await import("./produto-custom");
-  return (await produtoCustomPorCodigo(codigo)) ?? undefined;
+  try {
+    return (await produtoCustomPorCodigo(codigo)) ?? undefined;
+  } catch (e) {
+    // Mesma degradação de `catalogoCompleto` acima: banco fora do ar não pode derrubar quem
+    // só queria reabrir uma proposta. Quem chama já trata "não achei" (o item fica com a
+    // imagem do snapshot) — bem melhor do que um 500 na leitura da proposta inteira.
+    console.error(`[catalogo] produto cadastrado ${codigo} indisponível:`, e);
+    return undefined;
+  }
 }

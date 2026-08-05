@@ -9,22 +9,30 @@ const GESTOR_EMAIL_PADRAO = process.env.GESTOR_EMAIL ?? "gustavossantos2905@gmai
 export async function aprenderEPreencherEmails<T extends { cliente: string; email: string | null }>(
   itens: T[],
 ): Promise<T[]> {
-  // 1) Aprende: grava os e-mails que vieram na planilha.
-  for (const i of itens) {
-    if (i.email) {
-      await prisma.contatoCliente.upsert({
-        where: { cliente: i.cliente },
-        update: { email: i.email },
-        create: { cliente: i.cliente, email: i.email },
-      });
+  // O e-mail é ENRIQUECIMENTO: quem decide quem deve e quanto é o motor determinístico (§2).
+  // Banco fora do ar não pode apagar a análise de inadimplência inteira — degrada e registra,
+  // mesma postura de `catalogoCompleto`. Sem e-mail, o disparo já lista o cliente em
+  // "SEM E-MAIL (não enviados, cadastre o e-mail)" em vez de sumir com ele.
+  try {
+    // 1) Aprende: grava os e-mails que vieram na planilha.
+    for (const i of itens) {
+      if (i.email) {
+        await prisma.contatoCliente.upsert({
+          where: { cliente: i.cliente },
+          update: { email: i.email },
+          create: { cliente: i.cliente, email: i.email },
+        });
+      }
     }
-  }
-  // 2) Preenche os que ficaram sem e-mail, pelo cadastro aprendido.
-  const semEmail = itens.filter((i) => !i.email).map((i) => i.cliente);
-  if (semEmail.length) {
-    const cadastro = await prisma.contatoCliente.findMany({ where: { cliente: { in: semEmail } } });
-    const mapa = new Map(cadastro.map((c) => [c.cliente, c.email]));
-    for (const i of itens) if (!i.email) i.email = mapa.get(i.cliente) ?? null;
+    // 2) Preenche os que ficaram sem e-mail, pelo cadastro aprendido.
+    const semEmail = itens.filter((i) => !i.email).map((i) => i.cliente);
+    if (semEmail.length) {
+      const cadastro = await prisma.contatoCliente.findMany({ where: { cliente: { in: semEmail } } });
+      const mapa = new Map(cadastro.map((c) => [c.cliente, c.email]));
+      for (const i of itens) if (!i.email) i.email = mapa.get(i.cliente) ?? null;
+    }
+  } catch (e) {
+    console.error("[contatos] cadastro de e-mails indisponível — seguindo com o que veio na planilha:", e);
   }
   return itens;
 }
