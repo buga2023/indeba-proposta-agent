@@ -35,6 +35,16 @@ import { CommandPalette, type PaletteItem } from "./_app/command-palette";
 const fmt = (n: number) => "R$ " + n.toFixed(2).replace(".", ",");
 // Valor sem "R$" (preview do PDF de orçamento espelha o template, que omite o símbolo).
 const dec = (n: number) => n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Preço digitado por humano → número. O consultor digita em PT-BR: "88", "88,50" e
+// "1.234,56" (ponto de milhar) valem. Vazio/inválido → NaN, e quem chama decide — na
+// montagem o item conta como SEM preço e a proposta não sai até alguém informar.
+const numeroBR = (v: string): number => {
+  const t = String(v ?? "").trim();
+  if (!t) return NaN;
+  return Number(t.includes(",") ? t.replace(/\./g, "").replace(",", ".") : t);
+};
+// Preço como o catálogo/proposta guardam ("88.00") → texto do campo em PT-BR ("88,00").
+const precoTextoBR = (v: string) => v.replace(".", ",");
 // Diluição digitada pelo consultor → forma canônica "1:N" (aceita "1:20", "20", "1 : 20").
 // Só número → assume 1:N (a parte de produto é sempre 1). Vazio/inválido → null (produto
 // pronto pra uso, ou sem diluição informada: a proposta simplesmente não mostra R$/L diluído).
@@ -338,12 +348,17 @@ const tipoLabel = (t: string) => TIPOS.find((x) => x.value === t)?.label ?? "Or�
 const TIPOS_SELECIONAVEIS = TIPOS.filter((t) => t.value === "consolidada");
 
 // Itens da command palette (Ctrl/Cmd+K) — só telas reais.
+// Os rótulos espelham a sidebar item a item: a paleta é a segunda porta para a mesma tela,
+// e um nome diferente aqui faria a busca por "Propostas Feitas" não achar o histórico.
 const CMD_ITEMS: PaletteItem[] = [
   { key: "dashboard", label: "Dashboard" },
-  { key: "manual", label: "Proposta manual" },
-  { key: "importar", label: "Importar orçamento" },
-  { key: "history", label: "Propostas" },
-  { key: "catalog", label: "Catálogo" },
+  { key: "manual", label: "Proposta de Solução" },
+  { key: "importar", label: "Importar Orçamento" },
+  { key: "history", label: "Propostas Feitas" },
+  { key: "prospeccao", label: "Visitas e Prospecção" },
+  { key: "contrato", label: "Contratos" },
+  { key: "chamados", label: "Solicitações Internas" },
+  { key: "catalog", label: "Catálogo de Produtos" },
   { key: "perfil", label: "Meu perfil" },
 ];
 // Configurações é o painel do gestor (e-mails de cobrança, colaboradores). Fica fora da
@@ -838,36 +853,69 @@ export default function Home() {
             </svg>
             Dashboard
           </Hoverable>
-          <div className="ies-side-text" style={navSection}>Criar proposta</div>
+          {/* Ordem e rótulos ditados pelo Mateus (áudio + foto do bloco, 05/08/2026): Proposta
+              de Solução no topo, Importar Orçamento e Propostas Feitas coladas nela, depois
+              Visitas e Prospecção, Contratos e Solicitações Internas, e o catálogo POR ÚLTIMO.
+              A seção deixou de se chamar "Criar proposta" porque Contratos e Solicitações
+              Internas não são criação de proposta — "Comercial" é o vocabulário que o resto
+              do sistema já usa (funil comercial, status comercial).
+              Prospecção, Contratos e Solicitações Internas TINHAM tela pronta e nenhuma porta
+              de entrada: existiam no código e eram inalcançáveis pela interface. O que entra
+              aqui é o acesso, não a tela. "Comodatos" também foi pedido, mas não existe nada
+              no sistema com esse nome — fica fora até virar módulo de verdade, em vez de item
+              de menu que leva a lugar nenhum. Ver docs/findings-menu-indeba.md. */}
+          <div className="ies-side-text" style={navSection}>Comercial</div>
           {/* Volta pro rascunho, não reseta: era exatamente aqui que a seleção sumia. */}
-          <Hoverable base={navItemStyle(["manual", "review", "pdf"])} hover={navHover} onClick={() => { setNavOpen(false); voltarParaMontagem(); }} title="Proposta manual — monte direto do catálogo">
+          <Hoverable base={navItemStyle(["manual", "review", "pdf"])} hover={navHover} onClick={() => { setNavOpen(false); voltarParaMontagem(); }} title="Proposta de Solução — monte direto do catálogo">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="2.5" width="12" height="12" rx="2" />
               <path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" />
             </svg>
-            Proposta manual
+            Proposta de Solução
           </Hoverable>
-          <Hoverable base={navItemStyle(["importar"])} hover={navHover} onClick={() => irPara("importar")} title="Importar orçamento — suba um PDF do ERP">
+          <Hoverable base={navItemStyle(["importar"])} hover={navHover} onClick={() => irPara("importar")} title="Importar Orçamento — suba um PDF do ERP">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M8.5 10.5V3M5.5 6l3-3 3 3" />
               <path d="M3 11v2a1 1 0 001 1h9a1 1 0 001-1v-2" />
             </svg>
-            Importar orçamento
+            Importar Orçamento
           </Hoverable>
-          <Hoverable base={navItemStyle(["history"])} hover={navHover} onClick={() => irPara("history")} title="Propostas — histórico">
+          <Hoverable base={navItemStyle(["history"])} hover={navHover} onClick={() => irPara("history")} title="Propostas Feitas — histórico">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
               <path d="M3 4.5h11M3 8.5h11M3 12.5h7" />
             </svg>
-            Propostas
+            Propostas Feitas
           </Hoverable>
-          <Hoverable base={navItemStyle(["catalog"])} hover={navHover} onClick={() => irPara("catalog")} title="Catálogo de produtos">
+          <Hoverable base={navItemStyle(["prospeccao"])} hover={navHover} onClick={() => irPara("prospeccao")} title="Visitas e Prospecção — encontre empresas e gere abordagem">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8.5 14.5s4.25-4.05 4.25-7.25a4.25 4.25 0 10-8.5 0c0 3.2 4.25 7.25 4.25 7.25z" />
+              <circle cx="8.5" cy="7.1" r="1.6" />
+            </svg>
+            Visitas e Prospecção
+          </Hoverable>
+          <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => irPara("contrato")} title="Contratos — gere e analise o contrato da proposta">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 2.5h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" />
+              <path d="M9 2.5v4h4" />
+              <path d="M5.5 9.5h6M5.5 12h4" />
+            </svg>
+            Contratos
+          </Hoverable>
+          <Hoverable base={navItemStyle(["chamados"])} hover={navHover} onClick={() => irPara("chamados")} title="Solicitações Internas — abra um chamado para o time">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 9.5a2 2 0 01-2 2H7l-3.5 2.5V4.5a2 2 0 012-2h6.5a2 2 0 012 2z" />
+              <path d="M6.5 6.5h5M6.5 9h3" />
+            </svg>
+            Solicitações Internas
+          </Hoverable>
+          <Hoverable base={navItemStyle(["catalog"])} hover={navHover} onClick={() => irPara("catalog")} title="Catálogo de Produtos">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="2.5" width="5" height="5" rx="1" />
               <rect x="9.5" y="2.5" width="5" height="5" rx="1" />
               <rect x="2.5" y="9.5" width="5" height="5" rx="1" />
               <rect x="9.5" y="9.5" width="5" height="5" rx="1" />
             </svg>
-            Catálogo
+            Catálogo de Produtos
           </Hoverable>
 
           {/* Configurações é o painel do gestor: e-mails de cobrança, GESTOR_EMAIL, cadastro
@@ -1131,7 +1179,7 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
           <div style={{ position: "relative", zIndex: 1, maxWidth: "560px" }}>
             <div style={{ fontSize: "12.5px", color: "rgba(255,255,255,.66)", fontWeight: 600, letterSpacing: ".02em", minHeight: "16px" }}>{hoje}</div>
             <div style={{ fontSize: "27px", fontWeight: 800, letterSpacing: "-.02em", marginTop: "5px" }}>{primeiroNome ? `${saudacao}, ${primeiroNome}` : saudacao}</div>
-            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.74)", marginTop: "7px", lineHeight: 1.55 }}>Monte a proposta direto do catálogo — escolha os produtos, defina as quantidades e gere o PDF no padrão Indeba. Preço e ficha sempre do catálogo.</div>
+            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.74)", marginTop: "7px", lineHeight: 1.55 }}>Monte a proposta direto do catálogo — escolha os produtos, defina quantidades e valores e gere o PDF no padrão Indeba. Ficha sempre do catálogo; o preço vem de lá e pode ser ajustado na proposta.</div>
             <div style={{ display: "flex", gap: "10px", marginTop: "20px", flexWrap: "wrap" }}>
               <Hoverable onClick={() => setScreen("manual")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 18px", borderRadius: "12px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600, boxShadow: "var(--shadow-accent)" }} hover={{ background: "var(--accent-hover)" }}>
                 <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="2" /><path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" /></svg>Nova proposta
@@ -1489,7 +1537,7 @@ function ManualScreen({
           nome: it.nome,
           tamanho: String(cotada.tamanho),
           unidade: cotada.unidade,
-          preco: cotada.preco,
+          preco: precoTextoBR(cotada.preco),
           diluicao: cotada.diluicaoMax ?? "",
           qtd: it.quantidade,
         });
@@ -1500,7 +1548,10 @@ function ManualScreen({
       ords.push(k);
       qtds[k] = it.quantidade;
       tams[p.codigo] = idx;
-      precos[k] = cotada.preco;
+      // Preço COTADO na proposta, não o de tabela: reabrir para editar tem que devolver o
+      // valor que foi negociado (o catálogo pode ter mudado desde então). Como `precoManual`
+      // agora é override, ele já entra no campo editável do painel.
+      precos[k] = precoTextoBR(cotada.preco);
       if (cotada.diluicaoMax) dils[k] = cotada.diluicaoMax;
       else nDil[k] = true; // sem diluição na cotada = "não dilui" marcado na montagem
     }
@@ -1525,13 +1576,24 @@ function ManualScreen({
   const q = busca.trim().toLowerCase();
   const porBusca = q ? disponiveis.filter((p) => `${p.nome} ${p.codigo} ${p.descricaoCurta}`.toLowerCase().includes(q)) : disponiveis;
   const filtrados = linhaFiltro === "todas" ? porBusca : porBusca.filter((p) => p.linha === linhaFiltro);
-  // null = catálogo sem preço E ainda sem valor digitado nessa sessão. `idx` é o tamanho
-  // em questão (cada embalagem tem preço próprio).
+  // Preço unitário do item na embalagem `idx` (cada embalagem tem preço próprio). O que o
+  // consultor digita MANDA: `precoManual` é override do catálogo, não só o preenchimento do
+  // produto arquivado — negociação de valor é rotina, e antes o consultor tinha que montar a
+  // proposta com o preço de tabela e corrigir depois. null = sem preço utilizável (catálogo
+  // sem preço e nada digitado, ou campo esvaziado/zerado): a montagem cobra o valor.
   const precoDe = (p: Produto, idx = tamanhoIdx(p.codigo)): number | null => {
+    const digitado = precoManual[chave(p.codigo, idx)];
+    if (digitado !== undefined) {
+      const n = numeroBR(digitado);
+      return Number.isFinite(n) && n > 0 ? n : null;
+    }
     const doCatalogo = p.embalagens[idx]?.preco;
-    if (doCatalogo != null) return Number(doCatalogo);
-    const digitado = Number((precoManual[chave(p.codigo, idx)] ?? "").replace(",", "."));
-    return digitado > 0 ? digitado : null;
+    return doCatalogo != null ? Number(doCatalogo) : null;
+  };
+  // Preço que sai da tabela do catálogo (null quando o produto está sem preço cadastrado).
+  const precoCatalogo = (p: Produto, idx: number): number | null => {
+    const v = p.embalagens[idx]?.preco;
+    return v != null ? Number(v) : null;
   };
   const selCat = Object.entries(itens)
     .map(([k, qtd]) => {
@@ -1552,17 +1614,52 @@ function ManualScreen({
     .map((l, i) => ({ l, pos: posNaOrdem.get(l.key) ?? ordem.length + i }))
     .sort((a, b) => a.pos - b.pos)
     .map((e) => e.l);
-  const rows: { key: string; nome: string; sub: string; preco: number; qtd: number; onQtd: (q: number) => void }[] = selecionadas.map((l) => {
+  // Cada linha carrega o preço como TEXTO (o que está no campo) e o setter dele: o painel
+  // de selecionados é onde o consultor fecha o valor, item a item, sem voltar ao catálogo.
+  const rows: {
+    key: string;
+    nome: string;
+    tam: string;
+    origem: string;
+    precoTexto: string;
+    onPreco: (v: string) => void;
+    preco: number;
+    qtd: number;
+    onQtd: (q: number) => void;
+  }[] = selecionadas.map((l) => {
     if (l.cat) {
       const x = l.cat;
-      const preco = precoDe(x.produto, x.idx) ?? 0;
       const emb = x.produto.embalagens[x.idx];
-      const semPreco = emb?.preco == null;
-      const tam = emb ? `${tamanhoLegivel(emb.tamanho, emb.unidade)} · ` : "";
-      return { key: x.k, nome: x.produto.nome, sub: `${tam}${fmt(preco)} un. · ${semPreco ? "preço digitado" : "catálogo"}`, preco, qtd: x.qtd, onQtd: (q: number) => setQtd(x.k, q) };
+      const doCatalogo = precoCatalogo(x.produto, x.idx);
+      const digitado = precoManual[x.k];
+      // "catálogo" enquanto o valor é o de tabela; vira "editado" no instante em que o
+      // consultor muda o número — é a única pista de que aquele preço não é mais o oficial.
+      const origem = doCatalogo == null ? "preço digitado" : digitado === undefined || numeroBR(digitado) === doCatalogo ? "catálogo" : "editado";
+      return {
+        key: x.k,
+        nome: x.produto.nome,
+        tam: emb ? tamanhoLegivel(emb.tamanho, emb.unidade) : "",
+        origem,
+        precoTexto: digitado ?? (doCatalogo == null ? "" : precoTextoBR(emb!.preco!)),
+        onPreco: (v: string) => setPreco(x.k, v),
+        preco: precoDe(x.produto, x.idx) ?? 0,
+        qtd: x.qtd,
+        onQtd: (q: number) => setQtd(x.k, q),
+      };
     }
     const c = l.own;
-    return { key: chavePropria(c.id), nome: c.nome, sub: `${fmt(Number(c.preco) || 0)} un. · ${c.tamanho}${c.unidade} · manual`, preco: Number(c.preco) || 0, qtd: c.qtd, onQtd: (q: number) => setCustomQtd(c.id, q) };
+    const preco = numeroBR(c.preco);
+    return {
+      key: chavePropria(c.id),
+      nome: c.nome,
+      tam: `${c.tamanho}${c.unidade}`,
+      origem: "manual",
+      precoTexto: c.preco,
+      onPreco: (v: string) => setCustomPreco(c.id, v),
+      preco: Number.isFinite(preco) && preco > 0 ? preco : 0,
+      qtd: c.qtd,
+      onQtd: (q: number) => setCustomQtd(c.id, q),
+    };
   });
   const total = rows.reduce((s, r) => s + r.preco * r.qtd, 0);
 
@@ -1588,17 +1685,27 @@ function ManualScreen({
     setCustom((cs) => (q <= 0 ? cs.filter((c) => c.id !== id) : cs.map((c) => (c.id === id ? { ...c, qtd: q } : c))));
     if (q <= 0) setOrdem((o) => o.filter((x) => x !== chavePropria(id)));
   }
+  // Preço editado no painel de selecionados. Guarda o TEXTO cru (o consultor está digitando:
+  // "88," é um estado válido no meio da digitação) — a conversão é sempre na leitura.
+  function setPreco(k: string, v: string) {
+    setPrecoManual((m) => ({ ...m, [k]: v }));
+  }
+  function setCustomPreco(id: number, v: string) {
+    setCustom((cs) => cs.map((c) => (c.id === id ? { ...c, preco: v } : c)));
+  }
   function addCustom() {
     const nome = draft.nome.trim();
     const tam = Number(draft.tamanho);
-    const preco = Number(draft.preco.replace(",", "."));
+    const preco = numeroBR(draft.preco);
     if (!nome || !(tam > 0) || !(preco > 0)) {
       setErro("Item próprio: preencha nome, tamanho e preço válidos.");
       return;
     }
     setErro(null);
     const id = nextId.current++;
-    setCustom((cs) => [...cs, { id, nome, tamanho: draft.tamanho, unidade: draft.unidade, preco: preco.toFixed(2), diluicao: draft.diluicao, qtd: 1 }]);
+    // Preço guardado como TEXTO em PT-BR: é o mesmo campo que fica editável no painel de
+    // selecionados, e lá o consultor lê e digita com vírgula.
+    setCustom((cs) => [...cs, { id, nome, tamanho: draft.tamanho, unidade: draft.unidade, preco: precoTextoBR(preco.toFixed(2)), diluicao: draft.diluicao, qtd: 1 }]);
     setOrdem((o) => [...o, chavePropria(id)]);
     setDraft({ nome: "", tamanho: "", unidade: "L", preco: "", diluicao: "" });
     setShowCustom(false);
@@ -1657,9 +1764,14 @@ function ManualScreen({
       setErro("Adicione ao menos um produto (catálogo ou item próprio).");
       return;
     }
-    const semPreco = selCat.filter((x) => precoDe(x.produto, x.idx) == null);
+    // Preço em branco/zerado — inclusive o que o consultor esvaziou editando no painel de
+    // selecionados. Item próprio entra na mesma checagem: o campo dele também é editável lá.
+    const semPreco = [
+      ...selCat.filter((x) => precoDe(x.produto, x.idx) == null).map((x) => x.produto.nome),
+      ...custom.filter((c) => !(numeroBR(c.preco) > 0)).map((c) => c.nome),
+    ];
     if (semPreco.length > 0) {
-      setErro(`Defina o preço de: ${semPreco.map((x) => x.produto.nome).join(", ")}.`);
+      setErro(`Defina o preço de: ${semPreco.join(", ")}.`);
       return;
     }
     // Diluição obrigatória por produto (decisão do Gustavo 25/07): ou o consultor informa a
@@ -1709,7 +1821,10 @@ function ManualScreen({
             // adiciona os dois — a seleção é chaveada por produto+tamanho e cada linha
             // tem preço, diluição e quantidade próprios. Os demais tamanhos continuam
             // visíveis na ficha, sem preço, via `tamanhosDisponiveis` (montar.ts).
-            const precoCotado = embEscolhido?.preco ?? (precoDe(x.produto, x.idx) ?? 0).toFixed(2);
+            // O preço cotado é o do painel — que é o do catálogo até o consultor editar.
+            const precoNum = precoDe(x.produto, x.idx) ?? 0;
+            const doCatalogo = precoCatalogo(x.produto, x.idx);
+            const precoProprio = doCatalogo == null || doCatalogo !== precoNum;
             return {
               codigo: x.produto.codigo,
               quantidade: x.qtd,
@@ -1717,15 +1832,18 @@ function ManualScreen({
                 comDiluicao({
                   tamanho: embEscolhido.tamanho,
                   unidade: embEscolhido.unidade,
-                  preco: precoCotado,
+                  preco: precoNum.toFixed(2),
                   diluicaoMax: embEscolhido.diluicaoMax,
-                  custoDiluido: embEscolhido.preco ? embEscolhido.custoDiluido : null,
+                  // custoDiluido do catálogo foi calculado sobre o preço de tabela: preço
+                  // digitado ou editado invalida esse número, e ele é recalculado no render
+                  // a partir do preço realmente cotado (custoLitroDiluido).
+                  custoDiluido: precoProprio ? null : embEscolhido.custoDiluido,
                 }),
               ],
             };
           }
           const c = l.own;
-          return { nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: Number(c.preco).toFixed(2), diluicaoMax: normalizaDiluicao(c.diluicao), custoDiluido: null }], quantidade: c.qtd };
+          return { nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: numeroBR(c.preco).toFixed(2), diluicaoMax: normalizaDiluicao(c.diluicao), custoDiluido: null }], quantidade: c.qtd };
         }),
       };
       const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -1747,8 +1865,8 @@ function ManualScreen({
     <div style={{ background: "var(--background)", minHeight: "100vh" }}>
       {montando && <MontandoOverlay />}
       <ScreenHead
-        title="Proposta manual"
-        sub="Monte direto do catálogo — preço sempre do catálogo"
+        title="Proposta de Solução"
+        sub="Monte direto do catálogo — preço do catálogo, editável item a item"
         right={
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             {rows.length > 0 && (
@@ -2113,7 +2231,25 @@ function ManualScreen({
                       </button>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-strong)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.nome}</div>
-                        <div style={{ fontSize: "11.5px", color: "var(--text-subtle)", fontFamily: "var(--font-mono)" }}>{r.sub}</div>
+                        {/* Preço EDITÁVEL: é aqui que o consultor fecha o valor com o cliente,
+                            item a item, sem sair da montagem. O rótulo ao lado diz de onde vem
+                            o número — catálogo, editado à mão ou digitado (produto sem preço). */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "5px", flexWrap: "wrap", marginTop: "3px", fontSize: "11.5px", color: "var(--text-subtle)", fontFamily: "var(--font-mono)" }}>
+                          {r.tam && <span>{r.tam} ·</span>}
+                          <span style={{ display: "flex", alignItems: "center", gap: "3px", height: "22px", padding: "0 6px", borderRadius: "6px", border: "1px solid " + (r.preco > 0 ? "var(--border-strong)" : "var(--danger)"), background: "var(--surface)" }}>
+                            <span>R$</span>
+                            <input
+                              value={r.precoTexto}
+                              onChange={(e) => r.onPreco(e.target.value)}
+                              inputMode="decimal"
+                              placeholder="0,00"
+                              aria-label={`Preço unitário de ${r.nome}`}
+                              title="Preço unitário — é o valor que vai para a proposta e para o PDF"
+                              style={{ width: "56px", padding: 0, border: "none", outline: "none", background: "transparent", color: r.preco > 0 ? "var(--text-strong)" : "var(--danger)", fontFamily: "var(--font-mono)", fontSize: "11.5px", fontWeight: 700 }}
+                            />
+                          </span>
+                          <span>un. · {r.origem}</span>
+                        </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: "none" }}>
                         <button onClick={() => r.onQtd(r.qtd - 1)} style={qtdBtn}>−</button>

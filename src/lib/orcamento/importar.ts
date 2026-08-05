@@ -144,7 +144,7 @@ export async function estruturarOrcamento(
   texto: string,
 ): Promise<{ extraido: OrcamentoExtraido; rejeitados: ItemRejeitado[] }> {
   if (!(await ollamaDisponivel())) {
-    throw new Error("IA indisponível — importar orçamento exige o Ollama ativo. Use a Proposta manual.");
+    throw new Error("IA indisponível — importar orçamento exige o Ollama ativo. Use a Proposta de Solução.");
   }
   const cru = await gerarJson(prompt(texto), JSON_SCHEMA, 90_000);
   const extraido = OrcamentoExtraido.parse(JSON.parse(cru));
