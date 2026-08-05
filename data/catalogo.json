@@ -2158,7 +2158,7 @@
       "codigo": "PRIMMAX-SANQUAT",
       "nome": "Primmax Sanquat",
       "marca": "indeba",
-      "linha": "limpeza_conservacao",
+      "linha": "alimentos_bebidas",
       "descricaoCurta": "Desinfetante concentrado à base de quaternário de 5ª geração",
       "descricaoUso": "Elimina maus odores em ralos, lixos e calhas; combate o cheiro de alimentos e desinfeta o ambiente por pulverização. Utilizar no diluidor automático.",
       "segmentos": [
@@ -6548,14 +6548,15 @@
           "pH": "9,0 ± 1,0",
           "aspecto": "Líquido",
           "cor": "Incolor",
-          "odor": "Lavanda e Karícia",
+          "odor": "Lavanda, Karícia e Floral",
           "uso": "Profissional"
         },
         "subtitulo": "NEUTRALIZADOR DE ODORES",
         "beneficios": [
           "Indicado para eliminação do fungo trichophyton interdigitale priestley (\"Mofo\")",
           "Deixa o aroma agradável e suave no ambiente",
-          "Indicado também para redução do mau odor de tabaco e como aromatizante de ambientes"
+          "Indicado também para redução do mau odor de tabaco e como aromatizante de ambientes",
+          "Disponível nos aromas Lavanda, Karícia e Floral"
         ],
         "diluicoes": [
           {
@@ -7993,7 +7994,7 @@
       "codigo": "PRATT-DETERGENTE-NEUTRO-FLORAL",
       "nome": "Pratt Detergente Neutro Floral",
       "marca": "pratt",
-      "linha": "alimentos_bebidas",
+      "linha": "limpeza_conservacao",
       "descricaoCurta": "Detergente neutro de ação desengordurante, com fragrância floral, indicado também para cozinhas profissionais e lavagem de louças.",
       "descricaoUso": "Indicado para limpeza de superfícies em geral como paredes, azulejos, banheiros, pisos, pintura de veículos, etc. Indicado também para lavagem de louças e sujidades leves.",
       "segmentos": [
@@ -8051,7 +8052,7 @@
       "codigo": "PRATT-DETERGENTE-NEUTRO",
       "nome": "Pratt Detergente Neutro",
       "marca": "pratt",
-      "linha": "alimentos_bebidas",
+      "linha": "limpeza_conservacao",
       "descricaoCurta": "Detergente neutro de ação desengordurante, indicado também para cozinhas profissionais e lavagem de louças.",
       "descricaoUso": "Indicado para limpeza de superfícies em geral como paredes, azulejos, banheiros, pisos, pintura de veículos, etc. Indicado também para lavagem de louças e sujidades leves.",
       "segmentos": [
