@@ -853,18 +853,12 @@ export default function Home() {
             </svg>
             Dashboard
           </Hoverable>
-          {/* Ordem e rótulos ditados pelo Mateus (áudio + foto do bloco, 05/08/2026): Proposta
-              de Solução no topo, Importar Orçamento e Propostas Feitas coladas nela, depois
-              Visitas e Prospecção, Contratos e Solicitações Internas, e o catálogo POR ÚLTIMO.
-              A seção deixou de se chamar "Criar proposta" porque Contratos e Solicitações
-              Internas não são criação de proposta — "Comercial" é o vocabulário que o resto
-              do sistema já usa (funil comercial, status comercial).
-              Prospecção, Contratos e Solicitações Internas TINHAM tela pronta e nenhuma porta
-              de entrada: existiam no código e eram inalcançáveis pela interface. O que entra
-              aqui é o acesso, não a tela. "Comodatos" também foi pedido, mas não existe nada
-              no sistema com esse nome — fica fora até virar módulo de verdade, em vez de item
-              de menu que leva a lugar nenhum. Ver docs/findings-menu-indeba.md. */}
-          <div className="ies-side-text" style={navSection}>Comercial</div>
+          {/* A sidebar é SÓ o fluxo de proposta (decisão do Gustavo, 05/08/2026). A lista de
+              módulos que o Mateus mandou por áudio+foto — Visitas e Prospecção, Contratos,
+              Solicitações Internas — mora no DASHBOARD, em MODULOS_DASHBOARD, não aqui.
+              Os rótulos abaixo seguem a foto do bloco para que a lateral e os cards do
+              Dashboard chamem a mesma tela pelo mesmo nome. */}
+          <div className="ies-side-text" style={navSection}>Criar proposta</div>
           {/* Volta pro rascunho, não reseta: era exatamente aqui que a seleção sumia. */}
           <Hoverable base={navItemStyle(["manual", "review", "pdf"])} hover={navHover} onClick={() => { setNavOpen(false); voltarParaMontagem(); }} title="Proposta de Solução — monte direto do catálogo">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -885,28 +879,6 @@ export default function Home() {
               <path d="M3 4.5h11M3 8.5h11M3 12.5h7" />
             </svg>
             Propostas Feitas
-          </Hoverable>
-          <Hoverable base={navItemStyle(["prospeccao"])} hover={navHover} onClick={() => irPara("prospeccao")} title="Visitas e Prospecção — encontre empresas e gere abordagem">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8.5 14.5s4.25-4.05 4.25-7.25a4.25 4.25 0 10-8.5 0c0 3.2 4.25 7.25 4.25 7.25z" />
-              <circle cx="8.5" cy="7.1" r="1.6" />
-            </svg>
-            Visitas e Prospecção
-          </Hoverable>
-          <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => irPara("contrato")} title="Contratos — gere e analise o contrato da proposta">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 2.5h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" />
-              <path d="M9 2.5v4h4" />
-              <path d="M5.5 9.5h6M5.5 12h4" />
-            </svg>
-            Contratos
-          </Hoverable>
-          <Hoverable base={navItemStyle(["chamados"])} hover={navHover} onClick={() => irPara("chamados")} title="Solicitações Internas — abra um chamado para o time">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 9.5a2 2 0 01-2 2H7l-3.5 2.5V4.5a2 2 0 012-2h6.5a2 2 0 012 2z" />
-              <path d="M6.5 6.5h5M6.5 9h3" />
-            </svg>
-            Solicitações Internas
           </Hoverable>
           <Hoverable base={navItemStyle(["catalog"])} hover={navHover} onClick={() => irPara("catalog")} title="Catálogo de Produtos">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -1095,6 +1067,98 @@ export default function Home() {
 
 /* ═══════════════════════ TELA: DASHBOARD ═══════════════════════ */
 
+// Atalhos de módulo da Visão Geral. É AQUI que o Mateus quer a lista de módulos (áudio + foto
+// do bloco, 05/08/2026) — não na sidebar, que fica só com o fluxo de proposta. A ordem é a que
+// ele ditou: Proposta de Solução primeiro, Importar Orçamento e Propostas Feitas coladas nela,
+// e o catálogo por último. Os rótulos vêm da foto, que tem autoridade sobre o áudio.
+//
+// Visitas e Prospecção, Contratos e Solicitações Internas TINHAM tela pronta e NENHUMA porta de
+// entrada: existiam no código e eram inalcançáveis pela interface. O que nasce aqui é o acesso,
+// não a tela. "Comodatos" também foi pedido, mas não existe módulo nenhum com esse nome no
+// sistema — card que não leva a lugar algum é pior que card ausente. Ver
+// docs/findings-menu-indeba.md para o inventário e o de-para completo.
+const MODULOS_DASHBOARD: { screen: Screen; titulo: string; sub: string; icone: ReactNode }[] = [
+  {
+    screen: "manual",
+    titulo: "Proposta de Solução",
+    sub: "Monte direto do catálogo e gere o PDF",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2.5" y="2.5" width="12" height="12" rx="2" />
+        <path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" />
+      </svg>
+    ),
+  },
+  {
+    screen: "importar",
+    titulo: "Importar Orçamento",
+    sub: "Suba um PDF do ERP e confira os itens",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8.5 10.5V3M5.5 6l3-3 3 3" />
+        <path d="M3 11v2a1 1 0 001 1h9a1 1 0 001-1v-2" />
+      </svg>
+    ),
+  },
+  {
+    screen: "history",
+    titulo: "Propostas Feitas",
+    sub: "Histórico, status e reabertura",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
+        <path d="M3 4.5h11M3 8.5h11M3 12.5h7" />
+      </svg>
+    ),
+  },
+  {
+    screen: "prospeccao",
+    titulo: "Visitas e Prospecção",
+    sub: "Encontre empresas e gere a abordagem",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8.5 14.5s4.25-4.05 4.25-7.25a4.25 4.25 0 10-8.5 0c0 3.2 4.25 7.25 4.25 7.25z" />
+        <circle cx="8.5" cy="7.1" r="1.6" />
+      </svg>
+    ),
+  },
+  {
+    screen: "contrato",
+    titulo: "Contratos",
+    sub: "Gere e analise o contrato da proposta",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 2.5h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" />
+        <path d="M9 2.5v4h4" />
+        <path d="M5.5 9.5h6M5.5 12h4" />
+      </svg>
+    ),
+  },
+  {
+    screen: "chamados",
+    titulo: "Solicitações Internas",
+    sub: "Abra um chamado para o time",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 9.5a2 2 0 01-2 2H7l-3.5 2.5V4.5a2 2 0 012-2h6.5a2 2 0 012 2z" />
+        <path d="M6.5 6.5h5M6.5 9h3" />
+      </svg>
+    ),
+  },
+  {
+    screen: "catalog",
+    titulo: "Catálogo de Produtos",
+    sub: "Consulte a linha, a ficha e cadastre novos",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2.5" y="2.5" width="5" height="5" rx="1" />
+        <rect x="9.5" y="2.5" width="5" height="5" rx="1" />
+        <rect x="2.5" y="9.5" width="5" height="5" rx="1" />
+        <rect x="9.5" y="9.5" width="5" height="5" rx="1" />
+      </svg>
+    ),
+  },
+];
+
 function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => void; usuario: Usuario | null }) {
   const primeiroNome = usuario?.nome?.trim().split(/\s+/)[0] || "";
   const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
@@ -1222,6 +1286,34 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
               <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-strong)", fontFamily: "var(--font-mono)", letterSpacing: "-.02em" }}>{k.valor}</div>
             </Hoverable>
           ))}
+        </div>
+
+        {/* ── Módulos: a lista que o Mateus ditou (ver MODULOS_DASHBOARD) ── */}
+        {/* Fica depois dos KPIs e antes dos gráficos: os números respondem "como estou", os
+            cards respondem "o que eu faço agora". Para Prospecção, Contratos e Solicitações
+            Internas esta é a ÚNICA porta de entrada do sistema — a sidebar não os lista. */}
+        <div>
+          <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Módulos</div>
+          <div style={{ fontSize: "12.5px", color: "var(--text-subtle)", marginBottom: "14px" }}>Tudo o que dá para fazer por aqui</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(228px,1fr))", gap: "14px" }}>
+            {MODULOS_DASHBOARD.map((m, i) => (
+              <Hoverable
+                key={m.screen}
+                onClick={() => setScreen(m.screen)}
+                title={m.titulo}
+                base={{ display: "flex", alignItems: "flex-start", gap: "12px", textAlign: "left", width: "100%", background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px 17px", cursor: "pointer", fontFamily: "var(--font-sans)", boxShadow: "var(--shadow-sm)", transition: "transform var(--duration-base) var(--ease-out),box-shadow var(--duration-base) var(--ease-standard)", animation: `popIn .4s var(--ease-spring) ${i * 0.04}s both` }}
+                hover={{ transform: "translateY(-3px)", boxShadow: "var(--shadow-lg)" }}
+              >
+                <span style={{ width: "34px", height: "34px", borderRadius: "10px", background: "var(--info-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)", flex: "none" }}>
+                  {m.icone}
+                </span>
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: "13.5px", fontWeight: 700, color: "var(--text-strong)" }}>{m.titulo}</span>
+                  <span style={{ display: "block", fontSize: "11.5px", color: "var(--text-subtle)", marginTop: "3px", lineHeight: 1.45 }}>{m.sub}</span>
+                </span>
+              </Hoverable>
+            ))}
+          </div>
         </div>
 
         {/* ── Painel: status · atividade · financeiro ── */}

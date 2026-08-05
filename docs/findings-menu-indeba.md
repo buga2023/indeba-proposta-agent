@@ -64,35 +64,53 @@ Campos que o cadastro **já exige** e o SPEC não previa: `codigo` (SKU, obrigat
 
 ## 5. F1 — EXECUTADO (05/08/2026)
 
-Menu novo, em `src/app/page.tsx`:
+> **Correção de rumo (Gustavo, 05/08/2026):** a lista do Mateus é a grade de módulos do
+> **DASHBOARD** ("Visão Geral", a tela inicial), **não** a sidebar. A sidebar fica só com o
+> fluxo de proposta. A primeira tentativa pôs tudo na lateral e foi desfeita.
 
-| Pos. | Seção | Rótulo | `screen` | O que mudou |
-|---|---|---|---|---|
-| 1 | Visão geral | Dashboard | `dashboard` | inalterado |
-| 2 | **Comercial** | **Proposta de Solução** | `manual`/`review`/`pdf` | renomeado (era "Proposta manual") |
-| 3 | Comercial | **Importar Orçamento** | `importar` | caixa alta |
-| 4 | Comercial | **Propostas Feitas** | `history` | renomeado (era "Propostas") |
-| 5 | Comercial | **Visitas e Prospecção** | `prospeccao` | **item novo** — tela já existia |
-| 6 | Comercial | **Contratos** | `contrato` | **item novo** — tela já existia |
-| 7 | Comercial | **Solicitações Internas** | `chamados` | **item novo** — tela já existia |
-| 8 | Comercial | **Catálogo de Produtos** | `catalog` | renomeado + movido para o fim |
-| — | Sistema | Configurações | `config` | inalterado (admin, rodapé) |
+### 5.1 Dashboard — `MODULOS_DASHBOARD` (grade nova)
 
-Decisões tomadas:
-- A seção "Criar proposta" virou **"Comercial"**: Contratos e Solicitações Internas não são
-  criação de proposta. "Comercial" é vocabulário que o sistema já usa (funil comercial, status comercial).
-- **Comodatos ficou fora.** Não existe módulo; item de menu apontando para o vazio seria pior
-  que a ausência. Entra quando virar tela de verdade.
+O Dashboard não tinha grade de módulos nenhuma: só hero, KPIs e gráficos. Ela nasce agora,
+entre os KPIs e os gráficos — os números respondem "como estou", os cards respondem
+"o que faço agora".
+
+| Pos. | Card | `screen` | Situação |
+|---|---|---|---|
+| 1 | **Proposta de Solução** | `manual` | rótulo da foto |
+| 2 | **Importar Orçamento** | `importar` | rótulo da foto |
+| 3 | **Propostas Feitas** | `history` | rótulo da foto |
+| 4 | **Visitas e Prospecção** | `prospeccao` | **primeira porta de entrada** do sistema |
+| 5 | **Contratos** | `contrato` | **primeira porta de entrada** do sistema |
+| 6 | **Solicitações Internas** | `chamados` | **primeira porta de entrada** do sistema |
+| 7 | **Catálogo de Produtos** | `catalog` | por último, como ele pediu |
+
+### 5.2 Sidebar — inalterada em estrutura, só rótulos
+
+| Seção | Rótulo | `screen` | O que mudou |
+|---|---|---|---|
+| Visão geral | Dashboard | `dashboard` | inalterado |
+| Criar proposta | **Proposta de Solução** | `manual`/`review`/`pdf` | era "Proposta manual" |
+| Criar proposta | **Importar Orçamento** | `importar` | caixa alta |
+| Criar proposta | **Propostas Feitas** | `history` | era "Propostas" |
+| Criar proposta | **Catálogo de Produtos** | `catalog` | era "Catálogo" |
+| Sistema | Configurações | `config` | inalterado (admin, rodapé) |
+
+Os rótulos acompanharam os do Dashboard de propósito: a lateral e os cards abrem a **mesma
+tela**, e chamá-la por dois nomes diferentes confundiria mais que ajudaria.
+
+### 5.3 Decisões
+
+- **Comodatos ficou fora.** Não existe módulo; card apontando para o vazio é pior que ausência.
 - **Cadastro de Produtos ficou onde está** (modal dentro do Catálogo, só gestor) — já funciona.
-- A **paleta ⌘K** (`CMD_ITEMS`) recebeu os mesmos rótulos e os 3 itens novos: nome divergente
-  ali faria a busca por "Propostas Feitas" não achar o histórico.
-- Rótulo `Visitas e Prospecção` (singular), conforme a foto do bloco. Confirmar com o Mateus.
-- `ScreenHead` da tela de montagem e a mensagem de erro do importador passaram a dizer
-  "Proposta de Solução" — o menu e a tela precisam falar o mesmo nome.
+- A **paleta ⌘K** (`CMD_ITEMS`) recebeu os rótulos novos e as 3 telas antes órfãs: nome
+  divergente ali faria a busca por "Propostas Feitas" não achar o histórico.
+- Rótulo `Visitas e Prospecção` (singular), conforme a foto. Confirmar com o Mateus.
+- `ScreenHead` da tela de montagem e o erro do importador passaram a dizer "Proposta de Solução".
 
 Verificação: `npm run lint` 0 erros (3 warnings pré-existentes, fora destes arquivos) ·
 `npx tsc --noEmit` limpo · `npm test` 467 testes / 75 arquivos, todos passando.
 Navegação é estado local (`setScreen`), não rota — risco de 404 é estruturalmente zero.
+**Não verificado visualmente:** o Dashboard exige login, e credenciais não são inseridas por mim.
 
 ## 6. Perguntas em aberto
 
