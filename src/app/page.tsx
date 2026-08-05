@@ -3339,14 +3339,23 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
       </div>
 
       <h2 style={{ fontSize: "14px", fontWeight: 800, color: navy, borderBottom: "2px solid #e5ebf2", paddingBottom: "5px", margin: "18px 0 12px" }}>Condições Comerciais</h2>
+      {/* As condições que o PDF consolidada imprime são `consolidada.condicoes.itens` — as
+          mesmas que a montagem e os Ajustes editam. Este resumo mostrava
+          `condicoesComerciais`, que neste modelo nunca é editável nem chega ao documento:
+          o vendedor digitava "válida por 30 dias", conferia "15 dias" aqui e enviava um PDF
+          dizendo 30. Condição comercial conferida antes do envio não pode divergir do que
+          vai assinado. O fallback cobre proposta antiga salva sem o bloco consolidada. */}
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
         <tbody>
-          {[
-            ["Validade da proposta", scope.condicoesComerciais.validade],
-            ["Prazo de implantação", scope.condicoesComerciais.prazoEntrega],
-            ["Forma de pagamento", scope.condicoesComerciais.pagamento],
-            ["Frete e entrega", scope.condicoesComerciais.frete],
-          ].map(([l, v]) => (
+          {(c
+            ? c.condicoes.itens.map((i) => [i.titulo, i.texto])
+            : [
+                ["Validade da proposta", scope.condicoesComerciais.validade],
+                ["Prazo de implantação", scope.condicoesComerciais.prazoEntrega],
+                ["Forma de pagamento", scope.condicoesComerciais.pagamento],
+                ["Frete e entrega", scope.condicoesComerciais.frete],
+              ]
+          ).map(([l, v]) => (
             <tr key={l}>
               <td style={{ border: "1px solid #e5ebf2", padding: "7px 10px", background: "#f2f5f9", color: navy, fontWeight: 700, width: "42%" }}>{l}</td>
               <td style={{ border: "1px solid #e5ebf2", padding: "7px 10px" }}>{v}</td>
