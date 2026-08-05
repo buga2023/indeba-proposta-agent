@@ -117,9 +117,18 @@ export function rotuloSegmento(valor: string): string {
  * Sem segmento informado → null, e a ficha simplesmente não exibe o rótulo (nunca
  * cai de volta no linhaLabel estático em inglês).
  */
+// "Linha" é substantivo feminino: rótulos de segmento masculinos concordam errado
+// ("LINHA AUTOMOTIVO"). Flexão aplicada só aqui — o segmento em si continua "Automotivo".
+const LINHA_FEMININA: Record<string, string> = {
+  AUTOMOTIVO: "AUTOMOTIVA",
+  ADMINISTRATIVO: "ADMINISTRATIVA",
+};
+
 export function linhaDoSegmento(segmento: string | null | undefined): string | null {
   const primeiro = (segmento ?? "").split(",").map((s) => s.trim()).filter(Boolean)[0];
-  return primeiro ? rotuloSegmento(primeiro).toUpperCase() : null;
+  if (!primeiro) return null;
+  const rotulo = rotuloSegmento(primeiro).toUpperCase();
+  return LINHA_FEMININA[rotulo] ?? rotulo;
 }
 
 /**
