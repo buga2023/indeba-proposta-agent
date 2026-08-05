@@ -52,10 +52,13 @@ export function AdminScreen() {
   const [novoCliente, setNovoCliente] = useState("");
   const [novoEmail, setNovoEmail] = useState("");
 
+  // O `setErro(null)` fica DEPOIS do await de propósito: no mount esta função roda dentro de
+  // um effect, e setState síncrono ali encadeia render extra (React 19 acusa). Limpar o erro
+  // só quando o carregamento dá certo também evita a mensagem piscar a cada recarga.
   async function carregar() {
-    setErro(null);
     try {
       const [cfg, ct, cl] = await Promise.all([fetch("/api/admin-config"), fetch("/api/contatos"), fetch("/api/colaboradores")]);
+      setErro(null);
       if (cfg.status === 403 || ct.status === 403 || cl.status === 403) {
         setSemAcesso(true);
         return;
@@ -70,8 +73,10 @@ export function AdminScreen() {
       setErro("Falha ao carregar o painel.");
     }
   }
+  // Carrega no mount por callback de promise — ver chamados-screen.tsx: chamada direta faria
+  // setState síncrono dentro do effect, encadeando render extra.
   useEffect(() => {
-    carregar();
+    void Promise.resolve().then(carregar);
   }, []);
 
   async function salvarGestor() {

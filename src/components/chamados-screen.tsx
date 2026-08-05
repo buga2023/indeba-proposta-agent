@@ -49,12 +49,14 @@ export function ChamadosScreen() {
   const [prioridade, setPrioridade] = useState<PrioridadeChamado>("media");
   const [enviando, setEnviando] = useState(false);
 
+  // `setErro(null)` depois do await: no mount isto roda dentro de um effect, e setState
+  // síncrono ali encadeia render extra (React 19 acusa). Ver admin-screen.tsx.
   async function carregar() {
-    setErro(null);
     try {
       const r = await fetch("/api/chamados");
       const d = await r.json();
       if (!r.ok) throw new Error(typeof d.erro === "string" ? d.erro : "Falha ao carregar os chamados.");
+      setErro(null);
       setChamados(d.chamados);
       setSouGestor(d.souGestor);
     } catch (e) {
@@ -63,8 +65,11 @@ export function ChamadosScreen() {
       setCarregando(false);
     }
   }
+  // Carrega no mount por callback de promise: chamar `carregar()` direto no corpo do effect
+  // faz setState síncrono e encadeia render extra (React 19 acusa) — mesmo motivo pelo qual
+  // ajuda-chat.tsx dispara o catálogo com fetch().then().
   useEffect(() => {
-    carregar();
+    void Promise.resolve().then(carregar);
   }, []);
 
   async function abrir(e: FormEvent) {

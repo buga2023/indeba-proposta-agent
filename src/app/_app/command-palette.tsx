@@ -23,14 +23,22 @@ export function CommandPalette({
   onGo: (key: string) => void;
 }) {
   const [q, setQ] = React.useState("");
+  const [abertoAntes, setAbertoAntes] = React.useState(open);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
+  // Zera a busca na ABERTURA ajustando o estado durante a renderização, não por effect:
+  // setState síncrono dentro de effect encadeia render extra (React 19 acusa). Este é o
+  // padrão oficial pra reagir a mudança de prop — ver "You Might Not Need an Effect".
+  if (open !== abertoAntes) {
+    setAbertoAntes(open);
+    if (open) setQ("");
+  }
+
+  // O effect fica só com o foco, que não mexe em estado.
   React.useEffect(() => {
-    if (open) {
-      setQ("");
-      const t = setTimeout(() => inputRef.current?.focus(), 30);
-      return () => clearTimeout(t);
-    }
+    if (!open) return;
+    const t = setTimeout(() => inputRef.current?.focus(), 30);
+    return () => clearTimeout(t);
   }, [open]);
 
   if (!open) return null;
