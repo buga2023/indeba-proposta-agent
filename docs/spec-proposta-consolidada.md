@@ -184,12 +184,13 @@ Dois problemas de layout descobertos ao varrer o catálogo inteiro:
 
 - `pnpm test` — unitários, incluindo `diluicao.test.ts`, `pagina-produto.test.ts`,
   `consolidada-html.test.ts`, `montar-consolidada.test.ts`.
-- `pnpm qa:layout` — varredura Playwright do catálogo inteiro (**154 páginas**) contra
-  corte, imagem quebrada, vazamento de borda e colisão de rodapé.
-  ([tests/qa-layout.qa.ts](tests/qa-layout.qa.ts))
+- A varredura Playwright do catálogo inteiro (`qa:layout`, **154 páginas**, contra corte,
+  imagem quebrada, vazamento de borda e colisão de rodapé) **foi removida do repositório**
+  (ago/2026, a pedido do Gustavo).
 
-Qualquer mudança neste template deve passar pelo `qa:layout` antes de subir: os quatro
-defeitos acima só apareceram porque alguém abriu o PDF de um produto específico.
+Sem ela, mudança neste template não tem rede: os quatro defeitos acima só apareceram porque
+alguém abriu o PDF de um produto específico. Gere e olhe o PDF dos produtos de ficha longa
+(Primmax Sanap é o caso-âncora) antes de subir alteração de layout.
 
 ---
 

@@ -296,10 +296,11 @@ começa com `/produtos/_`. Depois **screenshot** e confira o recipiente com o ol
 Divergência **preview OK / PDF errado** aponta para `resolverImagemProduto` e os recortes
 `-cutout.png` (causa 1 da spec original) — reporte com essa suspeita explícita.
 
-> Existe também o QA de layout do catálogo inteiro em PDF (`pnpm qa:layout` →
-> `generated/catalogo-completo.pdf`, 150+ páginas). Fora do escopo do navegador, mas se o
-> arquivo já existir na máquina, abri-lo é a forma mais rápida de varrer imagem quebrada no
-> PDF de todos os produtos.
+> O QA de layout do catálogo inteiro em PDF (`pnpm qa:layout` →
+> `generated/catalogo-completo.pdf`, 150+ páginas) foi removido do repositório em ago/2026.
+> Se o arquivo já existir na máquina de alguém, abri-lo continua sendo a forma mais rápida
+> de varrer imagem quebrada no PDF de todos os produtos — mas ele não é mais regenerável
+> por comando.
 
 ---
 

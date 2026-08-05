@@ -220,13 +220,7 @@ alimenta o painel **e** o payload de `montar()`, para tela e PDF não discordare
   rodada 30/07: `montarPropostaEstruturada` preserva a ordem do payload com item próprio no
   MEIO; a mesma seleção em ordem diferente sai em ordem diferente; Consolidada e Orçamento
   emitem os itens na ordem do array).
-- `pnpm exec vitest run --config vitest.qa.config.ts tests/qa-ordem-arrastar.qa.ts` — QA de
-  navegador da reordenação: sobe um `next dev` próprio (AUTH_ENABLED=false), abre o
-  Chromium e arrasta com **mouse de verdade**. 6 testes: arrasto para cima e para baixo,
-  arrasto longo de 3 posições (o guardião da captura de ponteiro), ↑/↓ pelo teclado, item
-  próprio reordenando junto, e a ordem da tela batendo com o payload de
-  `/api/montar-estruturado`. Nenhum outro `next dev` pode estar rodando no diretório.
-- `pnpm exec vitest run --config vitest.qa.config.ts tests/qa-proposta.qa.ts` — monta
-  uma proposta real (3 produtos, um deles cotado num tamanho que **não** é o primeiro do
-  catálogo), gera o PDF pelo mesmo `renderPdf` da rota e confere item a item.
-- `pnpm qa:layout` — varredura de layout do catálogo inteiro.
+- Os QA de navegador (Playwright) que cobriam a reordenação por arrasto, a proposta ponta a
+  ponta e a varredura de layout do catálogo **foram removidos do repositório** (ago/2026, a
+  pedido do Gustavo). O que eles provavam na tela — arrasto, ordem do payload, PDF item a
+  item — não tem cobertura automatizada hoje; a verificação é manual, com o app rodando.

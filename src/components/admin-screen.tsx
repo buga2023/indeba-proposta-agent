@@ -39,6 +39,9 @@ const btn = (cor: string, on = true) =>
     fontWeight: 600,
     cursor: on ? "pointer" : "default",
     flex: "none",
+    // Rótulo em uma linha só: os botões da lista do Time têm largura fixa (para as colunas
+    // alinharem entre as linhas) e "Tornar vendedor" quebraria em duas linhas sem isso.
+    whiteSpace: "nowrap",
   }) as const;
 
 export function AdminScreen() {
@@ -157,7 +160,10 @@ export function AdminScreen() {
   }
 
   return (
-    <div style={{ padding: "28px", maxWidth: "760px" }}>
+    // 900px, não 760: com as colunas de controle do Time em largura fixa, 760 deixava ~164px
+    // para nome + e-mail e truncava tudo ("João Guilherme Ma…", "· G…"). As demais seções só
+    // ganham respiro.
+    <div style={{ padding: "28px", maxWidth: "900px" }}>
       <div style={{ borderRadius: "18px", padding: "24px 28px", marginBottom: "20px", background: "linear-gradient(135deg,var(--blue-700),var(--blue-500))", color: "white" }}>
         <h2 style={{ fontSize: "22px", fontWeight: 800, letterSpacing: "-.5px", margin: 0 }}>Painel de administração</h2>
         <div style={{ fontSize: "13.5px", opacity: 0.9, marginTop: "6px" }}>E-mail do gestor e cadastro de e-mails dos clientes (usado na cobrança).</div>
@@ -295,6 +301,10 @@ function LinhaColaborador({
   const ehGestor = colaborador.papel === "admin";
   const liberado = colaborador.acesso === "aprovado";
 
+  // Colunas de LARGURA FIXA nos controles. Antes cada linha era um flex livre e a largura
+  // do botão de papel mudava com o texto ("Tornar vendedor" é maior que "Tornar gestor"):
+  // o telefone e os botões de cada pessoa paravam num ponto diferente e a lista saía
+  // serrilhada. Fixando as colunas, todas as linhas alinham independente do papel/acesso.
   return (
     <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", padding: "9px 11px", borderRadius: "9px", background: "var(--gray-50)" }}>
       <div style={{ flex: "1 1 190px", minWidth: 0 }}>
@@ -307,11 +317,11 @@ function LinhaColaborador({
         </div>
       </div>
 
-      <input style={{ ...inputStyle, flex: "1 1 120px", minWidth: "110px", padding: "6px 10px", fontSize: "13px" }} placeholder="Telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
-      <button style={btn("var(--blue-600)", mudou)} onClick={() => mudou && onSalvar(colaborador.email, telefone.trim())}>Salvar</button>
+      <input style={{ ...inputStyle, width: "132px", flex: "none", padding: "6px 10px", fontSize: "13px" }} placeholder="Telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+      <button style={{ ...btn("var(--blue-600)", mudou), width: "78px" }} disabled={!mudou} onClick={() => mudou && onSalvar(colaborador.email, telefone.trim())}>Salvar</button>
 
       <button
-        style={{ ...btn("var(--blue-800)"), background: "white", color: "var(--blue-800)", border: "1px solid var(--gray-200)" }}
+        style={{ ...btn("var(--blue-800)"), width: "142px", background: "white", color: "var(--blue-800)", border: "1px solid var(--gray-200)" }}
         title={ehGestor ? "Passa a ver só as próprias propostas" : "Passa a ver as propostas do time e este painel"}
         onClick={() =>
           onMudar(
@@ -326,8 +336,8 @@ function LinhaColaborador({
 
       <button
         style={liberado
-          ? { ...btn("#dc2626"), background: "white", color: "#dc2626", border: "1px solid #fecaca" }
-          : btn("var(--success)")}
+          ? { ...btn("#dc2626"), width: "96px", background: "white", color: "#dc2626", border: "1px solid #fecaca" }
+          : { ...btn("var(--success)"), width: "96px" }}
         title={liberado ? "A conta e as propostas continuam; só o acesso é encerrado" : "Devolve o acesso"}
         onClick={() =>
           onMudar(
