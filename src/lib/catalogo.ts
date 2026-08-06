@@ -29,10 +29,21 @@ export function produtoPorCodigo(codigo: string): Produto | undefined {
 // para acomodar a segunda fonte espalharia `await` por sete módulos sem ganho.
 //
 // Quem precisa ver o catálogo INTEIRO (a vitrine, a montagem, o RAG, a importação de
-// orçamento) usa as duas funções abaixo. Produto do banco entra depois do JSON e, em caso de
-// código repetido, o JSON vence: a base INDEBA/PRATT é a fonte histórica, e um cadastro novo
-// não pode sequestrar um código que já circula em proposta salva. O `@unique` da tabela
-// impede repetição dentro do banco; isto cobre a colisão ENTRE as fontes.
+// orçamento) usa as duas funções abaixo.
+//
+// Em caso de código repetido, o BANCO vence — e essa precedência já foi a inversa. Antes o
+// JSON ganhava, para que um cadastro novo não sequestrasse um código que já circula em
+// proposta salva. Só que isso deixava os ~150 da base sem conserto pela tela: corrigir um
+// preço errado exigia editar o arquivo e fazer deploy, e foi o que o Mateus esbarrou ("como é
+// que eu edito um produto que já está cadastrado?"). A linha do banco agora é o OVERRIDE
+// deliberado de um gestor — só admin escreve, e o formulário parte dos dados do próprio JSON.
+//
+// O que protege as propostas antigas não é esta precedência: é o snapshot. Toda proposta
+// grava seu PropostaScope com preço e embalagem do momento em que foi montada, então mexer no
+// catálogo hoje não reescreve o que já foi enviado ao cliente.
+//
+// A ORDEM da lista continua sendo a do JSON: o override troca o produto no lugar onde ele já
+// estava, e só produto realmente novo entra no fim.
 export async function catalogoCompleto(): Promise<Catalogo> {
   const base = carregarCatalogo();
   const { listarProdutosCustom } = await import("./produto-custom");
@@ -44,22 +55,23 @@ export async function catalogoCompleto(): Promise<Catalogo> {
     console.error("[catalogo] produtos cadastrados indisponíveis — servindo só o JSON:", e);
     return base;
   }
-  const doJson = new Set(base.produtos.map((p) => p.codigo));
-  const novos = custom.filter((p) => !doJson.has(p.codigo));
-  return novos.length ? { ...base, produtos: [...base.produtos, ...novos] } : base;
+  if (!custom.length) return base;
+  const porCodigo = new Map(base.produtos.map((p) => [p.codigo, p]));
+  for (const p of custom) porCodigo.set(p.codigo, p);
+  return { ...base, produtos: [...porCodigo.values()] };
 }
 
 export async function produtoPorCodigoCompleto(codigo: string): Promise<Produto | undefined> {
-  const doJson = produtoPorCodigo(codigo);
-  if (doJson) return doJson;
   const { produtoCustomPorCodigo } = await import("./produto-custom");
   try {
-    return (await produtoCustomPorCodigo(codigo)) ?? undefined;
+    // Banco primeiro, pela mesma razão: se existe override, é ele o produto atual.
+    const override = await produtoCustomPorCodigo(codigo);
+    if (override) return override;
   } catch (e) {
-    // Mesma degradação de `catalogoCompleto` acima: banco fora do ar não pode derrubar quem
-    // só queria reabrir uma proposta. Quem chama já trata "não achei" (o item fica com a
-    // imagem do snapshot) — bem melhor do que um 500 na leitura da proposta inteira.
-    console.error(`[catalogo] produto cadastrado ${codigo} indisponível:`, e);
-    return undefined;
+    // Degradação, não erro: banco fora do ar não pode derrubar quem só queria reabrir uma
+    // proposta. Cai no JSON abaixo, que é o pior caso aceitável (dado um pouco velho, não
+    // tela quebrada) — bem melhor do que um 500 na leitura da proposta inteira.
+    console.error(`[catalogo] override de ${codigo} indisponível — usando o JSON:`, e);
   }
+  return produtoPorCodigo(codigo);
 }

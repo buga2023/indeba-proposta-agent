@@ -77,10 +77,24 @@ como `/api/colaboradores`. O botão "Novo produto" só habilita para admin.
 
 ## Fora de escopo
 
-- Edição de produto do JSON pela tela (só os novos, do banco, são editáveis/removíveis)
-  > Entregue em 05/08/2026 para os produtos do banco: `PUT /api/produtos` + botões de editar
-  > e excluir na lista do Catálogo, a pedido do Mateus ("tem que deixar uma opção para eu,
-  > como administrador, adicionar, excluir ou editar"). O produto do JSON continua fora.
+- ~~Edição de produto do JSON pela tela~~ — **saiu do "fora de escopo" em 05/08/2026.**
+  > Primeiro veio a edição dos produtos do banco (`PUT /api/produtos` + botões na lista do
+  > Catálogo), a pedido do Mateus: "tem que deixar uma opção para eu, como administrador,
+  > adicionar, excluir ou editar". Só que em produção **todos** os 148 produtos vinham do
+  > JSON — nenhum era editável, e a tela mostrava "base" em cada linha. A entrega não
+  > resolvia o problema de quem pediu.
+  >
+  > Agora editar um produto da base grava um **override** na `ProdutoCustom` com o mesmo
+  > código, e a leitura passou a dar precedência ao banco (`catalogoCompleto()`). O
+  > `data/catalogo.json` fica intacto, servindo de origem: é dele que vêm foto e ficha
+  > enquanto o gestor não anexar as suas (por isso `imagem`/`imagemMime` viraram opcionais).
+  >
+  > Duas regras que caem junto: produto da base **não se exclui** (apagar a linha só desfaria
+  > a edição — a saída é arquivar, com `ativo: false`), e a **ficha herdada não se remove**
+  > (ela está no repositório, não no banco; para trocar, anexa-se outra).
+  >
+  > O que protege as propostas antigas não é mais a precedência do JSON: é o snapshot do
+  > `PropostaScope`, que guarda preço e embalagem do momento da montagem.
   > Ver `como-funciona-catalogo-e-cadastro.md` §5.
 - Migração dos 150 para o banco
 - Recorte automático de fundo (`gerar-cutouts.mjs`) para foto enviada pela tela

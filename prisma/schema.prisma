@@ -109,8 +109,10 @@ model ProdutoCustom {
   id           String   @id @default(cuid())
   codigo       String   @unique
   dados        Json
-  imagem       Bytes
-  imagemMime   String
+  // Opcionais desde que esta tabela passou a guardar também os OVERRIDES da base: editar o
+  // preço de um produto do catálogo.json não exige reenviar a foto que já está versionada.
+  imagem       Bytes?
+  imagemMime   String?
   ficha        Bytes?
   fichaMime    String?
   autor        String // e-mail do gestor que cadastrou (dado crítico vem da sessão)

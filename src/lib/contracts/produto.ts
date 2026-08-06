@@ -123,3 +123,11 @@ export const Catalogo = z.object({
   produtos: z.array(Produto),
 });
 export type Catalogo = z.infer<typeof Catalogo>;
+
+// Foto e ficha de um produto vêm de dois lugares: os bytes que o gestor subiu (servidos por
+// `/api/produtos/<codigo>/…`) ou o arquivo versionado no repositório (`/produtos/…`,
+// `/fichas-tecnicas/…`). Um produto da base que ganhou override HERDA os do repositório
+// enquanto ninguém anexa os seus — e quem edita precisa saber a diferença: trocar um anexo
+// próprio é uma coisa, "remover" um que nem está no banco é outra. Mora aqui, e não em
+// produto-custom.ts, porque o formulário é client e aquele módulo carrega o Prisma junto.
+export const anexoProprio = (caminho: string | null | undefined) => caminho?.startsWith("/api/produtos/") === true;

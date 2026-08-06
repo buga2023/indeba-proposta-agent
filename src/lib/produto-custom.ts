@@ -7,6 +7,7 @@
 // Ver docs/spec-cadastro-produto.md.
 import { prisma } from "@/lib/db";
 import { Produto } from "@/lib/contracts";
+import { produtoPorCodigo } from "@/lib/catalogo";
 
 // Foto e ficha não viajam no `dados`: são bytes, e servi-los por rota mantém o payload do
 // catálogo do mesmo tamanho de antes. Estes são os caminhos que o produto carrega.
@@ -15,17 +16,23 @@ export const caminhoFicha = (codigo: string) => `/api/produtos/${encodeURICompon
 
 // `imagemPath`/`fichaTecnicaPath` são DERIVADOS do código, nunca confiados ao que veio
 // gravado: assim um `dados` antigo (ou adulterado) não aponta para fora do sistema.
-function comCaminhos(codigo: string, dados: unknown, temFicha: boolean): Produto | null {
+//
+// Sem anexo próprio, a linha HERDA o da base: uma linha desta tabela pode ser o override de
+// um produto do data/catalogo.json (o gestor corrigiu o preço de um dos ~150), e aí a foto e
+// a ficha continuam sendo as versionadas em public/. O fallback também vem do JSON — fonte
+// nossa, não do cliente —, então a garantia acima continua de pé.
+function comCaminhos(codigo: string, dados: unknown, temFicha: boolean, temImagem: boolean): Produto | null {
   const r = Produto.safeParse(dados);
   if (!r.success) {
     console.error(`[produto-custom] ${codigo} fora do contrato — fora do catálogo:`, r.error.flatten());
     return null;
   }
+  const base = produtoPorCodigo(codigo);
   return {
     ...r.data,
     codigo,
-    imagemPath: caminhoImagem(codigo),
-    fichaTecnicaPath: temFicha ? caminhoFicha(codigo) : null,
+    imagemPath: temImagem ? caminhoImagem(codigo) : (base?.imagemPath ?? caminhoImagem(codigo)),
+    fichaTecnicaPath: temFicha ? caminhoFicha(codigo) : (base?.fichaTecnicaPath ?? null),
   };
 }
 
@@ -34,25 +41,28 @@ function comCaminhos(codigo: string, dados: unknown, temFicha: boolean): Produto
 // (que é o que um throw aqui faria, já que isto alimenta a vitrine E o PDF) é pior.
 export async function listarProdutosCustom(): Promise<Produto[]> {
   const linhas = await prisma.produtoCustom.findMany({
-    select: { codigo: true, dados: true, fichaMime: true },
+    select: { codigo: true, dados: true, fichaMime: true, imagemMime: true },
     orderBy: { criadoEm: "desc" },
   });
   return linhas
-    .map((l) => comCaminhos(l.codigo, l.dados, l.fichaMime !== null))
+    .map((l) => comCaminhos(l.codigo, l.dados, l.fichaMime !== null, l.imagemMime !== null))
     .filter((p): p is Produto => p !== null);
 }
 
 export async function produtoCustomPorCodigo(codigo: string): Promise<Produto | null> {
   const l = await prisma.produtoCustom.findUnique({
     where: { codigo },
-    select: { codigo: true, dados: true, fichaMime: true },
+    select: { codigo: true, dados: true, fichaMime: true, imagemMime: true },
   });
-  return l ? comCaminhos(l.codigo, l.dados, l.fichaMime !== null) : null;
+  return l ? comCaminhos(l.codigo, l.dados, l.fichaMime !== null, l.imagemMime !== null) : null;
 }
 
 export async function imagemDoProduto(codigo: string): Promise<{ bytes: Buffer; mime: string } | null> {
   const l = await prisma.produtoCustom.findUnique({ where: { codigo }, select: { imagem: true, imagemMime: true } });
-  return l ? { bytes: Buffer.from(l.imagem), mime: l.imagemMime } : null;
+  // Override que herdou a foto da base não tem bytes: quem chama devolve 404 e o navegador
+  // segue para o arquivo versionado, que é para onde o `imagemPath` deste produto aponta.
+  if (!l?.imagem || !l.imagemMime) return null;
+  return { bytes: Buffer.from(l.imagem), mime: l.imagemMime };
 }
 
 export async function fichaDoProduto(codigo: string): Promise<{ bytes: Buffer; mime: string } | null> {

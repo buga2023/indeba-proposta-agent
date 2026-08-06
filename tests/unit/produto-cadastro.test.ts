@@ -76,7 +76,10 @@ describe("POST /api/produtos — só o gestor cadastra", () => {
 });
 
 describe("POST /api/produtos — o que não entra no catálogo", () => {
-  beforeEach(() => usuarioAtual.mockResolvedValue(GESTOR));
+  // Com chaves: sem elas, o retorno é o próprio mock e o vitest o executa como teardown.
+  beforeEach(() => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+  });
 
   // Dois produtos com o mesmo código fariam proposta, matcher e RAG disputarem qual é qual.
   // O @unique da tabela só enxerga o banco — a colisão com o JSON é barrada aqui.

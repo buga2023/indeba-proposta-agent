@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Produto } from "@/lib/contracts";
+import { anexoProprio, type Produto } from "@/lib/contracts";
 
 // Formulário de produto (Catálogo → Novo produto / Editar), só para o gestor. O MESMO
 // formulário cadastra e edita: os campos são idênticos, e manter dois divergiria na primeira
@@ -108,11 +108,15 @@ export function FormProduto({
   onFechar,
   onSalvo,
   produto,
+  daBase = false,
 }: {
   onFechar: () => void;
   onSalvo: (codigo: string) => void;
-  /** Presente = edição de produto cadastrado pela tela. Ausente = cadastro novo. */
+  /** Presente = edição de produto existente. Ausente = cadastro novo. */
   produto?: Produto;
+  /** Produto dos ~150 do data/catalogo.json. A edição dele vira override, e quem edita
+   *  merece saber disso: o arquivo versionado continua lá, intacto, por baixo. */
+  daBase?: boolean;
 }) {
   const editando = produto != null;
   const car = produto?.ficha?.caracteristicas;
@@ -259,7 +263,9 @@ export function FormProduto({
         </div>
         <div style={{ fontSize: "12.5px", color: "var(--text-muted)", marginBottom: "16px" }}>
           {editando
-            ? "A alteração vale na hora, inclusive para propostas montadas daqui em diante. Preço continua vindo de você na montagem."
+            ? daBase
+              ? "Produto da base Indeba/Pratt. Sua correção é gravada por cima e passa a valer na hora — o catálogo original fica intacto por baixo, e as propostas já geradas não mudam."
+              : "A alteração vale na hora, inclusive para propostas montadas daqui em diante. Preço continua vindo de você na montagem."
             : "Entra no catálogo na hora, disponível para montar proposta. Preço não se cadastra aqui — ele vem de você na montagem."}
         </div>
 
@@ -400,10 +406,17 @@ export function FormProduto({
             {editando && produto.fichaTecnicaPath && !ficha && (
               <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
                 <a href={produto.fichaTecnicaPath} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", fontWeight: 600 }}>Ver ficha atual</a>
-                <label style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", cursor: "pointer" }}>
-                  <input type="checkbox" checked={removerFicha} onChange={(e) => setRemoverFicha(e.target.checked)} />
-                  Remover a ficha deste produto
-                </label>
+                {/* Ficha herdada da base mora no repositório, não no banco: não há o que
+                    apagar, e a rota recusa o pedido. Oferecer a caixa aqui seria prometer uma
+                    ação que não acontece — em vez dela, a frase que diz como trocar. */}
+                {anexoProprio(produto.fichaTecnicaPath) ? (
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", cursor: "pointer" }}>
+                    <input type="checkbox" checked={removerFicha} onChange={(e) => setRemoverFicha(e.target.checked)} />
+                    Remover a ficha deste produto
+                  </label>
+                ) : (
+                  <div style={{ marginTop: "6px", color: "var(--text-subtle)" }}>Vem da base Indeba/Pratt — para trocar, anexe uma nova.</div>
+                )}
               </div>
             )}
           </div>
@@ -417,7 +430,9 @@ export function FormProduto({
               <span style={{ display: "block", fontSize: "12px", color: "var(--text-subtle)" }}>
                 Desmarcado, ele vira <strong>Arquivado</strong>: some dos filtros e da seleção automática, mas continua
                 encontrável pela busca e nas propostas já geradas. É o caminho do meio para o produto que saiu de linha —
-                excluir de vez é o botão da lista.
+                {daBase
+                  ? " e é por aqui que se tira um produto da base da vitrine, já que ele não se exclui."
+                  : " excluir de vez é o botão da lista."}
               </span>
             </span>
           </label>

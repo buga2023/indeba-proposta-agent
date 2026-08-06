@@ -3890,11 +3890,14 @@ function CatalogScreen({
   const [marcaFiltro, setMarcaFiltro] = useState("Todas");
   const toast = useToast();
 
-  // Quais produtos foram cadastrados PELA TELA. Só esses são editáveis/removíveis: os 150 da
-  // base vivem em data/catalogo.json, versionado no git (spec-cadastro-produto.md). A lista
-  // vem de /api/produtos (rota de gestor) e é o que decide se a linha ganha os botões — sem
-  // ela, o gestor clicaria em "editar" num produto do JSON e levaria 404 na cara.
+  // TODO produto é editável — inclusive os ~150 da base, desde 05/08. O que estas duas listas
+  // separam é outra coisa: `editaveis` traz quem já tem linha no banco (produto cadastrado
+  // pela tela ou produto da base que já foi editado), e é de lá que o formulário parte, para
+  // abrir com o override e não com o dado antigo do JSON; `codigosBase` diz quem veio do
+  // data/catalogo.json, e esses não ganham lixeira — apagar a linha do banco não tiraria o
+  // produto do catálogo, só desfaria a edição (a saída para eles é arquivar).
   const [editaveis, setEditaveis] = useState<Map<string, Produto>>(new Map());
+  const [codigosBase, setCodigosBase] = useState<Set<string>>(new Set());
   const [emEdicao, setEmEdicao] = useState<Produto | null>(null);
   const [excluindo, setExcluindo] = useState<string | null>(null);
   const [recarga, setRecarga] = useState(0);
@@ -3902,9 +3905,11 @@ function CatalogScreen({
     if (!ehAdmin) return;
     let vivo = true;
     fetch("/api/produtos")
-      .then((r) => (r.ok ? r.json() : { produtos: [] }))
-      .then((d: { produtos?: Produto[] }) => {
-        if (vivo) setEditaveis(new Map((d.produtos ?? []).map((p) => [p.codigo, p])));
+      .then((r) => (r.ok ? r.json() : { produtos: [], base: [] }))
+      .then((d: { produtos?: Produto[]; base?: string[] }) => {
+        if (!vivo) return;
+        setEditaveis(new Map((d.produtos ?? []).map((p) => [p.codigo, p])));
+        setCodigosBase(new Set(d.base ?? []));
       })
       // Falhar aqui não quebra o Catálogo: sem a lista, a tela só não oferece editar/excluir.
       .catch(() => {});
@@ -3997,6 +4002,7 @@ function CatalogScreen({
           // das props, e sem remontar o segundo "editar" abriria com os dados do primeiro.
           key={emEdicao.codigo}
           produto={emEdicao}
+          daBase={codigosBase.has(emEdicao.codigo)}
           onFechar={() => setEmEdicao(null)}
           onSalvo={() => {
             setEmEdicao(null);
@@ -4186,39 +4192,33 @@ function CatalogScreen({
                 )}
                 {ehAdmin && (
                   <div style={{ ...COL_ACOES, display: "flex", gap: "4px", justifyContent: "flex-end", alignItems: "center" }}>
-                    {editaveis.has(item.codigo) ? (
-                      <>
-                        <button
-                          onClick={() => setEmEdicao(editaveis.get(item.codigo)!)}
-                          title="Editar este produto"
-                          aria-label={`Editar ${item.nome}`}
-                          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: "white", color: "var(--primary)", cursor: "pointer" }}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 2.3L5.4 12.7l-3 .7.7-3z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => excluir(item)}
-                          disabled={excluindo === item.codigo}
-                          title="Excluir do catálogo"
-                          aria-label={`Excluir ${item.nome}`}
-                          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: "white", color: "var(--danger)", cursor: excluindo === item.codigo ? "default" : "pointer", opacity: excluindo === item.codigo ? 0.5 : 1 }}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M2.8 4.3h10.4M6.3 4.3V3a.9.9 0 0 1 .9-.9h1.6a.9.9 0 0 1 .9.9v1.3M4.2 4.3l.6 8.5a1 1 0 0 0 1 .9h4.4a1 1 0 0 0 1-.9l.6-8.5" />
-                          </svg>
-                        </button>
-                      </>
-                    ) : (
-                      // Produto do catálogo-base: sem botão, com o porquê no hover. Botão
-                      // desabilitado sem explicação vira "não está funcionando".
-                      <span
-                        title="Produto da base Indeba/Pratt — vem do catálogo versionado e não se edita pela tela"
-                        style={{ fontSize: "10.5px", color: "var(--gray-400)", alignSelf: "center" }}
+                    <button
+                      // Parte do override, quando existe: abrir a edição com o dado velho do
+                      // JSON faria o gestor "perder" a correção que ele já tinha feito.
+                      onClick={() => setEmEdicao(editaveis.get(item.codigo) ?? item)}
+                      title={codigosBase.has(item.codigo) ? "Editar este produto (a base fica intacta — sua correção passa a valer por cima)" : "Editar este produto"}
+                      aria-label={`Editar ${item.nome}`}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: "white", color: "var(--primary)", cursor: "pointer" }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 2.3L5.4 12.7l-3 .7.7-3z" />
+                      </svg>
+                    </button>
+                    {/* Lixeira só onde excluir apaga de verdade. No produto da base ela seria
+                        mentira: o JSON é versionado, então o produto voltaria na hora — por
+                        isso ali a saída é arquivar, pela própria edição. */}
+                    {!codigosBase.has(item.codigo) && (
+                      <button
+                        onClick={() => excluir(item)}
+                        disabled={excluindo === item.codigo}
+                        title="Excluir do catálogo"
+                        aria-label={`Excluir ${item.nome}`}
+                        style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: "white", color: "var(--danger)", cursor: excluindo === item.codigo ? "default" : "pointer", opacity: excluindo === item.codigo ? 0.5 : 1 }}
                       >
-                        base
-                      </span>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M2.8 4.3h10.4M6.3 4.3V3a.9.9 0 0 1 .9-.9h1.6a.9.9 0 0 1 .9.9v1.3M4.2 4.3l.6 8.5a1 1 0 0 0 1 .9h4.4a1 1 0 0 0 1-.9l.6-8.5" />
+                        </svg>
+                      </button>
                     )}
                   </div>
                 )}

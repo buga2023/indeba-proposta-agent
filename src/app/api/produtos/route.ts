@@ -25,7 +25,15 @@ export async function GET(req: NextRequest) {
   const { erro } = await exigirGestor(req);
   if (erro) return erro;
   try {
-    return NextResponse.json({ produtos: await listarProdutosCustom() });
+    // `base` são os códigos que vêm do data/catalogo.json. A tela precisa deles para separar
+    // o que se EXCLUI (produto que nasceu na tela: some de vez) do que só se ARQUIVA (produto
+    // da base: o arquivo versionado continua lá, então apagar a linha do banco não o tiraria
+    // do catálogo — só desfaria a edição). Sem essa distinção o gestor clica em excluir, vê o
+    // produto continuar na lista e conclui que o sistema ignorou o comando.
+    return NextResponse.json({
+      produtos: await listarProdutosCustom(),
+      base: carregarCatalogo().produtos.map((p) => p.codigo),
+    });
   } catch (e) {
     return respostaErro(e, "Falha ao listar produtos cadastrados", 500);
   }
@@ -145,9 +153,13 @@ export async function POST(req: NextRequest) {
 // `/api/produtos/<codigo>/imagem|ficha`. Renomear deixaria toda proposta já gerada apontando
 // a foto para um código que não existe mais. Para trocar de código: apaga e cadastra.
 //
-// Produto do JSON continua fora — ele é versionado no git (spec-cadastro-produto.md).
+// Produto da BASE também se edita por aqui, desde 05/08: a primeira versão recusava (404) e
+// isso deixava os ~150 do JSON sem conserto pela tela — corrigir um preço exigia desenvolvedor
+// e deploy. Agora a edição de um produto da base grava um OVERRIDE nesta tabela, que passa a
+// vencer o JSON na leitura (ver catalogoCompleto). O arquivo versionado fica intacto, servindo
+// de origem: é dele que vêm a foto e a ficha enquanto o gestor não anexar as suas.
 export async function PUT(req: NextRequest) {
-  const { erro } = await exigirGestor(req);
+  const { erro, email } = await exigirGestor(req);
   if (erro) return erro;
 
   const form = await lerForm(req);
@@ -160,11 +172,12 @@ export async function PUT(req: NextRequest) {
   const codigo = parsed.data.codigo.trim().toUpperCase();
 
   const atual = await prisma.produtoCustom.findUnique({ where: { codigo }, select: { dados: true, fichaMime: true } });
-  if (!atual) {
-    // 404 e não 403: o gestor PODE editar — este produto específico é que não mora no banco.
+  const naBase = carregarCatalogo().produtos.find((p) => p.codigo === codigo);
+  if (!atual && !naBase) {
+    // 404 e não 403: o gestor PODE editar — este código é que não existe em fonte nenhuma.
     // A mensagem precisa dizer o que fazer, senão vira "o botão de salvar não funciona".
     return NextResponse.json(
-      { erro: `${codigo} não é um produto cadastrado pela tela — os 150 da base vêm do catálogo versionado e não se editam por aqui.` },
+      { erro: `${codigo} não existe no catálogo. Para incluí-lo, use "Novo produto".` },
       { status: 404 },
     );
   }
@@ -176,30 +189,43 @@ export async function PUT(req: NextRequest) {
   // Trocar a ficha e removê-la são pedidos distintos: sem o sinal explícito, "não anexei
   // nada" (o caso comum ao editar só o texto) apagaria a ficha que já estava lá.
   const removerFicha = String(form.get("removerFicha") ?? "") === "1";
+  // Remover a ficha HERDADA da base é um pedido que não dá para cumprir: ela não está no
+  // banco para ser apagada, está no repositório. Dizer isso é melhor do que aceitar o clique,
+  // não fazer nada e deixar o gestor achando que apagou.
+  if (removerFicha && !fch.ficha && !atual?.fichaMime && naBase?.fichaTecnicaPath) {
+    return NextResponse.json(
+      { erro: "A ficha técnica deste produto vem da base versionada e não se remove pela tela. Para trocá-la, anexe uma nova." },
+      { status: 400 },
+    );
+  }
 
   try {
     // `ativo` ausente preserva o estado atual — editar a descrição não é motivo para
-    // desarquivar um produto que o gestor tinha tirado de circulação.
-    const ativoAtual = Produto.safeParse(atual.dados);
+    // desarquivar um produto que o gestor tinha tirado de circulação. Sem linha no banco
+    // (primeira edição de um produto da base), o estado a preservar é o do JSON.
+    const ativoAtual = atual ? Produto.safeParse(atual.dados) : null;
     const dados = {
       ...parsed.data,
       codigo,
-      ativo: parsed.data.ativo ?? (ativoAtual.success ? ativoAtual.data.ativo : true),
+      ativo: parsed.data.ativo ?? (ativoAtual?.success ? ativoAtual.data.ativo : (naBase?.ativo ?? true)),
       imagemPath: "",
       fichaTecnicaPath: null,
     };
-    await prisma.produtoCustom.update({
-      where: { codigo },
-      data: {
-        dados,
-        ...(img.imagem ? { imagem: Buffer.from(await img.imagem.arrayBuffer()), imagemMime: img.imagem.type } : {}),
-        ...(fch.ficha
-          ? { ficha: Buffer.from(await fch.ficha.arrayBuffer()), fichaMime: fch.ficha.type }
-          : removerFicha
-            ? { ficha: null, fichaMime: null }
-            : {}),
-      },
-    });
+    const anexos = {
+      ...(img.imagem ? { imagem: Buffer.from(await img.imagem.arrayBuffer()), imagemMime: img.imagem.type } : {}),
+      ...(fch.ficha
+        ? { ficha: Buffer.from(await fch.ficha.arrayBuffer()), fichaMime: fch.ficha.type }
+        : removerFicha
+          ? { ficha: null, fichaMime: null }
+          : {}),
+    };
+    if (atual) {
+      await prisma.produtoCustom.update({ where: { codigo }, data: { dados, ...anexos } });
+    } else {
+      // Primeiro override deste produto da base. Sem foto anexada, `imagem` fica nula e o
+      // produto segue exibindo a que está versionada em public/ (ver produto-custom.ts).
+      await prisma.produtoCustom.create({ data: { codigo, dados, autor: email, ...anexos } });
+    }
     return NextResponse.json({ ok: true, codigo });
   } catch (e) {
     return respostaErro(e, "Falha ao salvar o produto", 500);
@@ -208,16 +234,25 @@ export async function PUT(req: NextRequest) {
 
 const Remover = z.object({ codigo: z.string().min(1) });
 
-// Só remove o que foi cadastrado pela tela — produto do JSON não é apagável por aqui (nem
-// deveria: ele é versionado no git). Proposta já salva não quebra: o PropostaScope é
-// snapshot, e `comImagensDoCatalogo` só recalcula enquanto o código existir.
+// Só remove o que NASCEU na tela. Produto da base não é apagável por aqui — e agora que ele
+// pode ter override, isso vale mais ainda: apagar a linha do banco não o tiraria do catálogo,
+// só desfaria a edição, e o produto reapareceria com os dados antigos. Quem quer sumir com um
+// produto da base arquiva (`ativo: false` pela edição), que é reversível e mantém as propostas
+// antigas legíveis. Proposta já salva não quebra de todo jeito: o PropostaScope é snapshot.
 export async function DELETE(req: NextRequest) {
   const { erro } = await exigirGestor(req);
   if (erro) return erro;
   const parsed = Remover.safeParse({ codigo: req.nextUrl.searchParams.get("codigo") });
   if (!parsed.success) return NextResponse.json({ erro: "Código não informado." }, { status: 400 });
+  const codigo = parsed.data.codigo;
+  if (carregarCatalogo().produtos.some((p) => p.codigo === codigo)) {
+    return NextResponse.json(
+      { erro: `${codigo} é da base Indeba/Pratt e não sai do catálogo por aqui. Para tirá-lo da vitrine, edite o produto e desmarque "Ativo" — some dos filtros e continua encontrável pela busca.` },
+      { status: 409 },
+    );
+  }
   try {
-    await prisma.produtoCustom.delete({ where: { codigo: parsed.data.codigo } });
+    await prisma.produtoCustom.delete({ where: { codigo } });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ erro: "Produto não encontrado." }, { status: 404 });

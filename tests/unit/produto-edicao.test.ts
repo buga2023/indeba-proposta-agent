@@ -7,10 +7,11 @@ import type { NextRequest } from "next/server";
 // O que precisa ficar de pé aqui: quem pode escrever, o que a edição NÃO pode apagar sem
 // pedido explícito (foto, ficha, estado de arquivado) e a fronteira com o catálogo-base —
 // os 150 do JSON são versionados no git e não se editam por esta rota.
-const { usuarioAtual, findUnique, update, remover, carregarCatalogo, listarProdutosCustom } = vi.hoisted(() => ({
+const { usuarioAtual, findUnique, update, create, remover, carregarCatalogo, listarProdutosCustom } = vi.hoisted(() => ({
   usuarioAtual: vi.fn(),
   findUnique: vi.fn(),
   update: vi.fn(),
+  create: vi.fn(),
   remover: vi.fn(),
   carregarCatalogo: vi.fn(),
   listarProdutosCustom: vi.fn(),
@@ -18,7 +19,7 @@ const { usuarioAtual, findUnique, update, remover, carregarCatalogo, listarProdu
 
 vi.mock("@/lib/auth-db", () => ({ usuarioAtual }));
 vi.mock("@/lib/db", () => ({
-  prisma: { produtoCustom: { create: vi.fn(), findMany: vi.fn(), findUnique, update, delete: remover } },
+  prisma: { produtoCustom: { create, findMany: vi.fn(), findUnique, update, delete: remover } },
 }));
 vi.mock("@/lib/catalogo", () => ({ carregarCatalogo }));
 vi.mock("@/lib/produto-custom", () => ({ listarProdutosCustom }));
@@ -58,12 +59,19 @@ function req(dados: unknown, extras: Record<string, File | string> = {}) {
 }
 
 const dadosSalvos = () => update.mock.calls[0][0].data.dados;
+// Override de produto da base entra por `create`, não por `update` — a linha ainda não existe.
+const dadosCriados = () => create.mock.calls[0][0].data.dados;
+
+// O PRIMMAX-PLUS representa a base: mora no JSON e (salvo quando o teste disser o contrário)
+// não tem linha no banco. Ativo e com ficha versionada, como os produtos reais do arquivo.
+const NA_BASE = { codigo: "PRIMMAX-PLUS", ativo: true, fichaTecnicaPath: "/fichas-tecnicas/primmax-plus.pdf" };
 
 beforeEach(() => {
-  for (const m of [usuarioAtual, findUnique, update, remover, carregarCatalogo]) m.mockReset();
-  carregarCatalogo.mockReturnValue({ marca: "indeba_express", produtos: [{ codigo: "PRIMMAX-PLUS" }] });
+  for (const m of [usuarioAtual, findUnique, update, create, remover, carregarCatalogo]) m.mockReset();
+  carregarCatalogo.mockReturnValue({ marca: "indeba_express", produtos: [NA_BASE] });
   findUnique.mockResolvedValue(NO_BANCO);
   update.mockResolvedValue({});
+  create.mockResolvedValue({});
   remover.mockResolvedValue({});
 });
 
@@ -81,16 +89,75 @@ describe("PUT /api/produtos — só o gestor edita", () => {
   });
 });
 
-describe("PUT /api/produtos — a fronteira com o catálogo-base", () => {
-  beforeEach(() => usuarioAtual.mockResolvedValue(GESTOR));
+describe("PUT /api/produtos — editar produto da base grava override", () => {
+  beforeEach(() => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+    findUnique.mockResolvedValue(null); // produto da base ainda não tem linha no banco
+  });
 
-  // Produto do JSON não tem linha no banco. Editar por aqui gravaria um segundo produto com
-  // o mesmo código — as duas fontes brigando por quem é o PRIMMAX-PLUS de verdade.
-  it("GUARDIÃO: produto que não veio da tela é recusado (404), não criado", async () => {
-    findUnique.mockResolvedValue(null);
+  // Isto já foi 404 por design, e a recusa é que era o problema: os ~150 do JSON ficavam sem
+  // conserto pela tela (o Mateus esbarrou nisso). Agora a primeira edição CRIA a linha, que
+  // passa a vencer o JSON na leitura — sem tocar no arquivo versionado.
+  it("primeira edição de produto da base cria a linha, não devolve 404", async () => {
     const r = await PUT(req({ ...EDICAO, codigo: "PRIMMAX-PLUS" }));
+    expect(r.status).toBe(200);
+    expect(create).toHaveBeenCalled();
+    expect(dadosCriados().codigo).toBe("PRIMMAX-PLUS");
+    expect(dadosCriados().nome).toBe("Produto de Teste (renomeado)");
+  });
+
+  it("o override nasce sem bytes de imagem — a foto continua sendo a versionada", async () => {
+    await PUT(req({ ...EDICAO, codigo: "PRIMMAX-PLUS" }));
+    expect(create.mock.calls[0][0].data).not.toHaveProperty("imagem");
+    expect(dadosCriados().imagemPath).toBe("");
+  });
+
+  it("com foto anexada, o override nasce com a imagem própria", async () => {
+    await PUT(req({ ...EDICAO, codigo: "PRIMMAX-PLUS" }, { imagem: png() }));
+    expect(create.mock.calls[0][0].data.imagemMime).toBe("image/png");
+  });
+
+  // Sem linha no banco, o estado a preservar é o do JSON — não um `true` inventado.
+  it("GUARDIÃO: `ativo` ausente herda o estado da base", async () => {
+    carregarCatalogo.mockReturnValue({ marca: "indeba_express", produtos: [{ ...NA_BASE, ativo: false }] });
+    await PUT(req({ ...EDICAO, codigo: "PRIMMAX-PLUS" }));
+    expect(dadosCriados().ativo).toBe(false);
+  });
+
+  it("arquivar um produto da base é edição com `ativo: false`", async () => {
+    await PUT(req({ ...EDICAO, codigo: "PRIMMAX-PLUS", ativo: false }));
+    expect(dadosCriados().ativo).toBe(false);
+  });
+
+  // A ficha herdada está no repositório, não no banco: aceitar o pedido e não fazer nada
+  // deixaria o gestor certo de que apagou.
+  it("GUARDIÃO: remover a ficha herdada da base é recusado com explicação", async () => {
+    const r = await PUT(req({ ...EDICAO, codigo: "PRIMMAX-PLUS" }, { removerFicha: "1" }));
+    expect(r.status).toBe(400);
+    expect((await r.json()).erro).toMatch(/base versionada/i);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("anexar ficha nova a um produto da base é permitido", async () => {
+    const r = await PUT(req({ ...EDICAO, codigo: "PRIMMAX-PLUS" }, { ficha: pdf(), removerFicha: "1" }));
+    expect(r.status).toBe(200);
+    expect(create.mock.calls[0][0].data.fichaMime).toBe("application/pdf");
+  });
+
+  // Editar exige que o produto exista em ALGUMA fonte: código inventado continua 404, senão
+  // o PUT viraria uma segunda porta de cadastro, sem foto obrigatória nem checagem de código.
+  it("GUARDIÃO: código que não existe em fonte nenhuma é 404, não criação", async () => {
+    const r = await PUT(req({ ...EDICAO, codigo: "NAO-EXISTE" }));
     expect(r.status).toBe(404);
+    expect(create).not.toHaveBeenCalled();
     expect(update).not.toHaveBeenCalled();
+  });
+});
+
+describe("PUT /api/produtos — contrato e segurança", () => {
+  // Com chaves: sem elas, o retorno é o próprio mock e o vitest o executa como teardown.
+  beforeEach(() => {
+    usuarioAtual.mockResolvedValue(GESTOR);
   });
 
   it("dados fora do contrato Zod são recusados (linha inexistente)", async () => {
@@ -106,7 +173,10 @@ describe("PUT /api/produtos — a fronteira com o catálogo-base", () => {
 });
 
 describe("PUT /api/produtos — o que a edição não pode apagar sozinha", () => {
-  beforeEach(() => usuarioAtual.mockResolvedValue(GESTOR));
+  // Com chaves: sem elas, o retorno é o próprio mock e o vitest o executa como teardown.
+  beforeEach(() => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+  });
 
   it("salva o texto novo", async () => {
     const r = await PUT(req(EDICAO));
@@ -191,12 +261,23 @@ describe("DELETE /api/produtos", () => {
     expect(remover).toHaveBeenCalledWith({ where: { codigo: "TESTE-NOVO" } });
   });
 
-  // Produto do JSON não tem linha no banco: o delete falha e vira 404 — nunca um 500 que
-  // pareceria falha do sistema.
-  it("produto que não veio da tela devolve 404", async () => {
+  // Produto da base não se exclui, e a recusa tem que vir ANTES do banco: apagar a linha só
+  // desfaria o override, o produto voltaria com os dados antigos e o gestor veria "excluí e
+  // continua lá". A mensagem manda arquivar, que é o que de fato tira da vitrine.
+  it("GUARDIÃO: produto da base é recusado (409) sem tocar no banco", async () => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+    const r = await DELETE(reqDel("PRIMMAX-PLUS"));
+    expect(r.status).toBe(409);
+    expect((await r.json()).erro).toMatch(/ativo/i);
+    expect(remover).not.toHaveBeenCalled();
+  });
+
+  // Código que não é da base e não está no banco: o delete falha e vira 404 — nunca um 500,
+  // que pareceria falha do sistema.
+  it("produto inexistente devolve 404", async () => {
     usuarioAtual.mockResolvedValue(GESTOR);
     remover.mockRejectedValue(new Error("registro não encontrado"));
-    expect((await DELETE(reqDel("PRIMMAX-PLUS"))).status).toBe(404);
+    expect((await DELETE(reqDel("NAO-EXISTE"))).status).toBe(404);
   });
 
   it("sem código, 400", async () => {
