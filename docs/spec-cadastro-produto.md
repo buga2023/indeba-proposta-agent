@@ -78,5 +78,9 @@ como `/api/colaboradores`. O botão "Novo produto" só habilita para admin.
 ## Fora de escopo
 
 - Edição de produto do JSON pela tela (só os novos, do banco, são editáveis/removíveis)
+  > Entregue em 05/08/2026 para os produtos do banco: `PUT /api/produtos` + botões de editar
+  > e excluir na lista do Catálogo, a pedido do Mateus ("tem que deixar uma opção para eu,
+  > como administrador, adicionar, excluir ou editar"). O produto do JSON continua fora.
+  > Ver `como-funciona-catalogo-e-cadastro.md` §5.
 - Migração dos 150 para o banco
 - Recorte automático de fundo (`gerar-cutouts.mjs`) para foto enviada pela tela

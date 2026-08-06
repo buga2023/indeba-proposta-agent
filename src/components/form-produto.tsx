@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import type { Produto } from "@/lib/contracts";
 
-// Formulário de cadastro de produto (Catálogo → Novo produto), só para o gestor.
+// Formulário de produto (Catálogo → Novo produto / Editar), só para o gestor. O MESMO
+// formulário cadastra e edita: os campos são idênticos, e manter dois divergiria na primeira
+// mudança — um lado ganharia campo que o outro não sabe salvar.
 //
 // Cobre a FICHA RICA junto com os dados básicos de propósito: é dela que sai a página de
 // produto do PDF (benefícios, diluições, características). Um cadastro que só aceitasse
@@ -39,8 +42,33 @@ const METODOS = [
 
 const UNIDADES = ["L", "kg", "un", "ml"] as const;
 
-type Embalagem = { tamanho: string; unidade: (typeof UNIDADES)[number]; diluicaoMax: string };
-type Diluicao = { uso: string; razao: string };
+// `resto` carrega o que o formulário NÃO mostra (preço, custo diluído, foto por embalagem,
+// "como aplicar" da diluição). Sem isso, editar o nome do produto apagaria em silêncio o que
+// outra parte do sistema gravou — a edição só pode mexer no que ela de fato exibe.
+type Embalagem = {
+  tamanho: string;
+  unidade: (typeof UNIDADES)[number];
+  diluicaoMax: string;
+  resto?: Omit<Produto["embalagens"][number], "tamanho" | "unidade" | "diluicaoMax">;
+};
+type Diluicao = { uso: string; razao: string; comoAplicar?: string };
+
+const EMBALAGEM_VAZIA: Embalagem = { tamanho: "", unidade: "L", diluicaoMax: "" };
+
+function embalagensIniciais(p?: Produto): Embalagem[] {
+  if (!p?.embalagens.length) return [EMBALAGEM_VAZIA];
+  return p.embalagens.map(({ tamanho, unidade, diluicaoMax, ...resto }) => ({
+    tamanho: String(tamanho).replace(".", ","),
+    unidade,
+    diluicaoMax: diluicaoMax ?? "",
+    resto,
+  }));
+}
+
+function diluicoesIniciais(p?: Produto): Diluicao[] {
+  const d = p?.ficha?.diluicoes ?? [];
+  return d.length ? d.map((x) => ({ uso: x.uso, razao: x.razao, comoAplicar: x.comoAplicar })) : [{ uso: "", razao: "" }];
+}
 
 const campo = {
   width: "100%", padding: "9px 12px", border: "1px solid var(--gray-200)", borderRadius: "9px",
@@ -76,31 +104,49 @@ function Chips<T extends string>({ opcoes, valor, onToggle }: { opcoes: readonly
   );
 }
 
-export function NovoProduto({ onFechar, onCriado }: { onFechar: () => void; onCriado: (codigo: string) => void }) {
-  const [codigo, setCodigo] = useState("");
-  const [nome, setNome] = useState("");
-  const [marca, setMarca] = useState<"indeba" | "pratt">("indeba");
-  const [linha, setLinha] = useState<(typeof LINHAS)[number][0]>("limpeza_conservacao");
-  const [descricaoCurta, setDescricaoCurta] = useState("");
-  const [descricaoUso, setDescricaoUso] = useState("");
-  const [segmentos, setSegmentos] = useState("");
-  const [funcoes, setFuncoes] = useState<(typeof FUNCOES)[number][0][]>([]);
-  const [metodos, setMetodos] = useState<(typeof METODOS)[number][0][]>([]);
-  const [embalagens, setEmbalagens] = useState<Embalagem[]>([{ tamanho: "", unidade: "L", diluicaoMax: "" }]);
+export function FormProduto({
+  onFechar,
+  onSalvo,
+  produto,
+}: {
+  onFechar: () => void;
+  onSalvo: (codigo: string) => void;
+  /** Presente = edição de produto cadastrado pela tela. Ausente = cadastro novo. */
+  produto?: Produto;
+}) {
+  const editando = produto != null;
+  const car = produto?.ficha?.caracteristicas;
+
+  const [codigo, setCodigo] = useState(produto?.codigo ?? "");
+  const [nome, setNome] = useState(produto?.nome ?? "");
+  const [marca, setMarca] = useState<"indeba" | "pratt">(produto?.marca ?? "indeba");
+  const [linha, setLinha] = useState<(typeof LINHAS)[number][0]>(produto?.linha ?? "limpeza_conservacao");
+  const [descricaoCurta, setDescricaoCurta] = useState(produto?.descricaoCurta ?? "");
+  const [descricaoUso, setDescricaoUso] = useState(produto?.descricaoUso ?? "");
+  const [segmentos, setSegmentos] = useState((produto?.segmentos ?? []).join(", "));
+  const [funcoes, setFuncoes] = useState<(typeof FUNCOES)[number][0][]>(
+    (produto?.funcoes ?? []) as (typeof FUNCOES)[number][0][],
+  );
+  const [metodos, setMetodos] = useState<(typeof METODOS)[number][0][]>(
+    (produto?.metodos ?? []) as (typeof METODOS)[number][0][],
+  );
+  const [embalagens, setEmbalagens] = useState<Embalagem[]>(() => embalagensIniciais(produto));
+  const [ativo, setAtivo] = useState(produto?.ativo ?? true);
 
   // Ficha rica
-  const [fichaTitulo, setFichaTitulo] = useState("");
-  const [fichaDescricao, setFichaDescricao] = useState("");
-  const [beneficios, setBeneficios] = useState("");
-  const [pH, setPH] = useState("");
-  const [aspecto, setAspecto] = useState("");
-  const [cor, setCor] = useState("");
-  const [odor, setOdor] = useState("");
-  const [rendimento, setRendimento] = useState("");
-  const [diluicoes, setDiluicoes] = useState<Diluicao[]>([{ uso: "", razao: "" }]);
+  const [fichaTitulo, setFichaTitulo] = useState(produto?.ficha?.titulo ?? "");
+  const [fichaDescricao, setFichaDescricao] = useState(produto?.ficha?.descricao ?? "");
+  const [beneficios, setBeneficios] = useState((produto?.ficha?.beneficios ?? []).join("\n"));
+  const [pH, setPH] = useState(car?.pH ?? "");
+  const [aspecto, setAspecto] = useState(car?.aspecto ?? "");
+  const [cor, setCor] = useState(car?.cor ?? "");
+  const [odor, setOdor] = useState(car?.odor ?? "");
+  const [rendimento, setRendimento] = useState(produto?.ficha?.rendimento ?? "");
+  const [diluicoes, setDiluicoes] = useState<Diluicao[]>(() => diluicoesIniciais(produto));
 
   const [imagem, setImagem] = useState<File | null>(null);
   const [ficha, setFicha] = useState<File | null>(null);
+  const [removerFicha, setRemoverFicha] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
 
@@ -114,13 +160,14 @@ export function NovoProduto({ onFechar, onCriado }: { onFechar: () => void; onCr
     const emb = embalagens
       .filter((x) => x.tamanho.trim())
       .map((x) => ({
-        tamanho: Number(x.tamanho.replace(",", ".")),
-        unidade: x.unidade,
         // Preço NÃO é cadastrado aqui: o catálogo é fonte de produto, e o valor vem do
         // humano na montagem (constituição §1.2). Nenhum produto do catálogo tem preço.
         preco: null,
-        diluicaoMax: x.diluicaoMax.trim() || null,
         custoDiluido: null,
+        ...x.resto,
+        tamanho: Number(x.tamanho.replace(",", ".")),
+        unidade: x.unidade,
+        diluicaoMax: x.diluicaoMax.trim() || null,
       }));
 
     if (!codigo.trim() || !nome.trim()) return setErro("Código e nome são obrigatórios.");
@@ -128,24 +175,40 @@ export function NovoProduto({ onFechar, onCriado }: { onFechar: () => void; onCr
       return setErro("Informe ao menos uma embalagem com tamanho válido.");
     }
     if (!funcoes.length) return setErro("Escolha ao menos uma função — é por ela que a seleção automática acha o produto.");
-    if (!imagem) return setErro("A foto do produto é obrigatória.");
+    // Na edição, não anexar foto significa "mantém a que já está lá".
+    if (!editando && !imagem) return setErro("A foto do produto é obrigatória.");
 
     const listaBeneficios = beneficios.split("\n").map((l) => l.trim()).filter(Boolean);
-    const listaDiluicoes = diluicoes.filter((d) => d.uso.trim() && d.razao.trim());
-    const caracteristicas = Object.fromEntries(
-      Object.entries({ pH, aspecto, cor, odor }).filter(([, v]) => v.trim()),
-    );
+    const listaDiluicoes = diluicoes
+      .filter((d) => d.uso.trim() && d.razao.trim())
+      .map((d) => ({ uso: d.uso.trim(), razao: d.razao.trim(), ...(d.comoAplicar ? { comoAplicar: d.comoAplicar } : {}) }));
+    // Características que o formulário não mostra (uso, densidade, cloro ativo) seguem
+    // adiante como estavam — quem não é editado aqui não pode ser apagado daqui.
+    const caracteristicas = {
+      ...car,
+      ...Object.fromEntries(Object.entries({ pH, aspecto, cor, odor }).map(([k, v]) => [k, v.trim() || undefined])),
+    };
+    const caracteristicasLimpas = Object.fromEntries(Object.entries(caracteristicas).filter(([, v]) => v));
     const fichaRica = {
+      // Mesma razão: subtítulo, rótulo de linha e "indicado para" não têm campo na tela.
+      ...(produto?.ficha?.subtitulo ? { subtitulo: produto.ficha.subtitulo } : {}),
+      ...(produto?.ficha?.linhaLabel ? { linhaLabel: produto.ficha.linhaLabel } : {}),
+      ...(produto?.ficha?.indicadoPara ? { indicadoPara: produto.ficha.indicadoPara } : {}),
       ...(fichaTitulo.trim() ? { titulo: fichaTitulo.trim() } : {}),
       ...(fichaDescricao.trim() ? { descricao: fichaDescricao.trim() } : {}),
       ...(listaBeneficios.length ? { beneficios: listaBeneficios } : {}),
       ...(listaDiluicoes.length ? { diluicoes: listaDiluicoes } : {}),
-      ...(Object.keys(caracteristicas).length ? { caracteristicas } : {}),
+      ...(Object.keys(caracteristicasLimpas).length ? { caracteristicas: caracteristicasLimpas } : {}),
       ...(rendimento.trim() ? { rendimento: rendimento.trim() } : {}),
     };
 
     const dados = {
-      codigo: codigo.trim().toUpperCase(),
+      // `fotoEmbalagem` diz qual recipiente a foto mostra (lib/imagem-produto.ts). Não tem
+      // campo aqui, então viaja de volta intacto.
+      ...(produto?.fotoEmbalagem ? { fotoEmbalagem: produto.fotoEmbalagem } : {}),
+      // Código é imutável na edição — é ele que forma o caminho da foto e da ficha; trocar
+      // deixaria as propostas já geradas apontando para um produto que não existe mais.
+      codigo: (editando ? produto.codigo : codigo.trim().toUpperCase()),
       nome: nome.trim(),
       marca,
       linha,
@@ -155,22 +218,24 @@ export function NovoProduto({ onFechar, onCriado }: { onFechar: () => void; onCr
       funcoes,
       metodos,
       embalagens: emb,
+      ...(editando ? { ativo } : {}),
       ...(Object.keys(fichaRica).length ? { ficha: fichaRica } : {}),
     };
 
     const form = new FormData();
     form.append("dados", JSON.stringify(dados));
-    form.append("imagem", imagem);
+    if (imagem) form.append("imagem", imagem);
     if (ficha) form.append("ficha", ficha);
+    if (editando && removerFicha && !ficha) form.append("removerFicha", "1");
 
     setSalvando(true);
     try {
-      const r = await fetch("/api/produtos", { method: "POST", body: form });
+      const r = await fetch("/api/produtos", { method: editando ? "PUT" : "POST", body: form });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.erro || `Falha ao cadastrar (HTTP ${r.status}).`);
-      onCriado(d.codigo);
+      if (!r.ok) throw new Error(d.erro || `Falha ao salvar (HTTP ${r.status}).`);
+      onSalvo(d.codigo);
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao cadastrar.");
+      setErro(e instanceof Error ? e.message : "Erro ao salvar.");
     } finally {
       setSalvando(false);
     }
@@ -187,11 +252,15 @@ export function NovoProduto({ onFechar, onCriado }: { onFechar: () => void; onCr
         style={{ background: "white", borderRadius: "16px", padding: "24px 26px", width: "100%", maxWidth: "680px", boxShadow: "var(--shadow-lg)" }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: 800, color: "var(--text-strong)", margin: 0 }}>Novo produto</h2>
+          <h2 style={{ fontSize: "18px", fontWeight: 800, color: "var(--text-strong)", margin: 0 }}>
+            {editando ? "Editar produto" : "Novo produto"}
+          </h2>
           <button type="button" onClick={onFechar} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--text-subtle)", lineHeight: 1 }}>×</button>
         </div>
         <div style={{ fontSize: "12.5px", color: "var(--text-muted)", marginBottom: "16px" }}>
-          Entra no catálogo na hora, disponível para montar proposta. Preço não se cadastra aqui — ele vem de você na montagem.
+          {editando
+            ? "A alteração vale na hora, inclusive para propostas montadas daqui em diante. Preço continua vindo de você na montagem."
+            : "Entra no catálogo na hora, disponível para montar proposta. Preço não se cadastra aqui — ele vem de você na montagem."}
         </div>
 
         {erro && (
@@ -200,8 +269,15 @@ export function NovoProduto({ onFechar, onCriado }: { onFechar: () => void; onCr
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: "12px" }}>
           <div>
-            <label style={rotulo}>Código *</label>
-            <input style={campo} value={codigo} onChange={(e) => setCodigo(e.target.value.toUpperCase())} placeholder="PRIMMAX-NOVO" />
+            <label style={rotulo}>Código {editando ? "" : "*"}</label>
+            <input
+              style={{ ...campo, ...(editando ? { background: "var(--gray-50)", color: "var(--text-muted)", cursor: "not-allowed" } : {}) }}
+              value={codigo}
+              onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+              placeholder="PRIMMAX-NOVO"
+              disabled={editando}
+              title={editando ? "O código não muda: é ele que liga a foto, a ficha e as propostas já geradas a este produto." : undefined}
+            />
           </div>
           <div>
             <label style={rotulo}>Nome *</label>
@@ -305,19 +381,52 @@ export function NovoProduto({ onFechar, onCriado }: { onFechar: () => void; onCr
         <div style={secao}>Arquivos</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
           <div>
-            <label style={rotulo}>Foto do produto * <span style={{ fontWeight: 400, color: "var(--text-subtle)" }}>PNG/JPG</span></label>
+            <label style={rotulo}>
+              Foto do produto {editando ? "" : "*"}{" "}
+              <span style={{ fontWeight: 400, color: "var(--text-subtle)" }}>{editando ? "— só se for trocar" : "PNG/JPG"}</span>
+            </label>
             <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => setImagem(e.target.files?.[0] ?? null)} style={{ ...campo, padding: "7px" }} />
+            {editando && !imagem && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={produto.imagemPath} alt="" style={{ width: "34px", height: "34px", objectFit: "contain", border: "1px solid var(--gray-100)", borderRadius: "7px", background: "white" }} />
+                Foto atual — mantida se você não anexar outra.
+              </div>
+            )}
           </div>
           <div>
             <label style={rotulo}>Ficha técnica <span style={{ fontWeight: 400, color: "var(--text-subtle)" }}>PDF, opcional</span></label>
             <input type="file" accept="application/pdf" onChange={(e) => setFicha(e.target.files?.[0] ?? null)} style={{ ...campo, padding: "7px" }} />
+            {editando && produto.fichaTecnicaPath && !ficha && (
+              <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
+                <a href={produto.fichaTecnicaPath} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", fontWeight: 600 }}>Ver ficha atual</a>
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", cursor: "pointer" }}>
+                  <input type="checkbox" checked={removerFicha} onChange={(e) => setRemoverFicha(e.target.checked)} />
+                  Remover a ficha deste produto
+                </label>
+              </div>
+            )}
           </div>
         </div>
+
+        {editando && (
+          <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", marginTop: "16px", cursor: "pointer", fontSize: "13px", color: "var(--text-body)" }}>
+            <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} style={{ marginTop: "2px" }} />
+            <span>
+              Ativo no catálogo
+              <span style={{ display: "block", fontSize: "12px", color: "var(--text-subtle)" }}>
+                Desmarcado, ele vira <strong>Arquivado</strong>: some dos filtros e da seleção automática, mas continua
+                encontrável pela busca e nas propostas já geradas. É o caminho do meio para o produto que saiu de linha —
+                excluir de vez é o botão da lista.
+              </span>
+            </span>
+          </label>
+        )}
 
         <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "22px" }}>
           <button type="button" onClick={onFechar} style={{ padding: "10px 18px", borderRadius: "10px", border: "1px solid var(--gray-200)", background: "white", color: "var(--text-body)", fontSize: "13.5px", fontWeight: 600, cursor: "pointer" }}>Cancelar</button>
           <button type="submit" disabled={salvando} style={{ padding: "10px 22px", borderRadius: "10px", border: "none", background: salvando ? "var(--border)" : "var(--blue-600)", color: "white", fontSize: "13.5px", fontWeight: 700, cursor: salvando ? "default" : "pointer" }}>
-            {salvando ? "Cadastrando…" : "Cadastrar produto"}
+            {salvando ? "Salvando…" : editando ? "Salvar alterações" : "Cadastrar produto"}
           </button>
         </div>
       </form>

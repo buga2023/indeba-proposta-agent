@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { LogoCompleta, Wordmark } from "@/components/brand";
 
 export default function Login() {
   const router = useRouter();
@@ -67,22 +68,10 @@ export default function Login() {
             boxShadow: "0 32px 80px rgba(14,58,95,.5), 0 0 0 1px rgba(255,255,255,.15)",
           }}
         >
-          {/* logo */}
+          {/* logo oficial */}
           <div className="mb-8 flex flex-col items-center">
-            <div
-              className="mb-3.5 flex h-[60px] w-[60px] items-center justify-center rounded-2xl"
-              style={{
-                background: "linear-gradient(135deg,var(--blue-600),var(--blue-800))",
-                boxShadow: "0 10px 28px rgba(18,87,196,.4)",
-                animation: "glow-pulse 3s ease-in-out infinite",
-              }}
-            >
-              <span className="text-lg font-extrabold tracking-[-0.5px] text-white">ies</span>
-            </div>
-            <div className="text-xl font-extrabold tracking-tight text-[var(--text-strong)]">
-              indeba <span className="text-accent">express</span>
-            </div>
-            <div className="mt-1 text-[12.5px] text-[var(--text-muted)]">Plataforma de IA · acesso restrito</div>
+            <LogoCompleta altura={86} className="mb-2" />
+            <div className="text-[12.5px] text-[var(--text-muted)]">Plataforma de IA · acesso restrito</div>
           </div>
 
           <form onSubmit={entrar} className="flex flex-col gap-4">
@@ -147,8 +136,9 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="absolute bottom-4 text-[11px] text-white/30">
-        Indeba Express · Plataforma de Proposta + Prospecção
+      <div className="absolute bottom-4 flex items-center gap-2 text-[11px] text-white/30">
+        <Wordmark variante="white" altura={13} alt="" className="opacity-40" />
+        <span>· Plataforma de Proposta + Prospecção</span>
       </div>
     </div>
   );

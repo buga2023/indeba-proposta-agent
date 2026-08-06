@@ -19,7 +19,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ cod
         // Nome do arquivo entre aspas e sem o que possa quebrar o header — o código é
         // [A-Z0-9-] na entrada, mas o header não é lugar de confiar em validação distante.
         "Content-Disposition": `inline; filename="${limpo.replace(/[^A-Za-z0-9._-]/g, "")}.pdf"`,
-        "Cache-Control": "private, max-age=3600, immutable",
+        // Sem `immutable`: a ficha pode ser trocada ou removida na edição do produto, e a
+        // URL continua a mesma — cache imutável entregaria o PDF antigo depois da troca.
+        "Cache-Control": "private, max-age=0, must-revalidate",
       },
     });
   } catch (e) {

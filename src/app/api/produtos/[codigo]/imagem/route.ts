@@ -19,8 +19,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ cod
       headers: {
         "Content-Type": img.mime,
         // `private`: passa pelo middleware de auth e não pode parar em cache de CDN
-        // compartilhado. `immutable` porque trocar a foto significa novo cadastro.
-        "Cache-Control": "private, max-age=3600, immutable",
+        // compartilhado. Já `immutable` saiu quando a edição chegou: a URL é fixa (o código
+        // não muda) e a foto agora TROCA por dentro dela — o gestor trocaria a imagem e
+        // continuaria vendo a antiga por uma hora, achando que o salvar não funcionou.
+        "Cache-Control": "private, max-age=0, must-revalidate",
       },
     });
   } catch (e) {

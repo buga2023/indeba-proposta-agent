@@ -12,7 +12,7 @@
  * Constituição: preço/embalagem vêm SEMPRE do catálogo; a IA só seleciona e escreve.
  */
 
-import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
 import type { StatusProposta, PropostaScope, PropostaItem, Produto, Funcao, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
 import type { Usuario } from "@/lib/auth";
 import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo } from "@/lib/proposta-edit";
@@ -26,7 +26,8 @@ import { AjudaChat } from "@/components/ajuda-chat";
 import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
 import { AdminScreen } from "@/components/admin-screen";
-import { NovoProduto } from "@/components/novo-produto";
+import { FormProduto } from "@/components/form-produto";
+import { Logo, Wordmark } from "@/components/brand";
 import { useToast } from "./_app/toast";
 import { CommandPalette, type PaletteItem } from "./_app/command-palette";
 
@@ -359,6 +360,10 @@ const CMD_ITEMS: PaletteItem[] = [
   { key: "contrato", label: "Contratos" },
   { key: "chamados", label: "Solicitações Internas" },
   { key: "catalog", label: "Catálogo de Produtos" },
+  // Chave especial (como `produto:<codigo>`): não é uma tela, é o Catálogo com o formulário
+  // de cadastro aberto. Fica na paleta porque o card existe no Dashboard para todo mundo —
+  // quem não é gestor recebe o aviso explicando, não uma porta escondida.
+  { key: "cadastro-produto", label: "Cadastro de Produtos", hint: "Nome, imagem, ficha técnica e segmento" },
   { key: "perfil", label: "Meu perfil" },
 ];
 // Configurações é o painel do gestor (e-mails de cobrança, colaboradores). Fica fora da
@@ -373,6 +378,14 @@ const CMD_ITEM_CONFIG: PaletteItem = { key: "config", label: "Configurações" }
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("dashboard");
+  // "Cadastro de Produtos" do Dashboard: o cadastro é um modal DENTRO do Catálogo, então o
+  // card leva para o Catálogo com este sinal ligado e o formulário já abre. É ref e não
+  // estado porque o Catálogo consome o sinal ao montar e o zera ali mesmo — como estado,
+  // zerar dispararia um render extra toda vez que alguém entrasse na tela.
+  const cadastroProdutoPedido = useRef(false);
+  const consumirCadastroProduto = useCallback(() => {
+    cadastroProdutoPedido.current = false;
+  }, []);
   const toast = useToast();
   const [palette, setPalette] = useState(false);
   // Gaveta de navegação (≤760px). Acima disso o CSS ignora este estado e a
@@ -818,14 +831,13 @@ export default function Home() {
       <aside className="ies-sidebar" data-open={navOpen ? "true" : "false"} style={{ width: "248px", flex: "none", height: "100vh", background: "var(--gradient-hero)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", boxShadow: "0 2px 8px rgba(30,107,184,.5)" }}>
-              <span style={{ color: "white", fontWeight: 700, fontSize: "13px", letterSpacing: "-.5px" }}>ies</span>
-            </div>
+            {/* Marca oficial. O símbolo fica fora do .ies-side-text de propósito: quando
+                a sidebar colapsa em trilha de ícones (761–1024px) o lettering some e ele
+                é o que resta identificando a plataforma. */}
+            <Logo variante="white" altura={31} />
             <div className="ies-side-text" style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: "14px", fontWeight: 700, color: "white", lineHeight: 1.1 }}>
-                indeba <span style={{ color: "var(--accent)" }}>express</span>
-              </div>
-              <div style={{ fontSize: "11px", color: "rgba(255,255,255,.45)", marginTop: "2px" }}>Plataforma de IA</div>
+              <Wordmark variante="white" altura={17} alt="" />
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,.45)", marginTop: "3px" }}>Plataforma de IA</div>
             </div>
             {/* Fechar a gaveta. Só aparece na faixa em que ela existe (≤760px). */}
             <button
@@ -953,7 +965,7 @@ export default function Home() {
 
       {/* ============ MAIN ============ */}
       <main className="ies-scroll ies-main" style={{ flex: 1, minWidth: 0, height: "100vh", overflowY: "auto", overflowX: "hidden", position: "relative" }}>
-        {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} />}
+        {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={() => { cadastroProdutoPedido.current = true; }} />}
         {/* Sempre montada, escondida fora de foco: é o rascunho vivo (ver builderKey). */}
         <div style={{ display: screen === "manual" ? "contents" : "none" }}>
           <ManualScreen key={builderKey} onMontar={aplicarScopeManual} prefill={manualPrefill} scopeParaEditar={scopeParaEditar} catalogoVersao={catalogoVersao} />
@@ -1005,7 +1017,7 @@ export default function Home() {
             }}
           />
         )}
-        {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} ehAdmin={ehAdmin} onRecarregar={() => { setCatalogo(null); setCatalogoVersao((v) => v + 1); }} />}
+        {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} ehAdmin={ehAdmin} cadastroInicial={cadastroProdutoPedido.current} onCadastroConsumido={consumirCadastroProduto} onRecarregar={() => { setCatalogo(null); setCatalogoVersao((v) => v + 1); }} />}
         {screen === "prospeccao" && (
           <ProspeccaoScreen
             onGerarProposta={(d) => {
@@ -1025,7 +1037,7 @@ export default function Home() {
         {screen === "chamados" && <ChamadosScreen />}
         {/* Segundo cadeado do painel do gestor: some do menu E não renderiza sem papel — quem
             chegar por outro caminho cai no Dashboard em vez de ver a tela vazia/quebrada. */}
-        {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} />)}
+        {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={() => { cadastroProdutoPedido.current = true; }} />)}
         {screen === "perfil" && <MeuPerfilScreen />}
       </main>
 
@@ -1048,6 +1060,11 @@ export default function Home() {
         ]}
         onGo={(k) => {
           setPalette(false);
+          if (k === "cadastro-produto") {
+            cadastroProdutoPedido.current = true;
+            setScreen("catalog");
+            return;
+          }
           if (k.startsWith("produto:")) {
             const p = (catalogo ?? []).find((x) => x.codigo === k.slice("produto:".length));
             setCatFilter(p && !p.ativo ? "Arquivados" : p ? humaniza(p.linha) : "Todos");
@@ -1074,10 +1091,13 @@ export default function Home() {
 //
 // Visitas e Prospecção, Contratos e Solicitações Internas TINHAM tela pronta e NENHUMA porta de
 // entrada: existiam no código e eram inalcançáveis pela interface. O que nasce aqui é o acesso,
-// não a tela. "Comodatos" também foi pedido, mas não existe módulo nenhum com esse nome no
-// sistema — card que não leva a lugar algum é pior que card ausente. Ver
-// docs/findings-menu-indeba.md para o inventário e o de-para completo.
-const MODULOS_DASHBOARD: { screen: Screen; titulo: string; sub: string; icone: ReactNode }[] = [
+// não a tela. Ver docs/findings-menu-indeba.md para o inventário e o de-para completo.
+//
+// `screen: null` = módulo pedido que ainda NÃO existe no sistema (hoje: Comodatos). O card
+// aparece na posição que o Mateus ditou, com selo "Em breve" e sem clique: some da lista ele
+// perde o lugar combinado, mas fingir que navega seria pior. `abreCadastroProduto` manda abrir
+// o Catálogo já com o formulário de cadastro na frente — o cadastro é modal de lá, não tela.
+const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; icone: ReactNode; abreCadastroProduto?: boolean }[] = [
   {
     screen: "manual",
     titulo: "Proposta de Solução",
@@ -1122,6 +1142,21 @@ const MODULOS_DASHBOARD: { screen: Screen; titulo: string; sub: string; icone: R
     ),
   },
   {
+    // Pedido no áudio de 05/08/2026 ("a terceira, comodatos"), mas não existe módulo, tela,
+    // rota nem componente com esse nome — a palavra só aparece como texto de condição
+    // comercial nos templates de PDF. Fica reservado no lugar certo até alguém dizer o que
+    // essa tela faz (controle de equipamento emprestado ao cliente? contrato de comodato?).
+    screen: null,
+    titulo: "Comodatos",
+    sub: "Módulo ainda não construído",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2.5 5.5l6-3 6 3v6l-6 3-6-3z" />
+        <path d="M2.5 5.5l6 3 6-3M8.5 8.5v6" />
+      </svg>
+    ),
+  },
+  {
     screen: "contrato",
     titulo: "Contratos",
     sub: "Gere e analise o contrato da proposta",
@@ -1157,9 +1192,35 @@ const MODULOS_DASHBOARD: { screen: Screen; titulo: string; sub: string; icone: R
       </svg>
     ),
   },
+  {
+    // "Abaixo de catálogo de produtos, bota cadastro de produtos" (áudio 05/08/2026). O
+    // cadastro já existe — nome, imagem, ficha técnica e segmento, tudo o que está na foto
+    // (novo-produto.tsx) — mas só se alcançava pelo botão "Novo produto" DENTRO do Catálogo.
+    // Este card é a porta direta. Cadastrar segue sendo do gestor: para o vendedor, o
+    // Catálogo abre com o aviso de sempre, explicando por quê, em vez de um modal negado.
+    screen: "catalog",
+    abreCadastroProduto: true,
+    titulo: "Cadastro de Produtos",
+    sub: "Nome, imagem, ficha técnica e segmento",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2.5" y="2.5" width="12" height="12" rx="2" />
+        <path d="M8.5 5.5v6M5.5 8.5h6" />
+      </svg>
+    ),
+  },
 ];
 
-function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => void; usuario: Usuario | null }) {
+function DashboardScreen({
+  setScreen,
+  usuario,
+  pedirCadastroProduto,
+}: {
+  setScreen: (s: Screen) => void;
+  usuario: Usuario | null;
+  /** Card "Cadastro de Produtos": marca o pedido antes de abrir o Catálogo. */
+  pedirCadastroProduto: () => void;
+}) {
   const primeiroNome = usuario?.nome?.trim().split(/\s+/)[0] || "";
   const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
   const [catalogoCount, setCatalogoCount] = useState<number | null>(null);
@@ -1296,10 +1357,38 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
           <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Módulos</div>
           <div style={{ fontSize: "12.5px", color: "var(--text-subtle)", marginBottom: "14px" }}>Tudo o que dá para fazer por aqui</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(228px,1fr))", gap: "14px" }}>
-            {MODULOS_DASHBOARD.map((m, i) => (
+            {MODULOS_DASHBOARD.map((m, i) => {
+              // Módulo pedido que ainda não existe (Comodatos): ocupa o lugar dele na grade,
+              // mas não é botão — sem clique, sem hover, com o selo dizendo o que é. Um card
+              // que parece clicável e não faz nada lê como tela quebrada.
+              if (!m.screen) {
+                return (
+                  <div
+                    key={m.titulo}
+                    title="Módulo pedido, ainda não construído"
+                    style={{ display: "flex", alignItems: "flex-start", gap: "12px", background: "var(--surface-card)", border: "1px dashed var(--border-strong)", borderRadius: "14px", padding: "16px 17px", boxShadow: "none", opacity: 0.72, animation: `popIn .4s var(--ease-spring) ${i * 0.04}s both` }}
+                  >
+                    <span style={{ width: "34px", height: "34px", borderRadius: "10px", background: "var(--surface-muted)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-subtle)", flex: "none" }}>
+                      {m.icone}
+                    </span>
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+                        <span style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--text-muted)" }}>{m.titulo}</span>
+                        <span style={{ fontSize: "9.5px", fontWeight: 700, letterSpacing: ".04em", textTransform: "uppercase", color: "var(--text-subtle)", background: "var(--surface-muted)", borderRadius: "999px", padding: "2px 7px", flex: "none" }}>Em breve</span>
+                      </span>
+                      <span style={{ display: "block", fontSize: "11.5px", color: "var(--text-subtle)", marginTop: "3px", lineHeight: 1.45 }}>{m.sub}</span>
+                    </span>
+                  </div>
+                );
+              }
+              const destino = m.screen;
+              return (
               <Hoverable
-                key={m.screen}
-                onClick={() => setScreen(m.screen)}
+                key={m.titulo}
+                onClick={() => {
+                  if (m.abreCadastroProduto) pedirCadastroProduto();
+                  setScreen(destino);
+                }}
                 title={m.titulo}
                 base={{ display: "flex", alignItems: "flex-start", gap: "12px", textAlign: "left", width: "100%", background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px 17px", cursor: "pointer", fontFamily: "var(--font-sans)", boxShadow: "var(--shadow-sm)", transition: "transform var(--duration-base) var(--ease-out),box-shadow var(--duration-base) var(--ease-standard)", animation: `popIn .4s var(--ease-spring) ${i * 0.04}s both` }}
                 hover={{ transform: "translateY(-3px)", boxShadow: "var(--shadow-lg)" }}
@@ -1312,7 +1401,8 @@ function DashboardScreen({ setScreen, usuario }: { setScreen: (s: Screen) => voi
                   <span style={{ display: "block", fontSize: "11.5px", color: "var(--text-subtle)", marginTop: "3px", lineHeight: 1.45 }}>{m.sub}</span>
                 </span>
               </Hoverable>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -3767,6 +3857,8 @@ function CatalogScreen({
   catFilter,
   setCatFilter,
   ehAdmin,
+  cadastroInicial = false,
+  onCadastroConsumido,
   onRecarregar,
 }: {
   catalogo: Produto[] | null;
@@ -3774,18 +3866,81 @@ function CatalogScreen({
   catFilter: string;
   setCatFilter: (c: string) => void;
   ehAdmin: boolean;
+  /** Veio do card "Cadastro de Produtos" do Dashboard: abre o formulário já na montagem. */
+  cadastroInicial?: boolean;
+  onCadastroConsumido?: () => void;
   onRecarregar: () => void;
 }) {
-  const [novoAberto, setNovoAberto] = useState(false);
+  // Quem chegou pelo card de cadastro já entra com o formulário aberto — ou, se não for
+  // gestor, com o aviso que explica por quê (o mesmo do botão "Novo produto").
+  const [novoAberto, setNovoAberto] = useState(() => cadastroInicial && ehAdmin);
   // Por que um aviso e não só o `title`: sem gestor, o botão ficava com `onClick` undefined
   // e o clique não fazia NADA — indistinguível de tela quebrada ("o botão de cadastrar
   // produto não está funcionando"). Tooltip não resolve: ninguém passa o mouse antes de
   // clicar, e no celular não existe hover. Quem não pode cadastrar precisa saber POR QUE e
   // O QUE fazer, no mesmo clique.
-  const [avisoPapel, setAvisoPapel] = useState(false);
+  const [avisoPapel, setAvisoPapel] = useState(() => cadastroInicial && !ehAdmin);
+  // Consome o sinal do Dashboard: voltar ao Catálogo pela lateral ou pelo ⌘K não pode
+  // reabrir o formulário — o pedido era daquele clique, não da tela.
+  useEffect(() => {
+    onCadastroConsumido?.();
+  }, [onCadastroConsumido]);
   const [busca, setBusca] = useState("");
   const [funcaoFiltro, setFuncaoFiltro] = useState("Todas");
   const [marcaFiltro, setMarcaFiltro] = useState("Todas");
+  const toast = useToast();
+
+  // Quais produtos foram cadastrados PELA TELA. Só esses são editáveis/removíveis: os 150 da
+  // base vivem em data/catalogo.json, versionado no git (spec-cadastro-produto.md). A lista
+  // vem de /api/produtos (rota de gestor) e é o que decide se a linha ganha os botões — sem
+  // ela, o gestor clicaria em "editar" num produto do JSON e levaria 404 na cara.
+  const [editaveis, setEditaveis] = useState<Map<string, Produto>>(new Map());
+  const [emEdicao, setEmEdicao] = useState<Produto | null>(null);
+  const [excluindo, setExcluindo] = useState<string | null>(null);
+  const [recarga, setRecarga] = useState(0);
+  useEffect(() => {
+    if (!ehAdmin) return;
+    let vivo = true;
+    fetch("/api/produtos")
+      .then((r) => (r.ok ? r.json() : { produtos: [] }))
+      .then((d: { produtos?: Produto[] }) => {
+        if (vivo) setEditaveis(new Map((d.produtos ?? []).map((p) => [p.codigo, p])));
+      })
+      // Falhar aqui não quebra o Catálogo: sem a lista, a tela só não oferece editar/excluir.
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, [ehAdmin, recarga]);
+
+  // Recarrega as duas fontes: o catálogo do pai (que a vitrine mostra) e a lista de
+  // editáveis daqui — salvar e ver a linha antiga seria pior do que não ter salvo.
+  const recarregarTudo = useCallback(() => {
+    onRecarregar();
+    setRecarga((n) => n + 1);
+  }, [onRecarregar]);
+
+  async function excluir(p: Produto) {
+    if (!window.confirm(`Excluir ${p.nome} (${p.codigo}) do catálogo? Isso apaga a foto e a ficha técnica dele. As propostas já geradas não mudam.`)) return;
+    setExcluindo(p.codigo);
+    try {
+      const r = await fetch(`/api/produtos?codigo=${encodeURIComponent(p.codigo)}`, { method: "DELETE" });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.erro || `Falha ao excluir (HTTP ${r.status}).`);
+      toast(`${p.nome} saiu do catálogo.`);
+      recarregarTudo();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Erro ao excluir.", "danger");
+    } finally {
+      setExcluindo(null);
+    }
+  }
+
+  // A coluna de ações só existe para quem pode agir — para o vendedor a tabela é a de antes.
+  const COLUNAS = ehAdmin
+    ? "44px 1fr 84px 150px 1fr 100px 40px 92px 76px"
+    : "44px 1fr 84px 150px 1fr 100px 40px 92px";
+
   const todos = catalogo ?? [];
   const ativos = todos.filter((p) => p.ativo);
   const linhas = Array.from(new Set(ativos.map((p) => humaniza(p.linha))));
@@ -3811,13 +3966,27 @@ function CatalogScreen({
   return (
     <div className="ies-pad28" style={{ padding: "28px" }}>
       {novoAberto && (
-        <NovoProduto
+        <FormProduto
           onFechar={() => setNovoAberto(false)}
-          onCriado={() => {
+          onSalvo={() => {
             setNovoAberto(false);
             // Zera o catálogo em memória: o efeito da tela refaz o GET e o produto novo
             // aparece na hora. Sem isto o gestor salvaria e não veria nada mudar.
-            onRecarregar();
+            recarregarTudo();
+          }}
+        />
+      )}
+      {emEdicao && (
+        <FormProduto
+          // `key` força o formulário a remontar ao trocar de produto: o estado inicial vem
+          // das props, e sem remontar o segundo "editar" abriria com os dados do primeiro.
+          key={emEdicao.codigo}
+          produto={emEdicao}
+          onFechar={() => setEmEdicao(null)}
+          onSalvo={() => {
+            setEmEdicao(null);
+            toast(`${emEdicao.nome} atualizado.`);
+            recarregarTudo();
           }}
         />
       )}
@@ -3934,7 +4103,7 @@ function CatalogScreen({
         </div>
       ) : (
         <div className="ies-tablewrap" style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "12px", boxShadow: "var(--shadow-sm)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "44px 1fr 84px 150px 1fr 100px 40px 92px", gap: "12px", minWidth: "880px", alignItems: "center", padding: "10px 16px", background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)", fontSize: "11px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".03em" }}>
+          <div style={{ display: "grid", gridTemplateColumns: COLUNAS, gap: "12px", minWidth: ehAdmin ? "960px" : "880px", alignItems: "center", padding: "10px 16px", background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)", fontSize: "11px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".03em" }}>
             <span />
             <span>Produto</span>
             <span>Marca</span>
@@ -3943,6 +4112,7 @@ function CatalogScreen({
             <span style={{ textAlign: "right" }}>Preço</span>
             <span />
             <span>Status</span>
+            {ehAdmin && <span />}
           </div>
           {filtered.map((item) => {
             const e = item.embalagens[0];
@@ -3950,7 +4120,7 @@ function CatalogScreen({
               <Hoverable
                 key={item.codigo}
                 as="div"
-                base={{ display: "grid", gridTemplateColumns: "44px 1fr 84px 150px 1fr 100px 40px 92px", gap: "12px", minWidth: "880px", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--gray-100)", transition: "background .15s ease" }}
+                base={{ display: "grid", gridTemplateColumns: COLUNAS, gap: "12px", minWidth: ehAdmin ? "960px" : "880px", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--gray-100)", transition: "background .15s ease" }}
                 hover={{ background: "var(--gray-50)" }}
               >
                 <div style={{ width: "40px", height: "40px", background: "#fff", border: "1px solid var(--gray-100)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flex: "none" }}>
@@ -3995,6 +4165,44 @@ function CatalogScreen({
                   >
                     Arquivado
                   </span>
+                )}
+                {ehAdmin && (
+                  <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                    {editaveis.has(item.codigo) ? (
+                      <>
+                        <button
+                          onClick={() => setEmEdicao(editaveis.get(item.codigo)!)}
+                          title="Editar este produto"
+                          aria-label={`Editar ${item.nome}`}
+                          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: "white", color: "var(--primary)", cursor: "pointer" }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 2.3L5.4 12.7l-3 .7.7-3z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => excluir(item)}
+                          disabled={excluindo === item.codigo}
+                          title="Excluir do catálogo"
+                          aria-label={`Excluir ${item.nome}`}
+                          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: "white", color: "var(--danger)", cursor: excluindo === item.codigo ? "default" : "pointer", opacity: excluindo === item.codigo ? 0.5 : 1 }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M2.8 4.3h10.4M6.3 4.3V3a.9.9 0 0 1 .9-.9h1.6a.9.9 0 0 1 .9.9v1.3M4.2 4.3l.6 8.5a1 1 0 0 0 1 .9h4.4a1 1 0 0 0 1-.9l.6-8.5" />
+                          </svg>
+                        </button>
+                      </>
+                    ) : (
+                      // Produto do catálogo-base: sem botão, com o porquê no hover. Botão
+                      // desabilitado sem explicação vira "não está funcionando".
+                      <span
+                        title="Produto da base Indeba/Pratt — vem do catálogo versionado e não se edita pela tela"
+                        style={{ fontSize: "10.5px", color: "var(--gray-400)", alignSelf: "center" }}
+                      >
+                        base
+                      </span>
+                    )}
+                  </div>
                 )}
               </Hoverable>
             );

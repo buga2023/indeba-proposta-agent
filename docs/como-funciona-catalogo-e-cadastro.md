@@ -23,7 +23,7 @@ Quem consome não sabe de onde o produto veio: os dois lados falam o mesmo contr
 |---|---|---|
 | Foto | `/produtos/<slug>.png` (arquivo em `public/`) | `/api/produtos/<codigo>/imagem` (bytes no Postgres) |
 | Ficha | `/fichas-tecnicas/<slug>.pdf` | `/api/produtos/<codigo>/ficha` |
-| Editável pela tela | Não | Sim (remover) |
+| Editável pela tela | Não | Sim (editar e remover) |
 
 Os dois caminhos do produto do banco são **derivados do código na leitura**, nunca lidos do
 que foi gravado — um `dados` adulterado não consegue apontar a foto para fora do sistema.
@@ -35,8 +35,8 @@ Só **gestor** (`papel = "admin"`). A trava existe em duas camadas:
 - **UI** — o botão "Novo produto" fica esmaecido; clicar mostra um aviso explicando a
   permissão que falta e onde pedir. (Antes ele simplesmente não fazia nada, o que era
   indistinguível de tela quebrada — foi a queixa que originou esta rodada.)
-- **API** — `POST/GET/DELETE /api/produtos` respondem **403** para quem não é gestor. Esta
-  é a trava que vale; a de cima é só cortesia.
+- **API** — `POST/GET/PUT/DELETE /api/produtos` respondem **403** para quem não é gestor.
+  Esta é a trava que vale; a de cima é só cortesia.
 
 O papel vem do **banco** a cada carregamento (`/api/me` → `estadoDaConta`), não do cookie.
 Promover alguém em Configurações → Colaboradores vale na navegação seguinte, sem precisar
@@ -98,15 +98,41 @@ A propagação é imediata, sem deploy e sem reiniciar nada:
 4. **Seleção pela IA** — entra pelo mesmo `catalogoCompleto()`, achado pelas funções
    marcadas.
 
-## 5. Removendo
+## 5. Editando (05/08/2026)
+
+Na lista do Catálogo, o gestor vê dois botões por linha — **lápis** (editar) e **lixeira**
+(excluir). Eles só aparecem nos produtos **cadastrados pela tela**; o produto do JSON mostra
+o rótulo `base` com a explicação no hover. Quem decide isso é o `GET /api/produtos`, que
+lista o que mora no banco: sem essa checagem, clicar em "editar" num produto da base levaria
+404 na cara sem motivo aparente.
+
+O formulário de edição é o **mesmo** do cadastro, com quatro diferenças:
+
+| | Cadastro | Edição |
+|---|---|---|
+| Código | Obrigatório, vira maiúsculo | **Travado** — é ele que forma os caminhos da foto/ficha e liga as propostas já geradas ao produto. Para mudar de código: apaga e cadastra |
+| Foto | Obrigatória | Opcional — não anexar **mantém** a atual (a miniatura aparece embaixo do campo) |
+| Ficha técnica | Opcional | Só troca com arquivo novo; para tirar, existe o **"Remover a ficha deste produto"**. Não anexar nada nunca apaga a que está lá |
+| Ativo | Nasce ativo | Checkbox **"Ativo no catálogo"** — desmarcar arquiva (some dos filtros e da seleção automática, continua na busca e nas propostas antigas) |
+
+`PUT /api/produtos` recebe o mesmo FormData do cadastro. O que o formulário **não** exibe
+(subtítulo e "indicado para" da ficha, `fotoEmbalagem`, preço/custo diluído por embalagem,
+"como aplicar" da diluição) viaja de volta intacto: editar o nome de um produto não pode
+apagar em silêncio o que outra parte do sistema gravou.
+
+Por causa da edição, a foto e a ficha deixaram de ser servidas como `immutable` — a URL é
+fixa e o conteúdo agora troca por dentro dela, então o cache passou a revalidar.
+
+## 6. Removendo
 
 `DELETE /api/produtos?codigo=<CODIGO>` — **só alcança produto cadastrado pela tela**.
-Produto do JSON não é apagável por aqui (nem deveria: é versionado no git).
+Produto do JSON não é apagável por aqui (nem deveria: é versionado no git). A tela pede
+confirmação antes, dizendo que a foto e a ficha vão junto.
 
 Proposta já salva não quebra: o `PropostaScope` é snapshot, e `comImagensDoCatalogo()` só
 recalcula enquanto o código existir.
 
-## 6. Estado verificado em produção (02/08/2026)
+## 7. Estado verificado em produção (02/08/2026)
 
 - Tabela `ProdutoCustom` **existe e funciona** — `GET /api/produtos` responde 200. Se a
   migração não tivesse rodado, o Prisma quebraria e a rota daria 500.
@@ -127,6 +153,22 @@ recalcula enquanto o código existir.
 - Arquivo que não é PDF no campo da ficha → 400.
 - Produto recém-cadastrado entra na montagem **sem F5** (151 → 152).
 - Proposta montada com o produto cadastrado pela tela, até a tela de Revisão.
+
+### O que foi verificado da edição (05/08/2026, build de produção local)
+
+- Cadastrar → **editar sem anexar nada** → a foto e a ficha continuam servindo 200, com os
+  mesmos bytes; o texto novo aparece na lista.
+- `removerFicha=1` → ficha vira 404, **imagem segue viva**.
+- Ficha rica (título, benefícios) sobrevive à edição que não mexe nela.
+- Desmarcar "Ativo no catálogo" → badge **Arquivado** na lista, produto ainda encontrável.
+- Excluir → confirmação, produto some, `/imagem` passa a 404.
+- Produto do catálogo-base aparece com o rótulo `base`, sem botões.
+
+> Nota de ambiente: no `next dev` deste projeto (Next 16.2.9 + Turbopack no Windows)
+> **toda** rota dinâmica — `/api/produtos/[codigo]/imagem`, `/api/propostas/[id]`,
+> `/api/chamados/[id]` — devolve 500 com "Jest worker encountered child process exceptions".
+> É falha do dev server, não do código: as mesmas rotas respondem 200 em `next build` +
+> `next start`. Não perca tempo caçando isso na rota.
 
 ## 7. Armadilhas ao depurar isto
 

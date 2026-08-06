@@ -101,7 +101,16 @@ tela**, e chamá-la por dois nomes diferentes confundiria mais que ajudaria.
 ### 5.3 Decisões
 
 - **Comodatos ficou fora.** Não existe módulo; card apontando para o vazio é pior que ausência.
+  → **Revisto em 05/08/2026** (Gustavo reenviou a foto e o áudio pedindo a lista inteira): o
+  card existe, na 3ª posição ditada, como **placeholder inerte** — borda tracejada, selo "Em
+  breve", sem clique (`screen: null` em `MODULOS_DASHBOARD`). Guarda o lugar combinado sem
+  fingir que navega. Continua sendo feature nova inteira; falta dizer o que a tela faz.
 - **Cadastro de Produtos ficou onde está** (modal dentro do Catálogo, só gestor) — já funciona.
+  → **Revisto em 05/08/2026:** ganhou card próprio no Dashboard, o último da grade, conforme
+  a foto ("abaixo de catálogo de produtos, bota cadastro de produtos"). O card leva ao
+  Catálogo com o formulário já aberto (`cadastroInicial`); para quem não é gestor abre o
+  aviso que explica o porquê, em vez de um modal negado. Também entrou na paleta ⌘K, com a
+  chave especial `cadastro-produto`. O modal segue sendo a implementação — não virou tela.
 - A **paleta ⌘K** (`CMD_ITEMS`) recebeu os rótulos novos e as 3 telas antes órfãs: nome
   divergente ali faria a busca por "Propostas Feitas" não achar o histórico.
 - Rótulo `Visitas e Prospecção` (singular), conforme a foto. Confirmar com o Mateus.
@@ -117,10 +126,13 @@ Navegação é estado local (`setScreen`), não rota — risco de 404 é estrutu
 Para o Mateus confirmar (nenhuma delas bloqueia o que já subiu):
 
 1. **Comodatos** — é módulo novo mesmo, ou outro nome para algo que já existe? O que precisa
-   fazer nessa tela?
+   fazer nessa tela? (**única pergunta que ainda bloqueia algo:** o card está no Dashboard
+   como "Em breve" e só sai desse estado quando alguém definir o que ele abre.)
 2. **Solicitações Internas** = a tela de Chamados (abrir bug/dúvida/sugestão para o time)?
    Foi o palpite adotado.
 3. **"Visitas e Prospecção"** — a foto diz singular, o áudio disse "prospecções". Ficou singular.
 4. **"Proposta de Solução"** como item de menu = a antiga "Proposta manual". Confirma?
-5. **Cadastro de Produtos** — ele já existe dentro do Catálogo. Serve assim, ou quer item
-   próprio no menu?
+5. ~~**Cadastro de Produtos** — ele já existe dentro do Catálogo. Serve assim, ou quer item
+   próprio no menu?~~ **Respondido (05/08/2026): quer item próprio.** Feito — card no
+   Dashboard abrindo o formulário direto. Falta confirmar se cadastrar continua restrito ao
+   gestor (hoje continua) ou se o vendedor também deve poder.
