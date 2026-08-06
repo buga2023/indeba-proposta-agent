@@ -3941,6 +3941,21 @@ function CatalogScreen({
     ? "44px 1fr 84px 150px 1fr 100px 40px 92px 76px"
     : "44px 1fr 84px 150px 1fr 100px 40px 92px";
 
+  // A tabela rola na horizontal (.ies-tablewrap) e a grade do gestor pede 960px. Em tela
+  // menor que isso — notebook pequeno, janela dividida, escala do Windows em 150% — a
+  // coluna de ações caía FORA da área visível, atrás de uma rolagem que nada anunciava: o
+  // gestor olhava a ponta direita, via "Status" e concluía que os botões não existiam. Foi
+  // exatamente o que aconteceu. Congelada na borda direita, ela aparece em qualquer largura.
+  // `background: inherit` faz a célula acompanhar o hover da linha (por isso a linha ganhou
+  // fundo branco explícito); a sombra à esquerda avisa que há conteúdo passando por baixo.
+  const COL_ACOES: CSSProperties = {
+    position: "sticky",
+    right: 0,
+    background: "inherit",
+    paddingLeft: "10px",
+    boxShadow: "-7px 0 7px -7px rgba(16,42,67,.16)",
+  };
+
   const todos = catalogo ?? [];
   const ativos = todos.filter((p) => p.ativo);
   const linhas = Array.from(new Set(ativos.map((p) => humaniza(p.linha))));
@@ -4112,7 +4127,8 @@ function CatalogScreen({
             <span style={{ textAlign: "right" }}>Preço</span>
             <span />
             <span>Status</span>
-            {ehAdmin && <span />}
+            {/* Rotulada, e não mais um <span/> mudo: coluna sem título não se procura. */}
+            {ehAdmin && <span style={{ ...COL_ACOES, background: "var(--gray-50)", textAlign: "right" }}>Ações</span>}
           </div>
           {filtered.map((item) => {
             const e = item.embalagens[0];
@@ -4120,7 +4136,9 @@ function CatalogScreen({
               <Hoverable
                 key={item.codigo}
                 as="div"
-                base={{ display: "grid", gridTemplateColumns: COLUNAS, gap: "12px", minWidth: ehAdmin ? "960px" : "880px", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--gray-100)", transition: "background .15s ease" }}
+                // Fundo branco explícito (antes era transparente sobre o container): é dele
+                // que a célula congelada de ações herda a cor, no repouso e no hover.
+                base={{ display: "grid", gridTemplateColumns: COLUNAS, gap: "12px", minWidth: ehAdmin ? "960px" : "880px", alignItems: "center", padding: "10px 16px", background: "white", borderBottom: "1px solid var(--gray-100)", transition: "background .15s ease" }}
                 hover={{ background: "var(--gray-50)" }}
               >
                 <div style={{ width: "40px", height: "40px", background: "#fff", border: "1px solid var(--gray-100)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flex: "none" }}>
@@ -4167,7 +4185,7 @@ function CatalogScreen({
                   </span>
                 )}
                 {ehAdmin && (
-                  <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                  <div style={{ ...COL_ACOES, display: "flex", gap: "4px", justifyContent: "flex-end", alignItems: "center" }}>
                     {editaveis.has(item.codigo) ? (
                       <>
                         <button
