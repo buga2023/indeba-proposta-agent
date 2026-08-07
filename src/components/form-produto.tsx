@@ -40,13 +40,9 @@ const FUNCOES = [
   ["cip", "CIP (circulação)"],
 ] as const;
 
-const METODOS = [
-  ["diluidor_automatico", "Diluidor automático"],
-  ["pulverizacao", "Pulverização"],
-  ["imersao", "Imersão"],
-  ["circulacao_cip", "Circulação CIP"],
-  ["manual", "Manual"],
-] as const;
+// Métodos saíram da tela em 07/08/2026 ("só os dados que tem na ficha") — sobra o TIPO do
+// estado `metodos`, que segue viajando no salvar para preservar o que já está gravado.
+type MetodoId = "diluidor_automatico" | "pulverizacao" | "imersao" | "circulacao_cip" | "manual";
 
 const UNIDADES = ["L", "kg", "un", "ml"] as const;
 
@@ -62,6 +58,17 @@ type Embalagem = {
 type Diluicao = { uso: string; razao: string; comoAplicar: string };
 
 const EMBALAGEM_VAZIA: Embalagem = { tamanho: "", unidade: "L", diluicaoMax: "" };
+
+// Código gerado do nome no cadastro (pedido do Matheus, 07/08/2026: só os dados que estão na
+// ficha; código não está nela). Mesma regra do slug de item próprio (lib/montar.ts).
+const codigoDoNome = (s: string) =>
+  s
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 function embalagensIniciais(p?: Produto): Embalagem[] {
   if (!p?.embalagens.length) return [EMBALAGEM_VAZIA];
@@ -241,7 +248,8 @@ export function FormProduto({
   const chave = chaveRascunho(produto?.codigo);
   const [salvo] = useState<Partial<Rascunho> | null>(() => lerRascunho(chave));
 
-  const [codigo, setCodigo] = useState(salvo?.codigo ?? produto?.codigo ?? "");
+  // Sem input próprio desde 07/08/2026 — sobrevivem do rascunho/produto e viajam no salvar.
+  const [codigo] = useState(salvo?.codigo ?? produto?.codigo ?? "");
   const [nome, setNome] = useState(salvo?.nome ?? produto?.nome ?? "");
   const [marca, setMarca] = useState<"indeba" | "pratt">(salvo?.marca ?? produto?.marca ?? "indeba");
   const [linha, setLinha] = useState<(typeof LINHAS)[number][0]>(
@@ -249,13 +257,11 @@ export function FormProduto({
   );
   const [descricaoCurta, setDescricaoCurta] = useState(salvo?.descricaoCurta ?? produto?.descricaoCurta ?? "");
   const [descricaoUso, setDescricaoUso] = useState(salvo?.descricaoUso ?? produto?.descricaoUso ?? "");
-  const [segmentos, setSegmentos] = useState(salvo?.segmentos ?? (produto?.segmentos ?? []).join(", "));
+  const [segmentos] = useState(salvo?.segmentos ?? (produto?.segmentos ?? []).join(", "));
   const [funcoes, setFuncoes] = useState<(typeof FUNCOES)[number][0][]>(
     (salvo?.funcoes ?? produto?.funcoes ?? []) as (typeof FUNCOES)[number][0][],
   );
-  const [metodos, setMetodos] = useState<(typeof METODOS)[number][0][]>(
-    (salvo?.metodos ?? produto?.metodos ?? []) as (typeof METODOS)[number][0][],
-  );
+  const [metodos] = useState<MetodoId[]>((salvo?.metodos ?? produto?.metodos ?? []) as MetodoId[]);
   const [embalagens, setEmbalagens] = useState<Embalagem[]>(() => salvo?.embalagens ?? embalagensIniciais(produto));
   const [ativo, setAtivo] = useState(salvo?.ativo ?? produto?.ativo ?? true);
 
@@ -405,7 +411,7 @@ export function FormProduto({
         diluicaoMax: x.diluicaoMax.trim() || null,
       }));
 
-    if (!codigo.trim() || !nome.trim()) return setErro("Código e nome são obrigatórios.");
+    if (!nome.trim()) return setErro("O nome do produto é obrigatório.");
     if (!emb.length || emb.some((x) => !Number.isFinite(x.tamanho) || x.tamanho <= 0)) {
       return setErro("Informe ao menos uma embalagem com tamanho válido.");
     }
@@ -450,7 +456,9 @@ export function FormProduto({
     const dados = {
       // Código é imutável na edição — é ele que forma o caminho da foto e da ficha; trocar
       // deixaria as propostas já geradas apontando para um produto que não existe mais.
-      codigo: (editando ? produto.codigo : codigo.trim().toUpperCase()),
+      // No cadastro ele é GERADO do nome (o campo saiu da tela em 07/08/2026 — a ficha
+      // técnica não tem código): rascunho antigo com código digitado ainda prevalece.
+      codigo: editando ? produto.codigo : (codigo.trim() ? codigo.trim().toUpperCase() : codigoDoNome(nome)),
       nome: nome.trim(),
       marca,
       linha,
@@ -479,6 +487,10 @@ export function FormProduto({
         throw new Error("Os arquivos anexados são grandes demais para o envio. Anexe uma foto ou uma ficha em PDF mais leve — o limite da plataforma é de cerca de 4 MB por envio.");
       }
       const d = await r.json().catch(() => ({}));
+      // O gestor não vê mais o código — o 409 de colisão precisa falar em NOME.
+      if (r.status === 409 && !editando) {
+        throw new Error("Já existe um produto com esse nome no catálogo. Ajuste o nome (ex.: acrescente o tamanho ou a variação) e salve de novo.");
+      }
       if (!r.ok) throw new Error(d.erro || `Falha ao salvar (HTTP ${r.status}).`);
       // Gravado no servidor: o rascunho cumpriu o papel e sai de cena. Sem isto, o próximo
       // "editar" deste produto abriria com o texto de antes por cima do que acabou de valer.
@@ -532,22 +544,11 @@ export function FormProduto({
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: "12px" }}>
-          <div>
-            <label style={rotulo}>Código {editando ? "" : "*"}</label>
-            <input
-              style={{ ...campo, ...(editando ? { background: "var(--gray-50)", color: "var(--text-muted)", cursor: "not-allowed" } : {}) }}
-              value={codigo}
-              onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-              placeholder="PRIMMAX-NOVO"
-              disabled={editando}
-              title={editando ? "O código não muda: é ele que liga a foto, a ficha e as propostas já geradas a este produto." : undefined}
-            />
-          </div>
-          <div>
-            <label style={rotulo}>Nome *</label>
-            <input style={campo} value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Primmax Novo" />
-          </div>
+        {/* Código saiu da tela (07/08/2026): não está na ficha técnica. No cadastro ele é
+            gerado do nome; na edição é imutável de qualquer forma. */}
+        <div>
+          <label style={rotulo}>Nome *</label>
+          <input style={campo} value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Primmax Novo" />
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1.6fr", gap: "12px", marginTop: "12px" }}>
@@ -654,26 +655,17 @@ export function FormProduto({
           </button>
         )}
 
+        {/* Métodos, segmentos e descrição curta saíram da tela (07/08/2026 — "só os dados que
+            tem na ficha"): os valores existentes seguem preservados no salvar, e a descrição
+            curta herda o nome/abertura. Funções fica: sem elas a seleção automática não acha
+            o produto. */}
         <div style={secao}>Onde o produto se encaixa</div>
         <label style={rotulo}>Funções * <span style={dica}>— é por elas que a seleção automática acha o produto</span></label>
         <Chips opcoes={FUNCOES} valor={funcoes} onToggle={toggle(funcoes, setFuncoes)} />
-        <label style={{ ...rotulo, marginTop: "14px" }}>Métodos de aplicação</label>
-        <Chips opcoes={METODOS} valor={metodos} onToggle={toggle(metodos, setMetodos)} />
-        <div style={{ marginTop: "12px" }}>
-          <label style={rotulo}>Segmentos <span style={dica}>— separados por vírgula</span></label>
-          <input style={campo} value={segmentos} onChange={(e) => setSegmentos(e.target.value)} placeholder="laticinio, cozinha_industrial" />
-        </div>
 
         <div style={secao}>A ficha do produto <span style={dica}>— na ordem da ficha técnica; é o que preenche a página dele no PDF</span></div>
-        {/* Os dois campos de descrição ficam juntos e dizem para onde vão. Separados, viravam
-            a queixa do "meio embolado": ninguém adivinhava que um abre a página do PDF e o
-            outro é a linha da lista, nem que deixar o de baixo vazio herda o de cima. */}
         <div>
-          <label style={rotulo}>Descrição curta <span style={dica}>— a linha que aparece na lista do catálogo</span></label>
-          <input style={campo} value={descricaoCurta} onChange={(e) => setDescricaoCurta(e.target.value)} placeholder="Detergente desengordurante alcalino" />
-        </div>
-        <div style={{ marginTop: "12px" }}>
-          <label style={rotulo}>Parágrafo de abertura <span style={dica}>— abre a página do produto no PDF; em branco, usa a descrição curta</span></label>
+          <label style={rotulo}>Parágrafo de abertura <span style={dica}>— abre a página do produto no PDF</span></label>
           <textarea style={{ ...campo, minHeight: "56px", resize: "vertical" }} value={fichaDescricao} onChange={(e) => setFichaDescricao(e.target.value)} />
         </div>
         <div style={{ marginTop: "12px" }}>
@@ -715,9 +707,11 @@ export function FormProduto({
           <div><label style={rotulo}>Odor</label><input style={campo} value={odor} onChange={(e) => setOdor(e.target.value)} placeholder="Característico" /></div>
         </div>
 
-        <div style={secao}>Embalagens</div>
+        <div style={secao}>Embalagens <span style={dica}>— os tamanhos que a ficha lista</span></div>
+        {/* A diluição máx. por embalagem saiu da tela (07/08/2026): as diluições já são
+            cadastradas acima, como na ficha. O valor gravado por embalagem é preservado. */}
         {embalagens.map((emb, i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 90px 1.2fr 34px", gap: "8px", marginBottom: "8px", alignItems: "end" }}>
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 90px 34px", gap: "8px", marginBottom: "8px", alignItems: "end" }}>
             <div>
               {i === 0 && <label style={rotulo}>Tamanho *</label>}
               <input style={campo} value={emb.tamanho} onChange={(e) => setEmbalagens(embalagens.map((x, j) => (j === i ? { ...x, tamanho: e.target.value } : x)))} placeholder="5" />
@@ -727,10 +721,6 @@ export function FormProduto({
               <select style={campo} value={emb.unidade} onChange={(e) => setEmbalagens(embalagens.map((x, j) => (j === i ? { ...x, unidade: e.target.value as Embalagem["unidade"] } : x)))}>
                 {UNIDADES.map((u) => <option key={u} value={u}>{u}</option>)}
               </select>
-            </div>
-            <div>
-              {i === 0 && <label style={rotulo}>Diluição máx.</label>}
-              <input style={campo} value={emb.diluicaoMax} onChange={(e) => setEmbalagens(embalagens.map((x, j) => (j === i ? { ...x, diluicaoMax: e.target.value } : x)))} placeholder="1:100" />
             </div>
             <button type="button" onClick={() => setEmbalagens(embalagens.length > 1 ? embalagens.filter((_, j) => j !== i) : embalagens)} style={{ height: "38px", border: "1px solid var(--gray-200)", background: "white", borderRadius: "9px", cursor: "pointer", color: "var(--danger)" }} title="Remover">×</button>
           </div>
