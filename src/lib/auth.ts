@@ -15,7 +15,24 @@ export type Usuario = { email: string; nome: string; papel: Papel };
 // revogação ficaria valendo só depois de expirar. O estado é sempre lido do banco.
 export type Acesso = "pendente" | "aprovado" | "bloqueado";
 
-const secret = () => process.env.AUTH_SESSION_SECRET || "dev-secret-trocar-em-producao";
+// Segredo que assina o cookie de sessão. FALHA FECHADA em produção: sem um
+// AUTH_SESSION_SECRET próprio, quem assina é uma string que está pública no repositório —
+// e com ela qualquer um forja um cookie `papel:"admin"` e lê todo dado sensível (financeiro,
+// cobrança, time, todas as propostas). Antes o código caía nessa string em silêncio; agora,
+// se a variável faltar (ou for justamente o fallback) num deploy de produção, assinar e
+// validar sessão LANÇA — o site fica fora do ar até configurar, o que é infinitamente melhor
+// do que ficar aberto com uma chave conhecida. Em dev (NODE_ENV !== production) o fallback
+// segue valendo, para não travar o uso local em 127.0.0.1.
+const DEV_SECRET = "dev-secret-trocar-em-producao";
+function secret(): string {
+  const s = process.env.AUTH_SESSION_SECRET;
+  if (process.env.NODE_ENV === "production" && (!s || s === DEV_SECRET)) {
+    throw new Error(
+      "AUTH_SESSION_SECRET ausente ou inseguro em produção. Defina um valor longo e aleatório (ex.: openssl rand -hex 32) no painel da Vercel.",
+    );
+  }
+  return s || DEV_SECRET;
+}
 
 // Liga por padrão. Só desliga com AUTH_ENABLED=false explícito (uso local em 127.0.0.1
 // sem quem logar ainda) — nunca desliga sozinha em produção.
