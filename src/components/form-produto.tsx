@@ -265,8 +265,9 @@ export function FormProduto({
     }
   }, [chave, serializado, tocado]);
 
-  // Sair GUARDANDO — é o que fazem o clique no fundo, o × e o Esc. Nada se perde e nada
-  // pergunta: o preenchimento já está no rascunho e volta inteiro no próximo "editar".
+  // Sair GUARDANDO — é o que fazem o × e o Esc. Nada se perde e nada pergunta: o
+  // preenchimento já está no rascunho e volta inteiro no próximo "editar". (O clique no
+  // fundo não fecha; ver o comentário do backdrop lá embaixo.)
   function sairGuardando() {
     onFechar();
   }
@@ -428,9 +429,11 @@ export function FormProduto({
 
   return (
     <div
-      // O clique no fundo fecha guardando: o rascunho já está gravado, então o deslize de
-      // mouse que antes levava embora a ficha inteira agora só adia o trabalho.
-      onClick={sairGuardando}
+      // O clique no fundo NÃO fecha — decisão do gestor (07/08/2026), depois de a versão que
+      // fechava guardando o rascunho ainda ter lido como "cliquei e saiu". Sair é ato
+      // deliberado: × , Esc, Cancelar ou Salvar. O aviso responde ao clique para ele não
+      // parecer um controle morto.
+      onClick={() => setAviso("Para sair, use o × no alto, Cancelar ou Salvar — clicar aqui fora não fecha o formulário.")}
       style={{ position: "fixed", inset: 0, background: "rgba(14,58,95,.45)", zIndex: 60, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "34px 16px", overflowY: "auto" }}
     >
       <form

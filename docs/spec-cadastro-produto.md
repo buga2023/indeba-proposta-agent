@@ -81,13 +81,16 @@ como `/api/colaboradores`. O botão "Novo produto" só habilita para admin.
   características) — sem isso o produto novo sai com página pobre no PDF, virando produto de
   segunda classe no catálogo
 - **Rascunho automático do formulário** (07/08/2026) — o preenchimento é gravado no navegador
-  (`localStorage`, chave `indeba:rascunho-produto:<codigo|novo>`) a cada digitação. Clique no
-  fundo, × e Esc fecham **guardando**; reabrir devolve tudo, com aviso. Só "Cancelar" (com
-  confirmação) e o salvamento bem-sucedido apagam o rascunho. Nasceu do "eu cliquei fora sem
-  querer e aí eu perdi" (06/08/2026): a resposta anterior — travar o clique no fundo — evitava
-  a perda mas prendia quem só queria sair um instante. Arquivos ficam de fora (`File` não
-  serializa, e o navegador não deixa repovoar um `<input type="file">`); o aviso da restauração
-  diz isso
+  (`localStorage`, chave `indeba:rascunho-produto:<codigo|novo>`) a cada digitação. × e Esc
+  fecham **guardando**; reabrir devolve tudo, com aviso. Só "Cancelar" (com confirmação) e o
+  salvamento bem-sucedido apagam o rascunho. Nasceu do "eu cliquei fora sem querer e aí eu
+  perdi" (06/08/2026). Arquivos ficam de fora (`File` não serializa, e o navegador não deixa
+  repovoar um `<input type="file">`); o aviso da restauração diz isso.
+  > **O clique no fundo não fecha** — nem fechando com rascunho. A versão que fechava guardando
+  > foi ao ar e o gestor voltou dizendo que "continua com o mesmo problema de clicar e sair":
+  > para quem preenche, o formulário sumir da tela **é** a perda, mesmo que o dado esteja
+  > guardado. O clique no fundo responde com um aviso dizendo por onde se sai; o rascunho fica
+  > como rede para o × e o Esc.
 - Testes-guardiões + smoke test de ponta a ponta
 
 ## Fora de escopo

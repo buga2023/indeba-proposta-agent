@@ -135,11 +135,15 @@ aplicação, modo de uso, diluições, rendimento, características), e o botão
 a partir da ficha"** lê o PDF anexado e propõe o conteúdo — extração determinística por
 cabeçalho (`lib/ficha-tecnica-parse.ts`), sem IA, com o gestor confirmando antes de salvar.
 
-**Nada do que você digita se perde ao sair.** O formulário guarda um rascunho no próprio
-navegador a cada tecla. Clicar fora, no ×, ou apertar Esc fecha **guardando** — reabrir o
-mesmo produto (ou o "Novo produto") devolve tudo onde estava, com um aviso no topo. Só o
-botão **Cancelar** descarta, e ele pergunta antes. Foto e ficha em PDF são a exceção: o
-navegador não permite repovoar um campo de arquivo, então precisam ser anexadas de novo.
+**Clicar fora do formulário não fecha nada** — o clique no fundo escurecido só mostra um
+aviso dizendo por onde se sai. Sair é sempre deliberado: o **×**, o **Esc**, o **Cancelar**
+ou o **Salvar**.
+
+**E nada do que você digita se perde ao sair.** O formulário guarda um rascunho no próprio
+navegador a cada tecla. O × e o Esc fecham **guardando** — reabrir o mesmo produto (ou o
+"Novo produto") devolve tudo onde estava, com um aviso no topo. Só o botão **Cancelar**
+descarta, e ele pergunta antes. Foto e ficha em PDF são a exceção: o navegador não permite
+repovoar um campo de arquivo, então precisam ser anexadas de novo.
 
 O rascunho é por produto (a edição do Alvaclor não se mistura com a do Sanquat) e vive só na
 máquina de quem digitou — salvar apaga o rascunho e passa a valer o que está no servidor.

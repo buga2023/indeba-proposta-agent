@@ -903,8 +903,13 @@ export default function Home() {
               06/08/2026: "solicitações internas, visitas, prospecções, contratos… é importante
               aparecer nesse dashboard lateral, pode ficar abaixo desses aqui". Antes eles só
               existiam como card no Dashboard, o que obrigava a voltar à visão geral para
-              alcançar qualquer um deles. Comodatos fica de fora até a tela existir: item de
-              menu que não leva a lugar nenhum lê como sistema quebrado. */}
+              alcançar qualquer um deles.
+
+              Desde 07/08/2026 a lista aqui espelha os cards de Módulos do Dashboard, item a
+              item e na mesma ordem ("esses módulos também têm que aparecer na barra lateral
+              depois das funções de proposta"). Comodatos entra como reserva de lugar, sem
+              clique e com selo "Em breve": item de menu que navega para o nada lê como sistema
+              quebrado, mas esmaecido e rotulado ele informa em vez de enganar. */}
           <div className="ies-side-text" style={navSection}>Módulos</div>
           <Hoverable base={navItemStyle(["prospeccao"])} hover={navHover} onClick={() => irPara("prospeccao")} title="Visitas e Prospecção — encontre empresas e gere a abordagem">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -913,6 +918,22 @@ export default function Home() {
             </svg>
             Visitas e Prospecção
           </Hoverable>
+          {/* Botão de verdade (e não uma div) para herdar as regras da trilha de ícones, onde
+              o nav esconde o rótulo de `nav > button`. `disabled` é o que diz, a mouse e a
+              leitor de tela, que ele ainda não leva a lugar nenhum. */}
+          <button
+            type="button"
+            disabled
+            title="Comodatos — módulo ainda não construído"
+            style={{ ...navItemStyle([]), cursor: "default", color: "rgba(255,255,255,.32)" }}
+          >
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2.5 5.5l6-3 6 3v6l-6 3-6-3z" />
+              <path d="M2.5 5.5l6 3 6-3M8.5 8.5v6" />
+            </svg>
+            Comodatos
+            <span className="ies-side-text" style={{ marginLeft: "auto", fontSize: "9px", fontWeight: 700, letterSpacing: ".05em", padding: "2px 6px", borderRadius: "999px", background: "rgba(255,255,255,.09)", color: "rgba(255,255,255,.45)" }}>EM BREVE</span>
+          </button>
           <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => irPara("contrato")} title="Contratos — gere e analise o contrato da proposta">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 2.5h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" />
@@ -927,6 +948,23 @@ export default function Home() {
               <path d="M6.5 6.5h5M6.5 9h3" />
             </svg>
             Solicitações Internas
+          </Hoverable>
+          {/* O cadastro é um modal DENTRO do Catálogo: o item liga o mesmo sinal que o card do
+              Dashboard e a paleta ⌘K usam, e o formulário abre junto com a tela. */}
+          <Hoverable
+            base={navItemStyle([])}
+            hover={navHover}
+            onClick={() => {
+              cadastroProdutoPedido.current = true;
+              irPara("catalog");
+            }}
+            title="Cadastro de Produtos — nome, imagem, ficha técnica e segmento"
+          >
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2.5" y="2.5" width="12" height="12" rx="2" />
+              <path d="M8.5 5.5v6M5.5 8.5h6" />
+            </svg>
+            Cadastro de Produtos
           </Hoverable>
 
           {/* Configurações é o painel do gestor: e-mails de cobrança, GESTOR_EMAIL, cadastro
