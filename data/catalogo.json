@@ -1730,7 +1730,7 @@
       ],
       "ficha": {
         "titulo": "Detergente Desengordurante",
-        "subtitulo": "Alcalino Concentrado",
+        "subtitulo": "ALCALINO CONCENTRADO",
         "linhaLabel": "KITCHEN",
         "descricao": "Fórmula poderosa que remove as gorduras mais difíceis com eficiência e rapidez. Ideal para uso profissional em cozinhas e ambientes que exigem alto padrão de limpeza.",
         "indicadoPara": [
@@ -2105,7 +2105,8 @@
         "beneficios": [
           "Não corrosivo às superfícies de inox, alumínio, estanho, zinco, teflon, polietileno, revestimentos sintéticos, esmaltados ou borrachas",
           "Indicado também para tratamento de buchos e vísceras na indústria alimentícia"
-        ]
+        ],
+        "subtitulo": "DESINFETANTE À BASE DE PERÓXIDO DE HIDROGÊNIO 50%"
       }
     },
     {
@@ -2151,7 +2152,8 @@
             "uso": "clareamento de buchos e vísceras",
             "razao": "entre 1 e 2% de concentração no intervalo de temperatura de 60 a 80°C"
           }
-        ]
+        ],
+        "subtitulo": "DESINFETANTE À BASE DE PERÓXIDO DE HIDROGÊNIO 35%"
       }
     },
     {
@@ -6615,7 +6617,8 @@
           "Promove brilho seco e natural às superfícies, em especial à madeiras",
           "Forma uma película sobre as superfícies, protegendo-as contra a ação do tempo, umidade, manchas d'água e poeira",
           "Deixa leve perfume lavanda no ambiente"
-        ]
+        ],
+        "subtitulo": "ABRILHANTADOR E PROTETOR À BASE DE SILICONE"
       }
     },
     {
@@ -8540,7 +8543,8 @@
           "Possui pH neutro",
           "Essência exclusiva de lírio do campo",
           "Contém tensoativos biodegradáveis"
-        ]
+        ],
+        "subtitulo": "SABONETE PEROLIZADO PARA MÃOS"
       }
     },
     {

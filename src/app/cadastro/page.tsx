@@ -180,7 +180,7 @@ export default function Cadastro() {
 
       <div className="absolute bottom-4 flex items-center gap-2 text-[11px] text-white/30">
         <Wordmark variante="white" altura={13} alt="" className="opacity-40" />
-        <span>PRO IA · Proposta + Prospecção</span>
+        <span>PRO IA</span>
       </div>
     </div>
   );

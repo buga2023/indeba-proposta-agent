@@ -46,6 +46,12 @@ export async function GET(req: NextRequest) {
 
 const MB = 1024 * 1024;
 const IMAGEM_MIMES = ["image/png", "image/jpeg", "image/webp"];
+// Os limites daqui eram 5 MB (foto) e 20 MB (ficha) — números que nunca chegavam a valer: a
+// função da Vercel corta o corpo do request em ~4,5 MB e responde 413 em HTML, antes de este
+// código rodar. Foi o "Falha ao salvar (HTTP 413)" de 07/08/2026. Prometer o que a
+// infraestrutura não entrega é pior do que um teto menor e honesto — a tela encolhe a foto
+// no navegador (ver components/form-produto.tsx) para caber com folga.
+const LIMITE_ANEXO = 4 * MB;
 
 // Validação dos anexos, compartilhada por cadastro e edição: os dois aceitam os MESMOS
 // arquivos, e regra de upload duplicada é regra que diverge (um lado aperta, o outro fica
@@ -56,8 +62,8 @@ function lerImagem(form: FormData): { erro: NextResponse } | { erro: null; image
   if (!IMAGEM_MIMES.includes(imagem.type)) {
     return { erro: NextResponse.json({ erro: "Foto deve ser PNG, JPG ou WebP." }, { status: 400 }) };
   }
-  if (imagem.size > 5 * MB) {
-    return { erro: NextResponse.json({ erro: "Foto acima de 5 MB." }, { status: 400 }) };
+  if (imagem.size > LIMITE_ANEXO) {
+    return { erro: NextResponse.json({ erro: "Foto acima de 4 MB — a plataforma recusa envios maiores." }, { status: 400 }) };
   }
   return { erro: null, imagem };
 }
@@ -68,8 +74,8 @@ function lerFicha(form: FormData): { erro: NextResponse } | { erro: null; ficha:
   if (ficha.type !== "application/pdf") {
     return { erro: NextResponse.json({ erro: "A ficha técnica deve ser um PDF." }, { status: 400 }) };
   }
-  if (ficha.size > 20 * MB) {
-    return { erro: NextResponse.json({ erro: "Ficha técnica acima de 20 MB." }, { status: 400 }) };
+  if (ficha.size > LIMITE_ANEXO) {
+    return { erro: NextResponse.json({ erro: "Ficha técnica acima de 4 MB — a plataforma recusa envios maiores." }, { status: 400 }) };
   }
   return { erro: null, ficha };
 }

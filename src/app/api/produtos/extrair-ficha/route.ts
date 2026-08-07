@@ -54,7 +54,8 @@ export async function POST(req: NextRequest) {
       if (ficha.type !== "application/pdf") {
         return NextResponse.json({ erro: "A ficha técnica deve ser um PDF." }, { status: 400 });
       }
-      if (ficha.size > 20 * MB) return NextResponse.json({ erro: "Ficha técnica acima de 20 MB." }, { status: 400 });
+      // 4 MB e não 20: acima disso a função da Vercel devolve 413 sem nem chamar este código.
+      if (ficha.size > 4 * MB) return NextResponse.json({ erro: "Ficha técnica acima de 4 MB — a plataforma recusa envios maiores." }, { status: 400 });
       origem = { bytes: new Uint8Array(await ficha.arrayBuffer()), nome: ficha.name || "ficha.pdf" };
     } else {
       const codigo = req.nextUrl.searchParams.get("codigo");

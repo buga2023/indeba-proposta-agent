@@ -328,6 +328,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
   rascunho: { label: "Rascunho", bg: "#F1F5F9", fg: "#64748B" },
   em_edicao: { label: "Em edição", bg: "#FEF3C7", fg: "#B45309" },
   enviada: { label: "Enviada", bg: "#DBEAFE", fg: "#2563EB" },
+  em_andamento: { label: "Em andamento", bg: "#EDE9FE", fg: "#7C3AED" },
   aprovada: { label: "Aprovada", bg: "#DCFCE7", fg: "#16A34A" },
   recusada: { label: "Recusada", bg: "#FEE2E2", fg: "#DC2626" },
   arquivada: { label: "Arquivada", bg: "#E2E8F0", fg: "#475569" },
@@ -1358,10 +1359,10 @@ function DashboardScreen({
   ];
 
   // Widget financeiro — derivado das propostas reais (sem números inventados, constituição §1.2):
-  // "aprovado" = soma das aprovadas; "em negociação" = soma das enviadas.
+  // "aprovado" = soma das aprovadas; "em negociação" = enviadas + em andamento.
   const somaPorStatus = (st: StatusProposta) => lista.filter((p) => p.status === st).reduce((s, p) => s + Number(p.total || 0), 0);
   const valorAprovado = somaPorStatus("aprovada");
-  const valorEmNegociacao = somaPorStatus("enviada");
+  const valorEmNegociacao = somaPorStatus("enviada") + somaPorStatus("em_andamento");
   const recentes = lista.slice(0, 4);
 
   return (
@@ -1573,7 +1574,7 @@ function DashboardScreen({
             <div style={{ fontSize: "21px", fontWeight: 800, color: "var(--text-strong)", fontFamily: "var(--font-mono)" }}>{fmt(valorAprovado)}</div>
             <div style={{ height: "1px", background: "var(--border)", margin: "13px 0" }} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-              <span style={{ fontSize: "12.5px", color: "var(--text-muted)", fontWeight: 500 }}>Em negociação (enviadas)</span>
+              <span style={{ fontSize: "12.5px", color: "var(--text-muted)", fontWeight: 500 }}>Em negociação (enviadas + em andamento)</span>
               <span style={{ width: "30px", height: "30px", borderRadius: "9px", background: "var(--info-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--info)" }}>
                 <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 4.5v5M6 7h5" /></svg>
               </span>
@@ -3736,6 +3737,10 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ color: navy, fontSize: "13.5px", fontWeight: 800 }}>{p.ficha?.titulo ?? p.nome}</div>
+              {/* Mesmo padrão da ficha no PDF: nome navy + subtítulo laranja em caixa alta. */}
+              {p.ficha?.subtitulo && (
+                <div style={{ color: orange, fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", marginTop: "2px" }}>{p.ficha.subtitulo}</div>
+              )}
               <div style={{ fontSize: "11px", color: "#5a6878", lineHeight: 1.45, margin: "4px 0 10px" }}>{p.ficha?.descricao ?? p.descricaoUso}</div>
               <div style={{ display: "flex", gap: "10px" }}>
                 {box("Embalagem", e ? tamanhoLegivel(e.tamanho, e.unidade) : "—")}

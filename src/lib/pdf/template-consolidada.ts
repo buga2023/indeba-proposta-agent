@@ -646,7 +646,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-runmark b { color: ${NAVY}; }
 .pp-main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
 .pp-tit { color: ${NAVY}; font-size: 25px; font-weight: 800; line-height: 1.08; letter-spacing: -.3px; }
-.pp-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin-top: 4px; }
+.pp-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin-top: 4px; text-transform: uppercase; }
 .pp-eyebrow-cat { color: #8a95a3; font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .3px; margin-top: 4px; }
 .pp-desc { color: #5a6878; font-size: 11.5px; line-height: 1.55; max-width: 400px; }
 .pp-label { display: inline-block; background: ${NAVY}; color: #fff; font-size: 10px; font-weight: 700;

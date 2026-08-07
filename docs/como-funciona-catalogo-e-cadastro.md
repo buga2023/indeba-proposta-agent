@@ -135,6 +135,14 @@ aplicação, modo de uso, diluições, rendimento, características), e o botão
 a partir da ficha"** lê o PDF anexado e propõe o conteúdo — extração determinística por
 cabeçalho (`lib/ficha-tecnica-parse.ts`), sem IA, com o gestor confirmando antes de salvar.
 
+**A foto é encolhida no seu navegador antes de subir.** Foto de estúdio em PNG passa fácil
+de 5 MB, e a função da Vercel recusa qualquer envio acima de ~4,5 MB — respondendo um
+`HTTP 413` que não explica nada (foi o erro ao trocar a foto do Spar HT-6). A tela agora
+reduz para 1400px e converte para WebP (que preserva a transparência do recorte) antes de
+enviar, e mostra o que fez: *"8,4 MB → 240 KB (reduzida para caber no envio)"*. O teto do
+envio inteiro é **4 MB** — se a ficha em PDF for pesada, salve o produto sem ela e anexe uma
+versão mais leve depois.
+
 **Clicar fora do formulário não fecha nada** — o clique no fundo escurecido só mostra um
 aviso dizendo por onde se sai. Sair é sempre deliberado: o **×**, o **Esc**, o **Cancelar**
 ou o **Salvar**.

@@ -114,7 +114,7 @@ export type PropostaScope = z.infer<typeof PropostaScope>;
 // feito direto no Postgres, fora do app — nada no código escrevia o valor). Como a coluna
 // é String livre, elas passavam pelo INSERT e só explodiam na leitura, derrubando o
 // histórico inteiro com 500. Faltava no enum, não era dado corrompido.
-export const StatusProposta = z.enum(["rascunho", "em_edicao", "enviada", "aprovada", "recusada", "arquivada"]);
+export const StatusProposta = z.enum(["rascunho", "em_edicao", "enviada", "em_andamento", "aprovada", "recusada", "arquivada"]);
 export type StatusProposta = z.infer<typeof StatusProposta>;
 
 // Linha do histórico — leve (sem o scope inteiro) para listar.

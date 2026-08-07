@@ -160,6 +160,53 @@ function apagarRascunho(chave: string) {
   }
 }
 
+// ── Foto: encolhida no navegador antes de subir ──────────────────────────────────────────
+// A função da Vercel recusa qualquer requisição acima de ~4,5 MB (FUNCTION_PAYLOAD_TOO_LARGE)
+// — e recusa ANTES de o código rodar, então a validação amigável da rota nunca chega a falar.
+// Era isso o "Falha ao salvar (HTTP 413)" ao trocar a foto do Spar HT-6 (07/08/2026): foto de
+// estúdio em PNG passa fácil dos 5 MB.
+//
+// Encolher aqui resolve na origem e ainda deixa o upload rápido: 1400px é mais resolução do
+// que a página do produto no PDF usa, e WebP preserva a transparência do recorte (o fundo
+// vazado é o que faz o produto encaixar no card). Se algo falhar — navegador antigo, canvas
+// bloqueado —, devolve o arquivo original: o pior caso é o que já acontecia.
+const LADO_MAX = 1400;
+const ALVO_BYTES = 1.2 * 1024 * 1024;
+// Teto do envio inteiro (foto + ficha + campos). O corte real da Vercel fica entre 4 e 5 MB,
+// medido contra a produção em 07/08/2026; 4 MB deixa margem para o resto do formulário.
+const LIMITE_ENVIO = 4 * 1024 * 1024;
+
+function pesoLegivel(bytes: number): string {
+  return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
+}
+
+async function encolherFoto(file: File): Promise<File> {
+  if (typeof window === "undefined" || !file.type.startsWith("image/")) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const escala = Math.min(1, LADO_MAX / Math.max(bitmap.width, bitmap.height));
+    // Já pequena e leve: reencodar só perderia qualidade sem ganhar nada.
+    if (escala === 1 && file.size <= ALVO_BYTES) {
+      bitmap.close();
+      return file;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * escala);
+    canvas.height = Math.round(bitmap.height * escala);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/webp", 0.92));
+    // Navegador sem WebP devolve PNG; o `type` do blob é quem manda no nome e no MIME.
+    if (!blob || blob.size >= file.size) return file;
+    const ext = blob.type === "image/webp" ? "webp" : blob.type === "image/jpeg" ? "jpg" : "png";
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + "." + ext, { type: blob.type });
+  } catch {
+    return file;
+  }
+}
+
 // O que a rota /api/produtos/extrair-ficha devolve — os blocos da ficha técnica em PDF.
 type CamposDaFicha = {
   descricao?: string;
@@ -227,6 +274,9 @@ export function FormProduto({
   const [diluicoes, setDiluicoes] = useState<Diluicao[]>(() => salvo?.diluicoes ?? diluicoesIniciais(produto));
 
   const [imagem, setImagem] = useState<File | null>(null);
+  // Linha discreta abaixo do campo de foto: "8,4 MB → 240 KB". Encolher a foto do gestor
+  // sem dizer nada seria mexer no arquivo dele às escondidas.
+  const [fotoInfo, setFotoInfo] = useState<string | null>(null);
   const [ficha, setFicha] = useState<File | null>(null);
   const [removerFicha, setRemoverFicha] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -362,6 +412,17 @@ export function FormProduto({
     if (!funcoes.length) return setErro("Escolha ao menos uma função — é por ela que a seleção automática acha o produto.");
     // Na edição, não anexar foto significa "mantém a que já está lá".
     if (!editando && !imagem) return setErro("A foto do produto é obrigatória.");
+    // O corte de ~4,5 MB é da plataforma e vale para o ENVIO INTEIRO (foto + ficha + campos).
+    // Barrar aqui é o que transforma um "HTTP 413" em uma frase que diz o que fazer.
+    const pesoAnexos = (imagem?.size ?? 0) + (ficha?.size ?? 0);
+    if (pesoAnexos > LIMITE_ENVIO) {
+      return setErro(
+        `Os anexos somam ${pesoLegivel(pesoAnexos)} e o envio aceita até ${pesoLegivel(LIMITE_ENVIO)}. ` +
+          (ficha && ficha.size > LIMITE_ENVIO / 2
+            ? "A ficha em PDF é a parte pesada — salve o produto sem ela e anexe uma versão mais leve depois."
+            : "Anexe uma foto menor."),
+      );
+    }
 
     const listaBeneficios = beneficios.split("\n").map((l) => l.trim()).filter(Boolean);
     const listaDiluicoes = diluicoes
@@ -412,6 +473,11 @@ export function FormProduto({
     setSalvando(true);
     try {
       const r = await fetch("/api/produtos", { method: editando ? "PUT" : "POST", body: form });
+      // 413 não passa pela rota: quem responde é a borda da Vercel, e em HTML — daí a
+      // mensagem escrita aqui. Rede de segurança para o que a checagem acima não previu.
+      if (r.status === 413) {
+        throw new Error("Os arquivos anexados são grandes demais para o envio. Anexe uma foto ou uma ficha em PDF mais leve — o limite da plataforma é de cerca de 4 MB por envio.");
+      }
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.erro || `Falha ao salvar (HTTP ${r.status}).`);
       // Gravado no servidor: o rascunho cumpriu o papel e sai de cena. Sem isto, o próximo
@@ -518,7 +584,30 @@ export function FormProduto({
               Foto do produto {editando ? "" : "*"}{" "}
               <span style={dica}>{editando ? "— só se for trocar" : "PNG/JPG"}</span>
             </label>
-            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => setImagem(e.target.files?.[0] ?? null)} style={{ ...campo, padding: "7px" }} />
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={async (e) => {
+                const original = e.target.files?.[0] ?? null;
+                setTocado(true);
+                if (!original) {
+                  setImagem(null);
+                  setFotoInfo(null);
+                  return;
+                }
+                setImagem(original);
+                setFotoInfo("Preparando a foto…");
+                const leve = await encolherFoto(original);
+                setImagem(leve);
+                setFotoInfo(
+                  leve === original
+                    ? pesoLegivel(original.size)
+                    : `${pesoLegivel(original.size)} → ${pesoLegivel(leve.size)} (reduzida para caber no envio)`,
+                );
+              }}
+              style={{ ...campo, padding: "7px" }}
+            />
+            {fotoInfo && <div style={{ marginTop: "6px", fontSize: "12px", color: "var(--text-subtle)" }}>{fotoInfo}</div>}
             {editando && !imagem && (
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -528,7 +617,7 @@ export function FormProduto({
             )}
           </div>
           <div>
-            <label style={rotulo}>Ficha técnica <span style={dica}>PDF, opcional</span></label>
+            <label style={rotulo}>Ficha técnica <span style={dica}>PDF até 4 MB, opcional</span></label>
             <input type="file" accept="application/pdf" onChange={(e) => setFicha(e.target.files?.[0] ?? null)} style={{ ...campo, padding: "7px" }} />
             {editando && produto.fichaTecnicaPath && !ficha && (
               <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--text-muted)" }}>
