@@ -22,7 +22,6 @@ import { mascaraCnpj, erroCnpj } from "@/lib/cnpj";
 import { SEGMENTOS, rotuloSegmento, linhaDoSegmento, segmentosLegiveis } from "@/lib/segmento";
 import { imagemEhIlustrativa } from "@/lib/imagem-produto";
 import { tamanhoLegivel } from "@/lib/embalagem";
-import { AjudaChat } from "@/components/ajuda-chat";
 import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
 import { AdminScreen } from "@/components/admin-screen";
@@ -287,7 +286,6 @@ function SegmentoInput({ value, onChange, campoLabel, campoInput }: { value: str
 /* ── Chrome global: ações do header (busca/assistente) compartilhadas com as telas ── */
 const ChromeContext = createContext<{
   openPalette: () => void;
-  openAssistant: () => void;
   goTo: (s: string) => void;
   // Em tela estreita a sidebar vira gaveta: o botão que a abre vive no ScreenHead
   // (que é irmão da <aside>, não filho), então o estado passa por aqui.
@@ -299,7 +297,6 @@ const ChromeContext = createContext<{
   ehAdmin: boolean;
 }>({
   openPalette: () => {},
-  openAssistant: () => {},
   goTo: () => {},
   openNav: () => {},
   ehAdmin: false,
@@ -810,8 +807,6 @@ export default function Home() {
   const chrome = {
     openPalette: () => setPalette(true),
     openNav: () => setNavOpen(true),
-    // O Assistente (AjudaChat) é um overlay independente; o header pede a abertura via evento.
-    openAssistant: () => window.dispatchEvent(new CustomEvent("ies:assistente")),
     goTo: (s: string) => setScreen(s as Screen),
     ehAdmin,
   };
@@ -1147,8 +1142,11 @@ export default function Home() {
         }}
       />
 
-      {/* Assistente de ajuda — overlay global (canto inferior direito) */}
-      <AjudaChat />
+      {/* O balão do assistente saiu da tela a pedido do gestor (07/08/2026). O componente
+          (`components/ajuda-chat.tsx`) e o cérebro determinístico dele continuam no código,
+          testados — o que saiu foi a porta: o balão flutuante E o botão do header, que
+          abriam o mesmo overlay. Deixar um dos dois seria botão que não faz nada. Para
+          reativar, basta devolver <AjudaChat /> aqui e o botão ao ScreenHead. */}
     </div>
     </ChromeContext.Provider>
   );
@@ -5348,7 +5346,7 @@ function abrirRelatorio(titulo: string, subtitulo: string, blocos: BlocoRelatori
 
 /* Cabeçalho de tela (design app.html) — barra branca fixa com título + subtítulo + ação. */
 function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) {
-  const { openPalette, openAssistant, openNav } = useContext(ChromeContext);
+  const { openPalette, openNav } = useContext(ChromeContext);
   return (
     <div className="ies-head" style={{ display: "flex", alignItems: "center", gap: "14px", padding: "0 24px", height: "62px", background: "var(--surface)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 20, flex: "none" }}>
       {/* Abre a gaveta de navegação. Só existe na faixa em que a sidebar sai do
@@ -5393,17 +5391,8 @@ function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?
           Cobrança não tinha porta no menu; agora tem (ver a seção Sistema da sidebar), então
           o sino virou porta duplicada e enganosa ao mesmo tempo. Se um dia houver contagem
           real de cobrança vencida, um sino volta — apontando para o que ele conta. */}
-      {/* Assistente → abre o overlay AjudaChat */}
-      <Hoverable
-        onClick={openAssistant}
-        title="Assistente"
-        ariaLabel="Abrir assistente"
-        base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 14px", borderRadius: "10px", border: "none", background: "var(--primary)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "13px", fontWeight: 600, boxShadow: "var(--shadow-sm)" }}
-        hover={{ background: "var(--primary-hover)" }}
-      >
-        <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 2.2l1.5 3.3 3.3 1.5-3.3 1.5L8.5 12 7 8l-3.3-1.5L7 5z" /></svg>
-        <span className="ies-hide-sm">Assistente</span>
-      </Hoverable>
+      {/* O botão "Assistente" saiu junto com o balão do chat (07/08/2026): ele era a outra
+          porta para o mesmo overlay, e sozinho abriria o que o gestor pediu para tirar. */}
       </div>
     </div>
   );
