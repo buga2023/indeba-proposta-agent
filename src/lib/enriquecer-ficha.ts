@@ -91,6 +91,10 @@ export function enriquecerFicha(p: Produto): Produto["ficha"] {
       icone: resolverIcone(i.label, i.icone), // corrige ícone genérico pelo rótulo
     })),
     beneficios: base.beneficios ?? mk.beneficios,
+    // Só vêm do catálogo: não há versão de marketing de composição química nem de campo de
+    // aplicação — é dado técnico, copiado da ficha impressa (ver lib/ficha-tecnica-parse.ts).
+    composicao: base.composicao,
+    aplicacao: base.aplicacao,
     diluicoes: base.diluicoes,
     rendimento: base.rendimento,
     caracteristicas: base.caracteristicas,
@@ -103,6 +107,6 @@ export function enriquecerFicha(p: Produto): Produto["ficha"] {
   // Se não sobrou nada além do título, mantém o que o catálogo já tinha (inclusive null).
   const temConteudo =
     ficha.subtitulo || ficha.linhaLabel || ficha.indicadoPara?.length || ficha.beneficios?.length ||
-    ficha.rendimento || ficha.caracteristicas || ficha.diluicoes?.length;
+    ficha.rendimento || ficha.caracteristicas || ficha.diluicoes?.length || ficha.composicao || ficha.aplicacao;
   return temConteudo ? FichaProduto.parse(ficha) : p.ficha ?? null;
 }

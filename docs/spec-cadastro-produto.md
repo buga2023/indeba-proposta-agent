@@ -66,13 +66,28 @@ como `/api/colaboradores`. O botão "Novo produto" só habilita para admin.
 ## Escopo
 
 - Modelo `ProdutoCustom` + migration (sem tocar em `Usuario`/`Proposta`)
-- `POST /api/produtos` (admin), `GET` para listar, `DELETE` para remover
+- `POST /api/produtos` (admin), `GET` para listar, `PUT` para editar, `DELETE` para excluir
+  (lápide) e `PATCH` para restaurar
+- `GET /api/produtos/<codigo>` — o produto **completo**, de onde o formulário de edição parte.
+  A listagem da tela vem de `/api/catalogo`, que recorta a ficha para título e descrição; abrir
+  a edição com aquela versão apagava o resto no salvar (06/08/2026). A segunda defesa é o merge
+  de `lib/produto-merge.ts`: campo ausente preserva, campo vazio apaga.
+- `POST /api/produtos/extrair-ficha` — lê a ficha técnica em PDF e devolve os campos sugeridos
+  (`lib/ficha-tecnica-parse.ts`, determinístico: recorte por cabeçalho, sem IA)
 - `GET /api/produtos/<codigo>/imagem` e `/ficha` — servem os bytes
 - `catalogoCompleto()` unindo as fontes; sete call sites migrados
 - `render.ts` resolvendo imagem do banco
 - Formulário na tela de Catálogo, cobrindo **a ficha rica também** (benefícios, diluições,
   características) — sem isso o produto novo sai com página pobre no PDF, virando produto de
   segunda classe no catálogo
+- **Rascunho automático do formulário** (07/08/2026) — o preenchimento é gravado no navegador
+  (`localStorage`, chave `indeba:rascunho-produto:<codigo|novo>`) a cada digitação. Clique no
+  fundo, × e Esc fecham **guardando**; reabrir devolve tudo, com aviso. Só "Cancelar" (com
+  confirmação) e o salvamento bem-sucedido apagam o rascunho. Nasceu do "eu cliquei fora sem
+  querer e aí eu perdi" (06/08/2026): a resposta anterior — travar o clique no fundo — evitava
+  a perda mas prendia quem só queria sair um instante. Arquivos ficam de fora (`File` não
+  serializa, e o navegador não deixa repovoar um `<input type="file">`); o aviso da restauração
+  diz isso
 - Testes-guardiões + smoke test de ponta a ponta
 
 ## Fora de escopo
@@ -89,12 +104,22 @@ como `/api/colaboradores`. O botão "Novo produto" só habilita para admin.
   > `data/catalogo.json` fica intacto, servindo de origem: é dele que vêm foto e ficha
   > enquanto o gestor não anexar as suas (por isso `imagem`/`imagemMime` viraram opcionais).
   >
-  > Duas regras que caem junto: produto da base **não se exclui** (apagar a linha só desfaria
-  > a edição — a saída é arquivar, com `ativo: false`), e a **ficha herdada não se remove**
-  > (ela está no repositório, não no banco; para trocar, anexa-se outra).
+  > A **ficha herdada não se remove** (ela está no repositório, não no banco; para trocar,
+  > anexa-se outra).
   >
   > O que protege as propostas antigas não é mais a precedência do JSON: é o snapshot do
   > `PropostaScope`, que guarda preço e embalagem do momento da montagem.
   > Ver `como-funciona-catalogo-e-cadastro.md` §5.
+- ~~Excluir produto da base~~ — **saiu do "fora de escopo" em 06/08/2026.**
+  > A regra anterior era "produto da base não se exclui, arquiva-se": apagar a linha do banco
+  > só desfazia o override, e o produto voltava pelo JSON. O Matheus pediu excluir de fato
+  > ("criar também, para os produtos que já foram criados, a opção de excluir").
+  >
+  > A exclusão virou **lápide**: `ProdutoCustom.excluido`. A linha fica, marcada, e
+  > `catalogoCompleto()` remove o código das duas fontes — então o produto some da vitrine,
+  > da busca e da seleção automática mesmo continuando no arquivo versionado. Vale também
+  > para o produto que nasceu na tela (nada de `DELETE` de linha), o que torna **toda**
+  > exclusão reversível pelo painel de restauração no topo do Catálogo. Arquivar continua
+  > existindo como o caminho do meio (some dos filtros, continua achável pela busca).
 - Migração dos 150 para o banco
 - Recorte automático de fundo (`gerar-cutouts.mjs`) para foto enviada pela tela

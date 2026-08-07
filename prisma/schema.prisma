@@ -109,6 +109,12 @@ model ProdutoCustom {
   id           String   @id @default(cuid())
   codigo       String   @unique
   dados        Json
+  /// Lápide: o produto foi EXCLUÍDO pelo gestor. Existe porque produto da base mora em
+  /// data/catalogo.json — arquivo versionado, que a função da Vercel não pode reescrever —,
+  /// então "sumir com ele" só é possível marcando aqui e filtrando na leitura. Vale para os
+  /// dois tipos: o que nasceu na tela também vira lápide em vez de DELETE, para a exclusão
+  /// ser reversível (o Matheus perdeu produto editando; apagar sem volta seria pior).
+  excluido     Boolean  @default(false)
   // Opcionais desde que esta tabela passou a guardar também os OVERRIDES da base: editar o
   // preço de um produto do catálogo.json não exige reenviar a foto que já está versionada.
   imagem       Bytes?

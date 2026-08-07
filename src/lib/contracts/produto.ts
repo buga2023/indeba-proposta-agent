@@ -63,6 +63,14 @@ export const FichaProduto = z.object({
   descricao: z.string().optional(),     // parágrafo hero
   indicadoPara: z.array(z.object({ label: z.string(), icone: z.string() })).optional(),
   beneficios: z.array(z.string()).optional(),
+  // Dois blocos que a ficha técnica REAL da Indeba traz e o cadastro pela tela não tinha
+  // onde guardar (pedido do Matheus, 06/08/2026: "botar exatamente os campos como é a
+  // ficha — composição, aplicação, modo de uso"). Sem eles, quem cadastrava um produto
+  // digitava a composição em "descrição" ou desistia, e a página do PDF saía sem a
+  // informação que o cliente pergunta. "Cuidados e precauções" foi dispensado no mesmo
+  // pedido — é conteúdo de rótulo/FISPQ, não de proposta comercial.
+  composicao: z.string().optional(),    // "Tensoativo aniônico, alcalinizante, sequestrante…"
+  aplicacao: z.string().optional(),     // onde e em que superfícies o produto se aplica
   diluicoes: z.array(z.object({
     uso: z.string(),                    // "Finalidade de uso"
     razao: z.string(),                  // "Diluição"

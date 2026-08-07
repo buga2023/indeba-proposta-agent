@@ -71,7 +71,7 @@ export default function Login() {
           {/* logo oficial */}
           <div className="mb-8 flex flex-col items-center">
             <LogoCompleta altura={86} className="mb-2" />
-            <div className="text-[12.5px] text-[var(--text-muted)]">Plataforma de IA · acesso restrito</div>
+            <div className="text-[12.5px] text-[var(--text-muted)]">PRO IA · acesso restrito</div>
           </div>
 
           <form onSubmit={entrar} className="flex flex-col gap-4">

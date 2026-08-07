@@ -139,7 +139,9 @@ export function paginaProduto(
   // embalagem com diluição pegava a de outro tamanho — o consultor marcava "não dilui" e o
   // painel continuava anunciando a diluição de catálogo do 20 L, contra o que ele informou.
   const diluicaoEmbalagem = cotada?.diluicaoMax ? cotada : null;
-  const simples = !f?.indicadoPara?.length && !f?.beneficios?.length && !f?.diluicoes?.length && !diluicaoEmbalagem && !f?.caracteristicas && !f?.rendimento;
+  const simples =
+    !f?.indicadoPara?.length && !f?.beneficios?.length && !f?.diluicoes?.length && !diluicaoEmbalagem &&
+    !f?.caracteristicas && !f?.rendimento && !f?.aplicacao && !f?.composicao;
   const semVenda = !simples && !f?.indicadoPara?.length && !f?.beneficios?.length;
 
   // Fichas MUITO longas (Primmax Sanap: 6 benefícios grandes + 7 finalidades de diluição)
@@ -151,7 +153,11 @@ export function paginaProduto(
     (f?.descricao?.length ?? 0) +
     (f?.beneficios ?? []).reduce((s, b) => s + b.length, 0) +
     (f?.diluicoes ?? []).reduce((s, d) => s + d.uso.length + d.razao.length + (d.comoAplicar?.length ?? 0), 0) +
-    (f?.rendimento?.length ?? 0);
+    (f?.rendimento?.length ?? 0) +
+    // Aplicação e composição entram na conta: são dois parágrafos inteiros a mais, e sem
+    // eles aqui o produto que os tem estouraria a página em vez de cair no modo denso.
+    (f?.aplicacao?.length ?? 0) +
+    (f?.composicao?.length ?? 0);
   const denso = pesoFicha > 1100;
 
   const indicado = f?.indicadoPara?.length
@@ -232,6 +238,16 @@ export function paginaProduto(
         )
         .join("")}</div></div>`
     : "";
+  // Aplicação e composição: dois blocos da ficha técnica impressa que o cadastro passou a
+  // guardar em 06/08/2026 ("botar exatamente os campos como é a ficha"). Painéis de texto
+  // corrido, na ordem em que a ficha os traz — aplicação diz ONDE se usa, composição diz do
+  // que é feito, e ambos são pergunta de cliente que o vendedor respondia por telefone.
+  const aplicacao = f?.aplicacao
+    ? `<div class="pp-panel"><h4>Aplicação</h4><p class="pp-panel-txt">${esc(f.aplicacao)}</p></div>`
+    : "";
+  const composicao = f?.composicao
+    ? `<div class="pp-panel"><h4>Composição</h4><p class="pp-panel-txt">${esc(f.composicao)}</p></div>`
+    : "";
   const carac = f?.caracteristicas
     ? `<div class="pp-panel"><h4>Características</h4><div class="pp-rows-cols">${Object.entries(f.caracteristicas)
         .filter(([, v]) => v)
@@ -277,7 +293,12 @@ export function paginaProduto(
     contato?.emailConsultor ? `<span class="pp-c-item"><span class="ic">${iconeSvg("email", ORANGE)}</span>${esc(contato.emailConsultor)}</span>` : "",
   ].filter(Boolean).join("");
 
-  const specs = diluicoes || modoUso || rendimento || embalagens || carac ? `<div class="pp-specs">${diluicoes}${modoUso}${rendimento}${embalagens}${carac}</div>` : "";
+  // A ordem dos painéis segue a leitura da ficha técnica: onde se aplica → do que é feito →
+  // como diluir/usar → quanto rende → em que embalagem → dados físico-químicos.
+  const specs =
+    aplicacao || composicao || diluicoes || modoUso || rendimento || embalagens || carac
+      ? `<div class="pp-specs">${aplicacao}${composicao}${diluicoes}${modoUso}${rendimento}${embalagens}${carac}</div>`
+      : "";
   // Página de produto não usa o .pgnum das outras seções: a própria rail já assina o
   // rodapé ("Página 07/11 · Proposta de Solução"), e os dois no mesmo canto colidiam.
   const runmark = numero ? `<div class="pp-runmark">Proposta de Solução <b>${esc(numero)}</b></div>` : "";
@@ -663,6 +684,10 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
    à parte (.pp-rows-cols), com k/v coladinhos — space-between ali jogaria o
    valor pra ponta da célula, longe da chave. */
 .pp-rows { display: flex; flex-direction: column; }
+\* Aplicação e composição são parágrafo, não k/v: texto corrido dentro do painel,
+   com o mesmo tamanho das linhas de spec para não competir com os benefícios. */
+.pp-panel-txt { font-size: 10px; line-height: 1.5; color: #46586c; margin: 0; text-align: justify; }
+.prodpg-denso .pp-panel-txt { font-size: 9.2px; line-height: 1.4; }
 .pp-rows-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
 .pp-row { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; }
 .pp-row .k { color: #6b7787; } .pp-row .v { font-weight: 700; color: ${NAVY}; text-align: right; }

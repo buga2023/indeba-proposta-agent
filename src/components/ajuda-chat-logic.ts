@@ -178,7 +178,7 @@ export const FAQ: QA[] = [
 ];
 
 export const WELCOME = L(
-  "**Oi! Sou o assistente da Plataforma de IA da Indeba.**",
+  "**Oi! Sou o assistente do Indeba Express PRO IA.**",
   "",
   "Posso te ajudar com:",
   "• **Catálogo** — ficha técnica, linha e embalagens de cada produto",

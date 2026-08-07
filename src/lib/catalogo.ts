@@ -46,27 +46,35 @@ export function produtoPorCodigo(codigo: string): Produto | undefined {
 // estava, e só produto realmente novo entra no fim.
 export async function catalogoCompleto(): Promise<Catalogo> {
   const base = carregarCatalogo();
-  const { listarProdutosCustom } = await import("./produto-custom");
+  const { listarProdutosCustom, excluidosCustom } = await import("./produto-custom");
   let custom: Produto[] = [];
+  let excluidos: string[] = [];
   try {
-    custom = await listarProdutosCustom();
+    [custom, excluidos] = await Promise.all([listarProdutosCustom(), excluidosCustom()]);
   } catch (e) {
     // Banco fora do ar não pode apagar o catálogo da tela: degrada para o JSON e registra.
     console.error("[catalogo] produtos cadastrados indisponíveis — servindo só o JSON:", e);
     return base;
   }
-  if (!custom.length) return base;
+  if (!custom.length && !excluidos.length) return base;
   const porCodigo = new Map(base.produtos.map((p) => [p.codigo, p]));
   for (const p of custom) porCodigo.set(p.codigo, p);
+  // A lápide é a ÚLTIMA palavra: um produto excluído sai da lista venha ele do JSON ou do
+  // banco. Aplicada depois do override porque a mesma linha guarda as duas coisas — o
+  // produto excluído continua com seus `dados` gravados, esperando um possível restaurar.
+  for (const c of excluidos) porCodigo.delete(c);
   return { ...base, produtos: [...porCodigo.values()] };
 }
 
 export async function produtoPorCodigoCompleto(codigo: string): Promise<Produto | undefined> {
-  const { produtoCustomPorCodigo } = await import("./produto-custom");
+  const { linhaCustom } = await import("./produto-custom");
   try {
     // Banco primeiro, pela mesma razão: se existe override, é ele o produto atual.
-    const override = await produtoCustomPorCodigo(codigo);
-    if (override) return override;
+    const linha = await linhaCustom(codigo);
+    if (linha?.produto) return linha.produto;
+    // Excluído é resposta definitiva: cair no JSON aqui ressuscitaria o produto da base que
+    // o gestor tirou do catálogo, e ele voltaria a aparecer na montagem e na seleção.
+    if (linha?.excluido) return undefined;
   } catch (e) {
     // Degradação, não erro: banco fora do ar não pode derrubar quem só queria reabrir uma
     // proposta. Cai no JSON abaixo, que é o pior caso aceitável (dado um pouco velho, não

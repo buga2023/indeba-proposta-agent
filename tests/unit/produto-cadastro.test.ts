@@ -6,18 +6,20 @@ import type { NextRequest } from "next/server";
 // que é aceito, e a garantia de que a segunda fonte não atropela a primeira.
 // vi.hoisted porque as fábricas de vi.mock sobem para o topo do arquivo — declarar os
 // espiões como const comum daria "Cannot access before initialization".
-const { usuarioAtual, create, findMany, carregarCatalogo, listarProdutosCustom } = vi.hoisted(() => ({
+const { usuarioAtual, upsert, findUnique, findMany, carregarCatalogo, listarProdutosCustom, listarExcluidos } = vi.hoisted(() => ({
   usuarioAtual: vi.fn(),
-  create: vi.fn(),
+  upsert: vi.fn(),
+  findUnique: vi.fn(),
   findMany: vi.fn(),
   carregarCatalogo: vi.fn(),
   listarProdutosCustom: vi.fn(),
+  listarExcluidos: vi.fn(),
 }));
 
 vi.mock("@/lib/auth-db", () => ({ usuarioAtual }));
-vi.mock("@/lib/db", () => ({ prisma: { produtoCustom: { create, findMany } } }));
+vi.mock("@/lib/db", () => ({ prisma: { produtoCustom: { upsert, findUnique, findMany } } }));
 vi.mock("@/lib/catalogo", () => ({ carregarCatalogo }));
-vi.mock("@/lib/produto-custom", () => ({ listarProdutosCustom }));
+vi.mock("@/lib/produto-custom", () => ({ listarProdutosCustom, listarExcluidos }));
 
 import { POST } from "@/app/api/produtos/route";
 
@@ -47,30 +49,33 @@ function req(dados: unknown, extras: Record<string, File> = {}) {
 }
 
 beforeEach(() => {
-  for (const m of [usuarioAtual, create, findMany, carregarCatalogo]) m.mockReset();
+  for (const m of [usuarioAtual, upsert, findUnique, findMany, carregarCatalogo]) m.mockReset();
   carregarCatalogo.mockReturnValue({ marca: "indeba_express", produtos: [{ codigo: "PRIMMAX-PLUS" }] });
-  create.mockResolvedValue({});
+  upsert.mockResolvedValue({});
+  // Código livre no banco. A gravação é um upsert (ele existe para reaproveitar código com
+  // lápide), então a rota consulta antes para saber se o código está OCUPADO de fato.
+  findUnique.mockResolvedValue(null);
 });
 
 describe("POST /api/produtos — só o gestor cadastra", () => {
   it("401 sem sessão", async () => {
     usuarioAtual.mockResolvedValue(null);
     expect((await POST(req(PRODUTO, { imagem: png() }))).status).toBe(401);
-    expect(create).not.toHaveBeenCalled();
+    expect(upsert).not.toHaveBeenCalled();
   });
 
   it("403 para vendedor", async () => {
     usuarioAtual.mockResolvedValue(VENDEDOR);
     expect((await POST(req(PRODUTO, { imagem: png() }))).status).toBe(403);
-    expect(create).not.toHaveBeenCalled();
+    expect(upsert).not.toHaveBeenCalled();
   });
 
   it("201 para gestor, e o autor sai da sessão — nunca do cliente", async () => {
     usuarioAtual.mockResolvedValue(GESTOR);
     const r = await POST(req({ ...PRODUTO, autor: "outro@x.com" }, { imagem: png() }));
     expect(r.status).toBe(201);
-    expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ codigo: "TESTE-NOVO", autor: GESTOR.email }) }),
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ create: expect.objectContaining({ codigo: "TESTE-NOVO", autor: GESTOR.email }) }),
     );
   });
 });
@@ -86,12 +91,12 @@ describe("POST /api/produtos — o que não entra no catálogo", () => {
   it("GUARDIÃO: código que já existe no JSON é recusado (409)", async () => {
     const r = await POST(req({ ...PRODUTO, codigo: "PRIMMAX-PLUS" }, { imagem: png() }));
     expect(r.status).toBe(409);
-    expect(create).not.toHaveBeenCalled();
+    expect(upsert).not.toHaveBeenCalled();
   });
 
   it("sem foto não cadastra — produto sem imagem sai torto no PDF", async () => {
     expect((await POST(req(PRODUTO))).status).toBe(400);
-    expect(create).not.toHaveBeenCalled();
+    expect(upsert).not.toHaveBeenCalled();
   });
 
   it("foto que não é imagem é recusada", async () => {
@@ -106,7 +111,7 @@ describe("POST /api/produtos — o que não entra no catálogo", () => {
 
   it("dados fora do contrato Zod são recusados (linha inexistente)", async () => {
     expect((await POST(req({ ...PRODUTO, linha: "espacial" }, { imagem: png() }))).status).toBe(400);
-    expect(create).not.toHaveBeenCalled();
+    expect(upsert).not.toHaveBeenCalled();
   });
 
   it("código com caractere fora de [A-Z0-9-] é recusado", async () => {
@@ -117,13 +122,13 @@ describe("POST /api/produtos — o que não entra no catálogo", () => {
   // apontar a foto do produto para qualquer URL externa.
   it("GUARDIÃO: imagemPath enviado pelo cliente é ignorado, não gravado", async () => {
     await POST(req({ ...PRODUTO, imagemPath: "https://malicioso.example/x.png" }, { imagem: png() }));
-    const dados = create.mock.calls[0][0].data.dados;
+    const dados = upsert.mock.calls[0][0].create.dados;
     expect(dados.imagemPath).toBe("");
     expect(JSON.stringify(dados)).not.toContain("malicioso");
   });
 
   it("produto novo nasce ATIVO — o gestor cadastrou para usar", async () => {
     await POST(req(PRODUTO, { imagem: png() }));
-    expect(create.mock.calls[0][0].data.dados.ativo).toBe(true);
+    expect(upsert.mock.calls[0][0].create.dados.ativo).toBe(true);
   });
 });

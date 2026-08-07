@@ -4,7 +4,8 @@ import { usuarioAtual } from "@/lib/auth-db";
 import { Produto } from "@/lib/contracts";
 import { prisma } from "@/lib/db";
 import { carregarCatalogo } from "@/lib/catalogo";
-import { listarProdutosCustom } from "@/lib/produto-custom";
+import { listarExcluidos } from "@/lib/produto-custom";
+import { mesclarProduto } from "@/lib/produto-merge";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
@@ -25,14 +26,18 @@ export async function GET(req: NextRequest) {
   const { erro } = await exigirGestor(req);
   if (erro) return erro;
   try {
-    // `base` são os códigos que vêm do data/catalogo.json. A tela precisa deles para separar
-    // o que se EXCLUI (produto que nasceu na tela: some de vez) do que só se ARQUIVA (produto
-    // da base: o arquivo versionado continua lá, então apagar a linha do banco não o tiraria
-    // do catálogo — só desfaria a edição). Sem essa distinção o gestor clica em excluir, vê o
-    // produto continuar na lista e conclui que o sistema ignorou o comando.
+    // `base` são os códigos que vêm do data/catalogo.json — a tela usa para dizer, no
+    // formulário, que a edição daquele produto vira override do arquivo versionado.
+    // `excluidos` são as lápides: produtos que saíram do catálogo e que só o gestor
+    // enxerga, para poder restaurar. Sem essa lista, uma exclusão por engano seria
+    // irrecuperável pela tela.
+    //
+    // Os produtos em si NÃO vêm mais daqui: a tela já tem o catálogo inteiro por
+    // /api/catalogo, e a edição busca o produto completo em /api/produtos/<codigo>. Mandar
+    // a lista de novo era trafegar as fichas duas vezes para preencher um Map que sobrava.
     return NextResponse.json({
-      produtos: await listarProdutosCustom(),
       base: carregarCatalogo().produtos.map((p) => p.codigo),
+      excluidos: await listarExcluidos(),
     });
   } catch (e) {
     return respostaErro(e, "Falha ao listar produtos cadastrados", 500);
@@ -111,6 +116,13 @@ export async function POST(req: NextRequest) {
   if (carregarCatalogo().produtos.some((p) => p.codigo === codigo)) {
     return NextResponse.json({ erro: `O código ${codigo} já existe no catálogo.` }, { status: 409 });
   }
+  // Colisão dentro da tabela — checada aqui, e não deixada para o `@unique`, porque a
+  // gravação abaixo é um upsert (ele existe para reaproveitar código com lápide). Sem esta
+  // porta, "cadastrar" um código que já está em uso sobrescreveria o produto do colega.
+  const ocupado = await prisma.produtoCustom.findUnique({ where: { codigo }, select: { excluido: true } });
+  if (ocupado && !ocupado.excluido) {
+    return NextResponse.json({ erro: `O código ${codigo} já existe no catálogo.` }, { status: 409 });
+  }
 
   const img = lerImagem(form);
   if (img.erro) return img.erro;
@@ -126,15 +138,19 @@ export async function POST(req: NextRequest) {
     // Nasce ATIVO: o gestor acabou de cadastrar querendo usar. `ativo` é flag de negócio —
     // arquivar é ato deliberado depois, não estado inicial (ver docs/spec-dashboard-catalogo-por-perfil.md).
     const dados = { ...parsed.data, codigo, ativo: true, imagemPath: "", fichaTecnicaPath: null };
-    await prisma.produtoCustom.create({
-      data: {
-        codigo,
-        dados,
-        imagem: Buffer.from(await imagem.arrayBuffer()),
-        imagemMime: imagem.type,
-        ...(ficha ? { ficha: Buffer.from(await ficha.arrayBuffer()), fichaMime: ficha.type } : {}),
-        autor: email,
-      },
+    const anexos = {
+      imagem: Buffer.from(await imagem.arrayBuffer()),
+      imagemMime: imagem.type,
+      ...(ficha ? { ficha: Buffer.from(await ficha.arrayBuffer()), fichaMime: ficha.type } : {}),
+    };
+    // Um código EXCLUÍDO não bloqueia o cadastro: a lápide não é um produto, é a marca de que
+    // aquele código saiu do catálogo. Cadastrar de novo com ele é a mesma intenção de
+    // restaurar, com dados novos — recusar aqui deixaria o código preso para sempre, com uma
+    // mensagem ("já existe no catálogo") apontando um produto que a tela não mostra.
+    await prisma.produtoCustom.upsert({
+      where: { codigo },
+      create: { codigo, dados, autor: email, ...anexos },
+      update: { dados, autor: email, excluido: false, ficha: null, fichaMime: null, ...anexos },
     });
     return NextResponse.json({ ok: true, codigo }, { status: 201 });
   } catch (e) {
@@ -171,8 +187,17 @@ export async function PUT(req: NextRequest) {
   }
   const codigo = parsed.data.codigo.trim().toUpperCase();
 
-  const atual = await prisma.produtoCustom.findUnique({ where: { codigo }, select: { dados: true, fichaMime: true } });
+  const atual = await prisma.produtoCustom.findUnique({
+    where: { codigo },
+    select: { dados: true, fichaMime: true, excluido: true },
+  });
   const naBase = carregarCatalogo().produtos.find((p) => p.codigo === codigo);
+  if (atual?.excluido) {
+    return NextResponse.json(
+      { erro: `${codigo} foi excluído do catálogo. Restaure o produto antes de editá-lo.` },
+      { status: 409 },
+    );
+  }
   if (!atual && !naBase) {
     // 404 e não 403: o gestor PODE editar — este código é que não existe em fonte nenhuma.
     // A mensagem precisa dizer o que fazer, senão vira "o botão de salvar não funciona".
@@ -203,14 +228,24 @@ export async function PUT(req: NextRequest) {
     // `ativo` ausente preserva o estado atual — editar a descrição não é motivo para
     // desarquivar um produto que o gestor tinha tirado de circulação. Sem linha no banco
     // (primeira edição de um produto da base), o estado a preservar é o do JSON.
-    const ativoAtual = atual ? Produto.safeParse(atual.dados) : null;
-    const dados = {
-      ...parsed.data,
-      codigo,
-      ativo: parsed.data.ativo ?? (ativoAtual?.success ? ativoAtual.data.ativo : (naBase?.ativo ?? true)),
-      imagemPath: "",
-      fichaTecnicaPath: null,
-    };
+    const gravado = atual ? Produto.safeParse(atual.dados) : null;
+    const mesclado = mesclarProduto(
+      // De onde parte a mesclagem: o override já gravado ou, na primeira edição de um
+      // produto da base, o produto do JSON com a ficha JÁ ENRIQUECIDA (carregarCatalogo faz
+      // isso) — é a ficha que o gestor vê na tela, e é ela que precisa sobreviver à edição.
+      gravado?.success ? gravado.data : naBase ?? null,
+      {
+        ...parsed.data,
+        codigo,
+        ativo: parsed.data.ativo ?? (gravado?.success ? gravado.data.ativo : (naBase?.ativo ?? true)),
+        imagemPath: "",
+        fichaTecnicaPath: null,
+      },
+    );
+    // Os dois caminhos são DERIVADOS na leitura (produto-custom.ts) e não podem voltar do
+    // merge com o valor antigo gravado: o `imagemPath` de um produto da base aponta para
+    // public/, e mantê-lo aqui esconderia a foto que o gestor acabou de anexar.
+    const dados = { ...mesclado, imagemPath: "", fichaTecnicaPath: null };
     const anexos = {
       ...(img.imagem ? { imagem: Buffer.from(await img.imagem.arrayBuffer()), imagemMime: img.imagem.type } : {}),
       ...(fch.ficha
@@ -234,27 +269,67 @@ export async function PUT(req: NextRequest) {
 
 const Remover = z.object({ codigo: z.string().min(1) });
 
-// Só remove o que NASCEU na tela. Produto da base não é apagável por aqui — e agora que ele
-// pode ter override, isso vale mais ainda: apagar a linha do banco não o tiraria do catálogo,
-// só desfaria a edição, e o produto reapareceria com os dados antigos. Quem quer sumir com um
-// produto da base arquiva (`ativo: false` pela edição), que é reversível e mantém as propostas
-// antigas legíveis. Proposta já salva não quebra de todo jeito: o PropostaScope é snapshot.
+// Excluir QUALQUER produto, inclusive os ~150 da base. Até 06/08/2026 a base era intocável
+// aqui (409 com o conselho de arquivar), porque apagar a linha do banco não tirava o produto
+// do catálogo — o arquivo versionado continuava lá e ele reaparecia com os dados antigos. O
+// Matheus pediu excluir de fato ("criar também, para os produtos que já foram criados, a
+// opção de excluir"), então a exclusão virou LÁPIDE: a linha fica, marcada, e a leitura
+// remove o código das duas fontes (ver catalogoCompleto).
+//
+// Lápide e não DELETE também para o produto que nasceu na tela: assim toda exclusão é
+// reversível pelo painel de restauração. Quem já perdeu ficha inteira num salvamento não
+// deve encontrar, no botão ao lado, uma ação sem volta.
+//
+// Propostas já geradas não mudam: o PropostaScope é snapshot: preço, ficha e embalagem do
+// momento da montagem viajam gravados com ela.
 export async function DELETE(req: NextRequest) {
-  const { erro } = await exigirGestor(req);
+  const { erro, email } = await exigirGestor(req);
   if (erro) return erro;
   const parsed = Remover.safeParse({ codigo: req.nextUrl.searchParams.get("codigo") });
   if (!parsed.success) return NextResponse.json({ erro: "Código não informado." }, { status: 400 });
   const codigo = parsed.data.codigo;
-  if (carregarCatalogo().produtos.some((p) => p.codigo === codigo)) {
-    return NextResponse.json(
-      { erro: `${codigo} é da base Indeba/Pratt e não sai do catálogo por aqui. Para tirá-lo da vitrine, edite o produto e desmarque "Ativo" — some dos filtros e continua encontrável pela busca.` },
-      { status: 409 },
-    );
-  }
+  const naBase = carregarCatalogo().produtos.find((p) => p.codigo === codigo);
+  const atual = await prisma.produtoCustom.findUnique({ where: { codigo }, select: { id: true } });
+  if (!atual && !naBase) return NextResponse.json({ erro: "Produto não encontrado." }, { status: 404 });
+
   try {
-    await prisma.produtoCustom.delete({ where: { codigo } });
+    if (atual) {
+      await prisma.produtoCustom.update({ where: { codigo }, data: { excluido: true } });
+    } else {
+      // Lápide de produto da base que nunca foi editado: `dados` guarda a cópia do JSON —
+      // é o que dá nome ao item no painel de restauração e o que volta se o gestor
+      // restaurar depois de o arquivo já ter mudado.
+      await prisma.produtoCustom.create({
+        data: { codigo, dados: { ...naBase!, imagemPath: "", fichaTecnicaPath: null }, autor: email, excluido: true },
+      });
+    }
     return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ erro: "Produto não encontrado." }, { status: 404 });
+  } catch (e) {
+    return respostaErro(e, "Falha ao excluir o produto", 500);
+  }
+}
+
+const Restaurar = z.object({ codigo: z.string().min(1) });
+
+// Desfaz a exclusão. Existe porque a lápide é reversível de propósito — e porque um gestor
+// que exclui o produto errado numa lista de 150 precisa de uma saída que não seja deploy.
+export async function PATCH(req: NextRequest) {
+  const { erro } = await exigirGestor(req);
+  if (erro) return erro;
+  const corpo = await req.json().catch(() => null);
+  const parsed = Restaurar.safeParse(corpo);
+  if (!parsed.success) return NextResponse.json({ erro: "Código não informado." }, { status: 400 });
+  const codigo = parsed.data.codigo;
+  const linha = await prisma.produtoCustom.findUnique({ where: { codigo }, select: { excluido: true } });
+  if (!linha?.excluido) return NextResponse.json({ erro: "Este produto não está excluído." }, { status: 404 });
+  try {
+    const naBase = carregarCatalogo().produtos.some((p) => p.codigo === codigo);
+    // Produto da base volta pelo JSON — a lápide sai inteira, e com ela o override vazio que
+    // só existia para segurar a marcação. O que nasceu na tela precisa da linha de volta.
+    if (naBase) await prisma.produtoCustom.delete({ where: { codigo } });
+    else await prisma.produtoCustom.update({ where: { codigo }, data: { excluido: false } });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return respostaErro(e, "Falha ao restaurar o produto", 500);
   }
 }

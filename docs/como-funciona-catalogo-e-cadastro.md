@@ -116,18 +116,47 @@ O formulário de edição é o **mesmo** do cadastro, com quatro diferenças:
 | Ativo | Nasce ativo | Checkbox **"Ativo no catálogo"** — desmarcar arquiva (some dos filtros e da seleção automática, continua na busca e nas propostas antigas) |
 
 `PUT /api/produtos` recebe o mesmo FormData do cadastro. O que o formulário **não** exibe
-(subtítulo e "indicado para" da ficha, `fotoEmbalagem`, preço/custo diluído por embalagem,
-"como aplicar" da diluição) viaja de volta intacto: editar o nome de um produto não pode
-apagar em silêncio o que outra parte do sistema gravou.
+("indicado para" e rótulo de linha da ficha, `fotoEmbalagem`, preço/custo diluído por
+embalagem, características fora das quatro da tela) é preservado pelo merge de
+`lib/produto-merge.ts`: editar o nome de um produto não pode apagar em silêncio o que outra
+parte do sistema gravou.
+
+A regra do merge, em uma linha: **campo ausente significa "não mexi"; campo vazio significa
+"apaguei"**. Por isso o formulário envia sempre os campos que ele controla, em branco quando
+o gestor limpou — sem essa distinção, limpar um subtítulo errado seria impossível.
+
+O formulário abre a partir de `GET /api/produtos/<codigo>`, que devolve o produto **inteiro**.
+Antes ele partia do produto da listagem, e a listagem vem de `/api/catalogo` com a ficha
+recortada para título e descrição — o gestor trocava só a foto e o salvamento levava embora
+benefícios, diluições e características (relato do Matheus, 06/08/2026).
+
+Os campos seguem a ordem da **ficha técnica impressa** (abertura, benefícios, composição,
+aplicação, modo de uso, diluições, rendimento, características), e o botão **"Preencher campos
+a partir da ficha"** lê o PDF anexado e propõe o conteúdo — extração determinística por
+cabeçalho (`lib/ficha-tecnica-parse.ts`), sem IA, com o gestor confirmando antes de salvar.
+
+**Nada do que você digita se perde ao sair.** O formulário guarda um rascunho no próprio
+navegador a cada tecla. Clicar fora, no ×, ou apertar Esc fecha **guardando** — reabrir o
+mesmo produto (ou o "Novo produto") devolve tudo onde estava, com um aviso no topo. Só o
+botão **Cancelar** descarta, e ele pergunta antes. Foto e ficha em PDF são a exceção: o
+navegador não permite repovoar um campo de arquivo, então precisam ser anexadas de novo.
+
+O rascunho é por produto (a edição do Alvaclor não se mistura com a do Sanquat) e vive só na
+máquina de quem digitou — salvar apaga o rascunho e passa a valer o que está no servidor.
 
 Por causa da edição, a foto e a ficha deixaram de ser servidas como `immutable` — a URL é
 fixa e o conteúdo agora troca por dentro dela, então o cache passou a revalidar.
 
 ## 6. Removendo
 
-`DELETE /api/produtos?codigo=<CODIGO>` — **só alcança produto cadastrado pela tela**.
-Produto do JSON não é apagável por aqui (nem deveria: é versionado no git). A tela pede
-confirmação antes, dizendo que a foto e a ficha vão junto.
+`DELETE /api/produtos?codigo=<CODIGO>` — alcança **qualquer** produto, inclusive os do JSON
+(desde 06/08/2026). A linha não é apagada: ela ganha uma **lápide** (`ProdutoCustom.excluido`)
+e `catalogoCompleto()` remove aquele código das duas fontes. É o único jeito de sumir com um
+produto versionado no git, já que a função da Vercel não reescreve o arquivo.
+
+Como a linha fica, toda exclusão é reversível: `PATCH /api/produtos` com `{ codigo }`
+restaura, e o painel no topo do Catálogo lista os excluídos para o gestor. Arquivar (`ativo:
+false`) continua sendo o caminho do meio — some dos filtros, continua achável pela busca.
 
 Proposta já salva não quebra: o `PropostaScope` é snapshot, e `comImagensDoCatalogo()` só
 recalcula enquanto o código existir.

@@ -121,7 +121,7 @@ export function AjudaChat() {
       </button>
 
       {aberto && (
-        <div style={painel} role="dialog" aria-label="Assistente da Plataforma de IA">
+        <div style={painel} role="dialog" aria-label="Assistente do Indeba Express PRO IA">
           <header style={cabecalho}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <div style={avatar}>ie</div>

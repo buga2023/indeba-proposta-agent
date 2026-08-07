@@ -23,6 +23,16 @@ const linha = (codigo: string, dados: Record<string, unknown>, temImagem = true,
   fichaMime: temFicha ? "application/pdf" : null,
 });
 
+// A tabela responde a DUAS perguntas na montagem do catálogo: quais linhas valem (produtos e
+// overrides) e quais códigos têm LÁPIDE (excluídos). As duas chegam pelo mesmo `findMany`,
+// separadas pelo `where` — daí o mock decidir pela consulta, e não devolver a mesma lista
+// para ambas (o que marcaria todo override como excluído).
+function respondePor(linhas: unknown[], excluidos: string[] = []) {
+  findMany.mockImplementation((args?: { where?: { excluido?: boolean } }) =>
+    Promise.resolve(args?.where?.excluido === true ? excluidos.map((codigo) => ({ codigo })) : linhas),
+  );
+}
+
 // Chaves obrigatórias aqui: `() => findMany.mockReset()` devolveria o próprio mock, e o
 // vitest trata o retorno do beforeEach como função de teardown — ele chamaria findMany() ao
 // fim de cada teste. Com uma implementação que lança, o teste morria com o erro que ele
@@ -33,13 +43,13 @@ beforeEach(() => {
 
 describe("catalogoCompleto — override vence o JSON", () => {
   it("sem nada no banco, o catálogo é o JSON inteiro", async () => {
-    findMany.mockResolvedValue([]);
+    respondePor([]);
     const c = await catalogoCompleto();
     expect(c.produtos.length).toBe(carregarCatalogo().produtos.length);
   });
 
   it("GUARDIÃO: o produto editado aparece com o dado NOVO, e uma vez só", async () => {
-    findMany.mockResolvedValue([linha(DA_BASE.codigo, { nome: "Nome Corrigido pelo Gestor" })]);
+    respondePor([linha(DA_BASE.codigo, { nome: "Nome Corrigido pelo Gestor" })]);
     const c = await catalogoCompleto();
     const encontrados = c.produtos.filter((p) => p.codigo === DA_BASE.codigo);
     expect(encontrados).toHaveLength(1);
@@ -51,14 +61,14 @@ describe("catalogoCompleto — override vence o JSON", () => {
   // A ordem da lista vira a numeração das páginas do PDF na proposta Consolidada: um override
   // que jogasse o produto para o fim mudaria a proposta sem ninguém pedir.
   it("GUARDIÃO: o override fica no lugar do produto original, não no fim", async () => {
-    findMany.mockResolvedValue([linha(DA_BASE.codigo, { nome: "Corrigido" })]);
+    respondePor([linha(DA_BASE.codigo, { nome: "Corrigido" })]);
     const c = await catalogoCompleto();
     expect(c.produtos[0].codigo).toBe(DA_BASE.codigo);
     expect(c.produtos[0].nome).toBe("Corrigido");
   });
 
   it("produto que nasceu na tela entra no fim, sem deslocar a base", async () => {
-    findMany.mockResolvedValue([linha("PRODUTO-NOVO-XYZ", { nome: "Produto Novo" })]);
+    respondePor([linha("PRODUTO-NOVO-XYZ", { nome: "Produto Novo" })]);
     const c = await catalogoCompleto();
     expect(c.produtos.length).toBe(carregarCatalogo().produtos.length + 1);
     expect(c.produtos[c.produtos.length - 1].codigo).toBe("PRODUTO-NOVO-XYZ");
@@ -67,7 +77,7 @@ describe("catalogoCompleto — override vence o JSON", () => {
   // Sem bytes próprios, o override herda a foto e a ficha versionadas: exigir reenviar a
   // imagem só para corrigir um texto seria trabalho inventado — e apagá-la, perda silenciosa.
   it("GUARDIÃO: override sem imagem própria mantém a foto da base", async () => {
-    findMany.mockResolvedValue([linha(DA_BASE.codigo, { nome: "Corrigido" }, false)]);
+    respondePor([linha(DA_BASE.codigo, { nome: "Corrigido" }, false)]);
     const c = await catalogoCompleto();
     const p = c.produtos.find((x) => x.codigo === DA_BASE.codigo)!;
     expect(p.imagemPath).toBe(DA_BASE.imagemPath);
@@ -75,7 +85,7 @@ describe("catalogoCompleto — override vence o JSON", () => {
   });
 
   it("com imagem própria, o caminho passa a ser o da rota que serve os bytes", async () => {
-    findMany.mockResolvedValue([linha(DA_BASE.codigo, { nome: "Corrigido" }, true)]);
+    respondePor([linha(DA_BASE.codigo, { nome: "Corrigido" }, true)]);
     const c = await catalogoCompleto();
     const p = c.produtos.find((x) => x.codigo === DA_BASE.codigo)!;
     expect(p.imagemPath).toBe(`/api/produtos/${encodeURIComponent(DA_BASE.codigo)}/imagem`);
@@ -96,8 +106,33 @@ describe("catalogoCompleto — override vence o JSON", () => {
 
   // Linha corrompida some da lista sem levar o catálogo junto (mesma postura de listarPropostas).
   it("linha fora do contrato é pulada e a base continua inteira", async () => {
-    findMany.mockResolvedValue([{ codigo: "PODRE", dados: { nome: 42 }, imagemMime: "image/png", fichaMime: null }]);
+    respondePor([{ codigo: "PODRE", dados: { nome: 42 }, imagemMime: "image/png", fichaMime: null }]);
     const c = await catalogoCompleto();
+    expect(c.produtos.length).toBe(carregarCatalogo().produtos.length);
+  });
+
+  // ── Lápide (06/08/2026): excluir um produto da BASE só funciona se a leitura o remover ──
+  // O arquivo é versionado e a função da Vercel é somente-leitura; sem este filtro, o gestor
+  // excluiria um dos ~150 e ele continuaria na vitrine, como se o botão não fizesse nada.
+  it("GUARDIÃO: produto da base com lápide sai do catálogo", async () => {
+    respondePor([], [DA_BASE.codigo]);
+    const c = await catalogoCompleto();
+    expect(c.produtos.some((p) => p.codigo === DA_BASE.codigo)).toBe(false);
+    expect(c.produtos.length).toBe(carregarCatalogo().produtos.length - 1);
+  });
+
+  // A lápide é a última palavra: um produto pode ter sido editado ANTES de ser excluído, e a
+  // linha guarda as duas coisas (os `dados` do override e a marcação).
+  it("GUARDIÃO: lápide vence o override do mesmo código", async () => {
+    respondePor([linha(DA_BASE.codigo, { nome: "Corrigido" })], [DA_BASE.codigo]);
+    const c = await catalogoCompleto();
+    expect(c.produtos.some((p) => p.codigo === DA_BASE.codigo)).toBe(false);
+  });
+
+  it("produto que nasceu na tela e foi excluído também some", async () => {
+    respondePor([], ["PRODUTO-NOVO-XYZ"]);
+    const c = await catalogoCompleto();
+    expect(c.produtos.some((p) => p.codigo === "PRODUTO-NOVO-XYZ")).toBe(false);
     expect(c.produtos.length).toBe(carregarCatalogo().produtos.length);
   });
 });

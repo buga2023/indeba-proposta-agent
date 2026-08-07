@@ -7,7 +7,7 @@ import type { NextRequest } from "next/server";
 // O que precisa ficar de pé aqui: quem pode escrever, o que a edição NÃO pode apagar sem
 // pedido explícito (foto, ficha, estado de arquivado) e a fronteira com o catálogo-base —
 // os 150 do JSON são versionados no git e não se editam por esta rota.
-const { usuarioAtual, findUnique, update, create, remover, carregarCatalogo, listarProdutosCustom } = vi.hoisted(() => ({
+const { usuarioAtual, findUnique, update, create, remover, carregarCatalogo, listarProdutosCustom, listarExcluidos } = vi.hoisted(() => ({
   usuarioAtual: vi.fn(),
   findUnique: vi.fn(),
   update: vi.fn(),
@@ -15,16 +15,17 @@ const { usuarioAtual, findUnique, update, create, remover, carregarCatalogo, lis
   remover: vi.fn(),
   carregarCatalogo: vi.fn(),
   listarProdutosCustom: vi.fn(),
+  listarExcluidos: vi.fn(),
 }));
 
 vi.mock("@/lib/auth-db", () => ({ usuarioAtual }));
 vi.mock("@/lib/db", () => ({
-  prisma: { produtoCustom: { create, findMany: vi.fn(), findUnique, update, delete: remover } },
+  prisma: { produtoCustom: { create, findMany: vi.fn(), findUnique, update, delete: remover, upsert: vi.fn() } },
 }));
 vi.mock("@/lib/catalogo", () => ({ carregarCatalogo }));
-vi.mock("@/lib/produto-custom", () => ({ listarProdutosCustom }));
+vi.mock("@/lib/produto-custom", () => ({ listarProdutosCustom, listarExcluidos }));
 
-import { PUT, DELETE } from "@/app/api/produtos/route";
+import { PUT, DELETE, PATCH } from "@/app/api/produtos/route";
 
 const GESTOR = { email: "gestor@indeba.com", papel: "admin" };
 const VENDEDOR = { email: "vendedor@indeba.com", papel: "user" };
@@ -239,6 +240,11 @@ describe("PUT /api/produtos — o que a edição não pode apagar sozinha", () =
   });
 });
 
+// A exclusão virou LÁPIDE em 06/08/2026. Antes, ela só valia para o produto nascido na tela
+// (DELETE da linha) e o produto da base era recusado com 409 — o que deixava o Matheus sem
+// como tirar do catálogo um dos ~150 ("criar também, para os produtos que já foram criados, a
+// opção de excluir"). Agora a linha fica marcada e a leitura filtra o código nas duas fontes,
+// o que faz o produto da base sumir de verdade E torna toda exclusão reversível.
 describe("DELETE /api/produtos", () => {
   const reqDel = (codigo: string | null) =>
     ({ nextUrl: { searchParams: new URLSearchParams(codigo === null ? "" : `codigo=${codigo}`) } }) as unknown as NextRequest;
@@ -246,42 +252,81 @@ describe("DELETE /api/produtos", () => {
   it("401 sem sessão", async () => {
     usuarioAtual.mockResolvedValue(null);
     expect((await DELETE(reqDel("TESTE-NOVO"))).status).toBe(401);
-    expect(remover).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
   });
 
   it("403 para vendedor — excluir produto é ato de gestor", async () => {
     usuarioAtual.mockResolvedValue(VENDEDOR);
     expect((await DELETE(reqDel("TESTE-NOVO"))).status).toBe(403);
-    expect(remover).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
   });
 
-  it("gestor remove pelo código", async () => {
+  // GUARDIÃO: a linha NÃO é apagada. É dela que sai o nome no painel de restauração, e é ela
+  // que segura os `dados` para o dia em que o gestor desfizer a exclusão.
+  it("GUARDIÃO: excluir marca a lápide em vez de apagar a linha", async () => {
     usuarioAtual.mockResolvedValue(GESTOR);
+    findUnique.mockResolvedValue({ id: "linha1" });
     expect((await DELETE(reqDel("TESTE-NOVO"))).status).toBe(200);
-    expect(remover).toHaveBeenCalledWith({ where: { codigo: "TESTE-NOVO" } });
-  });
-
-  // Produto da base não se exclui, e a recusa tem que vir ANTES do banco: apagar a linha só
-  // desfaria o override, o produto voltaria com os dados antigos e o gestor veria "excluí e
-  // continua lá". A mensagem manda arquivar, que é o que de fato tira da vitrine.
-  it("GUARDIÃO: produto da base é recusado (409) sem tocar no banco", async () => {
-    usuarioAtual.mockResolvedValue(GESTOR);
-    const r = await DELETE(reqDel("PRIMMAX-PLUS"));
-    expect(r.status).toBe(409);
-    expect((await r.json()).erro).toMatch(/ativo/i);
+    expect(update).toHaveBeenCalledWith({ where: { codigo: "TESTE-NOVO" }, data: { excluido: true } });
     expect(remover).not.toHaveBeenCalled();
   });
 
-  // Código que não é da base e não está no banco: o delete falha e vira 404 — nunca um 500,
-  // que pareceria falha do sistema.
+  // Produto da base nunca editado não tem linha: a lápide precisa nascer, com uma cópia do
+  // JSON dentro. Sem a cópia, o painel de restauração não teria nem o nome para exibir.
+  it("produto da base sem linha ganha lápide criada, com cópia dos dados", async () => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+    findUnique.mockResolvedValue(null);
+    expect((await DELETE(reqDel("PRIMMAX-PLUS"))).status).toBe(200);
+    expect(create.mock.calls[0][0].data.excluido).toBe(true);
+    expect(create.mock.calls[0][0].data.dados.codigo).toBe("PRIMMAX-PLUS");
+  });
+
+  // Código que não é da base e não está no banco: 404 — nunca um 500, que pareceria falha do
+  // sistema, nem um 200, que faria o gestor achar que excluiu algo.
   it("produto inexistente devolve 404", async () => {
     usuarioAtual.mockResolvedValue(GESTOR);
-    remover.mockRejectedValue(new Error("registro não encontrado"));
-    expect((await DELETE(reqDel("NAO-EXISTE"))).status).toBe(404);
+    findUnique.mockResolvedValue(null);
+    const r = await DELETE(reqDel("NAO-EXISTE"));
+    expect(r.status).toBe(404);
+    expect(create).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
   });
 
   it("sem código, 400", async () => {
     usuarioAtual.mockResolvedValue(GESTOR);
     expect((await DELETE(reqDel(null))).status).toBe(400);
+  });
+});
+
+describe("PATCH /api/produtos — restaurar", () => {
+  const reqPatch = (corpo: unknown) => ({ json: async () => corpo }) as unknown as NextRequest;
+
+  it("403 para vendedor", async () => {
+    usuarioAtual.mockResolvedValue(VENDEDOR);
+    expect((await PATCH(reqPatch({ codigo: "TESTE-NOVO" }))).status).toBe(403);
+  });
+
+  // Produto da base volta pelo JSON: a lápide sai inteira, senão sobraria uma linha vazia
+  // fazendo override de um produto que ninguém editou.
+  it("restaurar produto da base apaga a lápide", async () => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+    findUnique.mockResolvedValue({ excluido: true });
+    expect((await PATCH(reqPatch({ codigo: "PRIMMAX-PLUS" }))).status).toBe(200);
+    expect(remover).toHaveBeenCalledWith({ where: { codigo: "PRIMMAX-PLUS" } });
+  });
+
+  // Produto que nasceu na tela só existe no banco: apagar a linha o perderia de vez.
+  it("restaurar produto próprio só desmarca a lápide", async () => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+    findUnique.mockResolvedValue({ excluido: true });
+    expect((await PATCH(reqPatch({ codigo: "TESTE-NOVO" }))).status).toBe(200);
+    expect(update).toHaveBeenCalledWith({ where: { codigo: "TESTE-NOVO" }, data: { excluido: false } });
+    expect(remover).not.toHaveBeenCalled();
+  });
+
+  it("restaurar o que não está excluído é 404", async () => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+    findUnique.mockResolvedValue({ excluido: false });
+    expect((await PATCH(reqPatch({ codigo: "TESTE-NOVO" }))).status).toBe(404);
   });
 });

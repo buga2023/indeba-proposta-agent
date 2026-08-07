@@ -1,0 +1,11 @@
+-- Exclusão de produto ganha lápide em vez de sumiço da linha.
+--
+-- Produto da base (os ~150 de data/catalogo.json) não tinha como ser excluído pela tela: o
+-- arquivo é versionado e a função da Vercel é somente-leitura, então apagar a linha do banco
+-- não tirava o produto do catálogo — só desfazia a edição, e ele reaparecia com os dados
+-- antigos. A saída oferecida era arquivar, e o Matheus pediu excluir de fato (06/08/2026).
+--
+-- Com a lápide, a leitura filtra o código marcado e o produto some da vitrine, da busca e da
+-- seleção automática, venha ele do JSON ou do banco. E como a linha continua lá, a exclusão
+-- é reversível — importante para quem já perdeu dado editando produto.
+ALTER TABLE "ProdutoCustom" ADD COLUMN "excluido" BOOLEAN NOT NULL DEFAULT false;

@@ -837,7 +837,7 @@ export default function Home() {
             <Logo variante="white" altura={31} />
             <div className="ies-side-text" style={{ flex: 1, minWidth: 0 }}>
               <Wordmark variante="white" altura={17} alt="" />
-              <div style={{ fontSize: "11px", color: "rgba(255,255,255,.45)", marginTop: "3px" }}>Plataforma de IA</div>
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,.45)", marginTop: "3px" }}>PRO IA</div>
             </div>
             {/* Fechar a gaveta. Só aparece na faixa em que ela existe (≤760px). */}
             <button
@@ -865,11 +865,8 @@ export default function Home() {
             </svg>
             Dashboard
           </Hoverable>
-          {/* A sidebar é SÓ o fluxo de proposta (decisão do Gustavo, 05/08/2026). A lista de
-              módulos que o Mateus mandou por áudio+foto — Visitas e Prospecção, Contratos,
-              Solicitações Internas — mora no DASHBOARD, em MODULOS_DASHBOARD, não aqui.
-              Os rótulos abaixo seguem a foto do bloco para que a lateral e os cards do
-              Dashboard chamem a mesma tela pelo mesmo nome. */}
+          {/* Os rótulos abaixo seguem a foto do bloco que o Mateus mandou, para que a lateral
+              e os cards do Dashboard chamem a mesma tela pelo mesmo nome. */}
           <div className="ies-side-text" style={navSection}>Criar proposta</div>
           {/* Volta pro rascunho, não reseta: era exatamente aqui que a seleção sumia. */}
           <Hoverable base={navItemStyle(["manual", "review", "pdf"])} hover={navHover} onClick={() => { setNavOpen(false); voltarParaMontagem(); }} title="Proposta de Solução — monte direto do catálogo">
@@ -900,6 +897,36 @@ export default function Home() {
               <rect x="9.5" y="9.5" width="5" height="5" rx="1" />
             </svg>
             Catálogo de Produtos
+          </Hoverable>
+
+          {/* Os outros módulos, abaixo do fluxo de proposta — como o Mateus pediu no áudio de
+              06/08/2026: "solicitações internas, visitas, prospecções, contratos… é importante
+              aparecer nesse dashboard lateral, pode ficar abaixo desses aqui". Antes eles só
+              existiam como card no Dashboard, o que obrigava a voltar à visão geral para
+              alcançar qualquer um deles. Comodatos fica de fora até a tela existir: item de
+              menu que não leva a lugar nenhum lê como sistema quebrado. */}
+          <div className="ies-side-text" style={navSection}>Módulos</div>
+          <Hoverable base={navItemStyle(["prospeccao"])} hover={navHover} onClick={() => irPara("prospeccao")} title="Visitas e Prospecção — encontre empresas e gere a abordagem">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8.5 14.5s4.25-4.05 4.25-7.25a4.25 4.25 0 10-8.5 0c0 3.2 4.25 7.25 4.25 7.25z" />
+              <circle cx="8.5" cy="7.1" r="1.6" />
+            </svg>
+            Visitas e Prospecção
+          </Hoverable>
+          <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => irPara("contrato")} title="Contratos — gere e analise o contrato da proposta">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 2.5h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" />
+              <path d="M9 2.5v4h4" />
+              <path d="M5.5 9.5h6M5.5 12h4" />
+            </svg>
+            Contratos
+          </Hoverable>
+          <Hoverable base={navItemStyle(["chamados"])} hover={navHover} onClick={() => irPara("chamados")} title="Solicitações Internas — abra um chamado para o time">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 9.5a2 2 0 01-2 2H7l-3.5 2.5V4.5a2 2 0 012-2h6.5a2 2 0 012 2z" />
+              <path d="M6.5 6.5h5M6.5 9h3" />
+            </svg>
+            Solicitações Internas
           </Hoverable>
 
           {/* Configurações é o painel do gestor: e-mails de cobrança, GESTOR_EMAIL, cadastro
@@ -934,11 +961,11 @@ export default function Home() {
           )}
         </nav>
 
-        <div className="ies-side-foot" style={{ padding: "14px 14px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", alignItems: "center", gap: "10px" }}>
+        <div className="ies-side-foot" style={{ padding: "14px 14px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", flexDirection: "column", gap: "8px" }}>
           <Hoverable
             onClick={() => irPara("perfil")}
             title="Meu perfil"
-            base={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px", borderRadius: "10px", textAlign: "left" }}
+            base={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px", borderRadius: "10px", textAlign: "left" }}
             hover={{ background: "rgba(255,255,255,.06)" }}
           >
             <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "var(--blue-500)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontWeight: 700, fontSize: "13px", color: "white" }}>
@@ -949,17 +976,23 @@ export default function Home() {
               <div style={{ color: "rgba(255,255,255,.42)", fontSize: "11px" }}>{usuario?.papel === "admin" ? "Administrador" : "Vendedor"}</div>
             </div>
           </Hoverable>
-          <button
+          {/* Sair com a palavra escrita. Era uma seta de 14px em cinza a 35% de opacidade, ao
+              lado do nome — e ninguém achava: "só sai fechando [o navegador]" (Mateus,
+              06/08/2026). Sair de uma conta é ação que se procura pelo nome, não pelo ícone. */}
+          <Hoverable
             onClick={() => {
               fetch("/api/logout", { method: "POST" }).finally(() => (window.location.href = "/login"));
             }}
-            title="Sair"
-            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,.35)", padding: "2px", display: "flex" }}
+            title="Sair da conta"
+            base={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%", padding: "8px 10px", borderRadius: "9px", border: "1px solid rgba(255,255,255,.16)", background: "rgba(255,255,255,.06)", color: "rgba(255,255,255,.86)", cursor: "pointer", fontFamily: "var(--font-sans), sans-serif", fontSize: "12.5px", fontWeight: 600 }}
+            hover={{ background: "rgba(255,255,255,.14)", color: "#fff" }}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 2l4 5-4 5" />
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 14H3.5a1 1 0 01-1-1v-10a1 1 0 011-1H6" />
+              <path d="M10.5 11L13.5 8l-3-3M13.5 8H6" />
             </svg>
-          </button>
+            <span className="ies-side-text">Sair</span>
+          </Hoverable>
         </div>
       </aside>
 
@@ -1295,7 +1328,29 @@ function DashboardScreen({
 
   return (
     <div style={{ background: "var(--background)", minHeight: "100vh" }}>
-      <ScreenHead title="Dashboard" sub={primeiroNome ? `${saudacao}, ${primeiroNome} — visão geral` : `${saudacao} — visão geral`} />
+      <ScreenHead
+        title="Dashboard"
+        sub={primeiroNome ? `${saudacao}, ${primeiroNome} — visão geral` : `${saudacao} — visão geral`}
+        // Sair também daqui, do alto da tela em que se entra. O botão da sidebar resolve no
+        // desktop, mas com a lateral virada em gaveta (≤760px) ele fica atrás de um clique
+        // que ninguém dá para sair — e a alternativa era fechar o navegador.
+        right={
+          <Hoverable
+            onClick={() => {
+              fetch("/api/logout", { method: "POST" }).finally(() => (window.location.href = "/login"));
+            }}
+            title="Sair da conta"
+            base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 14px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", color: "var(--text-body)", cursor: "pointer", fontFamily: "var(--font-sans), sans-serif", fontSize: "13px", fontWeight: 600 }}
+            hover={{ background: "var(--surface-muted)" }}
+          >
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 14H3.5a1 1 0 01-1-1v-10a1 1 0 011-1H6" />
+              <path d="M10.5 11L13.5 8l-3-3M13.5 8H6" />
+            </svg>
+            Sair
+          </Hoverable>
+        }
+      />
       <div className="ies-pad" style={{ padding: "24px 28px 44px", display: "flex", flexDirection: "column", gap: "20px", animation: "fadeUp var(--duration-slow) var(--ease-out) both" }}>
         {/* ── Hero ── */}
         <div className="ies-hero" style={{ borderRadius: "18px", background: "var(--gradient-hero)", color: "#fff", padding: "26px 30px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "24px", position: "relative", overflow: "hidden", boxShadow: "var(--shadow-lg)" }}>
@@ -1304,7 +1359,8 @@ function DashboardScreen({
           <div style={{ position: "relative", zIndex: 1, maxWidth: "560px" }}>
             <div style={{ fontSize: "12.5px", color: "rgba(255,255,255,.66)", fontWeight: 600, letterSpacing: ".02em", minHeight: "16px" }}>{hoje}</div>
             <div style={{ fontSize: "27px", fontWeight: 800, letterSpacing: "-.02em", marginTop: "5px" }}>{primeiroNome ? `${saudacao}, ${primeiroNome}` : saudacao}</div>
-            <div style={{ fontSize: "14px", color: "rgba(255,255,255,.74)", marginTop: "7px", lineHeight: 1.55 }}>Monte a proposta direto do catálogo — escolha os produtos, defina quantidades e valores e gere o PDF no padrão Indeba. Ficha sempre do catálogo; o preço vem de lá e pode ser ajustado na proposta.</div>
+            {/* O parágrafo explicativo saiu a pedido do gestor (07/08/2026): quem entra aqui
+                todo dia já sabe o que a tela faz, e o botão abaixo diz o resto. */}
             <div style={{ display: "flex", gap: "10px", marginTop: "20px", flexWrap: "wrap" }}>
               <Hoverable onClick={() => setScreen("manual")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 18px", borderRadius: "12px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600, boxShadow: "var(--shadow-accent)" }} hover={{ background: "var(--accent-hover)" }}>
                 <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="2" /><path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" /></svg>Nova proposta
@@ -1351,8 +1407,9 @@ function DashboardScreen({
 
         {/* ── Módulos: a lista que o Mateus ditou (ver MODULOS_DASHBOARD) ── */}
         {/* Fica depois dos KPIs e antes dos gráficos: os números respondem "como estou", os
-            cards respondem "o que eu faço agora". Para Prospecção, Contratos e Solicitações
-            Internas esta é a ÚNICA porta de entrada do sistema — a sidebar não os lista. */}
+            cards respondem "o que eu faço agora". Desde 06/08/2026 a sidebar também lista
+            Prospecção, Contratos e Solicitações Internas — os cards seguem aqui porque é
+            neles que cada módulo se explica em uma linha, e Comodatos só tem lugar aqui. */}
         <div>
           <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Módulos</div>
           <div style={{ fontSize: "12.5px", color: "var(--text-subtle)", marginBottom: "14px" }}>Tudo o que dá para fazer por aqui</div>
@@ -3890,26 +3947,25 @@ function CatalogScreen({
   const [marcaFiltro, setMarcaFiltro] = useState("Todas");
   const toast = useToast();
 
-  // TODO produto é editável — inclusive os ~150 da base, desde 05/08. O que estas duas listas
-  // separam é outra coisa: `editaveis` traz quem já tem linha no banco (produto cadastrado
-  // pela tela ou produto da base que já foi editado), e é de lá que o formulário parte, para
-  // abrir com o override e não com o dado antigo do JSON; `codigosBase` diz quem veio do
-  // data/catalogo.json, e esses não ganham lixeira — apagar a linha do banco não tiraria o
-  // produto do catálogo, só desfaria a edição (a saída para eles é arquivar).
-  const [editaveis, setEditaveis] = useState<Map<string, Produto>>(new Map());
+  // TODO produto é editável e excluível — inclusive os ~150 da base. `codigosBase` diz quem
+  // veio do data/catalogo.json, só para o formulário avisar que a edição vira override do
+  // arquivo versionado. `excluidos` são as lápides: produtos que saíram do catálogo e que só
+  // o gestor enxerga, no painel de restauração.
   const [codigosBase, setCodigosBase] = useState<Set<string>>(new Set());
-  const [emEdicao, setEmEdicao] = useState<Produto | null>(null);
+  const [excluidos, setExcluidos] = useState<{ codigo: string; nome: string }[]>([]);
+  const [emEdicao, setEmEdicao] = useState<{ produto: Produto; daBase: boolean } | null>(null);
+  const [abrindo, setAbrindo] = useState<string | null>(null);
   const [excluindo, setExcluindo] = useState<string | null>(null);
   const [recarga, setRecarga] = useState(0);
   useEffect(() => {
     if (!ehAdmin) return;
     let vivo = true;
     fetch("/api/produtos")
-      .then((r) => (r.ok ? r.json() : { produtos: [], base: [] }))
-      .then((d: { produtos?: Produto[]; base?: string[] }) => {
+      .then((r) => (r.ok ? r.json() : { base: [], excluidos: [] }))
+      .then((d: { base?: string[]; excluidos?: { codigo: string; nome: string }[] }) => {
         if (!vivo) return;
-        setEditaveis(new Map((d.produtos ?? []).map((p) => [p.codigo, p])));
         setCodigosBase(new Set(d.base ?? []));
+        setExcluidos(d.excluidos ?? []);
       })
       // Falhar aqui não quebra o Catálogo: sem a lista, a tela só não oferece editar/excluir.
       .catch(() => {});
@@ -3925,8 +3981,35 @@ function CatalogScreen({
     setRecarga((n) => n + 1);
   }, [onRecarregar]);
 
+  // A edição parte do produto COMPLETO, buscado agora: a lista da tela vem de /api/catalogo,
+  // que corta a ficha para título e descrição. Abrir o formulário com aquela versão foi o que
+  // fez o Matheus perder benefícios, diluições e características ao trocar uma foto.
+  async function abrirEdicao(p: Produto) {
+    setAbrindo(p.codigo);
+    try {
+      const r = await fetch(`/api/produtos/${encodeURIComponent(p.codigo)}`);
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.erro || `Falha ao abrir o produto (HTTP ${r.status}).`);
+      setEmEdicao({ produto: d.produto as Produto, daBase: !!d.daBase });
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Erro ao abrir o produto.", "danger");
+    } finally {
+      setAbrindo(null);
+    }
+  }
+
   async function excluir(p: Produto) {
-    if (!window.confirm(`Excluir ${p.nome} (${p.codigo}) do catálogo? Isso apaga a foto e a ficha técnica dele. As propostas já geradas não mudam.`)) return;
+    const daBase = codigosBase.has(p.codigo);
+    if (
+      !window.confirm(
+        `Excluir ${p.nome} (${p.codigo}) do catálogo?\n\n` +
+          (daBase
+            ? "Ele é da base Indeba/Pratt: some da vitrine, da busca e da seleção automática. Dá para restaurar depois, pelo aviso no topo da lista."
+            : "Some da vitrine, da busca e da seleção automática. Dá para restaurar depois, pelo aviso no topo da lista.") +
+          "\n\nAs propostas já geradas não mudam.",
+      )
+    )
+      return;
     setExcluindo(p.codigo);
     try {
       const r = await fetch(`/api/produtos?codigo=${encodeURIComponent(p.codigo)}`, { method: "DELETE" });
@@ -3938,6 +4021,22 @@ function CatalogScreen({
       toast(e instanceof Error ? e.message : "Erro ao excluir.", "danger");
     } finally {
       setExcluindo(null);
+    }
+  }
+
+  async function restaurar(codigo: string, nome: string) {
+    try {
+      const r = await fetch("/api/produtos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.erro || `Falha ao restaurar (HTTP ${r.status}).`);
+      toast(`${nome} voltou ao catálogo.`);
+      recarregarTudo();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Erro ao restaurar.", "danger");
     }
   }
 
@@ -4000,13 +4099,14 @@ function CatalogScreen({
         <FormProduto
           // `key` força o formulário a remontar ao trocar de produto: o estado inicial vem
           // das props, e sem remontar o segundo "editar" abriria com os dados do primeiro.
-          key={emEdicao.codigo}
-          produto={emEdicao}
-          daBase={codigosBase.has(emEdicao.codigo)}
+          key={emEdicao.produto.codigo}
+          produto={emEdicao.produto}
+          daBase={emEdicao.daBase}
           onFechar={() => setEmEdicao(null)}
           onSalvo={() => {
+            const nome = emEdicao.produto.nome;
             setEmEdicao(null);
-            toast(`${emEdicao.nome} atualizado.`);
+            toast(`${nome} atualizado.`);
             recarregarTudo();
           }}
         />
@@ -4109,6 +4209,36 @@ function CatalogScreen({
         )}
       </div>
 
+      {/* Excluir é reversível, e a volta precisa estar à vista de quem excluiu: um produto
+          que some sem deixar rastro vira chamado ("sumiu do catálogo e não sei por quê").
+          Só o gestor vê — para o vendedor o produto simplesmente não existe mais. */}
+      {ehAdmin && excluidos.length > 0 && (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "10px", padding: "12px 14px", marginBottom: "18px", fontSize: "12.5px", color: "var(--text-body)", flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: "220px" }}>
+            <strong style={{ fontWeight: 700 }}>
+              {excluidos.length === 1 ? "1 produto excluído" : `${excluidos.length} produtos excluídos`}
+            </strong>{" "}
+            — fora da vitrine, da busca e da seleção automática. Clique para trazer de volta.
+          </div>
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+            {excluidos.map((x) => (
+              <button
+                key={x.codigo}
+                onClick={() => restaurar(x.codigo, x.nome)}
+                title={`Restaurar ${x.nome} (${x.codigo})`}
+                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 11px", borderRadius: "999px", border: "1px solid var(--gray-200)", background: "white", color: "var(--primary)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans), sans-serif" }}
+              >
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 7a5 5 0 105-5 5 5 0 00-3.5 1.5L2 5" />
+                  <path d="M2 2v3h3" />
+                </svg>
+                {x.nome}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {erro ? (
         <div style={{ textAlign: "center", padding: "60px 40px", color: "#DC2626", fontSize: "14px" }}>Não foi possível carregar o catálogo: {erro}</div>
       ) : filtered.length === 0 ? (
@@ -4193,33 +4323,33 @@ function CatalogScreen({
                 {ehAdmin && (
                   <div style={{ ...COL_ACOES, display: "flex", gap: "4px", justifyContent: "flex-end", alignItems: "center" }}>
                     <button
-                      // Parte do override, quando existe: abrir a edição com o dado velho do
-                      // JSON faria o gestor "perder" a correção que ele já tinha feito.
-                      onClick={() => setEmEdicao(editaveis.get(item.codigo) ?? item)}
+                      // Busca o produto INTEIRO antes de abrir: a lista desta tela vem com a
+                      // ficha recortada, e editar a partir dela apagava o resto no salvar.
+                      onClick={() => abrirEdicao(item)}
+                      disabled={abrindo === item.codigo}
                       title={codigosBase.has(item.codigo) ? "Editar este produto (a base fica intacta — sua correção passa a valer por cima)" : "Editar este produto"}
                       aria-label={`Editar ${item.nome}`}
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: "white", color: "var(--primary)", cursor: "pointer" }}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: "white", color: "var(--primary)", cursor: abrindo === item.codigo ? "default" : "pointer", opacity: abrindo === item.codigo ? 0.5 : 1 }}
                     >
                       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
                         <path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 2.3L5.4 12.7l-3 .7.7-3z" />
                       </svg>
                     </button>
-                    {/* Lixeira só onde excluir apaga de verdade. No produto da base ela seria
-                        mentira: o JSON é versionado, então o produto voltaria na hora — por
-                        isso ali a saída é arquivar, pela própria edição. */}
-                    {!codigosBase.has(item.codigo) && (
-                      <button
-                        onClick={() => excluir(item)}
-                        disabled={excluindo === item.codigo}
-                        title="Excluir do catálogo"
-                        aria-label={`Excluir ${item.nome}`}
-                        style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: "white", color: "var(--danger)", cursor: excluindo === item.codigo ? "default" : "pointer", opacity: excluindo === item.codigo ? 0.5 : 1 }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M2.8 4.3h10.4M6.3 4.3V3a.9.9 0 0 1 .9-.9h1.6a.9.9 0 0 1 .9.9v1.3M4.2 4.3l.6 8.5a1 1 0 0 0 1 .9h4.4a1 1 0 0 0 1-.9l.6-8.5" />
-                        </svg>
-                      </button>
-                    )}
+                    {/* Lixeira em TODO produto desde 06/08/2026. No da base ela não apagava
+                        nada (o JSON é versionado e o produto voltava na hora), então nem
+                        aparecia; agora a exclusão grava uma lápide que a leitura respeita —
+                        e o painel no topo da lista desfaz. */}
+                    <button
+                      onClick={() => excluir(item)}
+                      disabled={excluindo === item.codigo}
+                      title="Excluir do catálogo"
+                      aria-label={`Excluir ${item.nome}`}
+                      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "30px", height: "30px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: "white", color: "var(--danger)", cursor: excluindo === item.codigo ? "default" : "pointer", opacity: excluindo === item.codigo ? 0.5 : 1 }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2.8 4.3h10.4M6.3 4.3V3a.9.9 0 0 1 .9-.9h1.6a.9.9 0 0 1 .9.9v1.3M4.2 4.3l.6 8.5a1 1 0 0 0 1 .9h4.4a1 1 0 0 0 1-.9l.6-8.5" />
+                      </svg>
+                    </button>
                   </div>
                 )}
               </Hoverable>
