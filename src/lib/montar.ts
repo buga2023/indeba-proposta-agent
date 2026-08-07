@@ -5,6 +5,7 @@ import { extrairPedido } from "./llm/extrair-pedido";
 import { escreverApresentacao } from "./llm/escrever-texto";
 import { PropostaScope, type PropostaItem, type EntradaEstruturada, type Tipo, type Produto } from "./contracts";
 import { consolidadaDefaults } from "./consolidada-defaults";
+import { carregarTextosPadrao, type TextosPadrao } from "./textos-padrao";
 import { ARTE_GENERICA, imagemDaCotada } from "./imagem-produto";
 
 // Tamanhos que o produto TEM (ficha técnica), sem preço — o bloco "Embalagens
@@ -32,12 +33,9 @@ export type ConsultorInfo = { nome: string; email?: string | null };
 const marcaPorTipo = (tipo: Tipo, padrao: "indeba" | "indeba_express") =>
   tipo === "comercial" ? "indeba" : padrao;
 
-const CONDICOES_PADRAO = {
-  validade: "15 dias",
-  prazoEntrega: "72h após aprovação",
-  pagamento: "Faturamento boleto 28 dias",
-  frete: "CIF",
-};
+// As condições padrão (Orçamento/Comercial e cards da Consolidada) agora são
+// EDITÁVEIS pelo gestor no painel (Config "textosPadrao", lib/textos-padrao.ts).
+// Aqui só se aplica o vigente na hora da montagem; o de fábrica é fallback lá.
 
 // Quando tipo === "consolidada", anexa os textos institucionais default (editáveis
 // depois na revisão). Para os demais tipos, retorna undefined (campo omitido).
@@ -47,14 +45,19 @@ const CONDICOES_PADRAO = {
 // o e-mail do consultor prioriza o do usuário logado, com INDEBA_CONSULTOR_EMAIL como
 // fallback (dev local sem sessão). Vazio = PDF não exibe contato nenhum (a Revisão
 // avisa visivelmente quando os dois estão vazios).
-const blocoConsolidada = (tipo: Tipo, consultor?: ConsultorInfo | null) =>
-  tipo === "consolidada"
-    ? consolidadaDefaults({
-        consultor: consultor?.nome ?? undefined,
-        whatsapp: process.env.INDEBA_WHATSAPP || null,
-        emailConsultor: consultor?.email || process.env.INDEBA_CONSULTOR_EMAIL || null,
-      })
-    : undefined;
+const blocoConsolidada = (tipo: Tipo, consultor?: ConsultorInfo | null, textos?: TextosPadrao) => {
+  if (tipo !== "consolidada") return undefined;
+  const bloco = consolidadaDefaults({
+    consultor: consultor?.nome ?? undefined,
+    whatsapp: process.env.INDEBA_WHATSAPP || null,
+    emailConsultor: consultor?.email || process.env.INDEBA_CONSULTOR_EMAIL || null,
+  });
+  if (textos) {
+    bloco.condicoes.itens = textos.condicoesConsolidada;
+    bloco.condicoes.mensagemFechamento = textos.mensagemFechamento;
+  }
+  return bloco;
+};
 
 // Fluxo do produto (spec §2): briefing → PedidoScope → seleção → PropostaScope.
 export async function montarProposta(
@@ -65,6 +68,7 @@ export async function montarProposta(
   consultor?: ConsultorInfo | null,
 ): Promise<PropostaScope> {
   const catalogo = await catalogoCompleto();
+  const textos = await carregarTextosPadrao();
 
   const linhasCatalogo = new Set(catalogo.produtos.map((p) => p.linha));
   const pedido = await extrairPedido(briefing, linhasCatalogo);
@@ -117,8 +121,8 @@ export async function montarProposta(
     cliente,
     textoApresentacao: texto,
     itens,
-    condicoesComerciais: CONDICOES_PADRAO,
-    consolidada: blocoConsolidada(tipo, consultor),
+    condicoesComerciais: textos.condicoesComerciais,
+    consolidada: blocoConsolidada(tipo, consultor, textos),
   });
 }
 
@@ -129,6 +133,7 @@ export async function montarPropostaEstruturada(
   consultor?: ConsultorInfo | null,
 ): Promise<PropostaScope> {
   const catalogo = await catalogoCompleto();
+  const textos = await carregarTextosPadrao();
 
   const itens: PropostaItem[] = entrada.itens.map((it) => {
     if (it.codigo) {
@@ -196,7 +201,7 @@ export async function montarPropostaEstruturada(
   const tipo = entrada.tipo ?? "implantacao";
   // Condições comerciais preenchidas já na montagem (tela manual) substituem os
   // defaults — continuam editáveis na Revisão, é o MESMO campo.
-  const bloco = blocoConsolidada(tipo, consultor);
+  const bloco = blocoConsolidada(tipo, consultor, textos);
   const consolidada =
     bloco && entrada.condicoesConsolidada?.length
       ? { ...bloco, condicoes: { ...bloco.condicoes, itens: entrada.condicoesConsolidada } }
@@ -212,7 +217,7 @@ export async function montarPropostaEstruturada(
     cliente: entrada.cliente,
     textoApresentacao: texto,
     itens,
-    condicoesComerciais: { ...CONDICOES_PADRAO, ...entrada.condicoes },
+    condicoesComerciais: { ...textos.condicoesComerciais, ...entrada.condicoes },
     consolidada,
   });
 }

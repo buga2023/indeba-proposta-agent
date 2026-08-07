@@ -2236,7 +2236,17 @@ function ManualScreen({
                 <span style={{ fontSize: "11.5px", color: "var(--text-subtle)" }}>· vão para a última página da proposta</span>
               </div>
               <button
-                onClick={() => setCondicoes(consolidadaDefaults().condicoes.itens)}
+                onClick={async () => {
+                  // Restaura para o padrão VIGENTE (editável pelo gestor no painel), não
+                  // para o de fábrica; sem rede/API cai no chumbado, como antes.
+                  try {
+                    const r = await fetch("/api/textos-padrao");
+                    const d = await r.json();
+                    setCondicoes(d?.textos?.condicoesConsolidada ?? consolidadaDefaults().condicoes.itens);
+                  } catch {
+                    setCondicoes(consolidadaDefaults().condicoes.itens);
+                  }
+                }}
                 style={{ background: "none", border: "none", color: "var(--text-subtle)", fontSize: "12px", cursor: "pointer", fontFamily: "inherit", textDecoration: "underline" }}
               >
                 Restaurar padrão

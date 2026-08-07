@@ -32,7 +32,7 @@ const scopeBase: PropostaScope = {
 
 describe("contrato de persistência da proposta", () => {
   it("StatusProposta cobre exatamente o fluxo comercial decidido", () => {
-    expect(StatusProposta.options).toEqual(["rascunho", "em_edicao", "enviada", "aprovada", "recusada", "arquivada"]);
+    expect(StatusProposta.options).toEqual(["rascunho", "em_edicao", "enviada", "em_andamento", "aprovada", "recusada", "arquivada"]);
     expect(StatusProposta.safeParse("finalizada").success).toBe(false); // status do DOCUMENTO, não comercial
   });
 

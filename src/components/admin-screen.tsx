@@ -182,6 +182,9 @@ export function AdminScreen() {
         </div>
       </section>
 
+      {/* Textos padrão da proposta — editáveis sem programador (pedido do Matheus, ago/2026) */}
+      <SecaoTextosPadrao onErro={setErro} onAviso={setAviso} />
+
       {/* Cadastro de e-mails dos clientes */}
       <section style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px" }}>
         <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>E-mails dos clientes · {contatos.length}</h3>
@@ -262,6 +265,122 @@ export function AdminScreen() {
         </div>
       </section>
     </div>
+  );
+}
+
+type TextosPadrao = {
+  condicoesConsolidada: { titulo: string; texto: string; icone: string }[];
+  mensagemFechamento: string;
+  condicoesComerciais: { validade: string; prazoEntrega: string; pagamento: string; frete: string };
+};
+
+// Condições comerciais e mensagem de fechamento que preenchem toda proposta NOVA.
+// O que já foi salvo/enviado não muda — o texto assinado é o do documento gerado.
+function SecaoTextosPadrao({ onErro, onAviso }: { onErro: (m: string | null) => void; onAviso: (m: string | null) => void }) {
+  const [textos, setTextos] = useState<TextosPadrao | null>(null);
+  const [fabrica, setFabrica] = useState<TextosPadrao | null>(null);
+  const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    void fetch("/api/textos-padrao")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.textos) setTextos(d.textos);
+        if (d?.fabrica) setFabrica(d.fabrica);
+      })
+      .catch(() => onErro("Falha ao carregar os textos padrão."));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function salvar() {
+    if (!textos) return;
+    setSalvando(true);
+    onErro(null);
+    onAviso(null);
+    const r = await fetch("/api/textos-padrao", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ textos }),
+    });
+    setSalvando(false);
+    if (r.ok) onAviso("Textos padrão salvos — valem para as próximas propostas.");
+    else onErro((await r.json().catch(() => ({}))).erro ?? "Falha ao salvar os textos.");
+  }
+
+  const rotulosComerciais: { k: keyof TextosPadrao["condicoesComerciais"]; label: string }[] = [
+    { k: "validade", label: "Validade da proposta" },
+    { k: "prazoEntrega", label: "Prazo de entrega" },
+    { k: "pagamento", label: "Condições de pagamento" },
+    { k: "frete", label: "Frete" },
+  ];
+
+  return (
+    <section style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", marginBottom: "22px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", flexWrap: "wrap" }}>
+        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>Textos padrão da proposta</h3>
+        {fabrica && (
+          <button
+            style={{ background: "none", border: "none", color: "var(--gray-500)", fontSize: "12px", cursor: "pointer", fontFamily: "inherit", textDecoration: "underline" }}
+            onClick={() => setTextos(fabrica)}
+          >
+            Restaurar de fábrica
+          </button>
+        )}
+      </div>
+      <div style={{ fontSize: "12.5px", color: "var(--gray-500)", marginBottom: "12px" }}>
+        As condições comerciais que já vêm preenchidas em toda proposta nova (ex.: prazo do boleto). Propostas já geradas não mudam.
+      </div>
+
+      {!textos ? (
+        <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Carregando…</div>
+      ) : (
+        <>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".04em", margin: "6px 0 8px" }}>Proposta Consolidada</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "10px 16px", marginBottom: "14px" }}>
+            {textos.condicoesConsolidada.map((c, i) => (
+              <label key={i} style={{ minWidth: 0 }}>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>{c.titulo}</div>
+                <textarea
+                  value={c.texto}
+                  rows={2}
+                  onChange={(e) =>
+                    setTextos((t) => t && { ...t, condicoesConsolidada: t.condicoesConsolidada.map((x, j) => (j === i ? { ...x, texto: e.target.value } : x)) })
+                  }
+                  style={{ ...inputStyle, width: "100%", resize: "vertical", lineHeight: 1.45, fontSize: "13px" }}
+                />
+              </label>
+            ))}
+            <label style={{ minWidth: 0 }}>
+              <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>Mensagem de fechamento</div>
+              <textarea
+                value={textos.mensagemFechamento}
+                rows={2}
+                onChange={(e) => setTextos((t) => t && { ...t, mensagemFechamento: e.target.value })}
+                style={{ ...inputStyle, width: "100%", resize: "vertical", lineHeight: 1.45, fontSize: "13px" }}
+              />
+            </label>
+          </div>
+
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".04em", margin: "6px 0 8px" }}>Orçamento e Comercial</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "10px 16px", marginBottom: "14px" }}>
+            {rotulosComerciais.map(({ k, label }) => (
+              <label key={k} style={{ minWidth: 0 }}>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>{label}</div>
+                <input
+                  value={textos.condicoesComerciais[k]}
+                  onChange={(e) => setTextos((t) => t && { ...t, condicoesComerciais: { ...t.condicoesComerciais, [k]: e.target.value } })}
+                  style={{ ...inputStyle, width: "100%", fontSize: "13px" }}
+                />
+              </label>
+            ))}
+          </div>
+
+          <button style={btn("var(--blue-600)", !salvando)} disabled={salvando} onClick={salvar}>
+            {salvando ? "Salvando…" : "Salvar textos padrão"}
+          </button>
+        </>
+      )}
+    </section>
   );
 }
 
