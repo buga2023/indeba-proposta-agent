@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { ChamadoUpdate } from "@/lib/contracts";
 import { usuarioAtual, atualizarChamado } from "@/lib/chamados";
 import { respostaErro } from "@/lib/erro";
@@ -19,7 +20,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const chamado = await atualizarChamado(id, parsed.data);
     return NextResponse.json(chamado);
   } catch (e) {
-    // update num id inexistente → Prisma lança; tratamos como 404.
-    return respostaErro(e, "Falha ao atualizar o chamado.", 404);
+    // Só P2025 (id inexistente) é 404; falha transitória (banco fora) vira 500, não um
+    // "chamado não encontrado" enganoso no meio de um outage.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      return NextResponse.json({ erro: "Chamado não encontrado." }, { status: 404 });
+    }
+    return respostaErro(e, "Falha ao atualizar o chamado.", 500);
   }
 }

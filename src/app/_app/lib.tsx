@@ -110,7 +110,7 @@ export function Hoverable({
 
 /* ───────────────────────── tipos & constantes ───────────────────────── */
 
-export type StatusProposta = "rascunho" | "em_edicao" | "enviada" | "em_andamento" | "aprovada" | "recusada";
+export type StatusProposta = "rascunho" | "em_edicao" | "enviada" | "em_andamento" | "aprovada" | "recusada" | "arquivada";
 // Espelha PropostaResumo (src/lib/contracts/proposta.ts): proposta persistida + status.
 export type PropostaLog = {
   id: string;
@@ -133,6 +133,7 @@ export const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: 
   em_andamento: { label: "Em andamento", bg: "#EDE9FE", fg: "#7C3AED" },
   aprovada: { label: "Aprovada", bg: "#DCFCE7", fg: "#16A34A" },
   recusada: { label: "Recusada", bg: "#FEE2E2", fg: "#DC2626" },
+  arquivada: { label: "Arquivada", bg: "#E2E8F0", fg: "#475569" },
 };
 
 export const LOADING_MSGS = ["Analisando o briefing...", "Buscando no catálogo...", "Selecionando produtos...", "Finalizando a proposta..."];

@@ -15,6 +15,11 @@ describe("proposta-edit", () => {
     expect(normalizarPreco("150")).toBe("150.00");
     expect(normalizarPreco("150,5")).toBe("150.50");
     expect(normalizarPreco("abc")).toBe("0.00");
+    // Ponto decimal (o input da revisão vem de toFixed(2), ex. "150.90") NÃO pode virar milhar.
+    expect(normalizarPreco("150.90")).toBe("150.90");
+    expect(normalizarPreco("1500.00")).toBe("1500.00");
+    // pt-BR com milhar + decimal segue correto.
+    expect(normalizarPreco("1.234,56")).toBe("1234.56");
   });
   it("setPrecoEmbalagem atualiza sem mutar o original", () => {
     const novo = setPrecoEmbalagem(scope, 0, 0, "250,90");

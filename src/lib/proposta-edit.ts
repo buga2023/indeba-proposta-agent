@@ -1,9 +1,17 @@
 import type { PropostaScope } from "./contracts";
 
-// Converte entrada humana ("150", "150,90") em decimal string canônica "\d+\.\d{2}".
+// Converte entrada humana em decimal string canônica "\d+\.\d{2}".
 // Preço nunca é float no domínio — sempre string (constituição §1.1).
+//
+// Com VÍRGULA → é decimal pt-BR: o ponto é separador de milhar ("1.234,56" → 1234.56).
+// SEM vírgula → o ponto (se houver) é o separador DECIMAL e é preservado ("150.90" → 150.90).
+// Antes o ponto era sempre removido: o input de preço da revisão vem de `toFixed(2)` (ex.
+// "150.90"), e só tabular pelo campo dispara o onBlur — "150.90" virava 15090.00 (100×),
+// dinheiro errado direto no PDF/contrato. O caso pt-BR com vírgula continua idêntico.
 export function normalizarPreco(v: string): string {
-  const n = Number(String(v).replace(/\./g, "").replace(",", "."));
+  const s = String(v).trim();
+  const normalizado = s.includes(",") ? s.replace(/\./g, "").replace(",", ".") : s;
+  const n = Number(normalizado);
   return Number.isFinite(n) ? n.toFixed(2) : "0.00";
 }
 

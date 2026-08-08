@@ -6,8 +6,10 @@ import type { Embalagem, FichaProduto } from "./contracts";
 // pronta. Aqui o cálculo sai da diluição REAL da ficha técnica (nunca inventada) —
 // texto livre do catálogo → fator numérico → custo.
 
-// Número em PT-BR ("0,30" / "03" / "1,5") → Number.
-const num = (s: string) => Number(s.replace(/\./g, "").replace(",", "."));
+// Número da ficha → Number. Com vírgula = decimal pt-BR (ponto é milhar: "1.000" → 1000).
+// Sem vírgula, o ponto é o separador decimal e é preservado ("0.30" → 0.30) — antes o ponto
+// era sempre removido e "0.30%" virava 30, inflando o custo/litro diluído ~100×.
+const num = (s: string) => Number(s.includes(",") ? s.replace(/\./g, "").replace(",", ".") : s);
 
 const N = String.raw`\d+(?:[.,]\d+)?`;
 

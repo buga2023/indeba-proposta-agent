@@ -109,6 +109,11 @@ export async function usuarioAtual(
   const s = await sessaoDoRequest(req);
   if (!s) return null;
   const estado = await estadoDaConta(s.email).catch(() => null);
+  // Revogação vale AGORA, não só na próxima carga de /api/me. O cookie é autocontido e vale
+  // 8h; sem esta checagem, um vendedor bloqueado no painel seguia com acesso total à API por
+  // até 8h (bastava um curl com o cookie, ou uma aba que não recarrega). `estadoDaConta` já
+  // traz o `acesso` — só faltava consultá-lo. Bloqueado/pendente → trata como não autenticado.
+  if (estado && estado.acesso !== "aprovado") return null;
   // Banco fora do ar ou conta ainda não persistida (dev local): mantém o papel do cookie em
   // vez de derrubar o pedido — degradar para "menos poder" trancaria o gestor para fora.
   return estado ? { email: s.email, papel: estado.papel } : s;

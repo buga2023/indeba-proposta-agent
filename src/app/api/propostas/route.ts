@@ -40,8 +40,11 @@ export async function POST(req: NextRequest) {
     // Só o `autor`, não a proposta inteira: este é o caminho do auto-save, dispara a cada
     // edição, e carregar o `scope` do colega para ler uma string sairia caro no lugar mais
     // quente do app.
+    // Falha FECHADA: se a proposta já existe e NÃO há sessão (misconfiguração que tire a rota
+    // do middleware), nega em vez de deixar o auto-save sobrescrever a proposta por id de
+    // cliente. Em dev (AUTH_ENABLED=false) `usuarioAtual` devolve admin, então nada trava.
     const dono = await autorDaProposta(parsed.data.id);
-    if (dono && usuario && usuario.papel !== "admin" && dono !== usuario.email) {
+    if (dono && (!usuario || (usuario.papel !== "admin" && dono !== usuario.email))) {
       return NextResponse.json({ erro: "Proposta não encontrada." }, { status: 404 });
     }
     const registro = await salvarProposta(parsed.data, autor);

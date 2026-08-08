@@ -46,10 +46,14 @@ function diasEntre(a: string, b: string): number {
   return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 86_400_000);
 }
 
+// Título que NÃO deve ser cobrado: pago/quitado OU cancelado/estornado. O "não pago"
+// (aberto/vencido/…) vem primeiro e vence. Sem `cancel|estorn`, um título "Cancelado" caía
+// no `return false` e entrava como inadimplente — a régua disparava cobrança indevida a um
+// cliente por uma dívida que não existe mais.
 function ehPago(s: string): boolean {
   const v = s.toLowerCase();
   if (/n[ãa]o|aberto|pendente|atras|vencid|devid/.test(v)) return false;
-  return /pag|quit|liquid|receb|baix/.test(v);
+  return /pag|quit|liquid|receb|baix|cancel|estorn/.test(v);
 }
 
 function severidade(dias: number): SeveridadeCobranca {

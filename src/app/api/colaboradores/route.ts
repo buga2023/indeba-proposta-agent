@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { usuarioAtual } from "@/lib/auth-db";
 import { listarColaboradores, atualizarColaborador } from "@/lib/auth-db";
+import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 
@@ -51,11 +53,20 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  const colaborador = await atualizarColaborador(email, {
-    ...(dados.nome !== undefined ? { nome: dados.nome } : {}),
-    ...(dados.telefone !== undefined ? { telefone: dados.telefone?.trim() || null } : {}),
-    ...(dados.papel !== undefined ? { papel: dados.papel } : {}),
-    ...(dados.acesso !== undefined ? { acesso: dados.acesso } : {}),
-  });
-  return NextResponse.json(colaborador);
+  try {
+    const colaborador = await atualizarColaborador(email, {
+      ...(dados.nome !== undefined ? { nome: dados.nome } : {}),
+      ...(dados.telefone !== undefined ? { telefone: dados.telefone?.trim() || null } : {}),
+      ...(dados.papel !== undefined ? { papel: dados.papel } : {}),
+      ...(dados.acesso !== undefined ? { acesso: dados.acesso } : {}),
+    });
+    return NextResponse.json(colaborador);
+  } catch (e) {
+    // e-mail inexistente (colaborador removido, digitação) → P2025. Sem este catch a rota
+    // devolvia 500 opaco; é a única rota de admin sem o wrapper de erro das irmãs.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      return NextResponse.json({ erro: "Colaborador não encontrado." }, { status: 404 });
+    }
+    return respostaErro(e, "Falha ao atualizar o colaborador.", 500);
+  }
 }

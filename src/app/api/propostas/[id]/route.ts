@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { StatusUpdate } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth-db";
 import { obterProposta, autorDaProposta, atualizarStatusProposta } from "@/lib/propostas";
@@ -53,7 +54,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (await negar(req, autor)) return naoEncontrada();
     return NextResponse.json(await atualizarStatusProposta(id, parsed.data.status));
   } catch (e) {
-    // update num id inexistente → Prisma lança; tratamos como 404.
-    return respostaErro(e, "Falha ao atualizar o status", 404);
+    // Só o "registro não encontrado" (P2025) é 404 — a autoria já foi conferida acima, então
+    // uma falha aqui costuma ser transitória (banco fora do ar). Mapear TUDO para 404 dizia
+    // "proposta não encontrada" no meio de um outage, escondendo o problema real.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return naoEncontrada();
+    return respostaErro(e, "Falha ao atualizar o status", 500);
   }
 }
