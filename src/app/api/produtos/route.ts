@@ -329,11 +329,16 @@ export async function PATCH(req: NextRequest) {
   const linha = await prisma.produtoCustom.findUnique({ where: { codigo }, select: { excluido: true } });
   if (!linha?.excluido) return NextResponse.json({ erro: "Este produto não está excluído." }, { status: 404 });
   try {
-    const naBase = carregarCatalogo().produtos.some((p) => p.codigo === codigo);
-    // Produto da base volta pelo JSON — a lápide sai inteira, e com ela o override vazio que
-    // só existia para segurar a marcação. O que nasceu na tela precisa da linha de volta.
-    if (naBase) await prisma.produtoCustom.delete({ where: { codigo } });
-    else await prisma.produtoCustom.update({ where: { codigo }, data: { excluido: false } });
+    // Restaurar = tirar a lápide, NUNCA apagar a linha. Antes, para produto da base, a
+    // restauração fazia DELETE — o que revertia pro JSON. Mas a exclusão de um produto da base
+    // JÁ EDITADO mantém o override em `dados` (o DELETE só marca `excluido`), e o hard-delete
+    // no restore jogava esse override fora em silêncio: editar preço 100→120, excluir e
+    // restaurar voltava pra 100. `dados` é JSON no Postgres (ordem de chave do jsonb não é
+    // confiável para comparar "lápide pura" vs "override"), então a única regra segura é
+    // preservar sempre. Custo: um produto da base excluído SEM edição volta com o snapshot do
+    // catálogo no momento da exclusão em vez de re-seguir o JSON — aceitável perto de perder
+    // um override real de preço. Reeditar o produto (ou excluir de novo sem edição) reancora.
+    await prisma.produtoCustom.update({ where: { codigo }, data: { excluido: false } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return respostaErro(e, "Falha ao restaurar o produto", 500);

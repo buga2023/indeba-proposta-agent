@@ -306,13 +306,15 @@ describe("PATCH /api/produtos — restaurar", () => {
     expect((await PATCH(reqPatch({ codigo: "TESTE-NOVO" }))).status).toBe(403);
   });
 
-  // Produto da base volta pelo JSON: a lápide sai inteira, senão sobraria uma linha vazia
-  // fazendo override de um produto que ninguém editou.
-  it("restaurar produto da base apaga a lápide", async () => {
+  // Restaurar NUNCA faz hard-delete, nem para produto da base: a exclusão de um produto da
+  // base já editado mantém o override em `dados`, e o DELETE antigo o perdia em silêncio
+  // (editar preço, excluir, restaurar → voltava ao preço do JSON). Só desmarca a lápide.
+  it("restaurar produto da base só desmarca a lápide (preserva override)", async () => {
     usuarioAtual.mockResolvedValue(GESTOR);
     findUnique.mockResolvedValue({ excluido: true });
     expect((await PATCH(reqPatch({ codigo: "PRIMMAX-PLUS" }))).status).toBe(200);
-    expect(remover).toHaveBeenCalledWith({ where: { codigo: "PRIMMAX-PLUS" } });
+    expect(update).toHaveBeenCalledWith({ where: { codigo: "PRIMMAX-PLUS" }, data: { excluido: false } });
+    expect(remover).not.toHaveBeenCalled();
   });
 
   // Produto que nasceu na tela só existe no banco: apagar a linha o perderia de vez.
