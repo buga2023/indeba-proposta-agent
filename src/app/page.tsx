@@ -1100,7 +1100,7 @@ export default function Home() {
         {screen === "fiscal" && <FiscalScreen />}
         {screen === "contabil" && <ContabilScreen />}
         {screen === "contrato" && <ContratoScreen scope={scope} onVerProposta={() => setScreen(scope ? "review" : "manual")} />}
-        {screen === "atendimento" && <AtendimentoScreen />}
+        {screen === "atendimento" && <AtendimentoScreen ehAdmin={ehAdmin} />}
         {screen === "chamados" && <ChamadosScreen />}
         {/* Segundo cadeado do painel do gestor: some do menu E não renderiza sem papel — quem
             chegar por outro caminho cai no Dashboard em vez de ver a tela vazia/quebrada. */}
@@ -4895,7 +4895,7 @@ function FeedbackResposta({ agente, pergunta, resposta }: { agente: string; perg
 
 type MsgRag = { role: "user" | "assistant"; texto: string; fontes?: RagResposta["fontes"] };
 
-function AtendimentoScreen() {
+function AtendimentoScreen({ ehAdmin }: { ehAdmin: boolean }) {
   const [msgs, setMsgs] = useState<MsgRag[]>([]);
   const [pergunta, setPergunta] = useState("");
   const [loading, setLoading] = useState(false);
@@ -4982,9 +4982,14 @@ function AtendimentoScreen() {
         title="Atendimento"
         sub="Dúvidas sobre produtos — responde só com o que está na base e cita a fonte"
         right={
-          <button onClick={() => setAdmin((a) => !a)} style={{ padding: "8px 14px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: admin ? "var(--blue-50)" : "white", color: admin ? "var(--blue-600)" : "var(--gray-700)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-            {admin ? "Fechar base" : "Gerenciar base"}
-          </button>
+          // "Gerenciar base" indexa catálogo/documentos no índice compartilhado — escrita que
+          // muda o que o atendimento responde para todos. Só o gestor vê o botão; a rota /api/rag
+          // também recusa a escrita de não-admin (defesa em profundidade).
+          ehAdmin ? (
+            <button onClick={() => setAdmin((a) => !a)} style={{ padding: "8px 14px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: admin ? "var(--blue-50)" : "white", color: admin ? "var(--blue-600)" : "var(--gray-700)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+              {admin ? "Fechar base" : "Gerenciar base"}
+            </button>
+          ) : null
         }
       />
 
