@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { usuarioAtual } from "@/lib/auth-db";
 import { Produto } from "@/lib/contracts";
 import { prisma } from "@/lib/db";
@@ -149,20 +150,27 @@ export async function POST(req: NextRequest) {
       imagemMime: imagem.type,
       ...(ficha ? { ficha: Buffer.from(await ficha.arrayBuffer()), fichaMime: ficha.type } : {}),
     };
-    // Um código EXCLUÍDO não bloqueia o cadastro: a lápide não é um produto, é a marca de que
-    // aquele código saiu do catálogo. Cadastrar de novo com ele é a mesma intenção de
-    // restaurar, com dados novos — recusar aqui deixaria o código preso para sempre, com uma
-    // mensagem ("já existe no catálogo") apontando um produto que a tela não mostra.
-    await prisma.produtoCustom.upsert({
-      where: { codigo },
-      create: { codigo, dados, autor: email, ...anexos },
-      update: { dados, autor: email, excluido: false, ficha: null, fichaMime: null, ...anexos },
-    });
+    // `create` direto, NÃO `upsert`: o pre-check `ocupado` acima é best-effort e, sob
+    // concorrência, dois cadastros do MESMO código novo passavam ambos por ele — e o `upsert`
+    // do segundo caía no branch `update`, sobrescrevendo em silêncio o produto que o primeiro
+    // acabou de criar (o 409 nunca disparava, porque o upsert não colide). Agora o segundo
+    // colide no `@unique` (P2002) e só REUSA a linha se ela for LÁPIDE (updateMany filtrando
+    // `excluido: true`) — código excluído volta a valer como restauração com dados novos, mas
+    // uma linha VIVA (o produto do concorrente) devolve 409 em vez de ser atropelada.
+    try {
+      await prisma.produtoCustom.create({ data: { codigo, dados, autor: email, ...anexos } });
+    } catch (e) {
+      if (!(e instanceof Prisma.PrismaClientKnownRequestError) || e.code !== "P2002") throw e;
+      const reusada = await prisma.produtoCustom.updateMany({
+        where: { codigo, excluido: true },
+        data: { dados, autor: email, excluido: false, ficha: null, fichaMime: null, ...anexos },
+      });
+      if (reusada.count === 0) {
+        return NextResponse.json({ erro: `O código ${codigo} já existe no catálogo.` }, { status: 409 });
+      }
+    }
     return NextResponse.json({ ok: true, codigo }, { status: 201 });
   } catch (e) {
-    if (e && typeof e === "object" && "code" in e && e.code === "P2002") {
-      return NextResponse.json({ erro: `O código ${codigo} já existe no catálogo.` }, { status: 409 });
-    }
     return respostaErro(e, "Falha ao cadastrar o produto", 500);
   }
 }
@@ -235,19 +243,31 @@ export async function PUT(req: NextRequest) {
     // desarquivar um produto que o gestor tinha tirado de circulação. Sem linha no banco
     // (primeira edição de um produto da base), o estado a preservar é o do JSON.
     const gravado = atual ? Produto.safeParse(atual.dados) : null;
-    const mesclado = mesclarProduto(
-      // De onde parte a mesclagem: o override já gravado ou, na primeira edição de um
-      // produto da base, o produto do JSON com a ficha JÁ ENRIQUECIDA (carregarCatalogo faz
-      // isso) — é a ficha que o gestor vê na tela, e é ela que precisa sobreviver à edição.
-      gravado?.success ? gravado.data : naBase ?? null,
-      {
-        ...parsed.data,
-        codigo,
-        ativo: parsed.data.ativo ?? (gravado?.success ? gravado.data.ativo : (naBase?.ativo ?? true)),
-        imagemPath: "",
-        fichaTecnicaPath: null,
-      },
-    );
+    // De onde parte a mesclagem: o override já gravado ou, na primeira edição de um produto
+    // da base, o produto do JSON com a ficha JÁ ENRIQUECIDA (carregarCatalogo faz isso) — é a
+    // ficha que o gestor vê na tela, e é ela que precisa sobreviver à edição.
+    //
+    // Se o `dados` gravado NÃO passa no schema (drift, edição manual no banco) e é um produto
+    // que só existe no banco, cair em `naBase ?? null` (=null) fazia o merge tratar como
+    // produto NOVO e gravar só os campos do formulário, apagando em silêncio tudo o que a tela
+    // não mostra. Em vez disso, mescla sobre o OBJETO BRUTO — `mesclarProduto` espalha a base,
+    // então campos legados/desconhecidos sobrevivem — e registra o problema.
+    let base: Produto | null;
+    if (gravado?.success) {
+      base = gravado.data;
+    } else if (atual) {
+      console.error(`[produtos] dados de ${codigo} fora do schema — mesclando sobre o objeto bruto para não perder campos:`, gravado?.error?.message);
+      base = (atual.dados as Produto | null) ?? naBase ?? null;
+    } else {
+      base = naBase ?? null;
+    }
+    const mesclado = mesclarProduto(base, {
+      ...parsed.data,
+      codigo,
+      ativo: parsed.data.ativo ?? base?.ativo ?? naBase?.ativo ?? true,
+      imagemPath: "",
+      fichaTecnicaPath: null,
+    });
     // Os dois caminhos são DERIVADOS na leitura (produto-custom.ts) e não podem voltar do
     // merge com o valor antigo gravado: o `imagemPath` de um produto da base aponta para
     // public/, e mantê-lo aqui esconderia a foto que o gestor acabou de anexar.
