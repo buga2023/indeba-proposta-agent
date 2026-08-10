@@ -82,6 +82,29 @@ async function recortarMargem(buf: Buffer): Promise<Buffer> {
 // diferentes: cache por caminho, vivo enquanto o processo viver.
 const cacheRecorte = new Map<string, string>();
 
+// Foto de produto SEM cutout também passa pelo recorte de margem: sem isso, na mesma
+// proposta o produto com cutout saía enquadrado no card e o sem cutout saía minúsculo
+// dentro da moldura de estúdio — as "artes saindo diferentes nas páginas" (CEO, ago/2026).
+// SVG (artes de recipiente) não passa pelo sharp — segue direto como data-URI.
+async function dataUriFotoProduto(relPath: string): Promise<string> {
+  if (!/\.(png|jpe?g|webp)$/i.test(relPath)) return dataUri(relPath);
+  const cacheado = cacheRecorte.get(relPath);
+  if (cacheado !== undefined) return cacheado;
+  const abs = dentroDePublic(relPath);
+  let uri = "";
+  if (abs) {
+    try {
+      const sharp = (await import("sharp")).default;
+      const buf = await sharp(readFileSync(abs)).trim({ threshold: 10 }).png({ compressionLevel: 9 }).toBuffer();
+      uri = "data:image/png;base64," + buf.toString("base64");
+    } catch {
+      uri = dataUri(relPath); // sharp indisponível/foto sem margem aparável: sai como está
+    }
+  }
+  cacheRecorte.set(relPath, uri);
+  return uri;
+}
+
 // Fotos com fundo removido (recorte automático + revisão visual, jul/2026) vivem ao
 // lado do original, mesmo nome + sufixo "-cutout.png" — usadas no card claro da ficha
 // de produto (consolidada) pra evitar a "caixa branca" do fundo de estúdio original
@@ -200,7 +223,7 @@ export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
   for (const item of scope.itens) {
     imagens[chaveImagem(item)] =
       (await resolverImagemProduto(item.imagemPath)) ||
-      dataUri(item.imagemPath) ||
+      (await dataUriFotoProduto(item.imagemPath)) ||
       (await dataUriDoBanco(item.imagemPath)) ||
       generico;
   }
@@ -229,6 +252,10 @@ export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
     await page.evaluate(() =>
       Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => {}))),
     );
+    // Fontes embutidas (@font-face data-URI) também carregam de forma assíncrona: sem
+    // esperar, o PDF saía com a fonte RESERVA do Chromium serverless — a "letra
+    // grosseira/de resolução ruim" vista nas propostas. fonts.ready garante a Geist.
+    await page.evaluate(() => (document as unknown as { fonts: { ready: Promise<unknown> } }).fonts.ready);
     return await page.pdf({
       format: "A4",
       printBackground: true,

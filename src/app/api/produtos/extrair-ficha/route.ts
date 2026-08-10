@@ -51,7 +51,11 @@ export async function POST(req: NextRequest) {
       if (!(ficha instanceof File) || ficha.size === 0) {
         return NextResponse.json({ erro: "Anexe a ficha técnica em PDF." }, { status: 400 });
       }
-      if (ficha.type !== "application/pdf") {
+      // MIME OU extensão: o Windows às vezes manda PDF como "application/x-pdf" ou até
+      // vazio (depende do app que gerou o arquivo) — barrar só pelo MIME dava "erro ao
+      // importar a ficha" com um PDF perfeitamente válido na mão do gestor.
+      const pareceP = /pdf$/i.test(ficha.type) || /\.pdf$/i.test(ficha.name ?? "");
+      if (!pareceP) {
         return NextResponse.json({ erro: "A ficha técnica deve ser um PDF." }, { status: 400 });
       }
       // 4 MB e não 20: acima disso a função da Vercel devolve 413 sem nem chamar este código.

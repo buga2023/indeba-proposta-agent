@@ -269,10 +269,24 @@ export function AdminScreen() {
 }
 
 type TextosPadrao = {
+  capaSubtitulo?: string;
+  apresentacao?: { saudacao: string; paragrafos: string[]; cards: { titulo: string; texto: string; icone: string }[] };
+  comodatos?: { intro: string; equipamentos: { titulo: string; icone: string }[]; vantagens: string[] };
   condicoesConsolidada: { titulo: string; texto: string; icone: string }[];
   mensagemFechamento: string;
   condicoesComerciais: { validade: string; prazoEntrega: string; pagamento: string; frete: string };
 };
+
+// Rótulo de página da edição página-a-página (segue a ordem do documento gerado).
+function TituloPagina({ numero, nome }: { numero: string; nome: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "16px 0 8px" }}>
+      <span style={{ fontSize: "10.5px", fontWeight: 700, color: "white", background: "var(--blue-700)", borderRadius: "999px", padding: "2px 9px", flex: "none" }}>{numero}</span>
+      <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".04em" }}>{nome}</span>
+      <span style={{ flex: 1, height: "1px", background: "var(--gray-200)" }} />
+    </div>
+  );
+}
 
 // Condições comerciais e mensagem de fechamento que preenchem toda proposta NOVA.
 // O que já foi salvo/enviado não muda — o texto assinado é o do documento gerado.
@@ -297,10 +311,22 @@ function SecaoTextosPadrao({ onErro, onAviso }: { onErro: (m: string | null) => 
     setSalvando(true);
     onErro(null);
     onAviso(null);
+    // Linha em branco no textarea de lista (parágrafos/equipamentos/vantagens) é
+    // rascunho de digitação, não item — sai antes de validar no servidor.
+    const semVazios = (xs: string[]) => xs.map((x) => x.trim()).filter(Boolean);
+    const limpo: TextosPadrao = {
+      ...textos,
+      apresentacao: textos.apresentacao && { ...textos.apresentacao, paragrafos: semVazios(textos.apresentacao.paragrafos) },
+      comodatos: textos.comodatos && {
+        ...textos.comodatos,
+        equipamentos: textos.comodatos.equipamentos.filter((e) => e.titulo.trim()),
+        vantagens: semVazios(textos.comodatos.vantagens),
+      },
+    };
     const r = await fetch("/api/textos-padrao", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ textos }),
+      body: JSON.stringify({ textos: limpo }),
     });
     setSalvando(false);
     if (r.ok) onAviso("Textos padrão salvos — valem para as próximas propostas.");
@@ -335,7 +361,106 @@ function SecaoTextosPadrao({ onErro, onAviso }: { onErro: (m: string | null) => 
         <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Carregando…</div>
       ) : (
         <>
-          <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".04em", margin: "6px 0 8px" }}>Proposta Consolidada</div>
+          {/* ── Edição página a página, na ordem do documento (pedido do CEO, ago/2026) ── */}
+          <TituloPagina numero="Pág. 1" nome="Capa" />
+          <label style={{ display: "block", maxWidth: "420px" }}>
+            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>Subtítulo da capa</div>
+            <input
+              value={textos.capaSubtitulo ?? ""}
+              onChange={(e) => setTextos((t) => t && { ...t, capaSubtitulo: e.target.value })}
+              style={{ ...inputStyle, width: "100%", fontSize: "13px" }}
+            />
+          </label>
+
+          {textos.apresentacao && (
+            <>
+              <TituloPagina numero="Pág. 2" nome="Apresentação" />
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "10px 16px" }}>
+                <label style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>Saudação</div>
+                  <input
+                    value={textos.apresentacao.saudacao}
+                    onChange={(e) => setTextos((t) => t?.apresentacao ? { ...t, apresentacao: { ...t.apresentacao, saudacao: e.target.value } } : t)}
+                    style={{ ...inputStyle, width: "100%", fontSize: "13px" }}
+                  />
+                </label>
+                <label style={{ minWidth: 0, gridColumn: "1 / -1" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>Parágrafos (um por linha)</div>
+                  <textarea
+                    value={textos.apresentacao.paragrafos.join("\n")}
+                    rows={5}
+                    onChange={(e) =>
+                      setTextos((t) => t?.apresentacao ? { ...t, apresentacao: { ...t.apresentacao, paragrafos: e.target.value.split("\n") } } : t)
+                    }
+                    style={{ ...inputStyle, width: "100%", resize: "vertical", lineHeight: 1.45, fontSize: "13px" }}
+                  />
+                </label>
+                {textos.apresentacao.cards.map((c, i) => (
+                  <label key={i} style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>Card: {c.titulo}</div>
+                    <textarea
+                      value={c.texto}
+                      rows={2}
+                      onChange={(e) =>
+                        setTextos((t) => t?.apresentacao ? { ...t, apresentacao: { ...t.apresentacao, cards: t.apresentacao.cards.map((x, j) => (j === i ? { ...x, texto: e.target.value } : x)) } } : t)
+                      }
+                      style={{ ...inputStyle, width: "100%", resize: "vertical", lineHeight: 1.45, fontSize: "13px" }}
+                    />
+                  </label>
+                ))}
+              </div>
+            </>
+          )}
+
+          {textos.comodatos && (
+            <>
+              <TituloPagina numero="Pág. 3" nome="Comodatos" />
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "10px 16px" }}>
+                <label style={{ minWidth: 0, gridColumn: "1 / -1" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>Texto de abertura</div>
+                  <textarea
+                    value={textos.comodatos.intro}
+                    rows={2}
+                    onChange={(e) => setTextos((t) => t?.comodatos ? { ...t, comodatos: { ...t.comodatos, intro: e.target.value } } : t)}
+                    style={{ ...inputStyle, width: "100%", resize: "vertical", lineHeight: 1.45, fontSize: "13px" }}
+                  />
+                </label>
+                <label style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>Equipamentos (um por linha)</div>
+                  <textarea
+                    value={textos.comodatos.equipamentos.map((e) => e.titulo).join("\n")}
+                    rows={4}
+                    onChange={(e) =>
+                      setTextos((t) => t?.comodatos ? {
+                        ...t,
+                        comodatos: {
+                          ...t.comodatos,
+                          equipamentos: e.target.value.split("\n").map((titulo, i) => ({ titulo, icone: t.comodatos!.equipamentos[i]?.icone ?? "check" })),
+                        },
+                      } : t)
+                    }
+                    style={{ ...inputStyle, width: "100%", resize: "vertical", lineHeight: 1.45, fontSize: "13px" }}
+                  />
+                </label>
+                <label style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>Vantagens (uma por linha)</div>
+                  <textarea
+                    value={textos.comodatos.vantagens.join("\n")}
+                    rows={4}
+                    onChange={(e) => setTextos((t) => t?.comodatos ? { ...t, comodatos: { ...t.comodatos, vantagens: e.target.value.split("\n") } } : t)}
+                    style={{ ...inputStyle, width: "100%", resize: "vertical", lineHeight: 1.45, fontSize: "13px" }}
+                  />
+                </label>
+              </div>
+            </>
+          )}
+
+          <TituloPagina numero="Pág. 4+" nome="Páginas de produto" />
+          <div style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>
+            O conteúdo das páginas de produto (nome, subtítulo, benefícios, ficha) vem do cadastro de produtos — edite lá.
+          </div>
+
+          <TituloPagina numero="Última" nome="Condições Comerciais" />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "10px 16px", marginBottom: "14px" }}>
             {textos.condicoesConsolidada.map((c, i) => (
               <label key={i} style={{ minWidth: 0 }}>

@@ -117,8 +117,16 @@ export function paginaProduto(
 ): string {
   const f = item.ficha ?? null;
   const titulo = esc(item.nome); // nome comercial real — sempre bate com a ficha técnica em PDF (nunca a categoria de marketing)
-  const categoria = f?.titulo && f.titulo !== item.nome ? `<div class="pp-eyebrow-cat">${esc(f.titulo)}</div>` : "";
-  const subtitulo = f?.subtitulo ? `<div class="pp-sub">${esc(f.subtitulo)}</div>` : "";
+  // Categoria (ficha.titulo) e subtítulo: quando o produto NÃO tem subtítulo cadastrado,
+  // a categoria assume o lugar dele em LARANJA (.pp-sub) — era ela que aparecia cinza e
+  // gerava o "às vezes o subtítulo não está em laranja" (pedido do CEO, ago/2026).
+  const catTexto = f?.titulo && f.titulo !== item.nome ? f.titulo : "";
+  const categoria = f?.subtitulo && catTexto ? `<div class="pp-eyebrow-cat">${esc(catTexto)}</div>` : "";
+  const subtitulo = f?.subtitulo
+    ? `<div class="pp-sub">${esc(f.subtitulo)}</div>`
+    : catTexto
+      ? `<div class="pp-sub">${esc(catTexto)}</div>`
+      : "";
   // LINHA = o SEGMENTO do cliente, não mais o `ficha.linhaLabel` estático do produto.
   // O linhaLabel era fixo por produto e inconsistente (KITCHEN/AUTO/LAUNDRY, metade em
   // inglês): uma proposta de lavanderia saía com "LINHA KITCHEN" na ficha. Sem segmento
@@ -474,8 +482,12 @@ export function consolidadaHtml(
 /* Tipografia da marca (Geist/Geist Mono — mesma da plataforma, tokens/typography.css
    do skill indeba-design). Fonte de arquivo (variável), embutida como data-URI: o
    render bloqueia requisição externa, então CDN não funciona aqui. */
-@font-face { font-family: "Geist"; src: url("${assets.fontSans}") format("woff2"); font-weight: 100 900; font-display: swap; }
-@font-face { font-family: "Geist Mono"; src: url("${assets.fontMono}") format("woff2"); font-weight: 100 900; font-display: swap; }
+/* font-display: block (não swap) — com swap o Chromium pintava o texto na fonte
+   reserva e o PDF podia ser tirado ANTES da troca: a "letra grosseira/serrilhada"
+   era a fonte substituta do Chromium serverless, não a Geist. O render também
+   espera document.fonts.ready antes do page.pdf (render.ts). */
+@font-face { font-family: "Geist"; src: url("${assets.fontSans}") format("woff2"); font-weight: 100 900; font-display: block; }
+@font-face { font-family: "Geist Mono"; src: url("${assets.fontMono}") format("woff2"); font-weight: 100 900; font-display: block; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11.5px; }
 .pg { padding: 14px 16mm 0; position: relative; }
@@ -506,7 +518,9 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .wave.wave-sec { width: 30mm; } /* especificidade > .wave sozinho — .wave define 96mm mais abaixo (capa) */
 .pg-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5ebf2; padding-bottom: 8px; margin-bottom: 18px; }
 .hlogo { height: 46px; } .hpg { color: #7a8696; font-size: 11px; } .hpg b { color: ${NAVY}; }
-.sec-tit { color: ${NAVY}; font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
+/* Títulos grandes em 700 (eram 800): no impresso o extra-bold da Geist saía "grosseiro"
+   perto da tipografia mais fina das propostas antigas (pedido do CEO, ago/2026). */
+.sec-tit { color: ${NAVY}; font-size: 30px; font-weight: 700; letter-spacing: -.5px; }
 .sec-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin: 2px 0 14px; }
 .sd { margin: 6px 0 10px; } .pt { color: #4a5768; line-height: 1.6; margin-bottom: 10px; }
 .ic { display: inline-flex; vertical-align: middle; }
@@ -555,7 +569,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .capa-dash { width: 46px; height: 2px; background: ${ORANGE}; position: relative; margin-bottom: 14px; }
 .capa-dash::before, .capa-dash::after { content: ""; position: absolute; top: -5px; width: 2px; height: 12px; background: ${ORANGE}; }
 .capa-dash::before { left: -2px; } .capa-dash::after { right: -2px; }
-.capa-tit { color: ${NAVY}; font-size: 26px; font-weight: 800; letter-spacing: 4px; }
+.capa-tit { color: ${NAVY}; font-size: 26px; font-weight: 700; letter-spacing: 4px; }
 .capa-sub { color: #6b7787; font-size: 13px; margin-top: 6px; }
 .capa-card { background: #fff; border: 1px solid #eef2f7; border-radius: 16px; box-shadow: 0 8px 30px rgba(11,42,74,.08); padding: 18px 26px; margin-top: 40px; width: 340px; }
 .cc-row { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f3f7; }
@@ -638,14 +652,15 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-d-rat { font-size: 10.6px; color: rgba(255,255,255,.6); }
 .pp-ficha-link { display: inline-block; margin-top: 12px; font-size: 11.3px; font-weight: 700; color: ${ORANGE}; text-decoration: underline; }
 .pp-railfoot { margin-top: 14px; font-size: 10.6px; letter-spacing: 1.2px; color: rgba(255,255,255,.4); text-transform: uppercase; }
-/* Coluna de conteúdo: centraliza o bloco principal verticalmente — sem isso,
-   produtos com pouca ficha (sem indicado-para/benefícios) deixavam a metade de
-   baixo vazia. Contato fica ancorado no fim da página. */
+/* Coluna de conteúdo: o bloco principal começa do TOPO (flex-start) — a centralização
+   vertical fazia o título de produto com ficha curta "começar no meio da folha"
+   (correção pedida pelo CEO, ago/2026). Ficha curta deixa respiro embaixo, que é o
+   comportamento esperado de uma ficha; contato segue ancorado no fim da página. */
 .pp-content { flex: 1; padding: 30px 34px 24px; display: flex; flex-direction: column; }
 .pp-runmark { align-self: flex-end; font-size: 9.5px; letter-spacing: 1px; color: #9aa3ae; text-transform: uppercase; }
 .pp-runmark b { color: ${NAVY}; }
-.pp-main { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
-.pp-tit { color: ${NAVY}; font-size: 25px; font-weight: 800; line-height: 1.08; letter-spacing: -.3px; }
+.pp-main { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; gap: 18px; }
+.pp-tit { color: ${NAVY}; font-size: 25px; font-weight: 700; line-height: 1.08; letter-spacing: -.3px; }
 .pp-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin-top: 4px; text-transform: uppercase; }
 .pp-eyebrow-cat { color: #8a95a3; font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .3px; margin-top: 4px; }
 .pp-desc { color: #5a6878; font-size: 11.5px; line-height: 1.55; max-width: 400px; }
@@ -684,7 +699,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
    à parte (.pp-rows-cols), com k/v coladinhos — space-between ali jogaria o
    valor pra ponta da célula, longe da chave. */
 .pp-rows { display: flex; flex-direction: column; }
-\* Aplicação e composição são parágrafo, não k/v: texto corrido dentro do painel,
+/* Aplicação e composição são parágrafo, não k/v: texto corrido dentro do painel,
    com o mesmo tamanho das linhas de spec para não competir com os benefícios. */
 .pp-panel-txt { font-size: 10px; line-height: 1.5; color: #46586c; margin: 0; text-align: justify; }
 .prodpg-denso .pp-panel-txt { font-size: 9.2px; line-height: 1.4; }
