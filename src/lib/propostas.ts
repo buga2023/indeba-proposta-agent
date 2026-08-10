@@ -100,8 +100,10 @@ const mapearRegistro = async (row: Row): Promise<PropostaRegistro> => {
 };
 
 // Auto-save da proposta gerada/editada (upsert pelo id do scope). Na criação entra como
-// `rascunho`; em updates o status é PRESERVADO (só muda por atualizarStatusProposta) e o
-// `autor` original é mantido.
+// `em_andamento` — desde ago/2026 o status comercial só tem quatro valores escolhíveis
+// (em_andamento/enviada/aprovada/recusada); "rascunho" virou legado, aceito só na
+// leitura de registros antigos. Em updates o status é PRESERVADO (só muda por
+// atualizarStatusProposta) e o `autor` original é mantido.
 export async function salvarProposta(scope: PropostaScope, autor: string): Promise<PropostaRegistro> {
   const dados = {
     cliente: scope.cliente.razaoSocial,
@@ -112,7 +114,7 @@ export async function salvarProposta(scope: PropostaScope, autor: string): Promi
   };
   const row = await prisma.proposta.upsert({
     where: { id: scope.id },
-    create: { id: scope.id, status: "rascunho", autor, ...dados },
+    create: { id: scope.id, status: "em_andamento", autor, ...dados },
     update: dados,
   });
   return await mapearRegistro(row);

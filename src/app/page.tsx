@@ -331,6 +331,13 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
   arquivada: { label: "Arquivada", bg: "#E2E8F0", fg: "#475569" },
 };
 
+// Status que o usuário pode ESCOLHER (pedido do Gustavo, ago/2026): só estes quatro.
+// Os demais (rascunho/em_edicao/arquivada) seguem no STATUS_UI porque existem propostas
+// antigas no banco com eles — removê-los do contrato quebraria a leitura do histórico
+// (foi o incidente do "arquivada", ver src/lib/contracts/proposta.ts) — mas não são
+// mais oferecidos como opção.
+const STATUS_OPCOES: StatusProposta[] = ["em_andamento", "enviada", "aprovada", "recusada"];
+
 type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config" | "perfil";
 type TipoProposta = "orcamento" | "implantacao" | "comercial" | "consolidada";
 
@@ -3915,7 +3922,10 @@ function HistoryScreen({
                     onChange={(e) => onStatus(p.id, e.target.value as StatusProposta)}
                     style={{ appearance: "none", padding: "3px 10px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 600, background: su.bg, color: su.fg, border: "none", cursor: "pointer", textAlign: "center" }}
                   >
-                    {(Object.keys(STATUS_UI) as StatusProposta[]).map((s) => (
+                    {/* Se a proposta ainda carrega um status legado, ele entra como
+                        primeira opção (senão o <select> mostraria valor errado) — mas
+                        escolhas novas são só as quatro. */}
+                    {(STATUS_OPCOES.includes(p.status) ? STATUS_OPCOES : [p.status, ...STATUS_OPCOES]).map((s) => (
                       <option key={s} value={s}>{STATUS_UI[s].label}</option>
                     ))}
                   </select>

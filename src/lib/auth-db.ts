@@ -170,7 +170,43 @@ export async function listarColaboradores(): Promise<Colaborador[]> {
 
 export async function atualizarColaborador(
   email: string,
-  dados: { nome?: string; telefone?: string | null; papel?: Papel; acesso?: Acesso },
+  dados: { nome?: string; telefone?: string | null; papel?: Papel; acesso?: Acesso; senha?: string },
 ): Promise<Colaborador> {
-  return mapear(await prisma.usuario.update({ where: { email }, data: dados, select: campos }));
+  const { senha, ...resto } = dados;
+  // Redefinição de senha PELO GESTOR (painel): grava o hash novo — nunca a senha em texto.
+  const data = senha ? { ...resto, credencial: await gerarCredencial(senha) } : resto;
+  return mapear(await prisma.usuario.update({ where: { email }, data, select: campos }));
+}
+
+// Criação PELO GESTOR (painel do admin) — diferente do cadastro próprio (criarUsuario):
+// a conta já nasce APROVADA, porque quem cria é exatamente quem liberaria; e o papel é
+// escolhido na hora, sem depender de ADMIN_EMAILS.
+export async function criarColaborador(dados: {
+  nome: string;
+  email: string;
+  senha: string;
+  telefone?: string | null;
+  papel?: Papel;
+}): Promise<Colaborador> {
+  const existente = await prisma.usuario.findUnique({ where: { email: dados.email } });
+  if (existente) throw new EmailEmUsoError();
+  const credencial = await gerarCredencial(dados.senha);
+  const u = await prisma.usuario.create({
+    data: {
+      nome: dados.nome,
+      email: dados.email,
+      credencial,
+      telefone: dados.telefone ?? null,
+      papel: dados.papel ?? "user",
+      acesso: "aprovado",
+    },
+    select: campos,
+  });
+  return mapear(u);
+}
+
+// Exclusão definitiva da CONTA (login). As propostas do colaborador ficam — o `autor`
+// da Proposta é o e-mail denormalizado, não uma FK, então o histórico não se perde.
+export async function removerColaborador(email: string): Promise<void> {
+  await prisma.usuario.delete({ where: { email } });
 }

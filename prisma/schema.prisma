@@ -42,7 +42,7 @@ model EmpresaReceita {
 /// auditoria imutável de cada PDF emitido (constituição §8). Preço sempre Decimal (§stack).
 model Proposta {
   id           String   @id // = PropostaScope.id (gerado na montagem)
-  status       String   @default("rascunho") // rascunho|em_edicao|enviada|em_andamento|aprovada|recusada|arquivada
+  status       String   @default("em_andamento") // escolhíveis: em_andamento|enviada|aprovada|recusada · legados (só leitura): rascunho|em_edicao|arquivada
   autor        String // login da sessão (dado crítico não vem do cliente)
   cliente      String // razão social (denormalizado p/ listagem)
   segmento     String?

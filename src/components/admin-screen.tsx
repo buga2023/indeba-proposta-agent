@@ -115,17 +115,70 @@ export function AdminScreen() {
     await carregar();
   }
 
-  async function salvarTelefoneColaborador(email: string, telefone: string) {
+  async function salvarDadosColaborador(email: string, dados: { nome?: string; telefone?: string }) {
     setErro(null);
     const r = await fetch("/api/colaboradores", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, telefone: telefone || null }),
+      body: JSON.stringify({ email, ...(dados.nome ? { nome: dados.nome } : {}), ...(dados.telefone !== undefined ? { telefone: dados.telefone || null } : {}) }),
     });
     if (!r.ok) {
-      setErro((await r.json()).erro ?? "Falha ao salvar telefone.");
+      setErro((await r.json()).erro ?? "Falha ao salvar.");
       return;
     }
+    await carregar();
+  }
+
+  // Criação de login pelo gestor (pedido do Matheus, ago/2026): nome + e-mail + telefone +
+  // senha, conta já liberada — quem cria é quem liberaria.
+  const [novoColab, setNovoColab] = useState({ nome: "", email: "", telefone: "", senha: "" });
+  const novoColabOk = novoColab.nome.trim().length >= 2 && novoColab.email.includes("@") && novoColab.senha.length >= 8;
+  async function criarLogin() {
+    setErro(null);
+    setAviso(null);
+    const r = await fetch("/api/colaboradores", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nome: novoColab.nome.trim(),
+        email: novoColab.email.trim(),
+        senha: novoColab.senha,
+        telefone: novoColab.telefone.trim() || null,
+      }),
+    });
+    if (!r.ok) {
+      setErro((await r.json().catch(() => ({}))).erro ?? "Falha ao criar o login.");
+      return;
+    }
+    setAviso(`Login de ${novoColab.nome.trim()} criado — já pode entrar.`);
+    setNovoColab({ nome: "", email: "", telefone: "", senha: "" });
+    await carregar();
+  }
+
+  // A senha nova vem do campo inline da linha (a LinhaColaborador só chama com ≥8 chars).
+  async function redefinirSenha(c: Colaborador, senha: string) {
+    setErro(null);
+    const r = await fetch("/api/colaboradores", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: c.email, senha }),
+    });
+    if (!r.ok) {
+      setErro((await r.json().catch(() => ({}))).erro ?? "Falha ao redefinir a senha.");
+      return;
+    }
+    setAviso(`Senha de ${c.nome} redefinida.`);
+  }
+
+  async function removerColaborador(c: Colaborador) {
+    if (!window.confirm(`Remover a conta de ${c.nome} (${c.email})?\n\nA exclusão é definitiva; as propostas dele ficam no histórico.`)) return;
+    setErro(null);
+    const r = await fetch(`/api/colaboradores?email=${encodeURIComponent(c.email)}`, { method: "DELETE" });
+    if (!r.ok) {
+      setErro((await r.json().catch(() => ({}))).erro ?? "Falha ao remover.");
+      return;
+    }
+    setAviso(`Conta de ${c.nome} removida.`);
     await carregar();
   }
 
@@ -147,8 +200,22 @@ export function AdminScreen() {
     await carregar();
   }
 
+  // Busca local (nome/e-mail/telefone no Time; cliente/e-mail nos contatos): as listas
+  // crescem com o uso e achar uma pessoa rolando a página inteira não escala.
+  const [buscaTime, setBuscaTime] = useState("");
+  const [buscaContato, setBuscaContato] = useState("");
+
   const pendentes = colaboradores.filter((c) => c.acesso === "pendente");
   const demais = colaboradores.filter((c) => c.acesso !== "pendente");
+  const qTime = buscaTime.trim().toLowerCase();
+  const timeFiltrado = qTime
+    ? demais.filter((c) => `${c.nome} ${c.email} ${c.telefone ?? ""}`.toLowerCase().includes(qTime))
+    : demais;
+  const qContato = buscaContato.trim().toLowerCase();
+  const contatosFiltrados = qContato
+    ? contatos.filter((c) => `${c.cliente} ${c.email}`.toLowerCase().includes(qContato))
+    : contatos;
+  const gestores = colaboradores.filter((c) => c.papel === "admin").length;
 
   if (semAcesso) {
     return (
@@ -166,47 +233,34 @@ export function AdminScreen() {
     <div style={{ padding: "28px", maxWidth: "900px" }}>
       <div style={{ borderRadius: "18px", padding: "24px 28px", marginBottom: "20px", background: "linear-gradient(135deg,var(--blue-700),var(--blue-500))", color: "white" }}>
         <h2 style={{ fontSize: "22px", fontWeight: 800, letterSpacing: "-.5px", margin: 0 }}>Painel de administração</h2>
-        <div style={{ fontSize: "13.5px", opacity: 0.9, marginTop: "6px" }}>E-mail do gestor e cadastro de e-mails dos clientes (usado na cobrança).</div>
-      </div>
-
-      {erro && <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", borderRadius: "12px", padding: "11px 14px", fontSize: "13px", marginBottom: "14px" }}>{erro}</div>}
-      {aviso && <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", color: "#047857", borderRadius: "12px", padding: "11px 14px", fontSize: "13px", marginBottom: "14px" }}>{aviso}</div>}
-
-      {/* E-mail do gestor */}
-      <section style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", marginBottom: "22px" }}>
-        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>E-mail do gestor</h3>
-        <div style={{ fontSize: "12.5px", color: "var(--gray-500)", marginBottom: "12px" }}>Quem recebe o resumo dos disparos de cobrança.</div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <input style={{ ...inputStyle, flex: 1 }} type="email" placeholder="gestor@empresa.com" value={gestorEmail} onChange={(e) => setGestorEmail(e.target.value)} />
-          <button style={btn("var(--blue-600)")} onClick={salvarGestor}>Salvar</button>
-        </div>
-      </section>
-
-      {/* Textos padrão da proposta — editáveis sem programador (pedido do Matheus, ago/2026) */}
-      <SecaoTextosPadrao onErro={setErro} onAviso={setAviso} />
-
-      {/* Cadastro de e-mails dos clientes */}
-      <section style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px" }}>
-        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>E-mails dos clientes · {contatos.length}</h3>
-        <div style={{ fontSize: "12.5px", color: "var(--gray-500)", marginBottom: "12px" }}>
-          O sistema aprende sozinho com a coluna de e-mail das planilhas. Aqui você corrige ou adiciona manualmente.
-        </div>
-
-        <div style={{ display: "flex", gap: "8px", marginBottom: "14px", flexWrap: "wrap" }}>
-          <input style={{ ...inputStyle, flex: 2, minWidth: "160px" }} placeholder="Nome do cliente (igual à planilha)" value={novoCliente} onChange={(e) => setNovoCliente(e.target.value)} />
-          <input style={{ ...inputStyle, flex: 2, minWidth: "160px" }} type="email" placeholder="email@cliente.com" value={novoEmail} onChange={(e) => setNovoEmail(e.target.value)} />
-          <button style={btn("var(--orange-500)", !!novoCliente.trim() && !!novoEmail.trim())} onClick={() => novoCliente.trim() && novoEmail.trim() && salvarContato(novoCliente.trim(), novoEmail.trim())}>
-            Adicionar
-          </button>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {contatos.length === 0 && <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Nenhum e-mail cadastrado ainda.</div>}
-          {contatos.map((c) => (
-            <LinhaContato key={c.cliente} contato={c} onSalvar={salvarContato} onRemover={remover} />
+        <div style={{ fontSize: "13.5px", opacity: 0.9, marginTop: "6px" }}>Logins e acessos do time, textos padrão da proposta e e-mails de clientes da cobrança.</div>
+        {/* Números rápidos — o gestor vê o estado do painel sem rolar até cada seção. */}
+        <div style={{ display: "flex", gap: "8px", marginTop: "14px", flexWrap: "wrap" }}>
+          {[
+            { n: demais.length, l: demais.length === 1 ? "conta no time" : "contas no time" },
+            { n: pendentes.length, l: pendentes.length === 1 ? "aguardando liberação" : "aguardando liberação", alerta: pendentes.length > 0 },
+            { n: gestores, l: gestores === 1 ? "gestor" : "gestores" },
+            { n: contatos.length, l: contatos.length === 1 ? "e-mail de cliente" : "e-mails de clientes" },
+          ].map((s, i) => (
+            <span key={i} style={{ fontSize: "12.5px", fontWeight: 600, borderRadius: "999px", padding: "5px 12px", background: s.alerta ? "#FCD34D" : "rgba(255,255,255,.16)", color: s.alerta ? "#78350F" : "white" }}>
+              <b style={{ fontWeight: 800 }}>{s.n}</b> {s.l}
+            </span>
           ))}
         </div>
-      </section>
+      </div>
+
+      {erro && (
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", borderRadius: "12px", padding: "11px 14px", fontSize: "13px", marginBottom: "14px" }}>
+          <span style={{ flex: 1 }}>{erro}</span>
+          <button onClick={() => setErro(null)} style={{ background: "none", border: "none", color: "#b91c1c", cursor: "pointer", fontSize: "15px", lineHeight: 1, padding: "2px" }} title="Fechar">✕</button>
+        </div>
+      )}
+      {aviso && (
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", background: "#ecfdf5", border: "1px solid #a7f3d0", color: "#047857", borderRadius: "12px", padding: "11px 14px", fontSize: "13px", marginBottom: "14px" }}>
+          <span style={{ flex: 1 }}>{aviso}</span>
+          <button onClick={() => setAviso(null)} style={{ background: "none", border: "none", color: "#047857", cursor: "pointer", fontSize: "15px", lineHeight: 1, padding: "2px" }} title="Fechar">✕</button>
+        </div>
+      )}
 
       {/* Fila de aprovação — quem se cadastrou e ainda não entrou */}
       <section
@@ -252,16 +306,92 @@ export function AdminScreen() {
           Quem entra, com que poder e o telefone. Gestor vê as propostas do time inteiro; vendedor vê só as dele.
           Revogar é reversível — a conta e as propostas continuam lá.
         </div>
+
+        {/* Novo login direto pelo gestor — a conta nasce liberada, sem passar pela fila. */}
+        <div style={{ display: "flex", gap: "8px", marginBottom: "14px", flexWrap: "wrap" }}>
+          <input style={{ ...inputStyle, flex: "1 1 150px", minWidth: "130px" }} placeholder="Nome" value={novoColab.nome} onChange={(e) => setNovoColab({ ...novoColab, nome: e.target.value })} />
+          <input style={{ ...inputStyle, flex: "1 1 180px", minWidth: "160px" }} type="email" placeholder="email@empresa.com" value={novoColab.email} onChange={(e) => setNovoColab({ ...novoColab, email: e.target.value })} />
+          <input style={{ ...inputStyle, flex: "1 1 120px", minWidth: "110px" }} placeholder="Telefone" value={novoColab.telefone} onChange={(e) => setNovoColab({ ...novoColab, telefone: e.target.value })} />
+          <input style={{ ...inputStyle, flex: "1 1 130px", minWidth: "120px" }} type="password" placeholder="Senha (mín. 8)" value={novoColab.senha} onChange={(e) => setNovoColab({ ...novoColab, senha: e.target.value })} />
+          <button style={btn("var(--orange-500)", novoColabOk)} disabled={!novoColabOk} onClick={() => novoColabOk && criarLogin()}>
+            Criar login
+          </button>
+        </div>
+
+        {demais.length > 5 && (
+          <input
+            style={{ ...inputStyle, width: "100%", marginBottom: "10px" }}
+            placeholder="Buscar por nome, e-mail ou telefone…"
+            value={buscaTime}
+            onChange={(e) => setBuscaTime(e.target.value)}
+          />
+        )}
+
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           {demais.length === 0 && <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Nenhum colaborador cadastrado ainda.</div>}
-          {demais.map((c) => (
+          {demais.length > 0 && timeFiltrado.length === 0 && (
+            <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Ninguém bate com “{buscaTime.trim()}”.</div>
+          )}
+          {timeFiltrado.map((c) => (
             <LinhaColaborador
               key={c.email}
               colaborador={c}
-              onSalvar={salvarTelefoneColaborador}
+              onSalvar={salvarDadosColaborador}
               onMudar={mudarAcessoOuPapel}
+              onSenha={redefinirSenha}
+              onRemover={removerColaborador}
             />
           ))}
+        </div>
+      </section>
+
+      {/* Textos padrão da proposta — editáveis sem programador (pedido do Matheus, ago/2026) */}
+      <div style={{ marginTop: "22px" }}>
+        <SecaoTextosPadrao onErro={setErro} onAviso={setAviso} />
+      </div>
+
+      {/* Cadastro de e-mails dos clientes */}
+      <section style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", marginTop: "22px" }}>
+        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>E-mails dos clientes · {contatos.length}</h3>
+        <div style={{ fontSize: "12.5px", color: "var(--gray-500)", marginBottom: "12px" }}>
+          O sistema aprende sozinho com a coluna de e-mail das planilhas. Aqui você corrige ou adiciona manualmente.
+        </div>
+
+        <div style={{ display: "flex", gap: "8px", marginBottom: "14px", flexWrap: "wrap" }}>
+          <input style={{ ...inputStyle, flex: 2, minWidth: "160px" }} placeholder="Nome do cliente (igual à planilha)" value={novoCliente} onChange={(e) => setNovoCliente(e.target.value)} />
+          <input style={{ ...inputStyle, flex: 2, minWidth: "160px" }} type="email" placeholder="email@cliente.com" value={novoEmail} onChange={(e) => setNovoEmail(e.target.value)} />
+          <button style={btn("var(--orange-500)", !!novoCliente.trim() && !!novoEmail.trim())} onClick={() => novoCliente.trim() && novoEmail.trim() && salvarContato(novoCliente.trim(), novoEmail.trim())}>
+            Adicionar
+          </button>
+        </div>
+
+        {contatos.length > 5 && (
+          <input
+            style={{ ...inputStyle, width: "100%", marginBottom: "10px" }}
+            placeholder="Buscar cliente ou e-mail…"
+            value={buscaContato}
+            onChange={(e) => setBuscaContato(e.target.value)}
+          />
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          {contatos.length === 0 && <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Nenhum e-mail cadastrado ainda.</div>}
+          {contatos.length > 0 && contatosFiltrados.length === 0 && (
+            <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Nenhum cliente bate com “{buscaContato.trim()}”.</div>
+          )}
+          {contatosFiltrados.map((c) => (
+            <LinhaContato key={c.cliente} contato={c} onSalvar={salvarContato} onRemover={remover} />
+          ))}
+        </div>
+      </section>
+
+      {/* E-mail do gestor — configuração da cobrança, por isso mora perto dos contatos. */}
+      <section style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", marginTop: "22px" }}>
+        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>E-mail do gestor</h3>
+        <div style={{ fontSize: "12.5px", color: "var(--gray-500)", marginBottom: "12px" }}>Quem recebe o resumo dos disparos de cobrança.</div>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <input style={{ ...inputStyle, flex: 1 }} type="email" placeholder="gestor@empresa.com" value={gestorEmail} onChange={(e) => setGestorEmail(e.target.value)} />
+          <button style={btn("var(--blue-600)")} onClick={salvarGestor}>Salvar</button>
         </div>
       </section>
     </div>
@@ -534,13 +664,24 @@ function LinhaColaborador({
   colaborador,
   onSalvar,
   onMudar,
+  onSenha,
+  onRemover,
 }: {
   colaborador: Colaborador;
-  onSalvar: (email: string, telefone: string) => void;
+  onSalvar: (email: string, dados: { nome?: string; telefone?: string }) => void;
   onMudar: (email: string, dados: { acesso?: Acesso; papel?: "admin" | "user" }, feito: string) => void;
+  onSenha: (colaborador: Colaborador, senha: string) => void;
+  onRemover: (colaborador: Colaborador) => void;
 }) {
   const [telefone, setTelefone] = useState(colaborador.telefone ?? "");
-  const mudou = telefone.trim() !== (colaborador.telefone ?? "");
+  // Nome também é editável na linha (pedido do Matheus, ago/2026: criar/alterar/remover
+  // o máximo possível daqui). E-mail não muda — é a chave do login e das propostas.
+  const [nome, setNome] = useState(colaborador.nome);
+  // Senha inline: o botão abre um campo na própria linha (o prompt() do navegador não
+  // deixava ver o que se digita nem cancelar direito, e destoava do resto do painel).
+  const [senhaAberta, setSenhaAberta] = useState(false);
+  const [senha, setSenha] = useState("");
+  const mudou = telefone.trim() !== (colaborador.telefone ?? "") || (nome.trim() !== colaborador.nome && nome.trim().length >= 2);
   const ui = ACESSO_UI[colaborador.acesso];
   const ehGestor = colaborador.papel === "admin";
   const liberado = colaborador.acesso === "aprovado";
@@ -553,16 +694,28 @@ function LinhaColaborador({
     <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", padding: "9px 11px", borderRadius: "9px", background: "var(--gray-50)" }}>
       <div style={{ flex: "1 1 190px", minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--gray-900)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{colaborador.nome}</span>
+          <input
+            style={{ ...inputStyle, padding: "4px 8px", fontSize: "13px", fontWeight: 600, flex: "1 1 auto", minWidth: 0 }}
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            title="Nome do colaborador (edite e clique em Salvar)"
+          />
           <span style={{ fontSize: "10.5px", fontWeight: 700, color: ui.fg, background: ui.bg, borderRadius: "999px", padding: "2px 8px", flex: "none" }}>{ui.label}</span>
         </div>
-        <div style={{ fontSize: "11.5px", color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: "11.5px", color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: "3px" }}>
           {colaborador.email} · {ehGestor ? "Gestor" : "Vendedor"}
         </div>
       </div>
 
       <input style={{ ...inputStyle, width: "132px", flex: "none", padding: "6px 10px", fontSize: "13px" }} placeholder="Telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
-      <button style={{ ...btn("var(--blue-600)", mudou), width: "78px" }} disabled={!mudou} onClick={() => mudou && onSalvar(colaborador.email, telefone.trim())}>Salvar</button>
+      <button
+        style={{ ...btn("var(--blue-600)", mudou), width: "78px" }}
+        disabled={!mudou}
+        onClick={() => mudou && onSalvar(colaborador.email, {
+          ...(nome.trim() !== colaborador.nome && nome.trim().length >= 2 ? { nome: nome.trim() } : {}),
+          ...(telefone.trim() !== (colaborador.telefone ?? "") ? { telefone: telefone.trim() } : {}),
+        })}
+      >Salvar</button>
 
       <button
         style={{ ...btn("var(--blue-800)"), width: "142px", background: "white", color: "var(--blue-800)", border: "1px solid var(--gray-200)" }}
@@ -593,6 +746,48 @@ function LinhaColaborador({
       >
         {liberado ? "Revogar" : "Liberar"}
       </button>
+
+      <button
+        style={{ ...btn("var(--gray-500)"), width: "72px", background: senhaAberta ? "var(--gray-100)" : "white", color: "var(--gray-700)", border: "1px solid var(--gray-200)" }}
+        title="Define uma senha nova para este login"
+        onClick={() => { setSenhaAberta(!senhaAberta); setSenha(""); }}
+      >
+        Senha
+      </button>
+
+      <button
+        style={{ ...btn("#dc2626"), padding: "9px 11px" }}
+        title="Remove a conta em definitivo (as propostas ficam)"
+        onClick={() => onRemover(colaborador)}
+      >
+        ✕
+      </button>
+
+      {senhaAberta && (
+        <div style={{ flexBasis: "100%", display: "flex", gap: "8px", alignItems: "center", marginTop: "2px" }}>
+          <input
+            style={{ ...inputStyle, flex: "1 1 200px", padding: "6px 10px", fontSize: "13px" }}
+            type="password"
+            placeholder={`Nova senha para ${colaborador.nome} (mín. 8)`}
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            autoFocus
+          />
+          <button
+            style={{ ...btn("var(--blue-600)", senha.length >= 8), width: "96px" }}
+            disabled={senha.length < 8}
+            onClick={() => { if (senha.length >= 8) { onSenha(colaborador, senha); setSenhaAberta(false); setSenha(""); } }}
+          >
+            Redefinir
+          </button>
+          <button
+            style={{ ...btn("var(--gray-500)"), background: "white", color: "var(--gray-500)", border: "1px solid var(--gray-200)" }}
+            onClick={() => { setSenhaAberta(false); setSenha(""); }}
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
     </div>
   );
 }
