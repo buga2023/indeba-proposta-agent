@@ -216,11 +216,14 @@ async function encolherFoto(file: File): Promise<File> {
 
 // O que a rota /api/produtos/extrair-ficha devolve — os blocos da ficha técnica em PDF.
 type CamposDaFicha = {
+  nome?: string;
+  titulo?: string;
   descricao?: string;
   composicao?: string;
   aplicacao?: string;
   modoDeUso?: string;
   beneficios?: string[];
+  embalagens?: { tamanho: number; unidade: "L" | "kg" | "ml" | "un" }[];
   caracteristicas?: { pH?: string; aspecto?: string; cor?: string; odor?: string };
 };
 
@@ -371,6 +374,11 @@ export function FormProduto({
         set(valor);
         preenchidos.push(nomeCampo);
       };
+      // Auto-cadastro (pedido do CEO, ago/2026): a ficha traz também o nome comercial, a
+      // categoria e as embalagens — anexou o PDF, o cadastro se preenche inteiro. A regra
+      // continua a mesma: só entra onde o gestor ainda não escreveu, e ele confirma no salvar.
+      aplicar(c.nome, nome, setNome, "nome");
+      aplicar(c.titulo, fichaTitulo, setFichaTitulo, "título");
       aplicar(c.descricao, fichaDescricao, setFichaDescricao, "abertura");
       aplicar(c.descricao, descricaoCurta, setDescricaoCurta, "descrição curta");
       aplicar(c.beneficios?.join("\n"), beneficios, setBeneficios, "benefícios");
@@ -381,6 +389,12 @@ export function FormProduto({
       aplicar(c.caracteristicas?.aspecto, aspecto, setAspecto, "aspecto");
       aplicar(c.caracteristicas?.cor, cor, setCor, "cor");
       aplicar(c.caracteristicas?.odor, odor, setOdor, "odor");
+      // Embalagens: só quando a tela ainda não tem nenhuma preenchida (mesma prioridade
+      // dos campos de texto — o que o gestor digitou nunca é sobrescrito).
+      if (c.embalagens?.length && !embalagens.some((e) => e.tamanho.trim())) {
+        setEmbalagens(c.embalagens.map((e) => ({ tamanho: String(e.tamanho).replace(".", ","), unidade: e.unidade, diluicaoMax: "" })));
+        preenchidos.push("embalagens");
+      }
       setTocado(true);
       setAviso(
         preenchidos.length
