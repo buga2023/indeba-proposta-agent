@@ -69,6 +69,14 @@ const nextConfig: NextConfig = {
     // externo). Usado por Importar orçamento e Análise de contrato (extração de PDF).
     "/api/orcamento/importar": ["./node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
     "/api/contrato/extrair": ["./node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+    // "Preencher a partir da ficha" (cadastro de produto) usa o MESMO pdfjs — sem o worker
+    // no bundle a rota devolvia 500 na Vercel ("Setting up fake worker failed"). E o fluxo
+    // por ?codigo= lê a ficha herdada da base de public/fichas-tecnicas/ via readFile, que
+    // o tracing também não segue (arquivos de public/ não entram na função por padrão).
+    "/api/produtos/extrair-ficha": [
+      "./node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+      "./public/fichas-tecnicas/**/*",
+    ],
   },
   // Cinto de segurança: mesmo com o include acima já restrito a produtos/marca/fonts,
   // exclui explicitamente as fichas técnicas (91MB de PDF) do bundle do /api/pdf —
