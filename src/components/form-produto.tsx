@@ -10,8 +10,8 @@ import { anexoProprio, type Produto } from "@/lib/contracts";
 // A ORDEM dos campos é a da FICHA TÉCNICA impressa, por pedido do Matheus (06/08/2026): ele
 // preenchia com a ficha aberta ao lado e a tela pedia as coisas noutra sequência ("achei que
 // aqui ficou meio embolado"). Agora: identificação → arquivos → onde se encaixa → a ficha, na
-// ordem em que ela é lida (abertura, benefícios, composição, aplicação, modo de uso,
-// diluições, rendimento, características) → embalagens. "Cuidados e precauções" ficou de
+// ordem em que ela é lida (abertura, benefícios, especificações físico-químicas, composição,
+// aplicação, modo de uso, diluições, rendimento) → embalagens. "Cuidados e precauções" ficou de
 // fora no mesmo pedido: é conteúdo de rótulo, não de proposta.
 //
 // Cobre a FICHA RICA junto com os dados básicos de propósito: é dela que sai a página de
@@ -382,13 +382,13 @@ export function FormProduto({
       aplicar(c.descricao, fichaDescricao, setFichaDescricao, "abertura");
       aplicar(c.descricao, descricaoCurta, setDescricaoCurta, "descrição curta");
       aplicar(c.beneficios?.join("\n"), beneficios, setBeneficios, "benefícios");
-      aplicar(c.composicao, composicao, setComposicao, "composição");
-      aplicar(c.aplicacao, aplicacao, setAplicacao, "aplicação");
-      aplicar(c.modoDeUso, descricaoUso, setDescricaoUso, "modo de uso");
       aplicar(c.caracteristicas?.pH, pH, setPH, "pH");
       aplicar(c.caracteristicas?.aspecto, aspecto, setAspecto, "aspecto");
       aplicar(c.caracteristicas?.cor, cor, setCor, "cor");
       aplicar(c.caracteristicas?.odor, odor, setOdor, "odor");
+      aplicar(c.composicao, composicao, setComposicao, "composição");
+      aplicar(c.aplicacao, aplicacao, setAplicacao, "aplicação");
+      aplicar(c.modoDeUso, descricaoUso, setDescricaoUso, "modo de uso");
       // Embalagens: só quando a tela ainda não tem nenhuma preenchida (mesma prioridade
       // dos campos de texto — o que o gestor digitou nunca é sobrescrito).
       if (c.embalagens?.length && !embalagens.some((e) => e.tamanho.trim())) {
@@ -686,6 +686,14 @@ export function FormProduto({
           <label style={rotulo}>Benefícios <span style={dica}>— um por linha</span></label>
           <textarea style={{ ...campo, minHeight: "64px", resize: "vertical" }} value={beneficios} onChange={(e) => setBeneficios(e.target.value)} placeholder={"Remove gordura sem agredir o inox\nEnxágue rápido"} />
         </div>
+        {/* Na ficha impressa, as ESPECIFICAÇÕES FÍSICO-QUÍMICAS abrem as informações
+            técnicas — antes de composição, aplicação e modo de uso (ver Alvaclor 165). */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "10px", marginTop: "12px" }}>
+          <div><label style={rotulo}>pH</label><input style={campo} value={pH} onChange={(e) => setPH(e.target.value)} placeholder="13,5" /></div>
+          <div><label style={rotulo}>Aspecto</label><input style={campo} value={aspecto} onChange={(e) => setAspecto(e.target.value)} placeholder="Líquido" /></div>
+          <div><label style={rotulo}>Cor</label><input style={campo} value={cor} onChange={(e) => setCor(e.target.value)} placeholder="Incolor" /></div>
+          <div><label style={rotulo}>Odor</label><input style={campo} value={odor} onChange={(e) => setOdor(e.target.value)} placeholder="Característico" /></div>
+        </div>
         <div style={{ marginTop: "12px" }}>
           <label style={rotulo}>Composição</label>
           <textarea style={{ ...campo, minHeight: "50px", resize: "vertical" }} value={composicao} onChange={(e) => setComposicao(e.target.value)} placeholder="Tensoativo aniônico, alcalinizante, sequestrante, conservante e veículo." />
@@ -713,12 +721,6 @@ export function FormProduto({
         <div style={{ marginTop: "16px" }}>
           <label style={rotulo}>Rendimento</label>
           <input style={campo} value={rendimento} onChange={(e) => setRendimento(e.target.value)} placeholder="1 L rende até 100 L de solução" />
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "10px", marginTop: "12px" }}>
-          <div><label style={rotulo}>pH</label><input style={campo} value={pH} onChange={(e) => setPH(e.target.value)} placeholder="13,5" /></div>
-          <div><label style={rotulo}>Aspecto</label><input style={campo} value={aspecto} onChange={(e) => setAspecto(e.target.value)} placeholder="Líquido" /></div>
-          <div><label style={rotulo}>Cor</label><input style={campo} value={cor} onChange={(e) => setCor(e.target.value)} placeholder="Incolor" /></div>
-          <div><label style={rotulo}>Odor</label><input style={campo} value={odor} onChange={(e) => setOdor(e.target.value)} placeholder="Característico" /></div>
         </div>
 
         <div style={secao}>Embalagens <span style={dica}>— os tamanhos que a ficha lista</span></div>
