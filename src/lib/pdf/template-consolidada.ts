@@ -308,23 +308,36 @@ export function paginaProduto(
       ? `<div class="pp-specs">${aplicacao}${composicao}${diluicoes}${modoUso}${rendimento}${embalagens}${carac}</div>`
       : "";
   // Página de produto não usa o .pgnum das outras seções: a própria rail já assina o
-  // rodapé ("Página 07/11 · Proposta de Solução"), e os dois no mesmo canto colidiam.
+  // rodapé, e os dois no mesmo canto colidiam. Formato ÚNICO do documento (Fase E):
+  // "Página N/T", sem zero à esquerda e sem sufixo — mesma baseline das demais páginas.
   const runmark = numero ? `<div class="pp-runmark">Proposta de Solução <b>${esc(numero)}</b></div>` : "";
   const railFoot = numero
-    ? `<div class="pp-railfoot">Página ${esc(numero)}${totalPag ? `/${totalPag}` : ""} · Proposta de Solução</div>`
+    ? `<div class="pp-railfoot">Página ${Number(numero)}${totalPag ? `/${totalPag}` : ""}</div>`
     : "";
 
   const wm = logoWhite
     ? `<img class="pp-wm-logo" src="${logoWhite}" alt="Indeba Express"/>`
     : `<div class="pp-wm"><b>indeba</b><span>express</span><i>.</i></div>`;
 
+  // Rodapé padrão (Fase E): o ornamento (mesma arte e MESMO tamanho da capa) entra
+  // também na página de produto, ancorado no canto inferior direito da coluna clara —
+  // a rail navy tem 79mm, então o ornamento (96mm encostado à direita numa página de
+  // 210mm) começa em ~114mm e nunca invade a área escura. Em troca, a assinatura
+  // ("Qualidade Profissional" + contatos) sobe para a coluna navy (.pp-railsign),
+  // empilhada acima do número de página, com cores invertidas.
   return `<section class="prodpg${simples ? " prodpg-simples" : semVenda ? " prodpg-sem-venda" : ""}${denso ? " prodpg-denso" : ""}">
+    ${wave("wave")}
     <aside class="pp-rail">
       ${wm}
       ${eyebrow}
       <div class="pp-figure"><div class="pp-imgcard"><img src="${dataUri}" alt="${titulo}"/></div>${ilustrativa}</div>
       ${valores}
       ${linkFicha}
+      <div class="pp-railsign">
+        <div class="pp-rs-marca">Qualidade Profissional</div>
+        <div class="pp-rs-tag">Resultados que transformam</div>
+        ${contatos ? `<div class="pp-rs-contatos">${contatos}</div>` : ""}
+      </div>
       ${railFoot}
     </aside>
     <div class="pp-content">
@@ -338,49 +351,61 @@ export function paginaProduto(
         ${beneficios}
         ${specs}
       </div>
-      <div class="pp-contact">
-        <div class="pp-c-left"><b>Qualidade Profissional</b><span>Resultados que transformam</span></div>
-        <div class="pp-c-right">${contatos}</div>
-      </div>
     </div>
   </section>`;
 }
 
-// Ondas orgânicas confinadas ao canto inferior direito, SEMPRE atrás do
-// conteúdo (mesma arte da capa Express; pedido do Matheus: nunca invadir texto).
-// `cls` escolhe o tamanho via CSS: "wave" (capa, 96mm) ou "wave wave-sec" (páginas
-// internas, 60mm — menor pra não cruzar texto, com faixa de segurança no rodapé).
-const wave = (cls: string) => `<svg class="${cls}" viewBox="0 0 360 300" fill="none">
-  <path d="M30 250 C 90 215, 140 220, 195 168" stroke="#ccd3dc" stroke-width="1.4"/>
-  <path d="M55 278 C 125 250, 170 252, 232 200" stroke="#dde2e8" stroke-width="1.2"/>
-  <path d="M186 162 l 9 -1 -4 8 Z" fill="#ccd3dc"/>
-  <path d="M212 226 C 252 196, 286 160, 316 106" stroke="${NAVY}" stroke-width="2.2"/>
-  <path d="M310 116 l 8 -12 2 14 Z" fill="${NAVY}"/>
-  <circle cx="222" cy="219" r="4" fill="${NAVY}"/>
-  <circle cx="268" cy="172" r="3" fill="${NAVY}" opacity=".55"/>
-  <path d="M360 128 C 302 158, 262 208, 252 300 L 360 300 Z" fill="${NAVY}"/>
-  <path d="M360 114 C 296 146, 256 198, 245 300" stroke="${ORANGE}" stroke-width="3"/>
-  <circle cx="236" cy="252" r="3" fill="${ORANGE}"/>
-  <g fill="#fff" opacity=".85">
-    <circle cx="300" cy="262" r="2"/><circle cx="313" cy="262" r="2"/><circle cx="326" cy="262" r="2"/><circle cx="339" cy="262" r="2"/>
-    <circle cx="300" cy="274" r="2"/><circle cx="313" cy="274" r="2"/><circle cx="326" cy="274" r="2"/><circle cx="339" cy="274" r="2"/>
-    <circle cx="300" cy="286" r="2"/><circle cx="313" cy="286" r="2"/><circle cx="326" cy="286" r="2"/><circle cx="339" cy="286" r="2"/>
+// ONDA RICA (Fase E, v3 — "nessa estética mais próxima a nossa logo"): o swoosh do "es"
+// reconstruído em vetor, ocupando a faixa inteira do rodapé (viewBox 794,56 × 320 = A4 a
+// 96dpi). Composição, na ordem de pintura: barra inferior navy (que "costura" a onda à
+// coluna navy da página de produto) → curvas de vento cinza com setas → curva laranja →
+// traço navy com seta e dois pontos → onda navy preenchida → eco interno → grade de
+// pontos 5×4 + ponto laranja. Geometria da spec VLAEG Fase E v3 §4; validada por
+// sobreposição contra o raster da referência do Mateus (proposta-indeba-consolidada__4_).
+const wave = (cls: string) => `<svg class="${cls}" viewBox="0 0 794.56 320" fill="none">
+  <path d="M0,308 L528,308 L548,320 L0,320 Z" fill="${NAVY}"/>
+  <path d="M420,300 C470,278 520,248 558,208" stroke="#D8DDE4" stroke-width="2.2"/>
+  <path d="M446,318 C504,296 552,264 596,222" stroke="#D8DDE4" stroke-width="2.2"/>
+  <path d="M474,268 C522,244 560,212 590,174" stroke="#D8DDE4" stroke-width="2.2"/>
+  <path d="M504,234 C548,212 582,184 608,150" stroke="#D8DDE4" stroke-width="2.2"/>
+  <path d="M534,316 C582,298 626,270 662,234" stroke="#D8DDE4" stroke-width="2.2"/>
+  <path d="M586,178 l 10,-2 -5,9 Z" fill="#C9D0D9"/>
+  <path d="M604,154 l 10,-2 -5,9 Z" fill="#C9D0D9"/>
+  <path d="M566,300 C622,294 662,258 692,218 C722,178 742,130 766,102" stroke="${ORANGE}" stroke-width="3"/>
+  <path d="M536,310 C602,304 644,266 672,228 C700,190 722,122 779,80" stroke="${NAVY}" stroke-width="3.4"/>
+  <path d="M779,80 l -15,1 7,13 Z" fill="${NAVY}"/>
+  <circle cx="689" cy="176" r="7" fill="${NAVY}"/>
+  <circle cx="656" cy="141" r="4.5" fill="${NAVY}"/>
+  <path d="M560,320 C600,318 645,281 679,255.7 C713,230.4 730,138 757,132.3 C771,129.3 782,131.6 794.56,136 L794.56,320 Z" fill="${NAVY}"/>
+  <path d="M694,296 C716,268 734,232 750,196" stroke="#1B3A61" stroke-width="2.4"/>
+  <path d="M726,306 C748,278 764,242 778,206" stroke="#1B3A61" stroke-width="2.4"/>
+  <g fill="#fff" opacity=".9">
+    ${Array.from({ length: 20 }, (_, i) => {
+      const cx = 716 + (i % 5) * 14.6;
+      const cy = 258 + Math.floor(i / 5) * 14.6;
+      return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2.5"/>`;
+    }).join("")}
   </g>
+  <circle cx="694" cy="265" r="3" fill="${ORANGE}"/>
 </svg>`;
 
 export function consolidadaHtml(
   scope: PropostaScope,
   imagens: Record<string, string>,
-  assets: { logo: string; logoWhite: string; fontSans: string; fontMono: string; siteUrl?: string },
+  assets: { logo: string; logoWhite: string; fontSans: string; fontMono: string; siteUrl?: string; simbolo?: string },
 ): string {
   const c = scope.consolidada ?? consolidadaDefaults();
   const cli = scope.cliente;
   const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  // Cabeçalho (Fase E): "Proposta de Solução" 10,5px + divisória + número 15px navy —
+  // proporção medida na referência (§2: --fs-cab / --fs-cab-num).
   const header = (n: string) => `<div class="pg-head"><img class="hlogo" src="${assets.logo}" alt="IES"/><div class="hpg">Proposta de Solução <b>${n}</b></div></div>`;
-  // Eyebrow (dash + rótulo em caixa alta) acima do título grande de cada seção —
-  // título passa a vir em title case (estilo atualizado); o rótulo em caixa alta
-  // preserva a convenção antiga de nomear a seção em maiúsculas.
-  const secLbl = (rotulo: string) => `<div class="lbl"><span></span><b>${esc(rotulo)}</b></div>`;
+  // Fase E: o dash laranja fica sozinho acima do H1 — o H1 já é caixa alta (preset A),
+  // repetir o rótulo pequeno em cima duplicava o título (ver referência, pág. 02).
+  const secLbl = () => `<div class="lbl"><span></span></div>`;
+  // Timbre "es" (Fase E — "essa capa tá bem legal com esse ies de fundo como papel
+  // timbrado"): símbolo da logo em opacidade 2,8%, centralizado, na capa e nas seções.
+  const timbre = assets.simbolo ? `<img class="timbre" src="${assets.simbolo}" alt=""/>` : "";
 
   const capaRow = (icone: string, rot: string, val: string) =>
     `<div class="cc-row"><span class="cc-ic">${iconeSvg(icone)}</span><div><div class="cc-r">${esc(rot)}</div><div class="cc-v">${esc(val)}</div></div></div>`;
@@ -390,7 +415,7 @@ export function consolidadaHtml(
   const capa = `<section class="capa">
     ${pgnum(1, total)}
     ${wave("wave")}
-    <div class="capa-wm">indeba express</div>
+    ${timbre || `<div class="capa-wm">indeba express</div>`}
     <img class="capa-logo" src="${assets.logo}" alt="Indeba Express"/>
     <div class="capa-dash"></div>
     <div class="capa-tit">PROPOSTA DE SOLUÇÃO</div>
@@ -411,9 +436,10 @@ export function consolidadaHtml(
 
   const apres = `<section class="pg sec">
     ${pgnum(2, total)}
-    ${wave("wave wave-sec")}
+    ${wave("wave")}
+    ${timbre}
     ${header("02")}
-    ${secLbl("APRESENTAÇÃO")}
+    ${secLbl()}
     <h1 class="sec-tit">Apresentação</h1><div class="sec-sub">${esc(c.capa.subtitulo)}</div>
     <p class="sd"><b>${esc(c.apresentacao.saudacao)}</b></p>
     ${c.apresentacao.paragrafos.map((p) => `<p class="pt">${esc(p)}</p>`).join("")}
@@ -428,9 +454,10 @@ export function consolidadaHtml(
 
   const comod = `<section class="pg sec">
     ${pgnum(3, total)}
-    ${wave("wave wave-sec")}
+    ${wave("wave")}
+    ${timbre}
     ${header("03")}
-    ${secLbl("COMODATOS OFERECIDOS")}
+    ${secLbl()}
     <h1 class="sec-tit">Comodatos Oferecidos</h1><div class="sec-sub">Equipamentos em Comodato</div>
     <p class="pt">${esc(c.comodatos.intro)}</p>
     <div class="equip">${c.comodatos.equipamentos
@@ -459,9 +486,10 @@ export function consolidadaHtml(
 
   const cond = `<section class="pg sec">
     ${pgnum(total, total)}
-    ${wave("wave wave-sec")}
+    ${wave("wave")}
+    ${timbre}
     ${header(String(PRIMEIRO_PRODUTO + scope.itens.length).padStart(2, "0"))}
-    ${secLbl("CONDIÇÕES COMERCIAIS")}
+    ${secLbl()}
     <h1 class="sec-tit">Condições Comerciais</h1><div class="sec-sub">Informações Gerais da Proposta</div>
     <div class="conds">${c.condicoes.itens
       .map((i) => `<div class="condi"><span class="ci">${iconeSvg(i.icone)}</span><div><h3>${esc(i.titulo)}</h3><p>${esc(i.texto)}</p></div></div>`)
@@ -489,8 +517,15 @@ export function consolidadaHtml(
 @font-face { font-family: "Geist"; src: url("${assets.fontSans}") format("woff2"); font-weight: 100 900; font-display: block; }
 @font-face { font-family: "Geist Mono"; src: url("${assets.fontMono}") format("woff2"); font-weight: 100 900; font-display: block; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11.5px; }
-.pg { padding: 14px 16mm 0; position: relative; }
+/* Escala Fase E v3 — medida na referência do Mateus (§2 da spec: unidade u × 0,7846),
+   não estimada: H1 28px · sub 13px · corpo 11px/1,6 · card 11/9px · cabeçalho 10,5px ·
+   nº de página 15px · nome em destaque 11,5px/700. Margem lateral 62px (--sp-margem). */
+body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font-size: 11px; }
+.pg { padding: 14px 62px 0; position: relative; }
+/* Timbre "es" — papel timbrado a 2,8% de opacidade (feedback do Mateus, 10/08),
+   sempre atrás de todo o conteúdo. */
+.timbre { position: absolute; z-index: 0; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 150mm; height: auto; opacity: .028; }
 /* Cada seção é UMA página — altura FIXA (não auto): sem isso, se o conteúdo de uma seção
    passar de 1 página impressa (ex.: comodatos com mais itens), o box CSS cresce além da
    página física e a onda (position:absolute;bottom:0, ancorada nesse box) passa a flutuar
@@ -506,52 +541,65 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .sec:last-of-type { page-break-after: auto; }
 /* Onda decorativa das páginas internas: SEMPRE atrás do conteúdo (mesma regra da capa) —
    28mm de faixa de segurança acima (padding-bottom do .sec) garante que texto nunca encoste. */
-.sec > *:not(.wave-sec):not(.pgnum) { position: relative; z-index: 1; }
+.sec > *:not(.wave):not(.pgnum):not(.timbre) { position: relative; z-index: 1; }
 /* Paginação impressa DENTRO da página (substitui o rodapé nativo do Chromium, que exigia
    margem inferior — a faixa branca que cortava o fundo). Ancorada no canto inferior
    ESQUERDO da seção (que tem position:relative e altura de página cheia): a arte
    (onda/quarto de círculo navy) mora no canto inferior direito de toda página, e ali
    o número cairia em cima dela. */
-.pgnum { position: absolute; left: 12mm; bottom: 6mm; z-index: 3;
-  font-size: 7.5px; letter-spacing: .3px; color: #9aa7b8; }
-.prodpg .pgnum { color: rgba(255,255,255,.45); } /* sobre a rail navy */
-.wave.wave-sec { width: 30mm; } /* especificidade > .wave sozinho — .wave define 96mm mais abaixo (capa) */
-.pg-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5ebf2; padding-bottom: 8px; margin-bottom: 18px; }
-.hlogo { height: 46px; } .hpg { color: #7a8696; font-size: 11px; } .hpg b { color: ${NAVY}; }
-/* Títulos grandes em 700 (eram 800): no impresso o extra-bold da Geist saía "grosseiro"
-   perto da tipografia mais fina das propostas antigas (pedido do CEO, ago/2026). */
-.sec-tit { color: ${NAVY}; font-size: 30px; font-weight: 700; letter-spacing: -.5px; }
-.sec-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin: 2px 0 14px; }
-.sd { margin: 6px 0 10px; } .pt { color: #4a5768; line-height: 1.6; margin-bottom: 10px; }
+/* Fase E — baseline única: nº de página a 30px do pé, alinhado à margem de conteúdo
+   (16mm), Geist 8px/400, formato "Página N/T" em todas as páginas. */
+.pgnum { position: absolute; left: 62px; bottom: 30px; z-index: 3;
+  font-size: 8px; font-weight: 400; letter-spacing: .06em; color: #8a94a6; }
+/* Onda rica: FAIXA de largura total no pé da página (viewBox 794,56×320 = A4 a 96dpi),
+   idêntica em todas as páginas. Trava anti-escala: o corte das internas veio de escala
+   herdada — tamanho fixo, sem transform. */
+.wave { transform: none !important; max-width: none; max-height: none; }
+.pg-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5ebf2; padding-bottom: 8px; margin-bottom: 46px; }
+.hlogo { height: 46px; }
+.hpg { color: #7a8696; font-size: 10.5px; display: flex; align-items: center; }
+.hpg b { color: ${NAVY}; font-size: 15px; font-weight: 600; margin-left: 10px; padding-left: 12px; border-left: 1px solid #d8dde4; }
+/* H1 de seção (Fase E v3, preset A da validação): caixa alta, 800, 28px — medido na
+   referência (36u × 0,7846). "Não tão grandes" resolvido por medida, não estimativa. */
+.sec-tit { color: ${NAVY}; font-size: 28px; font-weight: 800; letter-spacing: -.01em; text-transform: uppercase; }
+.sec-sub { color: ${ORANGE}; font-weight: 500; font-size: 13px; margin: 6px 0 30px; }
+b, strong { font-weight: 700; }
+.sd { margin: 6px 0 10px; } .pt { color: #46505f; line-height: 1.6; margin-bottom: 10px; }
 .ic { display: inline-flex; vertical-align: middle; }
-/* Eyebrow (fio + rótulo em caixa alta) acima do título grande de cada seção —
-   substitui o antigo ::before isolado na h1; título abaixo agora em title case. */
+/* Dash laranja sozinho acima do H1 (o H1 já é caixa alta — sem rótulo duplicado). */
 .lbl { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
-.lbl span { width: 16px; height: 3px; background: ${ORANGE}; border-radius: 2px; }
-.lbl b { font-size: 11px; font-weight: 700; letter-spacing: 1.6px; color: ${NAVY}; text-transform: uppercase; }
-/* Apresentação — cards "pill" (ícone + título + texto lado a lado) */
-.pillars { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
-.pill { background: #eef2f7; border-radius: 14px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
-.pill .pi { width: 38px; height: 38px; flex: none; border-radius: 10px; background: ${NAVY}; display: flex; align-items: center; justify-content: center; }
-.pill .pi svg { width: 19px; height: 19px; }
-.pill h3 { color: ${NAVY}; font-weight: 800; font-size: 12.5px; }
-.pill p { color: #6b7787; font-size: 10.5px; line-height: 1.45; margin-top: 4px; }
-/* Assinatura da Apresentação — simples divisor superior, sem badge */
-.sign { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 1px solid #e5ebf2; padding-top: 16px; margin-top: 20px; }
-.sign .n { color: ${NAVY}; font-weight: 800; font-size: 14px; }
-.sign .r { color: #8a95a3; font-size: 11px; margin-top: 2px; }
+.lbl span { width: 24px; height: 3px; background: ${ORANGE}; border-radius: 2px; }
+/* Apresentação — cards VERTICAIS brancos (referência pág. 02): ícone em círculo navy,
+   divisória laranja 34×2 sob o título (novidade do print das págs. 03/04 — mais recente
+   que o PDF, então manda), título navy caixa alta, texto cinza. */
+.pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 30px; }
+.pill { background: #fff; border: 1px solid #e8edf3; border-radius: 14px; padding: 20px 12px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  box-shadow: 0 6px 18px rgba(11,42,74,.06); }
+.pill .pi { width: 52px; height: 52px; flex: none; border-radius: 50%; background: ${NAVY}; display: flex; align-items: center; justify-content: center; }
+.pill .pi svg { width: 24px; height: 24px; }
+.pill h3 { color: ${NAVY}; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; line-height: 1.3; margin-top: 12px; }
+.pill h3::after { content: ""; display: block; width: 34px; height: 2px; background: ${ORANGE}; margin: 8px auto 0; border-radius: 1px; }
+.pill p { color: #6b7787; font-size: 9px; line-height: 1.5; margin-top: 8px; }
+/* Assinatura da Apresentação — nome em destaque: 700/11,5px SEMPRE; cargo 10px #8A94A6
+   (feedback do Mateus: destaque por peso, nunca por corpo). */
+.sign { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 1px solid #e5ebf2; padding-top: 16px; margin-top: 30px; }
+.sign .n { color: ${NAVY}; font-weight: 700; font-size: 11.5px; }
+.sign .r { color: #8a94a6; font-size: 10px; margin-top: 2px; }
 /* Comodatos — equipamentos em tile maior + painel navy de vantagens */
 .equip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
 .eq { background: #eef2f7; border-radius: 14px; padding: 20px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .eq .ei { width: 46px; height: 46px; border-radius: 12px; background: ${NAVY}; display: flex; align-items: center; justify-content: center; }
 .eq .ei svg { width: 22px; height: 22px; }
-.eq h3 { color: ${NAVY}; font-weight: 700; font-size: 11px; line-height: 1.3; }
-.eq p { color: #6b7787; font-size: 9.5px; line-height: 1.4; }
+.eq h3 { color: ${NAVY}; font-weight: 700; font-size: 11px; line-height: 1.3; text-transform: uppercase; }
+/* Divisória laranja sob o título — mesma dos cards da Apresentação (print págs. 03/04). */
+.eq h3::after { content: ""; display: block; width: 34px; height: 2px; background: ${ORANGE}; margin: 8px auto 0; border-radius: 1px; }
+.eq p { color: #6b7787; font-size: 9px; line-height: 1.5; }
 /* Vantagens do Comodato: texto ERA 9.5px e ficava ilegível no impresso (áudio do
    Matheus 24/07 — "aumentar a letra, está muito pequenininho"). Escala toda a
    caixa junto (título, check e espaçamento) pra continuar equilibrada. */
 .adv { background: ${NAVY}; border-radius: 16px; padding: 26px 28px; color: #fff; margin-top: 20px; }
-.adv h4 { text-align: center; font-weight: 700; font-size: 13px; letter-spacing: 1.8px; text-transform: uppercase; color: rgba(255,255,255,.9); margin-bottom: 18px; }
+.adv h4 { text-align: center; font-weight: 500; font-size: 13px; letter-spacing: 1.8px; text-transform: uppercase; color: rgba(255,255,255,.9); margin-bottom: 18px; }
 .adv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .av { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 .av .chk { width: 30px; height: 30px; border-radius: 50%; background: ${ORANGE}; display: flex; align-items: center; justify-content: center; flex: none; }
@@ -560,8 +608,9 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 /* Capa — fundo claro (padrão validado), decorativos SEMPRE atrás do conteúdo */
 .capa { height: ${ALTURA_PAGINA}; position: relative; display: flex; flex-direction: column; align-items: center;
   padding-top: 60px; padding-bottom: 110px; page-break-after: always; overflow: hidden; background: #f6f7f9; }
-.capa > *:not(.wave):not(.capa-wm):not(.pgnum) { position: relative; z-index: 1; }
-.wave { position: absolute; z-index: 0; right: 0; bottom: 0; width: 96mm; height: auto; }
+.capa > *:not(.wave):not(.capa-wm):not(.pgnum):not(.timbre) { position: relative; z-index: 1; }
+/* Onda rica em FAIXA (Fase E): largura total da página, 320px de altura no pé. */
+.wave { position: absolute; z-index: 0; left: 0; right: 0; bottom: 0; width: 100%; height: auto; }
 /* Marca-d'água gigante atrás do card — decorativa, nunca disputa leitura com o conteúdo */
 .capa-wm { position: absolute; z-index: 0; top: 46%; left: 50%; transform: translate(-50%, -50%);
   font-size: 68px; font-weight: 800; color: ${NAVY}; opacity: .045; white-space: nowrap; letter-spacing: -1px; }
@@ -569,12 +618,12 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .capa-dash { width: 46px; height: 2px; background: ${ORANGE}; position: relative; margin-bottom: 14px; }
 .capa-dash::before, .capa-dash::after { content: ""; position: absolute; top: -5px; width: 2px; height: 12px; background: ${ORANGE}; }
 .capa-dash::before { left: -2px; } .capa-dash::after { right: -2px; }
-.capa-tit { color: ${NAVY}; font-size: 26px; font-weight: 700; letter-spacing: 4px; }
+.capa-tit { color: ${NAVY}; font-size: 24px; font-weight: 600; letter-spacing: .22em; }
 .capa-sub { color: #6b7787; font-size: 13px; margin-top: 6px; }
 .capa-card { background: #fff; border: 1px solid #eef2f7; border-radius: 16px; box-shadow: 0 8px 30px rgba(11,42,74,.08); padding: 18px 26px; margin-top: 40px; width: 340px; }
 .cc-row { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f3f7; }
 .cc-row:last-child { border-bottom: none; } .cc-ic { width: 38px; height: 38px; border-radius: 50%; background: ${NAVY}; display: inline-flex; align-items: center; justify-content: center; flex: none; }
-.cc-ic svg { width: 18px; height: 18px; stroke: #fff; } .cc-r { color: #8a95a3; font-size: 9.5px; } .cc-v { color: ${NAVY}; font-weight: 800; font-size: 13px; }
+.cc-ic svg { width: 18px; height: 18px; stroke: #fff; } .cc-r { color: #8a94a6; font-size: 9.5px; } .cc-v { color: ${NAVY}; font-weight: 700; font-size: 11.5px; }
 .capa-cons { text-align: center; margin-top: 40px; }
 .capa-cons-row { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
 .capa-fio { width: 70px; height: 1px; } .capa-fio-l { background: linear-gradient(90deg, transparent, ${ORANGE}); }
@@ -582,7 +631,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .capa-badge { width: 36px; height: 36px; border: 1.5px solid ${ORANGE}; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 .capa-badge svg { width: 17px; height: 17px; }
 .cc-lab { color: #8a95a3; font-size: 11px; margin-top: 10px; }
-.cc-nome { color: ${NAVY}; font-weight: 800; font-size: 14px; margin-top: 2px; }
+.cc-nome { color: ${NAVY}; font-weight: 700; font-size: 11.5px; margin-top: 2px; }
 .capa-cal { margin-top: 22px; } .capa-cal svg { width: 20px; height: 20px; }
 .cc-cidade { color: #6b7787; font-size: 11px; margin-top: 13px; }
 /* Condições — grid 2 colunas de itens + fechamento navy (mensagem + assinatura) */
@@ -590,7 +639,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .condi { display: flex; gap: 11px; align-items: flex-start; padding-bottom: 10px; border-bottom: 1px solid #e5ebf2; }
 .condi .ci { width: 34px; height: 34px; flex: none; border-radius: 10px; background: #eef2f7; display: flex; align-items: center; justify-content: center; }
 .condi .ci svg { width: 17px; height: 17px; }
-.condi h3 { color: ${NAVY}; font-weight: 700; font-size: 13.5px; }
+.condi h3 { color: ${NAVY}; font-weight: 500; font-size: 13.5px; }
 .condi p { color: #6b7787; font-size: 11.5px; line-height: 1.4; margin-top: 3px; }
 .closing { background: ${NAVY}; border-radius: 16px; padding: 22px 26px; color: #fff; display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-top: 22px; }
 .closing .msg { font-size: 11px; line-height: 1.6; color: rgba(255,255,255,.8); max-width: 290px; }
@@ -605,8 +654,19 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
    coluna de conteúdo à direita (texto/specs). Altura fixa (mesmo raciocínio do
    .sec acima — impede que a página estoure e vaze layout pra página seguinte). */
 .prodpg { height: ${ALTURA_PAGINA}; overflow: hidden; page-break-after: always; display: flex; position: relative; }
+/* Ornamento do rodapé também na página de produto (Fase E) — mesma âncora e tamanho da
+   capa, sempre ATRÁS do conteúdo; a rail navy (79mm) nunca é invadida (o ornamento
+   começa em ~114mm da esquerda). */
+.prodpg > *:not(.wave) { position: relative; z-index: 1; }
 .pp-rail { width: 79mm; flex: none; color: #fff; background: linear-gradient(165deg, ${NAVY} 0%, #06203f 100%);
-  display: flex; flex-direction: column; padding: 32px 26px 26px; }
+  display: flex; flex-direction: column; padding: 32px 26px 30px; }
+/* Assinatura na coluna navy (subiu da coluna clara, que agora é do ornamento):
+   hairline + cores invertidas, empilhada acima do número de página. */
+.pp-railsign { margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.14); }
+.pp-rs-marca { font-size: 9.5px; font-weight: 500; letter-spacing: 1px; color: #fff; text-transform: uppercase; }
+.pp-rs-tag { font-size: 8.5px; letter-spacing: .5px; color: #7e8da3; text-transform: uppercase; margin-top: 2px; }
+.pp-rs-contatos { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.pp-rs-contatos .pp-c-item { color: #c3cedc; }
 .pp-wm { font-size: 17px; letter-spacing: .2px; }
 .pp-wm b { font-weight: 800; } .pp-wm span { font-weight: 400; opacity: .8; margin-left: 3px; }
 .pp-wm i { color: ${ORANGE}; font-style: normal; }
@@ -651,7 +711,9 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-d-price { font-family: "Geist Mono", monospace; font-size: 21.3px; font-weight: 700; color: ${ORANGE}; }
 .pp-d-rat { font-size: 10.6px; color: rgba(255,255,255,.6); }
 .pp-ficha-link { display: inline-block; margin-top: 12px; font-size: 11.3px; font-weight: 700; color: ${ORANGE}; text-decoration: underline; }
-.pp-railfoot { margin-top: 14px; font-size: 10.6px; letter-spacing: 1.2px; color: rgba(255,255,255,.4); text-transform: uppercase; }
+/* Mesma baseline (30px do pé) e mesmo corpo do .pgnum das outras páginas; a cor
+   #7E8DA3 é a variante legível sobre a rail navy. Alinhado à margem interna da rail. */
+.pp-railfoot { margin-top: 12px; font-size: 8px; font-weight: 400; letter-spacing: .06em; color: #7e8da3; }
 /* Coluna de conteúdo: o bloco principal começa do TOPO (flex-start) — a centralização
    vertical fazia o título de produto com ficha curta "começar no meio da folha"
    (correção pedida pelo CEO, ago/2026). Ficha curta deixa respiro embaixo, que é o
@@ -660,11 +722,11 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .pp-runmark { align-self: flex-end; font-size: 9.5px; letter-spacing: 1px; color: #9aa3ae; text-transform: uppercase; }
 .pp-runmark b { color: ${NAVY}; }
 .pp-main { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; gap: 18px; }
-.pp-tit { color: ${NAVY}; font-size: 25px; font-weight: 700; line-height: 1.08; letter-spacing: -.3px; }
-.pp-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin-top: 4px; text-transform: uppercase; }
+.pp-tit { color: ${NAVY}; font-size: 25px; font-weight: 400; line-height: 1.08; letter-spacing: -.02em; }
+.pp-sub { color: ${ORANGE}; font-weight: 500; font-size: 13px; margin-top: 4px; text-transform: uppercase; }
 .pp-eyebrow-cat { color: #8a95a3; font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .3px; margin-top: 4px; }
 .pp-desc { color: #5a6878; font-size: 11.5px; line-height: 1.55; max-width: 400px; }
-.pp-label { display: inline-block; background: ${NAVY}; color: #fff; font-size: 10px; font-weight: 700;
+.pp-label { display: inline-block; background: ${NAVY}; color: #fff; font-size: 10px; font-weight: 500;
   letter-spacing: 1.3px; text-transform: uppercase; padding: 6px 13px; border-radius: 7px; margin-bottom: 12px; }
 .pp-icons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .pp-ic { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
@@ -679,7 +741,7 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
    (diluição, rendimento, embalagens, características); nenhum é inventado. */
 .pp-specs { display: flex; flex-direction: column; gap: 10px; }
 .pp-panel { background: #eef2f7; border-radius: 12px; padding: 13px 14px; }
-.pp-panel h4 { color: ${NAVY}; font-size: 9px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase;
+.pp-panel h4 { color: ${NAVY}; font-size: 9px; font-weight: 500; letter-spacing: 1.3px; text-transform: uppercase;
   text-align: center; padding-bottom: 8px; margin-bottom: 9px; border-bottom: 1px solid #e0e6ee; }
 .pp-emb { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .pp-emb-chip { display: inline-block; font-family: "Geist Mono", monospace; font-weight: 700; font-size: 12px; color: ${NAVY};
@@ -746,11 +808,6 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .prodpg-denso .pp-rows .pp-row .k { font-size: 8.8px; }
 .prodpg-denso .pp-rows .pp-row .v { line-height: 1.4; }
 .prodpg-denso .pp-rows-cols .pp-row { font-size: 9.2px; }
-.prodpg-denso .pp-contact { padding-top: 10px; margin-top: 10px; }
-.pp-contact { border-top: 1px solid #e5ebf2; padding-top: 13px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.pp-c-left b { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: 1px; color: ${NAVY}; text-transform: uppercase; }
-.pp-c-left span { font-size: 8.5px; letter-spacing: .5px; color: #9aa3ae; text-transform: uppercase; }
-.pp-c-right { display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
 .pp-c-item { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; color: #2a3746; }
 .pp-c-item .ic svg { width: 13px; height: 13px; }
 </style></head><body>

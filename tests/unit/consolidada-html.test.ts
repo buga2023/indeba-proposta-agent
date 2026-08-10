@@ -29,9 +29,10 @@ describe("consolidadaHtml", () => {
     expect(html).toContain("Sua Empresa");
     expect(html).toContain("00.000.000/0000-00");
     expect(html).toContain("João"); // responsável
-    expect(html).toContain("APRESENTAÇÃO");
-    expect(html).toContain("COMODATOS");
-    expect(html).toContain("CONDIÇÕES COMERCIAIS");
+    // Fase E: o H1 sai em title case no HTML (caixa alta via CSS), sem rótulo duplicado.
+    expect(html).toContain("Apresentação");
+    expect(html).toContain("Comodatos Oferecidos");
+    expect(html).toContain("Condições Comerciais");
     expect(html).toContain("TitA"); // página produto A
     expect(html).toContain("Produto B"); // produto sem ficha cai no nome
     // duas páginas de produto (dois blocos prodpg — classe pode vir com " prodpg-simples" junto)
@@ -60,15 +61,17 @@ describe("consolidadaHtml", () => {
     expect(html).toContain("Página 2/6");
     expect(html).toContain("Página 3/6");
     expect(html).toContain("Página 6/6");
-    // páginas de produto assinam na própria rail (não repetem o .pgnum)
-    expect(html).toContain("Página 04/6 · Proposta de Solução");
-    expect(html).toContain("Página 05/6 · Proposta de Solução");
+    // páginas de produto assinam na própria rail (não repetem o .pgnum) — Fase E:
+    // formato único "Página N/T", sem zero à esquerda e sem sufixo
+    expect(html).toContain("Página 4/6");
+    expect(html).toContain("Página 5/6");
     expect(html.match(/class="pgnum"/g)?.length).toBe(4); // capa + 2 seções + condições
   });
 
-  it("onda decorativa (wave-sec) presente em apresentação/comodatos/condições", () => {
+  it("onda rica presente em TODAS as páginas (capa, seções e produtos) — Fase E", () => {
     const html = consolidadaHtml(scope, { A: "data:,x", B: "data:,y" }, assets);
-    expect(html.match(/wave-sec/g)?.length).toBeGreaterThanOrEqual(3);
+    // capa + apresentação + comodatos + 2 produtos + condições = 6 ornamentos
+    expect(html.match(/class="wave"/g)?.length).toBe(6);
   });
 
   it("usa consolidadaDefaults quando scope.consolidada está ausente", () => {

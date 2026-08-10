@@ -69,8 +69,9 @@ describe("ordem dos itens — PDF", () => {
 
     const html2 = consolidadaHtml(inverso, { A: "data:,x", B: "data:,y" }, assets);
     expect(html2.indexOf("Produto Beta")).toBeLessThan(html2.indexOf("Produto Alfa"));
-    // Beta agora é a primeira página de produto (04) e Alfa a segunda (05).
-    expect(html2.indexOf("Produto Beta")).toBeLessThan(html2.indexOf("Página 05/6"));
+    // Beta agora é a primeira página de produto (4) e Alfa a segunda (5) — Fase E:
+    // paginação sem zero à esquerda ("Página 5/6").
+    expect(html2.indexOf("Produto Beta")).toBeLessThan(html2.indexOf("Página 5/6"));
   });
 
   it("orçamento emite as linhas da tabela na ordem do array", () => {

@@ -164,6 +164,8 @@ export function montarDocumento(
           fontSans: asset("/fonts/geist-sans-variable.woff2"),
           fontMono: asset("/fonts/geist-mono-variable.woff2"),
           siteUrl: process.env.SITE_URL || "",
+          // Timbre "es" (Fase E): símbolo da logo a 2,8% de opacidade na capa e seções.
+          simbolo: asset("/marca/indeba-express-simbolo.png"),
         }),
         // Sem rodapé nativo: a paginação da Consolidada é desenhada no próprio HTML
         // (.pgnum). O rodapé do Chromium só existe dentro da margem inferior, e é
