@@ -73,9 +73,12 @@ const nextConfig: NextConfig = {
     // no bundle a rota devolvia 500 na Vercel ("Setting up fake worker failed"). E o fluxo
     // por ?codigo= lê a ficha herdada da base de public/fichas-tecnicas/ via readFile, que
     // o tracing também não segue (arquivos de public/ não entram na função por padrão).
+    // legacy/build INTEIRO (pdf.mjs + worker): o import do pdf.mjs em extrair-texto.ts é
+    // dinâmico por variável, invisível pro tracing — só o worker no bundle não basta.
     "/api/produtos/extrair-ficha": [
-      "./node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+      "./node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/legacy/build/**",
       "./public/fichas-tecnicas/**/*",
+      "./data/**/*",
     ],
   },
   // Cinto de segurança: mesmo com o include acima já restrito a produtos/marca/fonts,
