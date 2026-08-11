@@ -3855,7 +3855,10 @@ function HistoryScreen({
   verArquivadas: boolean;
   onVerArquivadas: (v: boolean) => void;
 }) {
-  const cols = "1.7fr 1fr 80px 130px 80px 110px 150px";
+  // Ações comporta os TRÊS botões (Abrir/Editar/Excluir): com 150px eles estouravam a
+  // célula e cobriam o Valor (print do Matheus, 11/08). O minWidth da tabela cresce
+  // junto — em tela estreita rola horizontal, não sobrepõe.
+  const cols = "1.7fr 1fr 80px 130px 70px 110px 210px";
   const lista = propostas ?? [];
   // Faturamento = só o que o cliente APROVOU (status comercial real, não o que foi gerado).
   const aprovado = lista.filter((p) => p.status === "aprovada").reduce((s, p) => s + (Number(p.total) || 0), 0);
@@ -3941,7 +3944,7 @@ function HistoryScreen({
         </div>
       ) : (
         <div className="ies-tablewrap" style={{ background: "white", borderRadius: "12px", border: "1px solid var(--gray-200)", overflowX: "auto", boxShadow: "var(--shadow-sm)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: cols, minWidth: "720px", padding: "11px 20px", background: "var(--gray-100)", borderBottom: "1px solid var(--gray-200)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: cols, minWidth: "820px", padding: "11px 20px", background: "var(--gray-100)", borderBottom: "1px solid var(--gray-200)" }}>
             {[
               { t: "Cliente", a: "left" },
               { t: "Segmento", a: "left" },
@@ -3961,7 +3964,7 @@ function HistoryScreen({
               <Hoverable
                 key={p.id + idx}
                 as="div"
-                base={{ display: "grid", gridTemplateColumns: cols, minWidth: "720px", padding: "13px 20px", borderBottom: "1px solid var(--gray-100)", alignItems: "center", transition: "background .15s ease" }}
+                base={{ display: "grid", gridTemplateColumns: cols, minWidth: "820px", padding: "13px 20px", borderBottom: "1px solid var(--gray-100)", alignItems: "center", transition: "background .15s ease" }}
                 hover={{ background: "var(--gray-50)" }}
               >
                 <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-900)" }}>{p.cliente}</div>
