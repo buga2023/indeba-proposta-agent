@@ -110,6 +110,11 @@ function Hoverable({
   // As telas são estilizadas inline, então media query só alcança este elemento
   // por classe (ver a camada `ies-*` em globals.css).
   className,
+  // `eager`: dispara o onClick já no pointerdown (guarda contra duplo disparo no click).
+  // Existe por causa da navegação da sidebar (QA 10/08/2026): um re-render entre o
+  // mousedown e o mouseup — troca de foco, poll de estado — engole o evento `click`
+  // do navegador, e o primeiro clique "não navegava". O pointerdown é imune a isso.
+  eager,
   children,
 }: {
   as?: "button" | "div";
@@ -121,10 +126,12 @@ function Hoverable({
   disabled?: boolean;
   ariaLabel?: string;
   className?: string;
+  eager?: boolean;
   children?: ReactNode;
 }) {
   const [h, setH] = useState(false);
   const [a, setA] = useState(false);
+  const firedByPointer = useRef(false);
   const style = { ...base, ...(h && hover ? hover : {}), ...(a && active ? active : {}) };
   const handlers = {
     onMouseEnter: () => setH(true),
@@ -134,7 +141,27 @@ function Hoverable({
     },
     onMouseDown: () => setA(true),
     onMouseUp: () => setA(false),
+    ...(eager && onClick
+      ? {
+          onPointerDown: (e: { button?: number }) => {
+            if (e.button !== undefined && e.button !== 0) return; // só botão principal
+            firedByPointer.current = true;
+            onClick();
+          },
+        }
+      : {}),
   };
+  // Com eager, o onClick nativo vira só o caminho do TECLADO (Enter/Espaço não geram
+  // pointerdown em botão) — clique de mouse já disparou e é ignorado aqui.
+  const clickHandler = eager
+    ? () => {
+        if (firedByPointer.current) {
+          firedByPointer.current = false;
+          return;
+        }
+        onClick?.();
+      }
+    : onClick;
   if (as === "div") {
     // Div clicável vira botão acessível: foco por teclado + Enter/Espaço aciona.
     const clicavel = typeof onClick === "function";
@@ -142,7 +169,7 @@ function Hoverable({
       <div
         style={style}
         className={className}
-        onClick={onClick}
+        onClick={clickHandler}
         title={title}
         aria-label={ariaLabel}
         role={clicavel ? "button" : undefined}
@@ -164,7 +191,7 @@ function Hoverable({
     );
   }
   return (
-    <button style={style} className={className} onClick={onClick} title={title} aria-label={ariaLabel} disabled={disabled} {...handlers}>
+    <button style={style} className={className} onClick={clickHandler} title={title} aria-label={ariaLabel} disabled={disabled} {...handlers}>
       {children}
     </button>
   );
@@ -390,6 +417,15 @@ export default function Home() {
   const cadastroProdutoPedido = useRef(false);
   const consumirCadastroProduto = useCallback(() => {
     cadastroProdutoPedido.current = false;
+  }, []);
+  // Segundo canal do mesmo pedido, para quando o Catálogo JÁ está montado (QA 10/08/2026):
+  // o ref acima só é lido na montagem da tela, então clicar em "Cadastro de Produtos"
+  // estando no próprio Catálogo não abria nada — nem re-render acontecia. O contador
+  // muda a cada clique e o Catálogo reage via effect.
+  const [cadastroTick, setCadastroTick] = useState(0);
+  const pedirCadastroProduto = useCallback(() => {
+    cadastroProdutoPedido.current = true;
+    setCadastroTick((t) => t + 1);
   }, []);
   const toast = useToast();
   const [palette, setPalette] = useState(false);
@@ -859,7 +895,7 @@ export default function Home() {
 
         <nav style={{ padding: "6px 8px 8px", flex: 1, display: "flex", flexDirection: "column", gap: "1px", overflowY: "auto" }}>
           <div className="ies-side-text" style={navSection}>Visão geral</div>
-          <Hoverable base={navItemStyle(["dashboard"])} hover={navHover} onClick={() => irPara("dashboard")} title="Dashboard — visão geral">
+          <Hoverable eager base={navItemStyle(["dashboard"])} hover={navHover} onClick={() => irPara("dashboard")} title="Dashboard — visão geral">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1" />
               <rect x="9" y="2.5" width="5.5" height="3.5" rx="1" />
@@ -872,27 +908,27 @@ export default function Home() {
               e os cards do Dashboard chamem a mesma tela pelo mesmo nome. */}
           <div className="ies-side-text" style={navSection}>Criar proposta</div>
           {/* Volta pro rascunho, não reseta: era exatamente aqui que a seleção sumia. */}
-          <Hoverable base={navItemStyle(["manual", "review", "pdf"])} hover={navHover} onClick={() => { setNavOpen(false); voltarParaMontagem(); }} title="Proposta de Solução — monte direto do catálogo">
+          <Hoverable eager base={navItemStyle(["manual", "review", "pdf"])} hover={navHover} onClick={() => { setNavOpen(false); voltarParaMontagem(); }} title="Proposta de Solução — monte direto do catálogo">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="2.5" width="12" height="12" rx="2" />
               <path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" />
             </svg>
             Proposta de Solução
           </Hoverable>
-          <Hoverable base={navItemStyle(["importar"])} hover={navHover} onClick={() => irPara("importar")} title="Importar Orçamento — suba um PDF do ERP">
+          <Hoverable eager base={navItemStyle(["importar"])} hover={navHover} onClick={() => irPara("importar")} title="Importar Orçamento — suba um PDF do ERP">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M8.5 10.5V3M5.5 6l3-3 3 3" />
               <path d="M3 11v2a1 1 0 001 1h9a1 1 0 001-1v-2" />
             </svg>
             Importar Orçamento
           </Hoverable>
-          <Hoverable base={navItemStyle(["history"])} hover={navHover} onClick={() => irPara("history")} title="Propostas Feitas — histórico">
+          <Hoverable eager base={navItemStyle(["history"])} hover={navHover} onClick={() => irPara("history")} title="Propostas Feitas — histórico">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
               <path d="M3 4.5h11M3 8.5h11M3 12.5h7" />
             </svg>
             Propostas Feitas
           </Hoverable>
-          <Hoverable base={navItemStyle(["catalog"])} hover={navHover} onClick={() => irPara("catalog")} title="Catálogo de Produtos">
+          <Hoverable eager base={navItemStyle(["catalog"])} hover={navHover} onClick={() => irPara("catalog")} title="Catálogo de Produtos">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="2.5" width="5" height="5" rx="1" />
               <rect x="9.5" y="2.5" width="5" height="5" rx="1" />
@@ -914,7 +950,7 @@ export default function Home() {
               clique e com selo "Em breve": item de menu que navega para o nada lê como sistema
               quebrado, mas esmaecido e rotulado ele informa em vez de enganar. */}
           <div className="ies-side-text" style={navSection}>Módulos</div>
-          <Hoverable base={navItemStyle(["prospeccao"])} hover={navHover} onClick={() => irPara("prospeccao")} title="Visitas e Prospecção — encontre empresas e gere a abordagem">
+          <Hoverable eager base={navItemStyle(["prospeccao"])} hover={navHover} onClick={() => irPara("prospeccao")} title="Visitas e Prospecção — encontre empresas e gere a abordagem">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M8.5 14.5s4.25-4.05 4.25-7.25a4.25 4.25 0 10-8.5 0c0 3.2 4.25 7.25 4.25 7.25z" />
               <circle cx="8.5" cy="7.1" r="1.6" />
@@ -937,7 +973,7 @@ export default function Home() {
             Comodatos
             <span className="ies-side-text" style={{ marginLeft: "auto", fontSize: "9px", fontWeight: 700, letterSpacing: ".05em", padding: "2px 6px", borderRadius: "999px", background: "rgba(255,255,255,.09)", color: "rgba(255,255,255,.45)" }}>EM BREVE</span>
           </button>
-          <Hoverable base={navItemStyle(["contrato"])} hover={navHover} onClick={() => irPara("contrato")} title="Contratos — gere e analise o contrato da proposta">
+          <Hoverable eager base={navItemStyle(["contrato"])} hover={navHover} onClick={() => irPara("contrato")} title="Contratos — gere e analise o contrato da proposta">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 2.5h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" />
               <path d="M9 2.5v4h4" />
@@ -945,7 +981,7 @@ export default function Home() {
             </svg>
             Contratos
           </Hoverable>
-          <Hoverable base={navItemStyle(["chamados"])} hover={navHover} onClick={() => irPara("chamados")} title="Solicitações Internas — abra um chamado para o time">
+          <Hoverable eager base={navItemStyle(["chamados"])} hover={navHover} onClick={() => irPara("chamados")} title="Solicitações Internas — abra um chamado para o time">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 9.5a2 2 0 01-2 2H7l-3.5 2.5V4.5a2 2 0 012-2h6.5a2 2 0 012 2z" />
               <path d="M6.5 6.5h5M6.5 9h3" />
@@ -955,10 +991,11 @@ export default function Home() {
           {/* O cadastro é um modal DENTRO do Catálogo: o item liga o mesmo sinal que o card do
               Dashboard e a paleta ⌘K usam, e o formulário abre junto com a tela. */}
           <Hoverable
+            eager
             base={navItemStyle([])}
             hover={navHover}
             onClick={() => {
-              cadastroProdutoPedido.current = true;
+              pedirCadastroProduto();
               irPara("catalog");
             }}
             title="Cadastro de Produtos — nome, imagem, ficha técnica e segmento"
@@ -981,7 +1018,7 @@ export default function Home() {
                   antiga; ele pediu para tirar também. A tela e a rota continuam no código e
                   funcionando — o que saiu foi o acesso pela navegação. Se voltar a ser usada,
                   o item volta aqui dentro deste bloco de admin. */}
-              <Hoverable base={navItemStyle(["config"])} hover={navHover} onClick={() => irPara("config")} title="Configurações">
+              <Hoverable eager base={navItemStyle(["config"])} hover={navHover} onClick={() => irPara("config")} title="Configurações">
                 <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="8.5" cy="8.5" r="2.25" />
                   <path d="M8.5 2.5v1M8.5 13v1.5M2.5 8.5h1M13 8.5h1.5M4.5 4.5l.7.7M11.8 11.8l.7.7M4.5 12.5l.7-.7M11.8 5.2l.7-.7" />
@@ -1004,6 +1041,7 @@ export default function Home() {
 
         <div className="ies-side-foot" style={{ padding: "14px 14px", borderTop: "1px solid rgba(255,255,255,.08)", display: "flex", flexDirection: "column", gap: "8px" }}>
           <Hoverable
+            eager
             onClick={() => irPara("perfil")}
             title="Meu perfil"
             base={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", minWidth: 0, background: "none", border: "none", cursor: "pointer", padding: "4px", margin: "-4px", borderRadius: "10px", textAlign: "left" }}
@@ -1039,7 +1077,7 @@ export default function Home() {
 
       {/* ============ MAIN ============ */}
       <main className="ies-scroll ies-main" style={{ flex: 1, minWidth: 0, height: "100vh", overflowY: "auto", overflowX: "hidden", position: "relative" }}>
-        {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={() => { cadastroProdutoPedido.current = true; }} />}
+        {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={pedirCadastroProduto} />}
         {/* Sempre montada, escondida fora de foco: é o rascunho vivo (ver builderKey). */}
         <div style={{ display: screen === "manual" ? "contents" : "none" }}>
           <ManualScreen key={builderKey} onMontar={aplicarScopeManual} prefill={manualPrefill} scopeParaEditar={scopeParaEditar} catalogoVersao={catalogoVersao} />
@@ -1091,7 +1129,7 @@ export default function Home() {
             }}
           />
         )}
-        {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} ehAdmin={ehAdmin} cadastroInicial={cadastroProdutoPedido.current} onCadastroConsumido={consumirCadastroProduto} onRecarregar={() => { setCatalogo(null); setCatalogoVersao((v) => v + 1); }} />}
+        {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} ehAdmin={ehAdmin} cadastroInicial={cadastroProdutoPedido.current} cadastroTick={cadastroTick} onCadastroConsumido={consumirCadastroProduto} onRecarregar={() => { setCatalogo(null); setCatalogoVersao((v) => v + 1); }} />}
         {screen === "prospeccao" && (
           <ProspeccaoScreen
             onGerarProposta={(d) => {
@@ -1111,7 +1149,7 @@ export default function Home() {
         {screen === "chamados" && <ChamadosScreen />}
         {/* Segundo cadeado do painel do gestor: some do menu E não renderiza sem papel — quem
             chegar por outro caminho cai no Dashboard em vez de ver a tela vazia/quebrada. */}
-        {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={() => { cadastroProdutoPedido.current = true; }} />)}
+        {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={pedirCadastroProduto} />)}
         {screen === "perfil" && <MeuPerfilScreen />}
       </main>
 
@@ -1135,7 +1173,7 @@ export default function Home() {
         onGo={(k) => {
           setPalette(false);
           if (k === "cadastro-produto") {
-            cadastroProdutoPedido.current = true;
+            pedirCadastroProduto();
             setScreen("catalog");
             return;
           }
@@ -3948,6 +3986,26 @@ function HistoryScreen({
                   >
                     Editar
                   </button>
+                  {/* Tirar da lista sem apagar (QA 10/08: não havia como limpar proposta de
+                      teste). Arquivar usa o status que a listagem já corta no WHERE; é
+                      reversível pela visão "Arquivadas". */}
+                  {verArquivadas ? (
+                    <button
+                      onClick={() => onStatus(p.id, "em_andamento")}
+                      title="Devolve a proposta à lista principal"
+                      style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", background: "white", border: "1px solid var(--gray-200)", borderRadius: "7px", cursor: "pointer" }}
+                    >
+                      Restaurar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { if (window.confirm(`Arquivar a proposta de ${p.cliente}?\n\nEla sai da lista e dos totais; dá para restaurar pela visão "Arquivadas".`)) onStatus(p.id, "arquivada"); }}
+                      title="Tira da lista e dos totais (reversível)"
+                      style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "#b91c1c", background: "white", border: "1px solid #fecaca", borderRadius: "7px", cursor: "pointer" }}
+                    >
+                      Arquivar
+                    </button>
+                  )}
                 </div>
               </Hoverable>
             );
@@ -3976,6 +4034,7 @@ function CatalogScreen({
   setCatFilter,
   ehAdmin,
   cadastroInicial = false,
+  cadastroTick = 0,
   onCadastroConsumido,
   onRecarregar,
 }: {
@@ -3986,6 +4045,8 @@ function CatalogScreen({
   ehAdmin: boolean;
   /** Veio do card "Cadastro de Produtos" do Dashboard: abre o formulário já na montagem. */
   cadastroInicial?: boolean;
+  /** Pedido de cadastro com a tela JÁ montada (item da lateral/⌘K estando no Catálogo). */
+  cadastroTick?: number;
   onCadastroConsumido?: () => void;
   onRecarregar: () => void;
 }) {
@@ -4003,6 +4064,17 @@ function CatalogScreen({
   useEffect(() => {
     onCadastroConsumido?.();
   }, [onCadastroConsumido]);
+  // Pedido chegando com a tela ABERTA (QA 10/08: "Cadastro de Produtos" estando no
+  // Catálogo não fazia nada — o ref só é lido na montagem). O tick de montagem já foi
+  // atendido pelo estado inicial acima; só reagimos a MUDANÇA.
+  const tickVisto = useRef(cadastroTick);
+  useEffect(() => {
+    if (cadastroTick === tickVisto.current) return;
+    tickVisto.current = cadastroTick;
+    onCadastroConsumido?.();
+    if (ehAdmin) setNovoAberto(true);
+    else setAvisoPapel(true);
+  }, [cadastroTick, ehAdmin, onCadastroConsumido]);
   const [busca, setBusca] = useState("");
   const [funcaoFiltro, setFuncaoFiltro] = useState("Todas");
   const [marcaFiltro, setMarcaFiltro] = useState("Todas");

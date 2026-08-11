@@ -56,16 +56,10 @@ describe("consolidadaHtml", () => {
     const html = consolidadaHtml(scope, { A: "data:,x", B: "data:,y" }, assets);
     expect(html).toContain("height: 297mm"); // capa/seções/páginas de produto
     expect(html).not.toContain("278mm");
-    // capa=1 · apresentação=2 · comodatos=3 · produtos=4,5 · condições=6
-    expect(html).toContain("Página 1/6");
-    expect(html).toContain("Página 2/6");
-    expect(html).toContain("Página 3/6");
-    expect(html).toContain("Página 6/6");
-    // páginas de produto assinam na própria rail (não repetem o .pgnum) — Fase E:
-    // formato único "Página N/T", sem zero à esquerda e sem sufixo
-    expect(html).toContain("Página 4/6");
-    expect(html).toContain("Página 5/6");
-    expect(html.match(/class="pgnum"/g)?.length).toBe(4); // capa + 2 seções + condições
+    // Modelo onda-v3: numeração vive SÓ no cabeçalho ("Proposta de Solução | NN") —
+    // nenhum rodapé "Página N/T" em lugar nenhum do documento.
+    expect(html).not.toMatch(/Página \d+\/\d+/);
+    expect(html).not.toContain('class="pgnum"');
   });
 
   it("onda rica presente em TODAS as páginas (capa, seções e produtos) — Fase E", () => {
@@ -95,12 +89,14 @@ describe("consolidadaHtml", () => {
       consolidada: { ...consolidadaDefaults(), contato: { whatsapp: "(71) 90000-0000", emailConsultor: "consultor@indeba.com.br" } },
     };
     const html = consolidadaHtml(comContato, { A: "d", B: "d" }, assets);
-    expect(html).toContain("WhatsApp (71) 90000-0000");
+    // Modelo onda-v3: contatos só na página de Condições (fechamento), sem o prefixo
+    // "WhatsApp" — e nunca na página de produto.
+    expect(html).toContain("(71) 90000-0000");
     expect(html).toContain("consultor@indeba.com.br");
 
     // CSS sempre define as classes; o que não pode existir é o ELEMENTO renderizado
     const semContato = consolidadaHtml(scope, { A: "d", B: "d" }, assets);
-    expect(semContato).not.toContain("WhatsApp");
+    expect(semContato).not.toContain("(71) 90000-0000");
     expect(semContato).not.toContain('class="cl-contato"');
     expect(semContato).not.toContain("null");
   });

@@ -156,16 +156,12 @@ describe("paginaProduto", () => {
     expect(html).not.toContain("undefined");
   });
 
-  it("rodapé: slogan fixo sempre; WhatsApp + e-mail só quando presentes no payload", () => {
+  it("modelo onda-v3: página de produto SEM rodapé de contato (contatos vivem nas Condições)", () => {
+    // O rodapé de slogan/WhatsApp saiu da página de produto (numeração só no cabeçalho);
+    // nenhum contato pode vazar aqui, nem quando presente no payload.
     const html = paginaProduto(item, "data:,x", { whatsapp: "(71) 90000-0000", emailConsultor: "consultor@indeba.com.br" });
-    expect(html).toContain("Qualidade Profissional");
-    expect(html).toContain("WhatsApp (71) 90000-0000");
-    expect(html).toContain("consultor@indeba.com.br");
-
-    // sem contato: rodapé existe, mas nenhum telefone/e-mail (nunca dado fictício)
-    for (const sem of [paginaProduto(item, "data:,x", { whatsapp: null, emailConsultor: null }), paginaProduto(item, "data:,x")]) {
-      expect(sem).toContain("Qualidade Profissional");
-      expect(sem).not.toContain("WhatsApp");
+    for (const sem of [html, paginaProduto(item, "data:,x", { whatsapp: null, emailConsultor: null }), paginaProduto(item, "data:,x")]) {
+      expect(sem).not.toContain("Qualidade Profissional");
       expect(sem).not.toContain("@indeba");
     }
   });

@@ -7,10 +7,10 @@
 # runtime já publicado.
 set -uo pipefail
 
-PROJ="/c/Users/gusta/OneDrive/Imagens/Documentos/Projects/Agente de Proposta - INDEBA"
+PROJ="/c/Users/Administrador/Documents/indeba-proposta-agent"
 LOG="$PROJ/scripts/autostart.log"
 STATE="$PROJ/scripts/.ollama-tunnel-url"
-CF="/c/Users/gusta/AppData/Local/Microsoft/WinGet/Packages/Cloudflare.cloudflared_Microsoft.Winget.Source_8wekyb3d8bbwe/cloudflared.exe"
+CF="/c/Program Files (x86)/cloudflared/cloudflared.exe"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG"; }
 

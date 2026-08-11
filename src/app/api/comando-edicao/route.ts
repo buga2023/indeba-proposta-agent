@@ -4,6 +4,7 @@ import { ComandoEdicao, PropostaScope, type PropostaItem } from "@/lib/contracts
 import { catalogoCompleto } from "@/lib/catalogo";
 import { itemDoCatalogo } from "@/lib/montar";
 import { interpretarComando } from "@/lib/llm/interpretar-comando";
+import { interpretarDeterministico } from "@/lib/llm/comando-deterministico";
 import { extrairPedido } from "@/lib/llm/extrair-pedido";
 import { selecionarComOrcamento } from "@/lib/selecao/matcher";
 import { extrairNumero } from "@/lib/proposta-edit";
@@ -33,7 +34,12 @@ export async function POST(req: NextRequest) {
     const catalogo = await catalogoCompleto();
     const itensProposta = scope.itens.map((it) => ({ codigo: it.codigo, nome: it.nome }));
     const itensCatalogo = catalogo.produtos.filter((p) => p.ativo).map((p) => ({ codigo: p.codigo, nome: p.nome }));
-    const comando = await interpretarComando(mensagem, itensProposta, itensCatalogo);
+    // Determinístico primeiro (QA 10/08: com Ollama fora do ar o chat não entendia nem o
+    // exemplo do placeholder). Comando de forma fixa não precisa de IA — e não pode
+    // depender dela. Só o que o regex não resolve com certeza vai ao modelo.
+    const comando =
+      interpretarDeterministico(mensagem, itensProposta, itensCatalogo) ??
+      (await interpretarComando(mensagem, itensProposta, itensCatalogo));
     const numero = extrairNumero(mensagem);
 
     let itemResolvido: PropostaItem | null = null;
