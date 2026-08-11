@@ -3457,14 +3457,6 @@ function PdfScreen({
             </svg>
             {downloading ? "Gerando…" : "Baixar PDF"}
           </Hoverable>
-          <button disabled title="Envio por e-mail — ainda não disponível. Baixe o PDF e anexe no seu e-mail." style={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", border: "1px solid var(--gray-300)", background: "var(--gray-100)", cursor: "not-allowed", fontSize: "14px", fontWeight: 600, color: "var(--gray-500)" }}>
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M13 7.5A5.5 5.5 0 112 7.5" />
-              <path d="M7.5 1.5v5M5 4l2.5 2.5L10 4" />
-            </svg>
-            Enviar por e-mail
-            <span style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em", padding: "2px 6px", borderRadius: "5px", background: "var(--surface)", border: "1px solid var(--gray-300)", color: "var(--gray-500)" }}>em breve</span>
-          </button>
           <Hoverable
             base={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", border: "none", background: "var(--orange-500)", cursor: downloading ? "wait" : "pointer", fontSize: "14px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(236,122,28,.35)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease", opacity: downloading ? 0.8 : 1 }}
             hover={downloading ? {} : { background: "#D2680F", boxShadow: "0 4px 14px rgba(236,122,28,.5)", transform: "translateY(-1px)" }}
