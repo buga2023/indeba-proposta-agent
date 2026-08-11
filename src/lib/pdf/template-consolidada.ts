@@ -538,7 +538,7 @@ b, strong { font-weight: 700; }
 /* Corpo da Apresentação/Comodatos: 12px (áudio do Matheus, 11/08 — "na apresentação a
    letra diminui; aumentar e padronizar"). A página tem folga vertical, então o texto
    pode alongar: entrelinha 1,75 e mais respiro entre parágrafos. */
-.sd { margin: 6px 0 12px; font-size: 12.5px; } .pt { color: #46505f; font-size: 12.5px; line-height: 1.75; margin-bottom: 12px; }
+.sd { margin: 6px 0 14px; font-size: 13.5px; } .pt { color: #46505f; font-size: 13.5px; line-height: 1.8; margin-bottom: 14px; }
 .ic { display: inline-flex; vertical-align: middle; }
 /* Dash laranja sozinho acima do H1 (o H1 já é caixa alta — sem rótulo duplicado). */
 .lbl { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
@@ -552,33 +552,33 @@ b, strong { font-weight: 700; }
   box-shadow: 0 6px 18px rgba(11,42,74,.06); }
 .pill .pi { width: 52px; height: 52px; flex: none; border-radius: 50%; background: ${NAVY}; display: flex; align-items: center; justify-content: center; }
 .pill .pi svg { width: 24px; height: 24px; }
-.pill h3 { color: ${NAVY}; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; line-height: 1.3; margin-top: 12px; }
+.pill h3 { color: ${NAVY}; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .02em; line-height: 1.3; margin-top: 12px; }
 .pill h3::after { content: ""; display: block; width: 34px; height: 2px; background: ${ORANGE}; margin: 8px auto 0; border-radius: 1px; }
-.pill p { color: #6b7787; font-size: 10px; line-height: 1.55; margin-top: 8px; }
+.pill p { color: #6b7787; font-size: 11px; line-height: 1.55; margin-top: 8px; }
 /* Assinatura da Apresentação — nome em destaque: 700/11,5px SEMPRE; cargo 10px #8A94A6
    (feedback do Mateus: destaque por peso, nunca por corpo). */
 .sign { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 1px solid #e5ebf2; padding-top: 16px; margin-top: 30px; }
-.sign .n { color: ${NAVY}; font-weight: 700; font-size: 11.5px; }
-.sign .r { color: #8a94a6; font-size: 10px; margin-top: 2px; }
+.sign .n { color: ${NAVY}; font-weight: 700; font-size: 12.5px; }
+.sign .r { color: #8a94a6; font-size: 11px; margin-top: 2px; }
 /* Comodatos — equipamentos em tile maior + painel navy de vantagens */
 .equip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
 .eq { background: #eef2f7; border-radius: 14px; padding: 20px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .eq .ei { width: 46px; height: 46px; border-radius: 12px; background: ${NAVY}; display: flex; align-items: center; justify-content: center; }
 .eq .ei svg { width: 22px; height: 22px; }
-.eq h3 { color: ${NAVY}; font-weight: 700; font-size: 11px; line-height: 1.3; text-transform: uppercase; }
+.eq h3 { color: ${NAVY}; font-weight: 700; font-size: 12px; line-height: 1.3; text-transform: uppercase; }
 /* Divisória laranja sob o título — mesma dos cards da Apresentação (print págs. 03/04). */
 .eq h3::after { content: ""; display: block; width: 34px; height: 2px; background: ${ORANGE}; margin: 8px auto 0; border-radius: 1px; }
-.eq p { color: #6b7787; font-size: 10px; line-height: 1.55; }
+.eq p { color: #6b7787; font-size: 11px; line-height: 1.55; }
 /* Vantagens do Comodato: texto ERA 9.5px e ficava ilegível no impresso (áudio do
    Matheus 24/07 — "aumentar a letra, está muito pequenininho"). Escala toda a
    caixa junto (título, check e espaçamento) pra continuar equilibrada. */
 .adv { background: ${NAVY}; border-radius: 16px; padding: 26px 28px; color: #fff; margin-top: 20px; }
-.adv h4 { text-align: center; font-weight: 500; font-size: 13px; letter-spacing: 1.8px; text-transform: uppercase; color: rgba(255,255,255,.9); margin-bottom: 18px; }
+.adv h4 { text-align: center; font-weight: 500; font-size: 14px; letter-spacing: 1.8px; text-transform: uppercase; color: rgba(255,255,255,.9); margin-bottom: 18px; }
 .adv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .av { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 .av .chk { width: 30px; height: 30px; border-radius: 50%; background: ${ORANGE}; display: flex; align-items: center; justify-content: center; flex: none; }
 .av .chk svg { width: 16px; height: 16px; }
-.av span { font-size: 12px; line-height: 1.45; color: #fff; }
+.av span { font-size: 13px; line-height: 1.45; color: #fff; }
 /* Capa — fundo claro (padrão validado), decorativos SEMPRE atrás do conteúdo */
 .capa { height: ${ALTURA_PAGINA}; position: relative; display: flex; flex-direction: column; align-items: center;
   padding-top: 60px; padding-bottom: 110px; page-break-after: always; overflow: hidden; background: #f6f7f9; }
@@ -616,21 +616,21 @@ b, strong { font-weight: 700; }
 .condi { display: flex; gap: 13px; align-items: flex-start; padding: 12px 0 14px; border-bottom: 1px solid #e5ebf2; }
 .condi .ci { width: 36px; height: 36px; flex: none; border-radius: 10px; background: ${NAVY}; display: flex; align-items: center; justify-content: center; }
 .condi .ci svg { width: 17px; height: 17px; }
-.condi h3 { color: ${NAVY}; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; }
-.condi p { color: #6b7787; font-size: 11.5px; line-height: 1.55; margin-top: 3px; }
+.condi h3 { color: ${NAVY}; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .02em; }
+.condi p { color: #6b7787; font-size: 12.5px; line-height: 1.55; margin-top: 3px; }
 .closing { background: #fff; border: 1px solid #e8edf3; border-radius: 16px; padding: 30px 26px; text-align: center;
   box-shadow: 0 6px 18px rgba(11,42,74,.06); }
-.closing .msg { font-size: 11.5px; line-height: 1.7; color: #4a5768; }
-.cl-at { margin-top: 18px; font-size: 10px; color: #8a94a6; }
+.closing .msg { font-size: 12.5px; line-height: 1.7; color: #4a5768; }
+.cl-at { margin-top: 18px; font-size: 11px; color: #8a94a6; }
 /* Hairline com o badge laranja por cima — mesma composição do bloco do consultor da capa. */
 .cl-rule { position: relative; height: 1px; background: #e5ebf2; margin: 26px 8px 24px; }
 .cl-badge { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 38px; height: 38px;
   background: #fff; border: 1.5px solid ${ORANGE}; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
 .cl-badge svg { width: 17px; height: 17px; }
-.closing .n { color: ${NAVY}; font-weight: 700; font-size: 11.5px; }
-.closing .r { color: #8a94a6; font-size: 10px; margin-top: 2px; }
-.closing .b { color: ${NAVY}; font-weight: 700; font-size: 11px; margin-top: 12px; }
-.cl-contato { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; font-size: 9.5px; color: #4a5768; }
+.closing .n { color: ${NAVY}; font-weight: 700; font-size: 12.5px; }
+.closing .r { color: #8a94a6; font-size: 11px; margin-top: 2px; }
+.closing .b { color: ${NAVY}; font-weight: 700; font-size: 12px; margin-top: 12px; }
+.cl-contato { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; font-size: 10.5px; color: #4a5768; }
 .cl-contato .ic svg { width: 12px; height: 12px; }
 /* Página de produto — layout "rail": faixa navy à esquerda (marca/foto/preço) +
    coluna de conteúdo à direita (texto/specs). Altura fixa (mesmo raciocínio do
