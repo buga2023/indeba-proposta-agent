@@ -532,12 +532,13 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 /* H1 de seção (Fase E v3, preset A da validação): caixa alta, 800, 28px — medido na
    referência (36u × 0,7846). "Não tão grandes" resolvido por medida, não estimativa. */
 .sec-tit { color: ${NAVY}; font-size: 28px; font-weight: 800; letter-spacing: -.01em; text-transform: uppercase; }
-.sec-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin: 6px 0 30px; }
+/* Subtítulo de seção acompanha o corpo maior (11/08): 14px, mesmo passo do da capa. */
+.sec-sub { color: ${ORANGE}; font-weight: 700; font-size: 14px; margin: 7px 0 30px; }
 b, strong { font-weight: 700; }
 /* Corpo da Apresentação/Comodatos: 12px (áudio do Matheus, 11/08 — "na apresentação a
    letra diminui; aumentar e padronizar"). A página tem folga vertical, então o texto
    pode alongar: entrelinha 1,75 e mais respiro entre parágrafos. */
-.sd { margin: 6px 0 12px; font-size: 12px; } .pt { color: #46505f; font-size: 12px; line-height: 1.75; margin-bottom: 12px; }
+.sd { margin: 6px 0 12px; font-size: 12.5px; } .pt { color: #46505f; font-size: 12.5px; line-height: 1.75; margin-bottom: 12px; }
 .ic { display: inline-flex; vertical-align: middle; }
 /* Dash laranja sozinho acima do H1 (o H1 já é caixa alta — sem rótulo duplicado). */
 .lbl { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
