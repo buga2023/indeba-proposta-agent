@@ -88,7 +88,7 @@ export const FAQ: QA[] = [
     a: L(
       "O histórico mostra a **sua carteira**: cada vendedor vê as propostas que ele mesmo criou. **Nada foi apagado** — as dos colegas continuam lá, só não aparecem para você. Quem enxerga o time inteiro é o gestor.",
       "",
-      "**Não achou uma proposta sua?** Ela pode estar arquivada — marque \"ver arquivadas\" no histórico.",
+      "**Não achou uma proposta sua?** Ela pode ter sido excluída — veja a aba \"Excluídas\" no histórico.",
     ),
   },
   {

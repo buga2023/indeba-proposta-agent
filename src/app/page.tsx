@@ -355,7 +355,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
   em_andamento: { label: "Em andamento", bg: "#EDE9FE", fg: "#7C3AED" },
   aprovada: { label: "Aprovada", bg: "#DCFCE7", fg: "#16A34A" },
   recusada: { label: "Recusada", bg: "#FEE2E2", fg: "#DC2626" },
-  arquivada: { label: "Arquivada", bg: "#E2E8F0", fg: "#475569" },
+  arquivada: { label: "Excluída", bg: "#E2E8F0", fg: "#475569" },
 };
 
 // Status que o usuário pode ESCOLHER (pedido do Gustavo, ago/2026): só estes quatro.
@@ -1077,7 +1077,7 @@ export default function Home() {
 
       {/* ============ MAIN ============ */}
       <main className="ies-scroll ies-main" style={{ flex: 1, minWidth: 0, height: "100vh", overflowY: "auto", overflowX: "hidden", position: "relative" }}>
-        {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={pedirCadastroProduto} />}
+        {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={pedirCadastroProduto} onNovaProposta={novaProposta} />}
         {/* Sempre montada, escondida fora de foco: é o rascunho vivo (ver builderKey). */}
         <div style={{ display: screen === "manual" ? "contents" : "none" }}>
           <ManualScreen key={builderKey} onMontar={aplicarScopeManual} prefill={manualPrefill} scopeParaEditar={scopeParaEditar} catalogoVersao={catalogoVersao} />
@@ -1149,7 +1149,7 @@ export default function Home() {
         {screen === "chamados" && <ChamadosScreen />}
         {/* Segundo cadeado do painel do gestor: some do menu E não renderiza sem papel — quem
             chegar por outro caminho cai no Dashboard em vez de ver a tela vazia/quebrada. */}
-        {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={pedirCadastroProduto} />)}
+        {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={pedirCadastroProduto} onNovaProposta={novaProposta} />)}
         {screen === "perfil" && <MeuPerfilScreen />}
       </main>
 
@@ -1330,15 +1330,19 @@ function DashboardScreen({
   setScreen,
   usuario,
   pedirCadastroProduto,
+  onNovaProposta,
 }: {
   setScreen: (s: Screen) => void;
   usuario: Usuario | null;
   /** Card "Cadastro de Produtos": marca o pedido antes de abrir o Catálogo. */
   pedirCadastroProduto: () => void;
+  /** "Nova proposta" começa do ZERO (áudio do Matheus, 11/08): descarta o rascunho
+      anterior antes de abrir a montagem — sem isso os dados/produtos da última
+      proposta vinham junto ("para não embolar"). */
+  onNovaProposta: () => void;
 }) {
   const primeiroNome = usuario?.nome?.trim().split(/\s+/)[0] || "";
   const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
-  const [catalogoCount, setCatalogoCount] = useState<number | null>(null);
   // Data/saudação calculadas só no cliente (evita divergência de hidratação SSR≠cliente).
   const [hdr, setHdr] = useState({ hoje: "", saudacao: "Olá" });
   const { hoje, saudacao } = hdr;
@@ -1355,15 +1359,11 @@ function DashboardScreen({
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
       .then((d: { propostas: PropostaLog[] }) => setPropostas(d.propostas))
       .catch(() => setPropostas([]));
-    fetch("/api/catalogo")
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
-      .then((d: { produtos: unknown[] }) => setCatalogoCount(d.produtos.length))
-      .catch(() => setCatalogoCount(null));
   }, []);
 
   const lista = propostas ?? [];
   const totalProp = lista.length;
-  const valorTotal = lista.reduce((s, p) => s + Number(p.total || 0), 0);
+  const emAndamento = lista.filter((p) => p.status === "em_andamento").length;
   const aprovadas = lista.filter((p) => p.status === "aprovada").length;
   const recusadas = lista.filter((p) => p.status === "recusada").length;
   // Gestor e vendedor veem painéis diferentes: o vendedor acompanha a própria carteira, o
@@ -1386,19 +1386,15 @@ function DashboardScreen({
     return `conic-gradient(${stops.join(",")})`;
   })();
 
-  // Os quatro números que o gestor pediu para o vendedor ver: "quantas propostas ele tem no
-  // login dele, qual o valor total, quantas são aprovadas, quantas recusadas". O status
-  // chama `recusada` (STATUS_UI) — não existe "reprovada" no sistema, e inventar o sinônimo
-  // aqui deixaria o card fora de sincronia com o badge e com o donut.
-  // "Produtos no catálogo" é métrica de gestão, não de carteira: fica só no admin.
+  // Cards do topo (pedido do Gustavo, ago/2026): sem "Valor total" nem "Produtos no
+  // catálogo" — só contagens de propostas: total, em andamento, aprovadas e recusadas.
+  // O status chama `recusada` (STATUS_UI) — não existe "reprovada" no sistema, e inventar
+  // o sinônimo aqui deixaria o card fora de sincronia com o badge e com o donut.
   const KPIS = [
     { label: "Propostas", valor: String(totalProp), cor: "var(--blue-600)" },
-    { label: "Valor total", valor: fmt(valorTotal), cor: "var(--success)" },
+    { label: "Em andamento", valor: String(emAndamento), cor: "#7C3AED" },
     { label: "Aprovadas", valor: String(aprovadas), cor: "var(--blue-800)" },
     { label: "Recusadas", valor: String(recusadas), cor: "var(--danger)" },
-    ...(ehAdmin
-      ? [{ label: "Produtos no catálogo", valor: catalogoCount == null ? "—" : String(catalogoCount), cor: "var(--orange-600)" }]
-      : []),
   ];
 
   // Widget financeiro — derivado das propostas reais (sem números inventados, constituição §1.2):
@@ -1444,7 +1440,7 @@ function DashboardScreen({
             {/* O parágrafo explicativo saiu a pedido do gestor (07/08/2026): quem entra aqui
                 todo dia já sabe o que a tela faz, e o botão abaixo diz o resto. */}
             <div style={{ display: "flex", gap: "10px", marginTop: "20px", flexWrap: "wrap" }}>
-              <Hoverable onClick={() => setScreen("manual")} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 18px", borderRadius: "12px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600, boxShadow: "var(--shadow-accent)" }} hover={{ background: "var(--accent-hover)" }}>
+              <Hoverable onClick={onNovaProposta} base={{ display: "flex", alignItems: "center", gap: "7px", height: "42px", padding: "0 18px", borderRadius: "12px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px", fontWeight: 600, boxShadow: "var(--shadow-accent)" }} hover={{ background: "var(--accent-hover)" }}>
                 <svg width="15" height="15" viewBox="0 0 17 17" fill="none" stroke="#fff" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="2.5" width="12" height="12" rx="2" /><path d="M5.5 6.5h6M5.5 9h6M5.5 11.5h3.5" /></svg>Nova proposta
               </Hoverable>
             </div>
@@ -1467,7 +1463,7 @@ function DashboardScreen({
               <div style={{ fontSize: "12.5px", color: "var(--text-muted)", marginTop: "2px" }}>Manual: escolha os produtos do catálogo e defina as quantidades. Importar orçamento: suba um PDF existente e deixe o sistema extrair os itens pra você conferir.</div>
             </div>
             <div style={{ display: "flex", gap: "8px", flex: "none" }}>
-              <Hoverable onClick={() => setScreen("manual")} base={{ height: "34px", padding: "0 14px", borderRadius: "9px", border: "none", background: "var(--primary)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "12.5px", fontWeight: 600 }} hover={{ background: "var(--primary-hover, var(--blue-700))" }}>
+              <Hoverable onClick={onNovaProposta} base={{ height: "34px", padding: "0 14px", borderRadius: "9px", border: "none", background: "var(--primary)", color: "#fff", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "12.5px", fontWeight: 600 }} hover={{ background: "var(--primary-hover, var(--blue-700))" }}>
                 Montar manual
               </Hoverable>
               <Hoverable onClick={() => setScreen("importar")} base={{ height: "34px", padding: "0 14px", borderRadius: "9px", border: "1px solid var(--blue-200, #a8cbea)", background: "var(--surface-card)", color: "var(--primary)", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "12.5px", fontWeight: 600 }} hover={{ background: "var(--info-soft)" }}>
@@ -3894,15 +3890,33 @@ function HistoryScreen({
         />
       </div>
 
-      {/* Arquivadas ficam fora por padrão — o filtro é do servidor, então alternar
-          refaz o fetch em vez de esconder linha no cliente. */}
-      <label
-        style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "16px", fontSize: "12.5px", color: "var(--gray-500)", cursor: "pointer", width: "fit-content" }}
-        title="Propostas arquivadas não aparecem na lista nem contam nos totais"
-      >
-        <input type="checkbox" checked={verArquivadas} onChange={(e) => onVerArquivadas(e.target.checked)} style={{ cursor: "pointer" }} />
-        Mostrar arquivadas
-      </label>
+      {/* Excluídas ficam fora por padrão — o filtro é do servidor, então alternar a aba
+          refaz o fetch em vez de esconder linha no cliente. (Por baixo, o status segue
+          "arquivada" no banco: excluir é reversível pela própria aba.) */}
+      <div style={{ display: "flex", gap: "6px", marginBottom: "16px" }}>
+        {[
+          { ativo: !verArquivadas, label: "Propostas", v: false },
+          { ativo: verArquivadas, label: "Excluídas", v: true },
+        ].map((t) => (
+          <button
+            key={t.label}
+            onClick={() => onVerArquivadas(t.v)}
+            title={t.v ? "Propostas excluídas: não aparecem na lista nem contam nos totais" : "Propostas ativas"}
+            style={{
+              padding: "7px 16px",
+              fontSize: "12.5px",
+              fontWeight: 600,
+              borderRadius: "999px",
+              border: t.ativo ? "1px solid var(--gray-900)" : "1px solid var(--gray-200)",
+              background: t.ativo ? "var(--gray-900)" : "white",
+              color: t.ativo ? "white" : "var(--gray-500)",
+              cursor: "pointer",
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "14px", marginBottom: "24px" }}>
         {stats.map((s) => (
@@ -3987,8 +4001,8 @@ function HistoryScreen({
                     Editar
                   </button>
                   {/* Tirar da lista sem apagar (QA 10/08: não havia como limpar proposta de
-                      teste). Arquivar usa o status que a listagem já corta no WHERE; é
-                      reversível pela visão "Arquivadas". */}
+                      teste). Excluir usa o status "arquivada", que a listagem já corta no
+                      WHERE; é reversível pela aba "Excluídas". */}
                   {verArquivadas ? (
                     <button
                       onClick={() => onStatus(p.id, "em_andamento")}
@@ -3999,11 +4013,11 @@ function HistoryScreen({
                     </button>
                   ) : (
                     <button
-                      onClick={() => { if (window.confirm(`Arquivar a proposta de ${p.cliente}?\n\nEla sai da lista e dos totais; dá para restaurar pela visão "Arquivadas".`)) onStatus(p.id, "arquivada"); }}
-                      title="Tira da lista e dos totais (reversível)"
+                      onClick={() => { if (window.confirm(`Excluir a proposta de ${p.cliente}?\n\nEla sai da lista e dos totais; dá para restaurar pela aba "Excluídas".`)) onStatus(p.id, "arquivada"); }}
+                      title="Tira da lista e dos totais (reversível pela aba Excluídas)"
                       style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "#b91c1c", background: "white", border: "1px solid #fecaca", borderRadius: "7px", cursor: "pointer" }}
                     >
-                      Arquivar
+                      Excluir
                     </button>
                   )}
                 </div>

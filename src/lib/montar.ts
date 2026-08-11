@@ -27,7 +27,7 @@ export type ContextoProspeccao = { problema: string; comoAjudar: string };
 
 // Quem está logado (nome/e-mail do cadastro) — vira "consultor"/"emailConsultor" na
 // Consolidada. Sem sessão (dev local), cai nos defaults de consolidadaDefaults/env.
-export type ConsultorInfo = { nome: string; email?: string | null };
+export type ConsultorInfo = { nome: string; email?: string | null; telefone?: string | null };
 
 // Comercial = identidade fabricante (Indeba); Orçamento/Implantação = Express.
 const marcaPorTipo = (tipo: Tipo, padrao: "indeba" | "indeba_express") =>
@@ -41,15 +41,15 @@ const marcaPorTipo = (tipo: Tipo, padrao: "indeba" | "indeba_express") =>
 // depois na revisão). Para os demais tipos, retorna undefined (campo omitido).
 // `consultor` vem da sessão (nome/e-mail do cadastro) — cai no default do
 // consolidadaDefaults (Matheus Maristane Resende) quando não há sessão ativa (auth
-// desligada localmente). WhatsApp segue vindo de env (não há telefone por usuário);
-// o e-mail do consultor prioriza o do usuário logado, com INDEBA_CONSULTOR_EMAIL como
-// fallback (dev local sem sessão). Vazio = PDF não exibe contato nenhum (a Revisão
-// avisa visivelmente quando os dois estão vazios).
+// desligada localmente). O telefone prioriza o do consultor logado (cadastro/perfil),
+// com INDEBA_WHATSAPP (env) como fallback; o e-mail do consultor prioriza o do usuário
+// logado, com INDEBA_CONSULTOR_EMAIL como fallback (dev local sem sessão). Vazio = PDF
+// não exibe contato nenhum (a Revisão avisa visivelmente quando os dois estão vazios).
 const blocoConsolidada = (tipo: Tipo, consultor?: ConsultorInfo | null, textos?: TextosPadrao) => {
   if (tipo !== "consolidada") return undefined;
   const bloco = consolidadaDefaults({
     consultor: consultor?.nome ?? undefined,
-    whatsapp: process.env.INDEBA_WHATSAPP || null,
+    whatsapp: consultor?.telefone || process.env.INDEBA_WHATSAPP || null,
     emailConsultor: consultor?.email || process.env.INDEBA_CONSULTOR_EMAIL || null,
   });
   if (textos) {

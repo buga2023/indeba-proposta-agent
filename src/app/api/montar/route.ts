@@ -4,6 +4,7 @@ import { montarProposta } from "@/lib/montar";
 import { Tipo } from "@/lib/contracts";
 import { detectarTipo, TIPOS_LABEL } from "@/lib/tipo-proposta";
 import { validarSessao } from "@/lib/auth";
+import { buscarColaborador } from "@/lib/auth-db";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // IA pode levar alguns segundos (Vercel)
@@ -52,12 +53,15 @@ export async function POST(req: NextRequest) {
   }
 
   const usuario = await validarSessao(req.cookies.get("sessao")?.value);
+  // Telefone não viaja no cookie de sessão (Edge-safe): vem do cadastro, para o PDF
+  // exibir o número do consultor no bloco de contato (fallback: INDEBA_WHATSAPP/env).
+  const telefone = usuario ? (await buscarColaborador(usuario.email))?.telefone ?? null : null;
   const scope = await montarProposta(
     briefing,
     { razaoSocial, cnpj, segmento, responsavel },
     tipoFinal,
     contextoProspeccao,
-    usuario ? { nome: usuario.nome, email: usuario.email } : null,
+    usuario ? { nome: usuario.nome, email: usuario.email, telefone } : null,
   );
 
   // Seleção vazia = o briefing não casou com nada do catálogo. Não emite proposta

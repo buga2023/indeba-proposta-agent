@@ -397,7 +397,6 @@ export function consolidadaHtml(
     ${wave("wave")}
     ${timbre || `<div class="capa-wm">indeba express</div>`}
     <img class="capa-logo" src="${assets.logo}" alt="Indeba Express"/>
-    <div class="capa-dash"></div>
     <div class="capa-tit">PROPOSTA DE SOLUÇÃO</div>
     <div class="capa-sub">${esc(c.capa.subtitulo)}</div>
     <div class="capa-card">
@@ -535,7 +534,10 @@ body { font-family: "Geist", "Segoe UI", Arial, sans-serif; color: #2a3746; font
 .sec-tit { color: ${NAVY}; font-size: 28px; font-weight: 800; letter-spacing: -.01em; text-transform: uppercase; }
 .sec-sub { color: ${ORANGE}; font-weight: 700; font-size: 13px; margin: 6px 0 30px; }
 b, strong { font-weight: 700; }
-.sd { margin: 6px 0 10px; } .pt { color: #46505f; line-height: 1.6; margin-bottom: 10px; }
+/* Corpo da Apresentação/Comodatos: 12px (áudio do Matheus, 11/08 — "na apresentação a
+   letra diminui; aumentar e padronizar"). A página tem folga vertical, então o texto
+   pode alongar: entrelinha 1,75 e mais respiro entre parágrafos. */
+.sd { margin: 6px 0 12px; font-size: 12px; } .pt { color: #46505f; font-size: 12px; line-height: 1.75; margin-bottom: 12px; }
 .ic { display: inline-flex; vertical-align: middle; }
 /* Dash laranja sozinho acima do H1 (o H1 já é caixa alta — sem rótulo duplicado). */
 .lbl { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
@@ -551,7 +553,7 @@ b, strong { font-weight: 700; }
 .pill .pi svg { width: 24px; height: 24px; }
 .pill h3 { color: ${NAVY}; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; line-height: 1.3; margin-top: 12px; }
 .pill h3::after { content: ""; display: block; width: 34px; height: 2px; background: ${ORANGE}; margin: 8px auto 0; border-radius: 1px; }
-.pill p { color: #6b7787; font-size: 9px; line-height: 1.5; margin-top: 8px; }
+.pill p { color: #6b7787; font-size: 10px; line-height: 1.55; margin-top: 8px; }
 /* Assinatura da Apresentação — nome em destaque: 700/11,5px SEMPRE; cargo 10px #8A94A6
    (feedback do Mateus: destaque por peso, nunca por corpo). */
 .sign { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 1px solid #e5ebf2; padding-top: 16px; margin-top: 30px; }
@@ -565,7 +567,7 @@ b, strong { font-weight: 700; }
 .eq h3 { color: ${NAVY}; font-weight: 700; font-size: 11px; line-height: 1.3; text-transform: uppercase; }
 /* Divisória laranja sob o título — mesma dos cards da Apresentação (print págs. 03/04). */
 .eq h3::after { content: ""; display: block; width: 34px; height: 2px; background: ${ORANGE}; margin: 8px auto 0; border-radius: 1px; }
-.eq p { color: #6b7787; font-size: 9px; line-height: 1.5; }
+.eq p { color: #6b7787; font-size: 10px; line-height: 1.55; }
 /* Vantagens do Comodato: texto ERA 9.5px e ficava ilegível no impresso (áudio do
    Matheus 24/07 — "aumentar a letra, está muito pequenininho"). Escala toda a
    caixa junto (título, check e espaçamento) pra continuar equilibrada. */
@@ -586,12 +588,11 @@ b, strong { font-weight: 700; }
 .capa-wm { position: absolute; z-index: 0; top: 46%; left: 50%; transform: translate(-50%, -50%);
   font-size: 68px; font-weight: 800; color: ${NAVY}; opacity: .045; white-space: nowrap; letter-spacing: -1px; }
 .capa-logo { width: 190px; margin-bottom: 22px; }
-.capa-dash { width: 46px; height: 2px; background: ${ORANGE}; position: relative; margin-bottom: 14px; }
-.capa-dash::before, .capa-dash::after { content: ""; position: absolute; top: -5px; width: 2px; height: 12px; background: ${ORANGE}; }
-.capa-dash::before { left: -2px; } .capa-dash::after { right: -2px; }
 /* Preset A (validação A/B da onda-v3, escolha do Mateus): ExtraBold, tracking largo. */
 .capa-tit { color: ${NAVY}; font-size: 26px; font-weight: 800; letter-spacing: .18em; }
-.capa-sub { color: #6b7787; font-size: 13px; margin-top: 6px; }
+/* Subtítulo em negrito e navy (áudio do Matheus, 11/08: "não ficar muito apagado esse
+   nome") — um ponto acima no corpo para acompanhar o título, sem disputar com ele. */
+.capa-sub { color: ${NAVY}; font-size: 14px; font-weight: 700; margin-top: 6px; }
 .capa-card { background: #fff; border: 1px solid #eef2f7; border-radius: 16px; box-shadow: 0 8px 30px rgba(11,42,74,.08); padding: 18px 26px; margin-top: 40px; width: 340px; }
 .cc-row { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f3f7; }
 .cc-row:last-child { border-bottom: none; } .cc-ic { width: 38px; height: 38px; border-radius: 50%; background: ${NAVY}; display: inline-flex; align-items: center; justify-content: center; flex: none; }
@@ -615,10 +616,10 @@ b, strong { font-weight: 700; }
 .condi .ci { width: 36px; height: 36px; flex: none; border-radius: 10px; background: ${NAVY}; display: flex; align-items: center; justify-content: center; }
 .condi .ci svg { width: 17px; height: 17px; }
 .condi h3 { color: ${NAVY}; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; }
-.condi p { color: #6b7787; font-size: 11px; line-height: 1.5; margin-top: 3px; }
+.condi p { color: #6b7787; font-size: 11.5px; line-height: 1.55; margin-top: 3px; }
 .closing { background: #fff; border: 1px solid #e8edf3; border-radius: 16px; padding: 30px 26px; text-align: center;
   box-shadow: 0 6px 18px rgba(11,42,74,.06); }
-.closing .msg { font-size: 11px; line-height: 1.65; color: #4a5768; }
+.closing .msg { font-size: 11.5px; line-height: 1.7; color: #4a5768; }
 .cl-at { margin-top: 18px; font-size: 10px; color: #8a94a6; }
 /* Hairline com o badge laranja por cima — mesma composição do bloco do consultor da capa. */
 .cl-rule { position: relative; height: 1px; background: #e5ebf2; margin: 26px 8px 24px; }

@@ -77,7 +77,7 @@ export const ConsolidadaBloco = z.object({
   // Default: propostas antigas persistidas continuam parseando.
   contato: z
     .object({
-      whatsapp: z.string().nullable(), // WhatsApp da Indeba (empresa)
+      whatsapp: z.string().nullable(), // telefone do consultor (fallback: WhatsApp da Indeba/env)
       emailConsultor: z.string().nullable(),
     })
     .default({ whatsapp: null, emailConsultor: null }),
