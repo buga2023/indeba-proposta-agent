@@ -17,9 +17,13 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const ehApi = pathname.startsWith("/api/");
 
-  // 1) Rate limit em TODA rota de API (inclui /api/login → trava brute force).
-  if (ehApi && !(await rateLimitOk(ipDe(req)))) {
-    return NextResponse.json({ erro: "Muitas requisições. Aguarde alguns segundos." }, { status: 429 });
+  // 1) Rate limit em TODA rota de API. Baldes separados: login/cadastro têm
+  // limite próprio (brute force) e NÃO são bloqueados pelo uso normal do app.
+  if (ehApi) {
+    const balde = API_PUBLICAS.includes(pathname) ? "auth" : "api";
+    if (!(await rateLimitOk(ipDe(req), balde))) {
+      return NextResponse.json({ erro: "Muitas requisições. Aguarde alguns segundos." }, { status: 429 });
+    }
   }
 
   // 2) Auth — só quando há usuários configurados (em local fica aberto).

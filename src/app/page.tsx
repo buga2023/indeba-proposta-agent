@@ -745,6 +745,25 @@ export default function Home() {
     }
   }
 
+  // Esvaziar a aba Excluídas: UMA requisição em lote apaga todas de vez. Antes era um
+  // DELETE por proposta — N invocações na Vercel, N tiques no rate limit.
+  async function esvaziarExcluidas(ids: string[]) {
+    setPropostas((ps) => (ps ? ps.filter((p) => !ids.includes(p.id)) : ps));
+    try {
+      const r = await fetch("/api/propostas/lote", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!r.ok) throw new Error();
+      const { apagadas } = await r.json();
+      toast(`${apagadas} proposta(s) excluída(s) definitivamente`, "success");
+    } catch {
+      setPropostas(null);
+      toast("Não foi possível esvaziar as excluídas", "danger");
+    }
+  }
+
   const includedItems = scope ? scope.itens.filter((_, pos) => !excluded.has(pos)) : [];
   const total = includedItems.reduce((sum, it) => sum + precoUnit(it) * it.quantidade, 0);
   // Contato ausente: só aviso visível (banners abaixo/na Revisão) — NÃO bloqueia mais a
@@ -1142,6 +1161,7 @@ export default function Home() {
             onEditar={editarProposta}
             onStatus={mudarStatus}
             onExcluirDefinitivo={excluirDefinitivo}
+            onEsvaziarExcluidas={esvaziarExcluidas}
             ehAdmin={ehAdmin}
             verArquivadas={verArquivadas}
             onVerArquivadas={(v) => {
@@ -3874,6 +3894,7 @@ function HistoryScreen({
   onEditar,
   onStatus,
   onExcluirDefinitivo,
+  onEsvaziarExcluidas,
   ehAdmin,
   verArquivadas,
   onVerArquivadas,
@@ -3885,6 +3906,7 @@ function HistoryScreen({
   onEditar: (id: string) => void; // reabre na MONTAGEM para alterar a seleção
   onStatus: (id: string, status: StatusProposta) => void;
   onExcluirDefinitivo: (id: string) => void;
+  onEsvaziarExcluidas: (ids: string[]) => void; // apaga TODAS as excluídas numa requisição só
   // Status/excluir/restaurar são ações de GESTÃO (a rota também barra por papel):
   // vendedor vê o status como selo fixo e não tem Excluir nem a aba Excluídas.
   ehAdmin: boolean;
@@ -3958,6 +3980,20 @@ function HistoryScreen({
             {t.label}
           </button>
         ))}
+        {/* Esvaziar em LOTE: uma requisição apaga tudo, em vez de um "Apagar de vez"
+            por linha (que estourava o rate limit e multiplicava invocações na Vercel). */}
+        {verArquivadas && lista.length > 1 && (
+          <button
+            onClick={() => {
+              if (window.confirm(`Apagar DE VEZ as ${lista.length} propostas excluídas?\n\nElas saem do banco de dados e NÃO dá para recuperar.`))
+                onEsvaziarExcluidas(lista.map((p) => p.id));
+            }}
+            title="Apaga do banco todas as propostas desta aba — sem volta"
+            style={{ marginLeft: "auto", padding: "7px 16px", fontSize: "12.5px", fontWeight: 600, borderRadius: "999px", border: "1px solid #b91c1c", background: "#b91c1c", color: "white", cursor: "pointer" }}
+          >
+            Esvaziar excluídas ({lista.length})
+          </button>
+        )}
       </div>
       )}
 

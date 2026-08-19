@@ -194,3 +194,14 @@ export async function autorEStatusDaProposta(id: string): Promise<{ autor: strin
 export async function excluirPropostaDefinitivamente(id: string): Promise<void> {
   await prisma.proposta.delete({ where: { id } });
 }
+
+// Versão em LOTE da exclusão definitiva: um deleteMany em vez de N requisições
+// (cada request na Vercel é uma invocação de função + uma passada no rate limit).
+// O WHERE repete os freios da rota individual: só ids arquivados saem — um id
+// ativo passado por engano é simplesmente ignorado, não apagado.
+export async function excluirPropostasArquivadas(ids: string[]): Promise<number> {
+  const { count } = await prisma.proposta.deleteMany({
+    where: { id: { in: ids }, status: "arquivada" },
+  });
+  return count;
+}
