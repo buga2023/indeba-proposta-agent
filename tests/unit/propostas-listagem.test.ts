@@ -62,7 +62,9 @@ describe("listarPropostas — uma linha ruim não pode derrubar o histórico", (
 
 // Arquivar é o jeito de tirar proposta da frente sem apagar dado. O corte tem que ser no
 // WHERE: filtrar no cliente ainda traria as linhas do banco e pela rede — eram 32 de 39.
-describe("listarPropostas — arquivadas fora por padrão", () => {
+// E a aba "Excluídas" é um RECORTE, não um "incluir também": misturar ativas e arquivadas
+// fazia a aba mostrar tudo com botão Restaurar (QA do Mateus, 18/08/2026).
+describe("listarPropostas — recorte de arquivadas", () => {
   it("por padrão pede ao banco só o que não está arquivado", async () => {
     findMany.mockResolvedValue([]);
     await listarPropostas();
@@ -71,10 +73,12 @@ describe("listarPropostas — arquivadas fora por padrão", () => {
     );
   });
 
-  it("com incluirArquivadas, não aplica filtro de status", async () => {
+  it("somenteArquivadas: SÓ as arquivadas — a aba Excluídas não mistura ativas", async () => {
     findMany.mockResolvedValue([]);
     await listarPropostas(200, true);
-    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: undefined }));
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: "arquivada" } }),
+    );
   });
 });
 
@@ -90,15 +94,19 @@ describe("listarPropostas — recorte por autor", () => {
     );
   });
 
-  it("autor + arquivadas: sobra só o recorte de autor", async () => {
+  it("autor + arquivadas: recorte de autor DENTRO das arquivadas", async () => {
     findMany.mockResolvedValue([]);
     await listarPropostas(200, true, "a@indeba.com");
-    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { autor: "a@indeba.com" } }));
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: "arquivada", autor: "a@indeba.com" } }),
+    );
   });
 
-  it("sem autor (admin), nenhum recorte é aplicado", async () => {
+  it("sem autor (admin), nenhum recorte de autor é aplicado", async () => {
     findMany.mockResolvedValue([]);
     await listarPropostas(200, true, undefined);
-    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: undefined }));
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: "arquivada" } }),
+    );
   });
 });

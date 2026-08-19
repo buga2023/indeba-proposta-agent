@@ -8,6 +8,8 @@ const obterProposta = vi.fn();
 const autorDaProposta = vi.fn();
 const atualizarStatusProposta = vi.fn();
 const salvarProposta = vi.fn();
+const autorEStatusDaProposta = vi.fn();
+const excluirPropostaDefinitivamente = vi.fn();
 
 vi.mock("@/lib/auth-db", () => ({ usuarioAtual: (req: NextRequest) => usuarioAtual(req) }));
 vi.mock("@/lib/propostas", () => ({
@@ -16,10 +18,12 @@ vi.mock("@/lib/propostas", () => ({
   autorDaProposta: (...a: unknown[]) => autorDaProposta(...a),
   atualizarStatusProposta: (...a: unknown[]) => atualizarStatusProposta(...a),
   salvarProposta: (...a: unknown[]) => salvarProposta(...a),
+  autorEStatusDaProposta: (...a: unknown[]) => autorEStatusDaProposta(...a),
+  excluirPropostaDefinitivamente: (...a: unknown[]) => excluirPropostaDefinitivamente(...a),
 }));
 
 import { GET as LISTAR, POST as SALVAR } from "@/app/api/propostas/route";
-import { GET as ABRIR, PATCH } from "@/app/api/propostas/[id]/route";
+import { GET as ABRIR, PATCH, DELETE } from "@/app/api/propostas/[id]/route";
 
 const ADMIN = { email: "mateus@indeba.com", papel: "admin" };
 const VENDEDOR_A = { email: "a@indeba.com", papel: "user" };
@@ -37,7 +41,7 @@ const doOutro = {
 };
 
 beforeEach(() => {
-  for (const m of [usuarioAtual, listarPropostas, obterProposta, autorDaProposta, atualizarStatusProposta, salvarProposta]) m.mockReset();
+  for (const m of [usuarioAtual, listarPropostas, obterProposta, autorDaProposta, atualizarStatusProposta, salvarProposta, autorEStatusDaProposta, excluirPropostaDefinitivamente]) m.mockReset();
   listarPropostas.mockResolvedValue([]);
 });
 
@@ -99,10 +103,21 @@ describe("PATCH /api/propostas/[id] — mudar status de proposta alheia", () => 
     expect(atualizarStatusProposta).not.toHaveBeenCalled();
   });
 
-  it("vendedor A na própria proposta → grava", async () => {
+  // Desde 17/08/2026 mudar status (inclusive excluir/restaurar) é ação de GESTÃO: o
+  // vendedor edita o conteúdo pelo POST, mas o status é do admin. 403 e não 404 — a
+  // proposta é dele, ele a vê; o que falta é papel.
+  it("vendedor A na própria proposta → 403 e nada é gravado", async () => {
     usuarioAtual.mockResolvedValue(VENDEDOR_A);
     autorDaProposta.mockResolvedValue("a@indeba.com");
-    atualizarStatusProposta.mockResolvedValue({ ...doOutro, autor: "a@indeba.com", status: "aprovada" });
+    const r = await PATCH(req("aprovada"), params("p-do-b"));
+    expect(r.status).toBe(403);
+    expect(atualizarStatusProposta).not.toHaveBeenCalled();
+  });
+
+  it("admin muda o status de qualquer proposta → grava", async () => {
+    usuarioAtual.mockResolvedValue(ADMIN);
+    autorDaProposta.mockResolvedValue("b@indeba.com");
+    atualizarStatusProposta.mockResolvedValue({ ...doOutro, status: "aprovada" });
     await PATCH(req("aprovada"), params("p-do-b"));
     expect(atualizarStatusProposta).toHaveBeenCalledWith("p-do-b", "aprovada");
   });
@@ -110,11 +125,46 @@ describe("PATCH /api/propostas/[id] — mudar status de proposta alheia", () => 
   // O gate confere o dono; carregar a proposta INTEIRA (scope + Zod + recálculo de imagem
   // pelo catálogo) para ler uma string era o custo que `autorDaProposta` corta.
   it("confere o dono sem carregar a proposta inteira", async () => {
-    usuarioAtual.mockResolvedValue(VENDEDOR_A);
-    autorDaProposta.mockResolvedValue("a@indeba.com");
-    atualizarStatusProposta.mockResolvedValue({ ...doOutro, autor: "a@indeba.com" });
+    usuarioAtual.mockResolvedValue(ADMIN);
+    autorDaProposta.mockResolvedValue("b@indeba.com");
+    atualizarStatusProposta.mockResolvedValue(doOutro);
     await PATCH(req("aprovada"), params("p-do-b"));
     expect(obterProposta).not.toHaveBeenCalled();
+  });
+});
+
+// Exclusão definitiva: só admin, e só de proposta já arquivada (freio de duas etapas).
+describe("DELETE /api/propostas/[id] — exclusão definitiva", () => {
+  it("admin apagando uma arquivada → deleta", async () => {
+    usuarioAtual.mockResolvedValue(ADMIN);
+    autorEStatusDaProposta.mockResolvedValue({ autor: "b@indeba.com", status: "arquivada" });
+    const r = await DELETE(reqVazio(), params("p-do-b"));
+    expect(r.status).toBe(200);
+    expect(excluirPropostaDefinitivamente).toHaveBeenCalledWith("p-do-b");
+  });
+
+  it("admin numa proposta ATIVA → 409 e nada é apagado", async () => {
+    usuarioAtual.mockResolvedValue(ADMIN);
+    autorEStatusDaProposta.mockResolvedValue({ autor: "b@indeba.com", status: "enviada" });
+    const r = await DELETE(reqVazio(), params("p-do-b"));
+    expect(r.status).toBe(409);
+    expect(excluirPropostaDefinitivamente).not.toHaveBeenCalled();
+  });
+
+  it("vendedor na PRÓPRIA arquivada → 403", async () => {
+    usuarioAtual.mockResolvedValue(VENDEDOR_A);
+    autorEStatusDaProposta.mockResolvedValue({ autor: "a@indeba.com", status: "arquivada" });
+    const r = await DELETE(reqVazio(), params("p-do-b"));
+    expect(r.status).toBe(403);
+    expect(excluirPropostaDefinitivamente).not.toHaveBeenCalled();
+  });
+
+  it("vendedor na arquivada de OUTRO → 404 (não confirma que existe)", async () => {
+    usuarioAtual.mockResolvedValue(VENDEDOR_A);
+    autorEStatusDaProposta.mockResolvedValue({ autor: "b@indeba.com", status: "arquivada" });
+    const r = await DELETE(reqVazio(), params("p-do-b"));
+    expect(r.status).toBe(404);
+    expect(excluirPropostaDefinitivamente).not.toHaveBeenCalled();
   });
 });
 

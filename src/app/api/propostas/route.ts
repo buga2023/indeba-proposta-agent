@@ -7,7 +7,7 @@ import { respostaErro } from "@/lib/erro";
 export const runtime = "nodejs";
 
 // Histórico = propostas persistidas (store de trabalho, com status comercial mutável).
-// `?arquivadas=1` inclui as arquivadas, que por padrão ficam fora (ver listarPropostas).
+// `?arquivadas=1` lista SÓ as arquivadas (aba Excluídas); sem o parâmetro, só as ativas.
 //
 // Gestor vê o time; vendedor vê a própria carteira. Mesmo recorte de listarChamados — e o
 // corte é aqui, no servidor: esconder no front deixaria o JSON com as propostas dos colegas
@@ -15,9 +15,9 @@ export const runtime = "nodejs";
 export async function GET(req: NextRequest) {
   try {
     const usuario = await usuarioAtual(req);
-    const incluirArquivadas = req.nextUrl.searchParams.get("arquivadas") === "1";
+    const somenteArquivadas = req.nextUrl.searchParams.get("arquivadas") === "1";
     const autor = usuario && usuario.papel !== "admin" ? usuario.email : undefined;
-    return NextResponse.json({ propostas: await listarPropostas(200, incluirArquivadas, autor) });
+    return NextResponse.json({ propostas: await listarPropostas(200, somenteArquivadas, autor) });
   } catch (e) {
     return respostaErro(e, "Falha ao listar propostas", 500);
   }

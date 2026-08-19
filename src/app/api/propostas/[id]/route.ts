@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { StatusUpdate } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth-db";
-import { obterProposta, autorDaProposta, atualizarStatusProposta } from "@/lib/propostas";
+import { obterProposta, autorDaProposta, autorEStatusDaProposta, atualizarStatusProposta, excluirPropostaDefinitivamente } from "@/lib/propostas";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
@@ -43,6 +43,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 // Muda o status comercial (enviada/aprovada/recusada/...). Só o status é mutável aqui;
 // preço e itens vêm sempre do scope (constituição §2).
+//
+// Ação de GESTÃO: mudar status (inclusive "arquivada" = excluir e o restaurar) é só do
+// admin. O vendedor edita a própria proposta pelo POST /api/propostas (o conteúdo), mas o
+// status comercial e a exclusão são decisões do gestor — pedido do Gustavo, 17/08/2026.
+// Para o dono não-admin a proposta EXISTE (ele a vê no GET), então aqui é 403, não 404.
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const parsed = StatusUpdate.safeParse(await req.json().catch(() => null));
@@ -52,6 +57,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const autor = await autorDaProposta(id);
     if (!autor) return naoEncontrada();
     if (await negar(req, autor)) return naoEncontrada();
+    const usuario = await usuarioAtual(req);
+    if (usuario?.papel !== "admin") {
+      return NextResponse.json({ erro: "Apenas o administrador pode alterar o status ou excluir." }, { status: 403 });
+    }
     return NextResponse.json(await atualizarStatusProposta(id, parsed.data.status));
   } catch (e) {
     // Só o "registro não encontrado" (P2025) é 404 — a autoria já foi conferida acima, então
@@ -59,5 +68,31 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // "proposta não encontrada" no meio de um outage, escondendo o problema real.
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return naoEncontrada();
     return respostaErro(e, "Falha ao atualizar o status", 500);
+  }
+}
+
+// Exclusão DEFINITIVA — só o admin, e só de proposta já excluída (status "arquivada").
+// É a limpeza da aba "Excluídas": daqui a proposta some do banco, sem volta. Exigir a
+// arquivagem antes é o freio de duas etapas: ninguém apaga direto uma proposta ativa.
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  try {
+    const registro = await autorEStatusDaProposta(id);
+    if (!registro) return naoEncontrada();
+    const usuario = await usuarioAtual(req);
+    if (!usuario) return naoEncontrada();
+    if (usuario.papel !== "admin") {
+      // Não-admin nem descobre se o id existe fora da própria carteira.
+      if (registro.autor !== usuario.email) return naoEncontrada();
+      return NextResponse.json({ erro: "Apenas o administrador pode excluir definitivamente." }, { status: 403 });
+    }
+    if (registro.status !== "arquivada") {
+      return NextResponse.json({ erro: "Só propostas já excluídas (aba Excluídas) podem ser apagadas definitivamente." }, { status: 409 });
+    }
+    await excluirPropostaDefinitivamente(id);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") return naoEncontrada();
+    return respostaErro(e, "Falha ao excluir a proposta", 500);
   }
 }

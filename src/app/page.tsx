@@ -712,8 +712,14 @@ export default function Home() {
   }
 
   // Muda o status comercial. Otimista: atualiza a lista local; se falhar, recarrega do servidor.
+  // Se o novo status tira a proposta do recorte atual (excluir na lista principal, restaurar na
+  // aba Excluídas), a linha SOME na hora — antes ela só trocava o rótulo e ficava ali até o
+  // próximo refetch, o que parecia "só excluiu no próximo login".
   async function mudarStatus(id: string, status: StatusProposta) {
-    setPropostas((ps) => (ps ? ps.map((p) => (p.id === id ? { ...p, status } : p)) : ps));
+    const saiDoRecorte = verArquivadas ? status !== "arquivada" : status === "arquivada";
+    setPropostas((ps) =>
+      ps ? (saiDoRecorte ? ps.filter((p) => p.id !== id) : ps.map((p) => (p.id === id ? { ...p, status } : p))) : ps,
+    );
     try {
       const r = await fetch(`/api/propostas/${id}`, {
         method: "PATCH",
@@ -723,6 +729,19 @@ export default function Home() {
       if (!r.ok) throw new Error();
     } catch {
       setPropostas(null);
+    }
+  }
+
+  // Exclusão DEFINITIVA (aba Excluídas, só admin): DELETE no servidor e a linha some na hora.
+  async function excluirDefinitivo(id: string) {
+    setPropostas((ps) => (ps ? ps.filter((p) => p.id !== id) : ps));
+    try {
+      const r = await fetch(`/api/propostas/${id}`, { method: "DELETE" });
+      if (!r.ok) throw new Error();
+      toast("Proposta excluída definitivamente", "success");
+    } catch {
+      setPropostas(null);
+      toast("Não foi possível excluir definitivamente", "danger");
     }
   }
 
@@ -1122,6 +1141,8 @@ export default function Home() {
             onReabrir={reabrirProposta}
             onEditar={editarProposta}
             onStatus={mudarStatus}
+            onExcluirDefinitivo={excluirDefinitivo}
+            ehAdmin={ehAdmin}
             verArquivadas={verArquivadas}
             onVerArquivadas={(v) => {
               setVerArquivadas(v);
@@ -1802,6 +1823,23 @@ function ManualScreen({
   const [condicoes, setCondicoes] = useState(
     () => scopeParaEditar?.consolidada?.condicoes.itens ?? consolidadaDefaults().condicoes.itens,
   );
+  // O padrão VIGENTE (editado pelo gestor no painel) entra sozinho na proposta nova — antes
+  // a tela abria com o texto de fábrica e o consultor tinha que clicar "Restaurar padrão"
+  // para ver o que o gestor salvou (QA do Mateus, 18/08). Proposta reaberta para edição
+  // mantém o texto dela, e se o usuário já digitou algo aqui o fetch não sobrescreve.
+  const condicoesTocadas = useRef(false);
+  useEffect(() => {
+    if (scopeParaEditar?.consolidada?.condicoes.itens) return;
+    fetch("/api/textos-padrao")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((d: { textos?: { condicoesConsolidada?: typeof condicoes } }) => {
+        if (!condicoesTocadas.current && d?.textos?.condicoesConsolidada) {
+          setCondicoes(d.textos.condicoesConsolidada);
+        }
+      })
+      .catch(() => {}); // sem rede/API fica no de fábrica, como antes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [draft, setDraft] = useState<{ nome: string; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; diluicao: string }>({ nome: "", tamanho: "", unidade: "L", preco: "", diluicao: "" });
   const [showCustom, setShowCustom] = useState(false);
   const nextId = useRef(1);
@@ -2297,7 +2335,7 @@ function ManualScreen({
                   <div style={campoLabel}>{c.titulo}</div>
                   <textarea
                     value={c.texto}
-                    onChange={(e) => setCondicoes((cs) => cs.map((x, j) => (j === i ? { ...x, texto: e.target.value } : x)))}
+                    onChange={(e) => { condicoesTocadas.current = true; setCondicoes((cs) => cs.map((x, j) => (j === i ? { ...x, texto: e.target.value } : x))); }}
                     rows={2}
                     style={{ ...campoInput, height: "auto", minHeight: "58px", padding: "9px 12px", lineHeight: 1.45, resize: "vertical" }}
                   />
@@ -3835,6 +3873,8 @@ function HistoryScreen({
   onReabrir,
   onEditar,
   onStatus,
+  onExcluirDefinitivo,
+  ehAdmin,
   verArquivadas,
   onVerArquivadas,
 }: {
@@ -3844,13 +3884,18 @@ function HistoryScreen({
   onReabrir: (id: string) => void;
   onEditar: (id: string) => void; // reabre na MONTAGEM para alterar a seleção
   onStatus: (id: string, status: StatusProposta) => void;
+  onExcluirDefinitivo: (id: string) => void;
+  // Status/excluir/restaurar são ações de GESTÃO (a rota também barra por papel):
+  // vendedor vê o status como selo fixo e não tem Excluir nem a aba Excluídas.
+  ehAdmin: boolean;
   verArquivadas: boolean;
   onVerArquivadas: (v: boolean) => void;
 }) {
   // Ações comporta os TRÊS botões (Abrir/Editar/Excluir): com 150px eles estouravam a
   // célula e cobriam o Valor (print do Matheus, 11/08). O minWidth da tabela cresce
   // junto — em tela estreita rola horizontal, não sobrepõe.
-  const cols = "1.7fr 1fr 80px 130px 70px 110px 210px";
+  // Na aba Excluídas cabem QUATRO botões (Abrir/Editar/Restaurar/Apagar de vez) — 300px.
+  const cols = `1.7fr 1fr 80px 130px 70px 110px ${verArquivadas ? "300px" : "210px"}`;
   const lista = propostas ?? [];
   // Faturamento = só o que o cliente APROVOU (status comercial real, não o que foi gerado).
   const aprovado = lista.filter((p) => p.status === "aprovada").reduce((s, p) => s + (Number(p.total) || 0), 0);
@@ -3887,7 +3932,9 @@ function HistoryScreen({
 
       {/* Excluídas ficam fora por padrão — o filtro é do servidor, então alternar a aba
           refaz o fetch em vez de esconder linha no cliente. (Por baixo, o status segue
-          "arquivada" no banco: excluir é reversível pela própria aba.) */}
+          "arquivada" no banco: excluir é reversível pela própria aba.)
+          Aba do GESTOR: vendedor não exclui, então também não navega pelas excluídas. */}
+      {ehAdmin && (
       <div style={{ display: "flex", gap: "6px", marginBottom: "16px" }}>
         {[
           { ativo: !verArquivadas, label: "Propostas", v: false },
@@ -3912,6 +3959,7 @@ function HistoryScreen({
           </button>
         ))}
       </div>
+      )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "14px", marginBottom: "24px" }}>
         {stats.map((s) => (
@@ -3963,19 +4011,24 @@ function HistoryScreen({
                 <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>{p.segmento ? segmentosLegiveis(p.segmento) : "—"}</div>
                 <div style={{ fontSize: "13px", color: "var(--gray-400)" }}>{data}</div>
                 <div style={{ display: "flex", justifyContent: "center" }}>
-                  {/* Status comercial editável: muda direto na lista (PATCH otimista). */}
-                  <select
-                    value={p.status}
-                    onChange={(e) => onStatus(p.id, e.target.value as StatusProposta)}
-                    style={{ appearance: "none", padding: "3px 10px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 600, background: su.bg, color: su.fg, border: "none", cursor: "pointer", textAlign: "center" }}
-                  >
-                    {/* Se a proposta ainda carrega um status legado, ele entra como
-                        primeira opção (senão o <select> mostraria valor errado) — mas
-                        escolhas novas são só as quatro. */}
-                    {(STATUS_OPCOES.includes(p.status) ? STATUS_OPCOES : [p.status, ...STATUS_OPCOES]).map((s) => (
-                      <option key={s} value={s}>{STATUS_UI[s].label}</option>
-                    ))}
-                  </select>
+                  {/* Status comercial editável direto na lista (PATCH otimista) — só pelo
+                      gestor; para o vendedor é um selo de leitura (a rota barra por papel). */}
+                  {ehAdmin ? (
+                    <select
+                      value={p.status}
+                      onChange={(e) => onStatus(p.id, e.target.value as StatusProposta)}
+                      style={{ appearance: "none", padding: "3px 10px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 600, background: su.bg, color: su.fg, border: "none", cursor: "pointer", textAlign: "center" }}
+                    >
+                      {/* Se a proposta ainda carrega um status legado, ele entra como
+                          primeira opção (senão o <select> mostraria valor errado) — mas
+                          escolhas novas são só as quatro. */}
+                      {(STATUS_OPCOES.includes(p.status) ? STATUS_OPCOES : [p.status, ...STATUS_OPCOES]).map((s) => (
+                        <option key={s} value={s}>{STATUS_UI[s].label}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span style={{ padding: "3px 10px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 600, background: su.bg, color: su.fg, textAlign: "center" }}>{su.label}</span>
+                  )}
                 </div>
                 <div style={{ textAlign: "center", fontSize: "13px", color: "var(--gray-500)" }}>{p.qtdItens} itens</div>
                 <div style={{ textAlign: "right", fontSize: "14px", fontWeight: 700, color: "var(--gray-900)" }}>{fmt(Number(p.total) || 0)}</div>
@@ -3998,14 +4051,25 @@ function HistoryScreen({
                   {/* Tirar da lista sem apagar (QA 10/08: não havia como limpar proposta de
                       teste). Excluir usa o status "arquivada", que a listagem já corta no
                       WHERE; é reversível pela aba "Excluídas". */}
-                  {verArquivadas ? (
-                    <button
-                      onClick={() => onStatus(p.id, "em_andamento")}
-                      title="Devolve a proposta à lista principal"
-                      style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", background: "white", border: "1px solid var(--gray-200)", borderRadius: "7px", cursor: "pointer" }}
-                    >
-                      Restaurar
-                    </button>
+                  {/* Excluir/Restaurar/Apagar são do GESTOR — vendedor fica com Abrir/Editar
+                      (e a rota barra por papel de qualquer forma). */}
+                  {ehAdmin && (verArquivadas ? (
+                    <>
+                      <button
+                        onClick={() => onStatus(p.id, "em_andamento")}
+                        title="Devolve a proposta à lista principal"
+                        style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", background: "white", border: "1px solid var(--gray-200)", borderRadius: "7px", cursor: "pointer" }}
+                      >
+                        Restaurar
+                      </button>
+                      <button
+                        onClick={() => { if (window.confirm(`Apagar DE VEZ a proposta de ${p.cliente}?\n\nEla sai do banco de dados e NÃO dá para recuperar.`)) onExcluirDefinitivo(p.id); }}
+                        title="Apaga do banco de dados — sem volta"
+                        style={{ padding: "5px 10px", fontSize: "12px", fontWeight: 600, color: "white", background: "#b91c1c", border: "1px solid #b91c1c", borderRadius: "7px", cursor: "pointer" }}
+                      >
+                        Apagar de vez
+                      </button>
+                    </>
                   ) : (
                     <button
                       onClick={() => { if (window.confirm(`Excluir a proposta de ${p.cliente}?\n\nEla sai da lista e dos totais; dá para restaurar pela aba "Excluídas".`)) onStatus(p.id, "arquivada"); }}
@@ -4014,7 +4078,7 @@ function HistoryScreen({
                     >
                       Excluir
                     </button>
-                  )}
+                  ))}
                 </div>
               </Hoverable>
             );

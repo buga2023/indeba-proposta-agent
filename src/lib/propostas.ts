@@ -132,14 +132,17 @@ export async function salvarProposta(scope: PropostaScope, autor: string): Promi
 // @@index([autor])) — proposta de outro vendedor não vira linha, não vira JSON e não trafega.
 export async function listarPropostas(
   limite = 200,
-  incluirArquivadas = false,
+  somenteArquivadas = false,
   autor?: string,
 ): Promise<PropostaResumo[]> {
-  const where: Prisma.PropostaWhereInput = {};
-  if (!incluirArquivadas) where.status = { not: "arquivada" };
+  // A aba "Excluídas" é um recorte, não um "incluir também": misturar ativas e arquivadas
+  // na mesma lista fazia a aba mostrar TUDO com botão Restaurar (QA do Mateus, 18/08).
+  const where: Prisma.PropostaWhereInput = {
+    status: somenteArquivadas ? "arquivada" : { not: "arquivada" },
+  };
   if (autor) where.autor = autor;
   const rows = await prisma.proposta.findMany({
-    where: Object.keys(where).length ? where : undefined,
+    where,
     orderBy: { atualizadoEm: "desc" },
     take: limite,
   });
@@ -177,4 +180,17 @@ export async function autorDaProposta(id: string): Promise<string | null> {
 export async function atualizarStatusProposta(id: string, status: StatusProposta): Promise<PropostaRegistro> {
   const row = await prisma.proposta.update({ where: { id }, data: { status } });
   return await mapearRegistro(row);
+}
+
+// Mesma ideia de autorDaProposta: o gate do DELETE precisa de autor + status, não do scope.
+export async function autorEStatusDaProposta(id: string): Promise<{ autor: string; status: string } | null> {
+  const row = await prisma.proposta.findUnique({ where: { id }, select: { autor: true, status: true } });
+  return row ?? null;
+}
+
+// Exclusão DEFINITIVA (hard delete) — só para propostas já arquivadas, só pelo admin
+// (o gate de papel e de status fica na rota). Diferente do "Excluir" da lista, que é o
+// status "arquivada" e reversível, daqui não volta.
+export async function excluirPropostaDefinitivamente(id: string): Promise<void> {
+  await prisma.proposta.delete({ where: { id } });
 }
