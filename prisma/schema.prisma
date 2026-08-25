@@ -126,13 +126,16 @@ model ProdutoCustom {
   atualizadoEm DateTime @updatedAt
 }
 
-/// Ferramentas Técnicas — Registro de Visitas da Carteira (áudio do Mateus, 21/08/2026):
-/// data, horário, cliente, quem recebeu, telefone, status (resolvido/não resolvido) e
-/// observação. Todo vendedor lança; cada um vê SÓ os seus registros, o gestor vê todos —
-/// mesmo recorte por `autor` de Proposta/Chamado. Data e horário são strings como digitadas
-/// (sem fuso): o registro é o que o vendedor anotou, não um instante de máquina.
+/// Relatório de Visitas de Rotina (áudio do Mateus 21/08/2026 + foto do bloco, que tem
+/// autoridade sobre o áudio): data, horário, cliente, quem recebeu, telefone, status
+/// (resolvido/não resolvido) e observação. A foto lista o MESMO relatório nas duas partes
+/// — Ferramentas Comerciais e Ferramentas Técnicas —, então `area` diz de qual tela o
+/// registro é, em vez de duplicar a tabela. Todo vendedor lança; cada um vê SÓ os seus
+/// registros, o gestor vê todos — mesmo recorte por `autor` de Proposta/Chamado. Data e
+/// horário são strings como digitadas (sem fuso): o registro é o que o vendedor anotou.
 model VisitaCarteira {
   id           String   @id @default(cuid())
+  area         String   @default("tecnica") // comercial | tecnica
   data         String // YYYY-MM-DD
   horario      String // HH:MM
   cliente      String
@@ -141,6 +144,39 @@ model VisitaCarteira {
   status       String   @default("nao_resolvido") // resolvido | nao_resolvido
   observacao   String?
   autor        String // login da sessão (dado crítico não vem do cliente)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([autor])
+}
+
+/// Ferramentas Comerciais — Relatório de Novas Prospecções (foto do bloco do Mateus):
+/// registro manual de prospecção feita pelo vendedor (diferente do módulo Prospecção, que
+/// garimpa empresas por IA — aqui é o vendedor anotando o que ELE fez na rua).
+model RelatorioProspeccao {
+  id           String   @id @default(cuid())
+  data         String // YYYY-MM-DD
+  empresa      String
+  contato      String?
+  telefone     String?
+  observacao   String?
+  autor        String
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([autor])
+}
+
+/// Ferramentas Comerciais — Solicitações Comerciais (foto do bloco): o vendedor pede
+/// análise de água e/ou tecidos, visita do setor técnico, ou amostra para demonstração.
+/// `status` é o andamento (pendente → atendida) — quem atende marca; validado no Zod.
+model SolicitacaoComercial {
+  id           String   @id @default(cuid())
+  tipo         String // analise_agua_tecidos | visita_setor_tecnico | amostra_demonstracao
+  cliente      String
+  observacao   String?
+  status       String   @default("pendente") // pendente | atendida
+  autor        String
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 

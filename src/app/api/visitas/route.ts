@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { VisitaCarteiraCreate } from "@/lib/contracts";
+import { AreaVisita, VisitaCarteiraCreate } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth-db";
 import { criarVisita, listarVisitas, excluirVisita } from "@/lib/ferramentas-tecnicas";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 
-// Registro de Visitas da Carteira (Ferramentas Técnicas). Gestor vê todos os registros,
-// vendedor vê só os seus — mesmo recorte de /api/chamados.
+// Relatório de Visitas de Rotina — existe nas DUAS telas (Ferramentas Comerciais e
+// Técnicas, foto do bloco do Mateus); `?area=` diz qual porta está pedindo. Gestor vê
+// todos os registros, vendedor vê só os seus — mesmo recorte de /api/chamados.
 export async function GET(req: NextRequest) {
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
+  const area = AreaVisita.safeParse(req.nextUrl.searchParams.get("area") ?? "tecnica");
+  if (!area.success) return NextResponse.json({ erro: "Área inválida." }, { status: 400 });
   try {
-    const visitas = await listarVisitas(usuario);
+    const visitas = await listarVisitas(usuario, area.data);
     return NextResponse.json({ visitas, souGestor: usuario.papel === "admin" });
   } catch (e) {
     return respostaErro(e, "Falha ao listar as visitas.", 500);

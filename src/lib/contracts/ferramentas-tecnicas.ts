@@ -12,9 +12,15 @@ import { z } from "zod";
 export const StatusVisita = z.enum(["resolvido", "nao_resolvido"]);
 export type StatusVisita = z.infer<typeof StatusVisita>;
 
+// A foto do bloco lista o Relatório de Visitas de Rotina nas DUAS partes (comerciais e
+// técnicas); `area` diz de qual tela o registro é — uma tabela, duas portas.
+export const AreaVisita = z.enum(["comercial", "tecnica"]);
+export type AreaVisita = z.infer<typeof AreaVisita>;
+
 // Data e horário viajam como strings digitadas (sem fuso): o registro é a anotação do
 // vendedor, não um instante de máquina.
 export const VisitaCarteiraCreate = z.object({
+  area: AreaVisita.default("tecnica"),
   data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "data no formato AAAA-MM-DD"),
   horario: z.string().regex(/^\d{2}:\d{2}$/, "horário no formato HH:MM"),
   cliente: z.string().min(2).max(200),
@@ -27,6 +33,7 @@ export type VisitaCarteiraCreate = z.infer<typeof VisitaCarteiraCreate>;
 
 export const VisitaCarteira = z.object({
   id: z.string(),
+  area: AreaVisita,
   data: z.string(),
   horario: z.string(),
   cliente: z.string(),

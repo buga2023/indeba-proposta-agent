@@ -18,4 +18,5 @@ export * from "./fiscal";
 export * from "./contabil";
 export * from "./chamado";
 export * from "./ferramentas-tecnicas";
+export * from "./ferramentas-comerciais";
 export * from "./comando-edicao";

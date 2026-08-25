@@ -25,6 +25,7 @@ import { tamanhoLegivel } from "@/lib/embalagem";
 import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
 import { FerramentasTecnicasScreen } from "@/components/ferramentas-tecnicas-screen";
+import { FerramentasComerciaisScreen } from "@/components/ferramentas-comerciais-screen";
 import { AdminScreen } from "@/components/admin-screen";
 import { FormProduto } from "@/components/form-produto";
 import { Logo, Wordmark } from "@/components/brand";
@@ -366,7 +367,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
 // mais oferecidos como opção.
 const STATUS_OPCOES: StatusProposta[] = ["em_andamento", "enviada", "aprovada", "recusada"];
 
-type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "ferramentas" | "config" | "perfil";
+type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "ferramentas" | "ferramentas-comerciais" | "config" | "perfil";
 type TipoProposta = "orcamento" | "implantacao" | "comercial" | "consolidada";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -390,7 +391,8 @@ const CMD_ITEMS: PaletteItem[] = [
   { key: "importar", label: "Importar Orçamento" },
   { key: "history", label: "Propostas Feitas" },
   { key: "prospeccao", label: "Visitas e Prospecção" },
-  { key: "ferramentas", label: "Ferramentas Técnicas", hint: "Visitas da carteira, contratos e estoque de comodatos" },
+  { key: "ferramentas-comerciais", label: "Ferramentas Comerciais", hint: "Novas prospecções, visitas de rotina e solicitações" },
+  { key: "ferramentas", label: "Ferramentas Técnicas", hint: "Visitas de rotina, contratos e estoque de comodatos" },
   { key: "contrato", label: "Contratos" },
   { key: "chamados", label: "Solicitações Internas" },
   { key: "catalog", label: "Catálogo de Produtos" },
@@ -997,10 +999,18 @@ export default function Home() {
             </svg>
             Visitas e Prospecção
           </Hoverable>
-          {/* Era o placeholder "Comodatos — EM BREVE". O áudio de 21/08/2026 definiu o que a
-              tela faz: Ferramentas Técnicas — registro de visitas da carteira, contratos e
-              comodatos (com o PDF anexado) e estoque de comodatos. */}
-          <Hoverable eager base={navItemStyle(["ferramentas"])} hover={navHover} onClick={() => irPara("ferramentas")} title="Ferramentas Técnicas — visitas da carteira, contratos e estoque de comodatos">
+          {/* As DUAS partes da foto do bloco do Mateus (21/08/2026): Ferramentas Comerciais
+              (novas prospecções, visitas de rotina, solicitações comerciais) e Ferramentas
+              Técnicas (visitas de rotina, contratos e comodatos com PDF, estoque). */}
+          <Hoverable eager base={navItemStyle(["ferramentas-comerciais"])} hover={navHover} onClick={() => irPara("ferramentas-comerciais")} title="Ferramentas Comerciais — novas prospecções, visitas de rotina e solicitações">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6.5 4.5v-1a1 1 0 011-1h2a1 1 0 011 1v1" />
+              <rect x="2.5" y="4.5" width="12" height="9" rx="1.5" />
+              <path d="M2.5 8.5h12" />
+            </svg>
+            Ferramentas Comerciais
+          </Hoverable>
+          <Hoverable eager base={navItemStyle(["ferramentas"])} hover={navHover} onClick={() => irPara("ferramentas")} title="Ferramentas Técnicas — visitas de rotina, contratos e estoque de comodatos">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M2.5 5.5l6-3 6 3v6l-6 3-6-3z" />
               <path d="M2.5 5.5l6 3 6-3M8.5 8.5v6" />
@@ -1185,6 +1195,7 @@ export default function Home() {
         {screen === "atendimento" && <AtendimentoScreen ehAdmin={ehAdmin} />}
         {screen === "chamados" && <ChamadosScreen />}
         {screen === "ferramentas" && <FerramentasTecnicasScreen />}
+        {screen === "ferramentas-comerciais" && <FerramentasComerciaisScreen />}
         {/* Segundo cadeado do painel do gestor: some do menu E não renderiza sem papel — quem
             chegar por outro caminho cai no Dashboard em vez de ver a tela vazia/quebrada. */}
         {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={pedirCadastroProduto} onNovaProposta={novaProposta} />)}
@@ -1295,12 +1306,27 @@ const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; i
     ),
   },
   {
-    // Pedido como "Comodatos" no áudio de 05/08/2026 e definido no de 21/08/2026: virou o
-    // módulo Ferramentas Técnicas — registro de visitas da carteira, contratos e comodatos
-    // (com o PDF do contrato anexado) e estoque de comodatos, exportável para Excel.
+    // Foto do bloco do Mateus (21/08/2026): a lista tem duas partes. Esta é a comercial —
+    // relatório de novas prospecções, relatório de visitas de rotina e solicitações
+    // comerciais (análise de água/tecidos, visita do setor técnico, amostra p/ demonstração).
+    screen: "ferramentas-comerciais",
+    titulo: "Ferramentas Comerciais",
+    sub: "Novas prospecções, visitas de rotina e solicitações",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6.5 4.5v-1a1 1 0 011-1h2a1 1 0 011 1v1" />
+        <rect x="2.5" y="4.5" width="12" height="9" rx="1.5" />
+        <path d="M2.5 8.5h12" />
+      </svg>
+    ),
+  },
+  {
+    // Pedido como "Comodatos" no áudio de 05/08/2026 e definido no de 21/08/2026 (áudio +
+    // foto do bloco): a parte técnica — relatório de visitas de rotina, contratos e
+    // comodatos (com o PDF do contrato anexado) e estoque de comodatos, exportável p/ Excel.
     screen: "ferramentas",
     titulo: "Ferramentas Técnicas",
-    sub: "Visitas da carteira, contratos e estoque de comodatos",
+    sub: "Visitas de rotina, contratos e estoque de comodatos",
     icone: (
       <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <path d="M2.5 5.5l6-3 6 3v6l-6 3-6-3z" />

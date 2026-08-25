@@ -31,9 +31,10 @@ export async function criarVisita(autor: string, dados: VisitaCarteiraCreate): P
   return VisitaCarteira.parse(iso(row));
 }
 
-export async function listarVisitas(usuario: SessaoUsuario): Promise<VisitaCarteira[]> {
+// `area` separa as duas portas do mesmo relatório (Ferramentas Comerciais × Técnicas).
+export async function listarVisitas(usuario: SessaoUsuario, area: "comercial" | "tecnica"): Promise<VisitaCarteira[]> {
   const rows = await prisma.visitaCarteira.findMany({
-    where: escopo(usuario),
+    where: { ...escopo(usuario), area },
     orderBy: [{ data: "desc" }, { horario: "desc" }],
   });
   return rows.map((r) => VisitaCarteira.parse(iso(r)));

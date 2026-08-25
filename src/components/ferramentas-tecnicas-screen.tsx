@@ -4,8 +4,9 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato } from "@/lib/contracts";
 
 /**
- * Ferramentas Técnicas (áudio do Mateus, 21/08/2026), três abas:
- *  - Registro de Visitas da Carteira: data, horário, cliente, quem recebeu, telefone,
+ * Ferramentas Técnicas (áudio do Mateus 21/08/2026 + foto do bloco, que dá os rótulos),
+ * três abas:
+ *  - Relatório de Visitas de Rotina: data, horário, cliente, quem recebeu, telefone,
  *    status (resolvido / não resolvido) e observação.
  *  - Contratos e Comodatos: cliente, comodatos (texto), observações e o contrato em PDF,
  *    disposto em linhas — clica na linha para abrir todas as informações.
@@ -17,7 +18,7 @@ import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato } 
 
 type Aba = "visitas" | "contratos" | "estoque";
 
-const inputStyle = {
+export const inputStyle = {
   width: "100%",
   padding: "10px 12px",
   border: "1px solid var(--gray-200)",
@@ -29,9 +30,9 @@ const inputStyle = {
   outline: "none",
 } as const;
 
-const labelStyle = { fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", display: "block" } as const;
+export const labelStyle = { fontSize: "12px", fontWeight: 600, color: "var(--gray-500)", display: "block" } as const;
 
-const cardStyle = {
+export const cardStyle = {
   background: "white",
   border: "1px solid var(--gray-200)",
   borderRadius: "16px",
@@ -40,7 +41,7 @@ const cardStyle = {
   boxShadow: "var(--shadow-sm)",
 } as const;
 
-const botaoPrimario = (ocupado: boolean) =>
+export const botaoPrimario = (ocupado: boolean) =>
   ({
     justifySelf: "start",
     padding: "11px 22px",
@@ -54,7 +55,7 @@ const botaoPrimario = (ocupado: boolean) =>
     opacity: ocupado ? 0.6 : 1,
   }) as const;
 
-const botaoExcluir = {
+export const botaoExcluir = {
   padding: "5px 11px",
   borderRadius: "999px",
   border: "1px solid #fecaca",
@@ -71,14 +72,14 @@ const STATUS_VISITA: Record<StatusVisita, { label: string; cor: string; bg: stri
   nao_resolvido: { label: "Não resolvido", cor: "#b45309", bg: "#fef3c7" },
 };
 
-function mensagemErro(d: unknown, fallback: string): string {
+export function mensagemErro(d: unknown, fallback: string): string {
   if (d && typeof d === "object" && "erro" in d && typeof (d as { erro: unknown }).erro === "string") {
     return (d as { erro: string }).erro;
   }
   return fallback;
 }
 
-const fmtData = (iso: string) => {
+export const fmtData = (iso: string) => {
   const [a, m, d] = iso.split("-");
   return a && m && d ? `${d}/${m}/${a}` : iso;
 };
@@ -102,7 +103,7 @@ export function FerramentasTecnicasScreen() {
       >
         <h2 style={{ fontSize: "22px", fontWeight: 800, letterSpacing: "-.5px", margin: 0 }}>Ferramentas Técnicas</h2>
         <div style={{ fontSize: "13.5px", opacity: 0.9, marginTop: "6px", lineHeight: 1.5 }}>
-          Registro de visitas da carteira, contratos e comodatos, e estoque de comodatos.{" "}
+          Relatório de visitas de rotina, contratos e comodatos, e estoque de comodatos.{" "}
           {souGestor ? "Como gestor, você vê os registros de toda a equipe." : "Você vê apenas os seus registros."}
         </div>
       </div>
@@ -111,7 +112,7 @@ export function FerramentasTecnicasScreen() {
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "18px" }}>
         {(
           [
-            { key: "visitas", label: "Visitas da Carteira" },
+            { key: "visitas", label: "Relatório de Visitas de Rotina" },
             { key: "contratos", label: "Contratos e Comodatos" },
             { key: "estoque", label: "Estoque de Comodatos" },
           ] as { key: Aba; label: string }[]
@@ -147,14 +148,14 @@ export function FerramentasTecnicasScreen() {
         </div>
       )}
 
-      {aba === "visitas" && <AbaVisitas setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
+      {aba === "visitas" && <AbaVisitas area="tecnica" setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
       {aba === "contratos" && <AbaContratos setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
       {aba === "estoque" && <AbaEstoque setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
     </div>
   );
 }
 
-type AbaProps = {
+export type AbaProps = {
   setErro: (e: string | null) => void;
   setSouGestor: (v: boolean) => void;
   souGestor: boolean;
@@ -162,7 +163,9 @@ type AbaProps = {
 
 /* ═══════════ Aba 1 — Registro de Visitas da Carteira ═══════════ */
 
-function AbaVisitas({ setErro, setSouGestor, souGestor }: AbaProps) {
+// Exportada: a foto do bloco lista o MESMO relatório nas Ferramentas Comerciais e nas
+// Técnicas — `area` diz de qual tela o registro é (a API separa as listas por ela).
+export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps & { area: "comercial" | "tecnica" }) {
   const [visitas, setVisitas] = useState<VisitaCarteira[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [enviando, setEnviando] = useState(false);
@@ -180,7 +183,7 @@ function AbaVisitas({ setErro, setSouGestor, souGestor }: AbaProps) {
 
   async function carregar() {
     try {
-      const r = await fetch("/api/visitas");
+      const r = await fetch(`/api/visitas?area=${area}`);
       const d = await r.json();
       if (!r.ok) throw new Error(mensagemErro(d, "Falha ao carregar as visitas."));
       setErro(null);
@@ -212,6 +215,7 @@ function AbaVisitas({ setErro, setSouGestor, souGestor }: AbaProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          area,
           data,
           horario,
           cliente: cliente.trim(),
