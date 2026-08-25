@@ -1,11 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { precoConstaNoTexto, validarPrecos, estruturarOrcamento, matchCatalogo } from "@/lib/orcamento/importar";
-
-const { ollamaDisponivel, gerarJson } = vi.hoisted(() => ({
-  ollamaDisponivel: vi.fn(),
-  gerarJson: vi.fn(),
-}));
-vi.mock("@/lib/llm/ollama", () => ({ ollamaDisponivel, gerarJson }));
+import { describe, it, expect } from "vitest";
+import { precoConstaNoTexto, validarPrecos, estruturarOrcamento, matchCatalogo, normalizarPreco } from "@/lib/orcamento/importar";
 
 const TEXTO = `ORÇAMENTO Nº 4821 — IES Equipamentos
 Cliente: Laticínio São João Ltda   CNPJ: 12.345.678/0001-90
@@ -68,29 +62,50 @@ describe("matchCatalogo — casa item do orçamento com produto do catálogo", (
   });
 });
 
-describe("estruturarOrcamento", () => {
-  it("caminho feliz: estrutura via IA e mantém só itens com preço do documento", async () => {
-    ollamaDisponivel.mockResolvedValue(true);
-    gerarJson.mockResolvedValue(
-      JSON.stringify({
-        cliente: { razaoSocial: "Laticínio São João Ltda", cnpj: "12.345.678/0001-90", segmento: null, responsavel: "Maria Souza" },
-        itens: [
-          { nome: "PRIMMAX PLUS", quantidade: 2, tamanho: 5, unidade: "L", preco: "130.00" },
-          { nome: "DGCLOR", quantidade: 1, tamanho: 20, unidade: "L", preco: "1234.56" },
-          { nome: "Alucinado", quantidade: 1, tamanho: null, unidade: null, preco: "555.55" },
-        ],
-        condicoes: { validade: null, prazoEntrega: null, pagamento: "boleto 28 dias", frete: "CIF" },
-      }),
-    );
+describe("normalizarPreco — formato brasileiro e decimal", () => {
+  it("converte para a convenção decimal-string do projeto", () => {
+    expect(normalizarPreco("1.234,56")).toBe("1234.56");
+    expect(normalizarPreco("130,00")).toBe("130.00");
+    expect(normalizarPreco("99")).toBe("99.00");
+    expect(normalizarPreco("45.90")).toBe("45.90");
+  });
+  it("rejeita o que não é preço", () => {
+    expect(normalizarPreco("0")).toBeNull();
+    expect(normalizarPreco("abc")).toBeNull();
+  });
+});
+
+describe("estruturarOrcamento — parser determinístico (sem IA)", () => {
+  it("caminho feliz: itens, cliente e condições saem do próprio texto", async () => {
     const { extraido, rejeitados } = await estruturarOrcamento(TEXTO);
-    expect(extraido.itens.map((i) => i.nome)).toEqual(["PRIMMAX PLUS", "DGCLOR"]);
-    expect(extraido.itens[0].preco).toBe("130.00"); // idêntico ao documento
-    expect(rejeitados.map((r) => r.nome)).toEqual(["Alucinado"]);
+    expect(extraido.itens).toHaveLength(3);
+    expect(extraido.itens[0]).toMatchObject({ quantidade: 2, tamanho: 5, unidade: "L", preco: "130.00" });
+    expect(extraido.itens[0].nome).toContain("PRIMMAX PLUS");
+    expect(extraido.itens[1]).toMatchObject({ quantidade: 1, tamanho: 20, unidade: "L", preco: "1234.56" });
+    expect(extraido.itens[2]).toMatchObject({ quantidade: 3, tamanho: 5, unidade: "L", preco: "99.00" });
+    expect(rejeitados).toHaveLength(0);
+    expect(extraido.cliente.razaoSocial).toBe("Laticínio São João Ltda");
+    expect(extraido.cliente.cnpj).toBe("12.345.678/0001-90");
     expect(extraido.cliente.responsavel).toBe("Maria Souza");
+    expect(extraido.condicoes.pagamento).toBe("boleto 28 dias");
+    expect(extraido.condicoes.frete).toBe("CIF");
   });
 
-  it("sem Ollama: erro claro, sem chute", async () => {
-    ollamaDisponivel.mockResolvedValue(false);
-    await expect(estruturarOrcamento(TEXTO)).rejects.toThrow(/IA indisponível/);
+  it("a numeração da lista e o preenchimento de coluna não entram no nome", async () => {
+    const { extraido } = await estruturarOrcamento(TEXTO);
+    expect(extraido.itens[0].nome).toBe("PRIMMAX PLUS - Bombona 5 L");
+    expect(extraido.itens[0].nome).not.toMatch(/^\d/);
+  });
+
+  it("linha de rótulo/total terminando em número não vira item", async () => {
+    const texto = `Cliente: Fulano\nSabão em pó 1 kg .... R$ 25,50\nTotal: R$ 25,50\nValidade: 10 dias`;
+    const { extraido } = await estruturarOrcamento(texto);
+    expect(extraido.itens).toHaveLength(1);
+    expect(extraido.itens[0]).toMatchObject({ tamanho: 1, unidade: "kg", preco: "25.50" });
+    expect(extraido.condicoes.validade).toBe("10 dias");
+  });
+
+  it("sem nenhuma linha de item: erro claro, sem chute", async () => {
+    await expect(estruturarOrcamento("Só um texto qualquer, sem itens.")).rejects.toThrow(/Não consegui extrair/);
   });
 });

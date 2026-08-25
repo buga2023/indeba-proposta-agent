@@ -5,13 +5,14 @@ import { catalogoCompleto } from "@/lib/catalogo";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
-export const maxDuration = 120; // extração de PDF + IA estruturando podem levar mais de 60s
+export const maxDuration = 60; // só extração de PDF — a estruturação virou parser local (sem IA)
 
 const MAX_BYTES = 15 * 1024 * 1024; // 15MB
 
 // Recebe o orçamento (multipart, campo "arquivo"), extrai o texto (determinístico,
-// mesmo extrator do contrato) e estrutura via IA com guarda de preço. A resposta
-// alimenta a tela de conferência — nada vira proposta sem o vendedor revisar.
+// mesmo extrator do contrato) e estrutura com o parser de linhas — SEM IA desde
+// 24/08/2026. A resposta alimenta a tela de conferência — nada vira proposta sem
+// o vendedor revisar.
 export async function POST(req: NextRequest) {
   let form: FormData;
   try {
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ extraido: { ...extraido, itens }, rejeitados, nomeArquivo: file.name, chars: texto.length });
   } catch (e) {
     // Mensagens curadas do fluxo (sem internals) vão direto pro vendedor; o resto é genérico.
-    if (e instanceof Error && /^(IA indisponível|Formato não suportado|Não consegui extrair)/.test(e.message)) {
+    if (e instanceof Error && /^(Formato não suportado|Não consegui extrair)/.test(e.message)) {
       return NextResponse.json({ erro: e.message }, { status: 422 });
     }
     return respostaErro(e, "Falha ao importar o orçamento.", 422);
