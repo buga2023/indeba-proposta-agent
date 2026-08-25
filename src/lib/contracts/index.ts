@@ -17,4 +17,5 @@ export * from "./compras";
 export * from "./fiscal";
 export * from "./contabil";
 export * from "./chamado";
+export * from "./ferramentas-tecnicas";
 export * from "./comando-edicao";

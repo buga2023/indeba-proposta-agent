@@ -24,6 +24,7 @@ import { imagemEhIlustrativa } from "@/lib/imagem-produto";
 import { tamanhoLegivel } from "@/lib/embalagem";
 import { EdicaoChat } from "@/components/edicao-chat";
 import { ChamadosScreen } from "@/components/chamados-screen";
+import { FerramentasTecnicasScreen } from "@/components/ferramentas-tecnicas-screen";
 import { AdminScreen } from "@/components/admin-screen";
 import { FormProduto } from "@/components/form-produto";
 import { Logo, Wordmark } from "@/components/brand";
@@ -365,7 +366,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
 // mais oferecidos como opção.
 const STATUS_OPCOES: StatusProposta[] = ["em_andamento", "enviada", "aprovada", "recusada"];
 
-type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "config" | "perfil";
+type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "ferramentas" | "config" | "perfil";
 type TipoProposta = "orcamento" | "implantacao" | "comercial" | "consolidada";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -389,6 +390,7 @@ const CMD_ITEMS: PaletteItem[] = [
   { key: "importar", label: "Importar Orçamento" },
   { key: "history", label: "Propostas Feitas" },
   { key: "prospeccao", label: "Visitas e Prospecção" },
+  { key: "ferramentas", label: "Ferramentas Técnicas", hint: "Visitas da carteira, contratos e estoque de comodatos" },
   { key: "contrato", label: "Contratos" },
   { key: "chamados", label: "Solicitações Internas" },
   { key: "catalog", label: "Catálogo de Produtos" },
@@ -995,22 +997,16 @@ export default function Home() {
             </svg>
             Visitas e Prospecção
           </Hoverable>
-          {/* Botão de verdade (e não uma div) para herdar as regras da trilha de ícones, onde
-              o nav esconde o rótulo de `nav > button`. `disabled` é o que diz, a mouse e a
-              leitor de tela, que ele ainda não leva a lugar nenhum. */}
-          <button
-            type="button"
-            disabled
-            title="Comodatos — módulo ainda não construído"
-            style={{ ...navItemStyle([]), cursor: "default", color: "rgba(255,255,255,.32)" }}
-          >
+          {/* Era o placeholder "Comodatos — EM BREVE". O áudio de 21/08/2026 definiu o que a
+              tela faz: Ferramentas Técnicas — registro de visitas da carteira, contratos e
+              comodatos (com o PDF anexado) e estoque de comodatos. */}
+          <Hoverable eager base={navItemStyle(["ferramentas"])} hover={navHover} onClick={() => irPara("ferramentas")} title="Ferramentas Técnicas — visitas da carteira, contratos e estoque de comodatos">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M2.5 5.5l6-3 6 3v6l-6 3-6-3z" />
               <path d="M2.5 5.5l6 3 6-3M8.5 8.5v6" />
             </svg>
-            Comodatos
-            <span className="ies-side-text" style={{ marginLeft: "auto", fontSize: "9px", fontWeight: 700, letterSpacing: ".05em", padding: "2px 6px", borderRadius: "999px", background: "rgba(255,255,255,.09)", color: "rgba(255,255,255,.45)" }}>EM BREVE</span>
-          </button>
+            Ferramentas Técnicas
+          </Hoverable>
           <Hoverable eager base={navItemStyle(["contrato"])} hover={navHover} onClick={() => irPara("contrato")} title="Contratos — gere e analise o contrato da proposta">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 2.5h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" />
@@ -1188,6 +1184,7 @@ export default function Home() {
         {screen === "contrato" && <ContratoScreen scope={scope} onVerProposta={() => setScreen(scope ? "review" : "manual")} />}
         {screen === "atendimento" && <AtendimentoScreen ehAdmin={ehAdmin} />}
         {screen === "chamados" && <ChamadosScreen />}
+        {screen === "ferramentas" && <FerramentasTecnicasScreen />}
         {/* Segundo cadeado do painel do gestor: some do menu E não renderiza sem papel — quem
             chegar por outro caminho cai no Dashboard em vez de ver a tela vazia/quebrada. */}
         {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={pedirCadastroProduto} onNovaProposta={novaProposta} />)}
@@ -1298,13 +1295,12 @@ const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; i
     ),
   },
   {
-    // Pedido no áudio de 05/08/2026 ("a terceira, comodatos"), mas não existe módulo, tela,
-    // rota nem componente com esse nome — a palavra só aparece como texto de condição
-    // comercial nos templates de PDF. Fica reservado no lugar certo até alguém dizer o que
-    // essa tela faz (controle de equipamento emprestado ao cliente? contrato de comodato?).
-    screen: null,
-    titulo: "Comodatos",
-    sub: "Módulo ainda não construído",
+    // Pedido como "Comodatos" no áudio de 05/08/2026 e definido no de 21/08/2026: virou o
+    // módulo Ferramentas Técnicas — registro de visitas da carteira, contratos e comodatos
+    // (com o PDF do contrato anexado) e estoque de comodatos, exportável para Excel.
+    screen: "ferramentas",
+    titulo: "Ferramentas Técnicas",
+    sub: "Visitas da carteira, contratos e estoque de comodatos",
     icone: (
       <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <path d="M2.5 5.5l6-3 6 3v6l-6 3-6-3z" />
@@ -2661,9 +2657,10 @@ function ManualScreen({
 /* ═══════════════════════ TELA: IMPORTAR ORÇAMENTO ═══════════════════════ */
 
 // Importa um orçamento pronto (PDF do ERP): extração de texto determinística +
-// IA estruturando com GUARDA de preço (só entra preço que consta no documento;
-// o que falha aparece em "rejeitados"). O vendedor confere e edita tudo aqui e
-// a montagem converge no MESMO /api/montar-estruturado da Proposta manual.
+// parser de linhas (SEM IA desde 24/08/2026) com GUARDA de preço (só entra preço
+// que consta no documento; o que falha aparece em "rejeitados"). O vendedor
+// confere e edita tudo aqui e a montagem converge no MESMO /api/montar-estruturado
+// da Proposta manual.
 type ItemImportado = { nome: string; quantidade: number; tamanho: string; unidade: "L" | "kg" | "un" | "ml"; preco: string; codigoCatalogo: string | null; nomeCatalogo: string | null };
 
 // Passos exibidos durante a montagem — heurística por tempo decorrido, não progresso
@@ -2714,7 +2711,7 @@ function MontandoOverlay({ titulo = "Montando sua proposta" }: { titulo?: string
   );
 }
 
-/* Prévia animada (shimmer) enquanto a IA lê o orçamento e casa os itens com o catálogo. */
+/* Prévia animada (shimmer) enquanto o servidor lê o orçamento e casa os itens com o catálogo. */
 function ImportacaoSkeleton() {
   const barra = (w: string, h = "12px"): CSSProperties => ({ width: w, height: h, borderRadius: "6px" });
   return (
@@ -2917,7 +2914,7 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
             </>
           )}
         </div>
-        {!arquivo && <span style={{ fontSize: "12px", color: "var(--text-subtle)", textAlign: "center" }}>A IA estrutura o documento; preços só entram se constarem no texto. Você confere tudo antes de montar.</span>}
+        {!arquivo && <span style={{ fontSize: "12px", color: "var(--text-subtle)", textAlign: "center" }}>O sistema lê o documento linha a linha; preços só entram se constarem no texto. Você confere tudo antes de montar.</span>}
 
         {erro && (
           <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--danger-soft)", border: "1px solid #FECACA", color: "#B91C1C", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", animation: "popIn .25s ease both" }}>

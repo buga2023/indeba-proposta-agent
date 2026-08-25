@@ -126,6 +126,61 @@ model ProdutoCustom {
   atualizadoEm DateTime @updatedAt
 }
 
+/// Ferramentas Técnicas — Registro de Visitas da Carteira (áudio do Mateus, 21/08/2026):
+/// data, horário, cliente, quem recebeu, telefone, status (resolvido/não resolvido) e
+/// observação. Todo vendedor lança; cada um vê SÓ os seus registros, o gestor vê todos —
+/// mesmo recorte por `autor` de Proposta/Chamado. Data e horário são strings como digitadas
+/// (sem fuso): o registro é o que o vendedor anotou, não um instante de máquina.
+model VisitaCarteira {
+  id           String   @id @default(cuid())
+  data         String // YYYY-MM-DD
+  horario      String // HH:MM
+  cliente      String
+  quemRecebeu  String
+  telefone     String?
+  status       String   @default("nao_resolvido") // resolvido | nao_resolvido
+  observacao   String?
+  autor        String // login da sessão (dado crítico não vem do cliente)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([autor])
+}
+
+/// Ferramentas Técnicas — Contratos e Comodatos: nome do cliente, texto livre com os
+/// comodatos do contrato, observações e a cópia do contrato em PDF. O PDF vai como bytes na
+/// própria linha, igual à ficha de ProdutoCustom (mesmo raciocínio: volume pequeno, e a rota
+/// /api/comodatos/<id>/pdf serve o conteúdo; se crescer, só esta coluna e aquela rota mudam).
+model ContratoComodato {
+  id           String   @id @default(cuid())
+  cliente      String
+  comodatos    String // texto livre: os comodatos deste cliente
+  observacoes  String?
+  contrato     Bytes?
+  contratoMime String?
+  autor        String
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([autor])
+}
+
+/// Ferramentas Técnicas — Estoque de Comodatos: código, peça, quantidade e observação.
+/// Cada lançamento é uma linha (o "pontinho" de cada registro que o João fizer); a tela
+/// exporta tudo para Excel/CSV.
+model EstoqueComodato {
+  id           String   @id @default(cuid())
+  codigo       String
+  peca         String
+  quantidade   Int
+  obs          String?
+  autor        String
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([autor])
+}
+
 /// `acesso` é o portão de entrada, separado de `papel` (que é o que a pessoa pode fazer
 /// DEPOIS de entrar): cadastro próprio é aberto, então quem se cadastra nasce `pendente` e
 /// só passa do login quando o gestor aprova no painel de Configurações.
