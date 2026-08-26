@@ -24,11 +24,47 @@ const iso = <T extends { criadoEm: Date; atualizadoEm: Date }>(row: T) => ({
 
 /* ───────── Registro de Visitas da Carteira ───────── */
 
+// Os bytes dos anexos (fotos/documento) nunca trafegam na listagem: o select fica nos
+// campos leves + ids das fotos, e as rotas /api/visitas/<id>/fotos/<fotoId> e
+// .../documento servem o conteúdo.
+const selectVisita = {
+  id: true,
+  area: true,
+  data: true,
+  horario: true,
+  cliente: true,
+  quemRecebeu: true,
+  telefone: true,
+  status: true,
+  observacao: true,
+  documentoMime: true,
+  documentoNome: true,
+  fotos: { select: { id: true }, orderBy: { criadoEm: "asc" as const } },
+  autor: true,
+  criadoEm: true,
+  atualizadoEm: true,
+};
+
+type RowVisita = {
+  criadoEm: Date;
+  atualizadoEm: Date;
+  documentoMime: string | null;
+  fotos: { id: string }[];
+};
+
+const paraContrato = (r: RowVisita) =>
+  VisitaCarteira.parse({
+    ...iso(r),
+    fotos: r.fotos.map((f) => f.id),
+    temDocumento: r.documentoMime != null,
+  });
+
 export async function criarVisita(autor: string, dados: VisitaCarteiraCreate): Promise<VisitaCarteira> {
   const row = await prisma.visitaCarteira.create({
     data: { ...dados, telefone: dados.telefone ?? null, observacao: dados.observacao ?? null, autor },
+    select: selectVisita,
   });
-  return VisitaCarteira.parse(iso(row));
+  return paraContrato(row);
 }
 
 // `area` separa as duas portas do mesmo relatório (Ferramentas Comerciais × Técnicas).
@@ -36,8 +72,68 @@ export async function listarVisitas(usuario: SessaoUsuario, area: "comercial" | 
   const rows = await prisma.visitaCarteira.findMany({
     where: { ...escopo(usuario), area },
     orderBy: [{ data: "desc" }, { horario: "desc" }],
+    select: selectVisita,
   });
-  return rows.map((r) => VisitaCarteira.parse(iso(r)));
+  return rows.map(paraContrato);
+}
+
+/* ── Anexos da visita (áudio do Mateus, 25/08/2026): até 10 fotos e um documento ── */
+
+export const MAX_FOTOS_VISITA = 10;
+
+// Uma foto por chamada (cada requisição fica abaixo do teto de ~4,5 MB da Vercel). O
+// escopo por autor vale para anexar: ninguém pendura foto na visita do colega.
+export async function anexarFotoVisita(
+  usuario: SessaoUsuario,
+  visitaId: string,
+  foto: { bytes: Uint8Array<ArrayBuffer>; mime: string },
+): Promise<"ok" | "nao_encontrada" | "cheia"> {
+  const visita = await prisma.visitaCarteira.findFirst({
+    where: { id: visitaId, ...escopo(usuario) },
+    select: { id: true, _count: { select: { fotos: true } } },
+  });
+  if (!visita) return "nao_encontrada";
+  if (visita._count.fotos >= MAX_FOTOS_VISITA) return "cheia";
+  await prisma.visitaFoto.create({ data: { visitaId, foto: foto.bytes, fotoMime: foto.mime } });
+  return "ok";
+}
+
+export async function anexarDocumentoVisita(
+  usuario: SessaoUsuario,
+  visitaId: string,
+  doc: { bytes: Uint8Array<ArrayBuffer>; mime: string; nome: string },
+): Promise<boolean> {
+  const r = await prisma.visitaCarteira.updateMany({
+    where: { id: visitaId, ...escopo(usuario) },
+    data: { documento: doc.bytes, documentoMime: doc.mime, documentoNome: doc.nome },
+  });
+  return r.count > 0;
+}
+
+// Leitura com o MESMO escopo da listagem — a rota não pode ser a fresta pela qual um
+// vendedor abre o anexo do colega (mesmo desenho de pdfDoContrato).
+export async function fotoDaVisita(
+  usuario: SessaoUsuario,
+  visitaId: string,
+  fotoId: string,
+): Promise<{ bytes: Uint8Array; mime: string } | null> {
+  const row = await prisma.visitaFoto.findFirst({
+    where: { id: fotoId, visitaId, visita: escopo(usuario) },
+    select: { foto: true, fotoMime: true },
+  });
+  return row ? { bytes: row.foto, mime: row.fotoMime } : null;
+}
+
+export async function documentoDaVisita(
+  usuario: SessaoUsuario,
+  visitaId: string,
+): Promise<{ bytes: Uint8Array; mime: string; nome: string | null } | null> {
+  const row = await prisma.visitaCarteira.findFirst({
+    where: { id: visitaId, ...escopo(usuario) },
+    select: { documento: true, documentoMime: true, documentoNome: true },
+  });
+  if (!row?.documento || !row.documentoMime) return null;
+  return { bytes: row.documento, mime: row.documentoMime, nome: row.documentoNome };
 }
 
 // `deleteMany` com o escopo no where: apagar registro alheio não acha linha → false → 404

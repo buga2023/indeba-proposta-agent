@@ -41,6 +41,12 @@ export const VisitaCarteira = z.object({
   telefone: z.string().nullable(),
   status: StatusVisita,
   observacao: z.string().nullable(),
+  // Anexos (áudio do Mateus, 25/08/2026): até 10 fotos e um documento por visita. Os bytes
+  // NÃO trafegam na listagem — só os ids; /api/visitas/<id>/fotos/<fotoId> e .../documento
+  // servem o conteúdo, com o mesmo escopo por autor.
+  fotos: z.array(z.string()),
+  temDocumento: z.boolean(),
+  documentoNome: z.string().nullable(),
   autor: z.string(),
   criadoEm: z.string(),
   atualizadoEm: z.string(),

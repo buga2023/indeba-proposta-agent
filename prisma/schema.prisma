@@ -134,20 +134,40 @@ model ProdutoCustom {
 /// registros, o gestor vê todos — mesmo recorte por `autor` de Proposta/Chamado. Data e
 /// horário são strings como digitadas (sem fuso): o registro é o que o vendedor anotou.
 model VisitaCarteira {
-  id           String   @id @default(cuid())
-  area         String   @default("tecnica") // comercial | tecnica
-  data         String // YYYY-MM-DD
-  horario      String // HH:MM
-  cliente      String
-  quemRecebeu  String
-  telefone     String?
-  status       String   @default("nao_resolvido") // resolvido | nao_resolvido
-  observacao   String?
-  autor        String // login da sessão (dado crítico não vem do cliente)
-  criadoEm     DateTime @default(now())
-  atualizadoEm DateTime @updatedAt
+  id            String       @id @default(cuid())
+  area          String       @default("tecnica") // comercial | tecnica
+  data          String // YYYY-MM-DD
+  horario       String // HH:MM
+  cliente       String
+  quemRecebeu   String
+  telefone      String?
+  status        String       @default("nao_resolvido") // resolvido | nao_resolvido
+  observacao    String?
+  /// Documento anexado à visita (áudio do Mateus 25/08/2026: o João colhe assinatura e
+  /// anexa) — bytes na própria linha, igual ao contrato de ContratoComodato.
+  documento     Bytes?
+  documentoMime String?
+  documentoNome String?
+  fotos         VisitaFoto[]
+  autor         String // login da sessão (dado crítico não vem do cliente)
+  criadoEm      DateTime     @default(now())
+  atualizadoEm  DateTime     @updatedAt
 
   @@index([autor])
+}
+
+/// Fotos da visita (áudio do Mateus 25/08/2026: até 10 fotos por visita — o João bate foto
+/// dos equipamentos). Uma linha por foto, em tabela própria: subir uma por requisição fica
+/// abaixo do teto de ~4,5 MB da função da Vercel, e a listagem de visitas não trafega bytes.
+model VisitaFoto {
+  id       String         @id @default(cuid())
+  visitaId String
+  visita   VisitaCarteira @relation(fields: [visitaId], references: [id], onDelete: Cascade)
+  foto     Bytes
+  fotoMime String
+  criadoEm DateTime       @default(now())
+
+  @@index([visitaId])
 }
 
 /// Ferramentas Comerciais — Relatório de Novas Prospecções (foto do bloco do Mateus):
@@ -156,6 +176,7 @@ model VisitaCarteira {
 model RelatorioProspeccao {
   id           String   @id @default(cuid())
   data         String // YYYY-MM-DD
+  horario      String? // HH:MM — pedido do Mateus (25/08/2026); nulo nos registros antigos
   empresa      String
   contato      String?
   telefone     String?

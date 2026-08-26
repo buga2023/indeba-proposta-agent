@@ -15,11 +15,11 @@ import {
 } from "@/components/ferramentas-tecnicas-screen";
 
 /**
- * Ferramentas Comerciais (foto do bloco do Mateus, 21/08/2026 — a foto tem autoridade
- * sobre o áudio), três abas:
- *  - Relatório de Novas Prospecções: anotação manual do vendedor (a prospecção por IA
+ * Ferramentas Comerciais (foto do bloco do Mateus, 21/08/2026, revisada pelos áudios de
+ * 25/08/2026 — "onde tem relatório, você bota registro"), três abas:
+ *  - Registro de Prospecções: anotação manual do vendedor (a prospecção por IA
  *    continua no módulo Visitas e Prospecção).
- *  - Relatório de Visitas de Rotina: mesma aba das Ferramentas Técnicas, com area
+ *  - Registro de Visitas de Rotina: mesma aba das Ferramentas Técnicas, com area
  *    "comercial" — a foto lista o relatório nas duas partes.
  *  - Solicitações Comerciais: análise de água e/ou tecidos, visita do setor técnico,
  *    ou amostra para demonstrações; status pendente → atendida.
@@ -36,6 +36,18 @@ const TIPOS_SOLICITACAO: { value: TipoSolicitacaoComercial; label: string }[] = 
   { value: "amostra_demonstracao", label: "Amostra para demonstração" },
 ];
 const rotuloTipo = (v: string) => TIPOS_SOLICITACAO.find((t) => t.value === v)?.label ?? v;
+
+const botaoEditar = {
+  padding: "5px 11px",
+  borderRadius: "999px",
+  border: "1px solid var(--blue-600)",
+  background: "white",
+  color: "var(--blue-600)",
+  fontSize: "12px",
+  fontWeight: 600,
+  cursor: "pointer",
+  flex: "none",
+} as const;
 
 export function FerramentasComerciaisScreen() {
   const [aba, setAba] = useState<Aba>("prospeccoes");
@@ -56,7 +68,7 @@ export function FerramentasComerciaisScreen() {
       >
         <h2 style={{ fontSize: "22px", fontWeight: 800, letterSpacing: "-.5px", margin: 0 }}>Ferramentas Comerciais</h2>
         <div style={{ fontSize: "13.5px", opacity: 0.9, marginTop: "6px", lineHeight: 1.5 }}>
-          Relatório de novas prospecções, relatório de visitas de rotina e solicitações comerciais.{" "}
+          Registro de prospecções, registro de visitas de rotina e solicitações comerciais.{" "}
           {souGestor ? "Como gestor, você vê os registros de toda a equipe." : "Você vê apenas os seus registros."}
         </div>
       </div>
@@ -65,8 +77,9 @@ export function FerramentasComerciaisScreen() {
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "18px" }}>
         {(
           [
-            { key: "prospeccoes", label: "Relatório de Novas Prospecções" },
-            { key: "visitas", label: "Relatório de Visitas de Rotina" },
+            // "Registro", não "Relatório" — áudio do Mateus, 25/08/2026.
+            { key: "prospeccoes", label: "Registro de Prospecções" },
+            { key: "visitas", label: "Registro de Visitas de Rotina" },
             { key: "solicitacoes", label: "Solicitações Comerciais" },
           ] as { key: Aba; label: string }[]
         ).map((t) => {
@@ -108,7 +121,7 @@ export function FerramentasComerciaisScreen() {
   );
 }
 
-/* ═══════════ Aba 1 — Relatório de Novas Prospecções ═══════════ */
+/* ═══════════ Aba 1 — Registro de Prospecções ═══════════ */
 
 function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [relatorios, setRelatorios] = useState<RelatorioProspeccao[]>([]);
@@ -119,10 +132,17 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [data, setData] = useState(
     `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`,
   );
+  const [horario, setHorario] = useState("");
   const [empresa, setEmpresa] = useState("");
   const [contato, setContato] = useState("");
   const [telefone, setTelefone] = useState("");
   const [observacao, setObservacao] = useState("");
+
+  // Edição (áudio do Mateus, 25/08/2026): usuário e gestor editam; a data NÃO muda —
+  // fica a da visita registrada (visita nova = registro novo).
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [ed, setEd] = useState({ horario: "", empresa: "", contato: "", telefone: "", observacao: "" });
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
 
   async function carregar() {
     try {
@@ -147,8 +167,8 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
 
   async function lancar(e: FormEvent) {
     e.preventDefault();
-    if (!data || empresa.trim().length < 2) {
-      setErro("Preencha a data e a empresa prospectada.");
+    if (!data || !horario || empresa.trim().length < 2) {
+      setErro("Preencha a data, o horário e a empresa prospectada.");
       return;
     }
     setEnviando(true);
@@ -159,6 +179,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           data,
+          horario,
           empresa: empresa.trim(),
           contato: contato.trim() || null,
           telefone: telefone.trim() || null,
@@ -166,6 +187,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
         }),
       });
       if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao registrar a prospecção."));
+      setHorario("");
       setEmpresa("");
       setContato("");
       setTelefone("");
@@ -178,6 +200,49 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
     }
   }
 
+  function abrirEdicao(p: RelatorioProspeccao) {
+    setEditandoId(p.id);
+    setEd({
+      horario: p.horario ?? "",
+      empresa: p.empresa,
+      contato: p.contato ?? "",
+      telefone: p.telefone ?? "",
+      observacao: p.observacao ?? "",
+    });
+    setErro(null);
+  }
+
+  async function salvarEdicao(id: string) {
+    if (ed.empresa.trim().length < 2) {
+      setErro("Informe a empresa prospectada.");
+      return;
+    }
+    setSalvandoEdicao(true);
+    setErro(null);
+    try {
+      const r = await fetch(`/api/novas-prospeccoes?id=${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          horario: ed.horario || null,
+          empresa: ed.empresa.trim(),
+          contato: ed.contato.trim() || null,
+          telefone: ed.telefone.trim() || null,
+          observacao: ed.observacao.trim() || null,
+        }),
+      });
+      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao editar a prospecção."));
+      setEditandoId(null);
+      await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao editar a prospecção.");
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  }
+
+  // Excluir é só do gestor — o botão nem aparece para o vendedor (áudio do Mateus,
+  // 25/08/2026: o usuário só edita).
   async function excluir(id: string) {
     if (!window.confirm("Excluir este registro de prospecção?")) return;
     try {
@@ -198,6 +263,10 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
               Data
               <input type="date" style={{ ...inputStyle, marginTop: "5px" }} value={data} onChange={(e) => setData(e.target.value)} />
             </label>
+            <label style={{ ...labelStyle, flex: 1, minWidth: "120px" }}>
+              Horário
+              <input type="time" style={{ ...inputStyle, marginTop: "5px" }} value={horario} onChange={(e) => setHorario(e.target.value)} />
+            </label>
             <label style={{ ...labelStyle, flex: 2, minWidth: "200px" }}>
               Empresa prospectada
               <input style={{ ...inputStyle, marginTop: "5px" }} placeholder="Nome da empresa" maxLength={200} value={empresa} onChange={(e) => setEmpresa(e.target.value)} />
@@ -206,7 +275,9 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <label style={{ ...labelStyle, flex: 2, minWidth: "180px" }}>
               Contato
-              <input style={{ ...inputStyle, marginTop: "5px" }} placeholder="Com quem falou (opcional)" maxLength={200} value={contato} onChange={(e) => setContato(e.target.value)} />
+              {/* Sem "(opcional)" no texto — áudio do Mateus, 25/08/2026: não travar o
+                  registro, mas também não convidar a deixar em branco. */}
+              <input style={{ ...inputStyle, marginTop: "5px" }} placeholder="Com quem falou" maxLength={200} value={contato} onChange={(e) => setContato(e.target.value)} />
             </label>
             <label style={{ ...labelStyle, flex: 1, minWidth: "150px" }}>
               Telefone
@@ -237,31 +308,98 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
         {!carregando && relatorios.length === 0 && (
           <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhuma prospecção registrada ainda.</div>
         )}
-        {relatorios.map((p) => (
-          <div key={p.id} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "14px 18px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)" }}>{fmtData(p.data)}</span>
-              <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {p.empresa}</span>
-              {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {p.autor}</span>}
-              <button onClick={() => excluir(p.id)} style={{ ...botaoExcluir, marginLeft: "auto" }}>
-                Excluir
-              </button>
-            </div>
-            {(p.contato || p.telefone) && (
-              <div style={{ fontSize: "13px", color: "var(--gray-700)", marginTop: "6px" }}>
-                {p.contato && (
-                  <>
-                    Contato: <b>{p.contato}</b>
-                  </>
+        {relatorios.map((p) => {
+          const emEdicao = editandoId === p.id;
+          return (
+            <div key={p.id} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "14px 18px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)" }}>
+                  {fmtData(p.data)}
+                  {p.horario ? ` às ${p.horario}` : ""}
+                </span>
+                <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {p.empresa}</span>
+                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {p.autor}</span>}
+                {!emEdicao && (
+                  <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
+                    <button onClick={() => abrirEdicao(p)} style={botaoEditar}>
+                      Editar
+                    </button>
+                    {/* Excluir é só do gestor — o vendedor só edita (áudio 25/08/2026). */}
+                    {souGestor && (
+                      <button onClick={() => excluir(p.id)} style={botaoExcluir}>
+                        Excluir
+                      </button>
+                    )}
+                  </div>
                 )}
-                {p.telefone ? `${p.contato ? " · " : ""}Tel: ${p.telefone}` : ""}
               </div>
-            )}
-            {p.observacao && (
-              <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "4px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{p.observacao}</div>
-            )}
-          </div>
-        ))}
+              {emEdicao ? (
+                <div style={{ display: "grid", gap: "10px", marginTop: "10px" }}>
+                  <div style={{ fontSize: "12px", color: "var(--gray-500)" }}>
+                    A data não muda na edição — visita nova é um registro novo.
+                  </div>
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    <label style={{ ...labelStyle, flex: 1, minWidth: "110px" }}>
+                      Horário
+                      <input type="time" style={{ ...inputStyle, marginTop: "5px" }} value={ed.horario} onChange={(e) => setEd({ ...ed, horario: e.target.value })} />
+                    </label>
+                    <label style={{ ...labelStyle, flex: 2, minWidth: "180px" }}>
+                      Empresa prospectada
+                      <input style={{ ...inputStyle, marginTop: "5px" }} maxLength={200} value={ed.empresa} onChange={(e) => setEd({ ...ed, empresa: e.target.value })} />
+                    </label>
+                  </div>
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    <label style={{ ...labelStyle, flex: 2, minWidth: "160px" }}>
+                      Contato
+                      <input style={{ ...inputStyle, marginTop: "5px" }} placeholder="Com quem falou" maxLength={200} value={ed.contato} onChange={(e) => setEd({ ...ed, contato: e.target.value })} />
+                    </label>
+                    <label style={{ ...labelStyle, flex: 1, minWidth: "140px" }}>
+                      Telefone
+                      <input style={{ ...inputStyle, marginTop: "5px" }} maxLength={30} value={ed.telefone} onChange={(e) => setEd({ ...ed, telefone: e.target.value })} />
+                    </label>
+                  </div>
+                  <label style={labelStyle}>
+                    Observação
+                    <textarea
+                      style={{ ...inputStyle, marginTop: "5px", minHeight: "70px", resize: "vertical" }}
+                      placeholder="Como foi a prospecção, próximos passos…"
+                      maxLength={4000}
+                      value={ed.observacao}
+                      onChange={(e) => setEd({ ...ed, observacao: e.target.value })}
+                    />
+                  </label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={() => salvarEdicao(p.id)} disabled={salvandoEdicao} style={botaoPrimario(salvandoEdicao)}>
+                      {salvandoEdicao ? "Salvando…" : "Salvar edição"}
+                    </button>
+                    <button
+                      onClick={() => setEditandoId(null)}
+                      style={{ ...botaoEditar, borderColor: "var(--gray-200)", color: "var(--gray-500)", padding: "11px 18px", borderRadius: "10px" }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {(p.contato || p.telefone) && (
+                    <div style={{ fontSize: "13px", color: "var(--gray-700)", marginTop: "6px" }}>
+                      {p.contato && (
+                        <>
+                          Contato: <b>{p.contato}</b>
+                        </>
+                      )}
+                      {p.telefone ? `${p.contato ? " · " : ""}Tel: ${p.telefone}` : ""}
+                    </div>
+                  )}
+                  {p.observacao && (
+                    <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "4px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{p.observacao}</div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
     </>
   );

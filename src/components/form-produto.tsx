@@ -187,7 +187,9 @@ function pesoLegivel(bytes: number): string {
   return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
 }
 
-async function encolherFoto(file: File): Promise<File> {
+// Exportada: as fotos das visitas de rotina (ferramentas-tecnicas-screen) encolhem pelo
+// mesmo caminho antes de subir.
+export async function encolherFoto(file: File): Promise<File> {
   if (typeof window === "undefined" || !file.type.startsWith("image/")) return file;
   try {
     const bitmap = await createImageBitmap(file);

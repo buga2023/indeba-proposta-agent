@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato } from "@/lib/contracts";
+import { encolherFoto } from "@/components/form-produto";
 
 /**
  * Ferramentas Técnicas (áudio do Mateus 21/08/2026 + foto do bloco, que dá os rótulos),
@@ -180,6 +181,11 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
   const [telefone, setTelefone] = useState("");
   const [status, setStatus] = useState<StatusVisita>("nao_resolvido");
   const [observacao, setObservacao] = useState("");
+  // Anexos (áudio do Mateus, 25/08/2026): até 10 fotos e um documento por visita — o João
+  // bate foto dos equipamentos e anexa a assinatura colhida no cliente.
+  const [fotos, setFotos] = useState<File[]>([]);
+  const [documento, setDocumento] = useState<File | null>(null);
+  const [inputKey, setInputKey] = useState(0); // reset dos <input type="file"> após salvar
 
   async function carregar() {
     try {
@@ -208,6 +214,18 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
       setErro("Preencha data, horário, cliente e quem recebeu.");
       return;
     }
+    if (fotos.length > 10) {
+      setErro("No máximo 10 fotos por visita.");
+      return;
+    }
+    if (documento && documento.type !== "application/pdf" && !documento.type.startsWith("image/")) {
+      setErro("O documento anexado deve ser um PDF ou uma imagem.");
+      return;
+    }
+    if (documento && documento.size > 4 * 1024 * 1024) {
+      setErro("Documento acima de 4 MB — a plataforma recusa envios maiores.");
+      return;
+    }
     setEnviando(true);
     setErro(null);
     try {
@@ -225,12 +243,42 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
           observacao: observacao.trim() || null,
         }),
       });
-      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao registrar a visita."));
+      const criada = await r.json();
+      if (!r.ok) throw new Error(mensagemErro(criada, "Falha ao registrar a visita."));
+
+      // Anexos depois do registro, UM por requisição — o lote inteiro num POST só
+      // estouraria o teto de ~4,5 MB da função da Vercel. Falha de anexo não desfaz a
+      // visita: o registro vale mais que a foto, e dá para tentar de novo.
+      const falhas: string[] = [];
+      for (const original of fotos) {
+        const leve = await encolherFoto(original);
+        if (leve.size > 4 * 1024 * 1024) {
+          falhas.push(`${original.name} (acima de 4 MB mesmo comprimida)`);
+          continue;
+        }
+        const form = new FormData();
+        form.set("foto", leve);
+        const rf = await fetch(`/api/visitas/${encodeURIComponent(criada.id)}/fotos`, { method: "POST", body: form });
+        if (!rf.ok) falhas.push(original.name);
+      }
+      if (documento) {
+        const form = new FormData();
+        form.set("documento", documento);
+        const rd = await fetch(`/api/visitas/${encodeURIComponent(criada.id)}/documento`, { method: "POST", body: form });
+        if (!rd.ok) falhas.push(documento.name);
+      }
+      if (falhas.length > 0) {
+        setErro(`Visita registrada, mas alguns anexos falharam: ${falhas.join(", ")}.`);
+      }
+
       setCliente("");
       setQuemRecebeu("");
       setTelefone("");
       setObservacao("");
       setStatus("nao_resolvido");
+      setFotos([]);
+      setDocumento(null);
+      setInputKey((k) => k + 1);
       await carregar();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao registrar a visita.");
@@ -295,6 +343,29 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
               onChange={(e) => setObservacao(e.target.value)}
             />
           </label>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <label style={{ ...labelStyle, flex: 1, minWidth: "220px" }}>
+              Fotos ({fotos.length}/10)
+              <input
+                key={`f${inputKey}`}
+                type="file"
+                accept="image/*"
+                multiple
+                style={{ ...inputStyle, marginTop: "5px", padding: "8px 12px" }}
+                onChange={(e) => setFotos(Array.from(e.target.files ?? []).slice(0, 10))}
+              />
+            </label>
+            <label style={{ ...labelStyle, flex: 1, minWidth: "220px" }}>
+              Documento (PDF ou imagem, até 4 MB)
+              <input
+                key={`d${inputKey}`}
+                type="file"
+                accept="application/pdf,image/*"
+                style={{ ...inputStyle, marginTop: "5px", padding: "8px 12px" }}
+                onChange={(e) => setDocumento(e.target.files?.[0] ?? null)}
+              />
+            </label>
+          </div>
           <button type="submit" disabled={enviando} style={botaoPrimario(enviando)}>
             {enviando ? "Registrando…" : "Registrar visita"}
           </button>
@@ -328,6 +399,30 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
               </div>
               {v.observacao && (
                 <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "4px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{v.observacao}</div>
+              )}
+              {(v.fotos.length > 0 || v.temDocumento) && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
+                  {v.fotos.map((fotoId) => (
+                    <a key={fotoId} href={`/api/visitas/${encodeURIComponent(v.id)}/fotos/${encodeURIComponent(fotoId)}`} target="_blank" rel="noreferrer">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- rota autenticada, sem otimizador */}
+                      <img
+                        src={`/api/visitas/${encodeURIComponent(v.id)}/fotos/${encodeURIComponent(fotoId)}`}
+                        alt="Foto da visita"
+                        style={{ width: "54px", height: "54px", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--gray-200)", display: "block" }}
+                      />
+                    </a>
+                  ))}
+                  {v.temDocumento && (
+                    <a
+                      href={`/api/visitas/${encodeURIComponent(v.id)}/documento`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ padding: "6px 14px", borderRadius: "999px", border: "1px solid var(--blue-600)", color: "var(--blue-600)", fontSize: "12.5px", fontWeight: 600, textDecoration: "none" }}
+                    >
+                      Abrir documento{v.documentoNome ? ` (${v.documentoNome})` : ""}
+                    </a>
+                  )}
+                </div>
               )}
             </div>
           );

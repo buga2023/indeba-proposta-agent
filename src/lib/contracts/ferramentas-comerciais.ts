@@ -10,9 +10,10 @@ import { z } from "zod";
  */
 
 // Registro manual de prospecção feita pelo vendedor — diferente do módulo Prospecção,
-// que garimpa empresas por IA.
+// que garimpa empresas por IA. Horário além da data (áudio do Mateus, 25/08/2026).
 export const RelatorioProspeccaoCreate = z.object({
   data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "data no formato AAAA-MM-DD"),
+  horario: z.string().regex(/^\d{2}:\d{2}$/, "horário no formato HH:MM").nullable().optional(),
   empresa: z.string().min(2).max(200),
   contato: z.string().max(200).nullable().optional(),
   telefone: z.string().max(30).nullable().optional(),
@@ -20,9 +21,15 @@ export const RelatorioProspeccaoCreate = z.object({
 });
 export type RelatorioProspeccaoCreate = z.infer<typeof RelatorioProspeccaoCreate>;
 
+// Edição (áudio do Mateus, 25/08/2026): usuário e gestor editam, mas a DATA não muda —
+// fica a da visita registrada; visita nova é registro novo. Por isso `data` não entra.
+export const RelatorioProspeccaoUpdate = RelatorioProspeccaoCreate.omit({ data: true });
+export type RelatorioProspeccaoUpdate = z.infer<typeof RelatorioProspeccaoUpdate>;
+
 export const RelatorioProspeccao = z.object({
   id: z.string(),
   data: z.string(),
+  horario: z.string().nullable(),
   empresa: z.string(),
   contato: z.string().nullable(),
   telefone: z.string().nullable(),
