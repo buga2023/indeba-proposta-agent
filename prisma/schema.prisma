@@ -149,6 +149,9 @@ model VisitaCarteira {
   documentoMime String?
   documentoNome String?
   fotos         VisitaFoto[]
+  /// Lápide (áudio do Mateus, 25/08/2026: "preciso ter aba de excluídos e excluí-lo
+  /// definitivamente"): excluir marca aqui; a aba Excluídos restaura ou apaga de vez.
+  excluidoEm    DateTime?
   autor         String // login da sessão (dado crítico não vem do cliente)
   criadoEm      DateTime     @default(now())
   atualizadoEm  DateTime     @updatedAt
@@ -181,6 +184,8 @@ model RelatorioProspeccao {
   contato      String?
   telefone     String?
   observacao   String?
+  /// Lápide da aba Excluídos (áudio do Mateus, 25/08/2026) — igual a VisitaCarteira.
+  excluidoEm   DateTime?
   autor        String
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -197,6 +202,8 @@ model SolicitacaoComercial {
   cliente      String
   observacao   String?
   status       String   @default("pendente") // pendente | atendida
+  /// Lápide da aba Excluídos (áudio do Mateus, 25/08/2026) — igual a VisitaCarteira.
+  excluidoEm   DateTime?
   autor        String
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -215,6 +222,8 @@ model ContratoComodato {
   observacoes  String?
   contrato     Bytes?
   contratoMime String?
+  /// Lápide da aba Excluídos (áudio do Mateus, 25/08/2026) — igual a VisitaCarteira.
+  excluidoEm   DateTime?
   autor        String
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
@@ -231,6 +240,8 @@ model EstoqueComodato {
   peca         String
   quantidade   Int
   obs          String?
+  /// Lápide da aba Excluídos (áudio do Mateus, 25/08/2026) — igual a VisitaCarteira.
+  excluidoEm   DateTime?
   autor        String
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt

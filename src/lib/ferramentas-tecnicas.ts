@@ -2,10 +2,13 @@ import { prisma } from "@/lib/db";
 import {
   VisitaCarteira,
   type VisitaCarteiraCreate,
+  type VisitaCarteiraUpdate,
   ContratoComodato,
   type ContratoComodatoCreate,
+  type ContratoComodatoUpdate,
   EstoqueComodato,
   type EstoqueComodatoCreate,
+  type EstoqueComodatoUpdate,
 } from "@/lib/contracts";
 import type { SessaoUsuario } from "@/lib/auth";
 
@@ -15,6 +18,12 @@ import type { SessaoUsuario } from "@/lib/auth";
 function escopo(usuario: SessaoUsuario) {
   return usuario.papel === "admin" ? {} : { autor: usuario.email };
 }
+
+// Lápide da aba Excluídos (áudio do Mateus, 25/08/2026): excluir marca `excluidoEm`; as
+// listagens normais filtram os vivos, a aba Excluídos lista as lápides — de onde o gestor
+// restaura ou exclui definitivamente.
+const vivos = { excluidoEm: null } as const;
+const lapides = { excluidoEm: { not: null } } as const;
 
 const iso = <T extends { criadoEm: Date; atualizadoEm: Date }>(row: T) => ({
   ...row,
@@ -67,14 +76,29 @@ export async function criarVisita(autor: string, dados: VisitaCarteiraCreate): P
   return paraContrato(row);
 }
 
-// `area` separa as duas portas do mesmo relatório (Ferramentas Comerciais × Técnicas).
-export async function listarVisitas(usuario: SessaoUsuario, area: "comercial" | "tecnica"): Promise<VisitaCarteira[]> {
+// `area` separa as duas portas do mesmo relatório (Ferramentas Comerciais × Técnicas);
+// `excluidas` troca a lista dos vivos pela aba Excluídos.
+export async function listarVisitas(
+  usuario: SessaoUsuario,
+  area: "comercial" | "tecnica",
+  excluidas = false,
+): Promise<VisitaCarteira[]> {
   const rows = await prisma.visitaCarteira.findMany({
-    where: { ...escopo(usuario), area },
+    where: { ...escopo(usuario), area, ...(excluidas ? lapides : vivos) },
     orderBy: [{ data: "desc" }, { horario: "desc" }],
     select: selectVisita,
   });
   return rows.map(paraContrato);
+}
+
+// Edição (áudio do Mateus, 25/08/2026): vendedor edita as suas, gestor qualquer uma; a
+// data e a área não entram (o contrato de update nem as aceita). Alheia → count 0 → 404.
+export async function editarVisita(usuario: SessaoUsuario, id: string, dados: VisitaCarteiraUpdate): Promise<boolean> {
+  const r = await prisma.visitaCarteira.updateMany({
+    where: { id, ...escopo(usuario), ...vivos },
+    data: { ...dados, telefone: dados.telefone ?? null, observacao: dados.observacao ?? null },
+  });
+  return r.count > 0;
 }
 
 /* ── Anexos da visita (áudio do Mateus, 25/08/2026): até 10 fotos e um documento ── */
@@ -136,10 +160,21 @@ export async function documentoDaVisita(
   return { bytes: row.documento, mime: row.documentoMime, nome: row.documentoNome };
 }
 
-// `deleteMany` com o escopo no where: apagar registro alheio não acha linha → false → 404
-// na rota (posse não se revela, igual a autorDaProposta).
+// Excluir vira lápide (a rota barra quem não é gestor); restaurar e excluir definitivo
+// operam só sobre lápides. `updateMany`/`deleteMany` com o escopo no where: registro
+// alheio não acha linha → false → 404 na rota (posse não se revela).
 export async function excluirVisita(usuario: SessaoUsuario, id: string): Promise<boolean> {
-  const r = await prisma.visitaCarteira.deleteMany({ where: { id, ...escopo(usuario) } });
+  const r = await prisma.visitaCarteira.updateMany({ where: { id, ...escopo(usuario), ...vivos }, data: { excluidoEm: new Date() } });
+  return r.count > 0;
+}
+
+export async function restaurarVisita(usuario: SessaoUsuario, id: string): Promise<boolean> {
+  const r = await prisma.visitaCarteira.updateMany({ where: { id, ...escopo(usuario), ...lapides }, data: { excluidoEm: null } });
+  return r.count > 0;
+}
+
+export async function excluirVisitaDefinitivo(usuario: SessaoUsuario, id: string): Promise<boolean> {
+  const r = await prisma.visitaCarteira.deleteMany({ where: { id, ...escopo(usuario), ...lapides } });
   return r.count > 0;
 }
 
@@ -163,9 +198,9 @@ export async function criarContratoComodato(
   return ContratoComodato.parse({ ...iso(row), temContrato: row.contratoMime != null, contrato: undefined });
 }
 
-export async function listarContratosComodato(usuario: SessaoUsuario): Promise<ContratoComodato[]> {
+export async function listarContratosComodato(usuario: SessaoUsuario, excluidas = false): Promise<ContratoComodato[]> {
   const rows = await prisma.contratoComodato.findMany({
-    where: escopo(usuario),
+    where: { ...escopo(usuario), ...(excluidas ? lapides : vivos) },
     orderBy: { criadoEm: "desc" },
     select: {
       id: true,
@@ -181,8 +216,32 @@ export async function listarContratosComodato(usuario: SessaoUsuario): Promise<C
   return rows.map((r) => ContratoComodato.parse({ ...iso(r), temContrato: r.contratoMime != null }));
 }
 
+// Edição (áudio do Mateus, 25/08/2026); o PDF não muda por aqui.
+export async function editarContratoComodato(
+  usuario: SessaoUsuario,
+  id: string,
+  dados: ContratoComodatoUpdate,
+): Promise<boolean> {
+  const r = await prisma.contratoComodato.updateMany({
+    where: { id, ...escopo(usuario), ...vivos },
+    data: { ...dados, observacoes: dados.observacoes ?? null },
+  });
+  return r.count > 0;
+}
+
+// Excluir vira lápide (rota barra quem não é gestor); restaurar/definitivo só sobre lápides.
 export async function excluirContratoComodato(usuario: SessaoUsuario, id: string): Promise<boolean> {
-  const r = await prisma.contratoComodato.deleteMany({ where: { id, ...escopo(usuario) } });
+  const r = await prisma.contratoComodato.updateMany({ where: { id, ...escopo(usuario), ...vivos }, data: { excluidoEm: new Date() } });
+  return r.count > 0;
+}
+
+export async function restaurarContratoComodato(usuario: SessaoUsuario, id: string): Promise<boolean> {
+  const r = await prisma.contratoComodato.updateMany({ where: { id, ...escopo(usuario), ...lapides }, data: { excluidoEm: null } });
+  return r.count > 0;
+}
+
+export async function excluirContratoComodatoDefinitivo(usuario: SessaoUsuario, id: string): Promise<boolean> {
+  const r = await prisma.contratoComodato.deleteMany({ where: { id, ...escopo(usuario), ...lapides } });
   return r.count > 0;
 }
 
@@ -209,12 +268,39 @@ export async function criarEstoqueComodato(autor: string, dados: EstoqueComodato
   return EstoqueComodato.parse(iso(row));
 }
 
-export async function listarEstoqueComodato(usuario: SessaoUsuario): Promise<EstoqueComodato[]> {
-  const rows = await prisma.estoqueComodato.findMany({ where: escopo(usuario), orderBy: { criadoEm: "desc" } });
+export async function listarEstoqueComodato(usuario: SessaoUsuario, excluidas = false): Promise<EstoqueComodato[]> {
+  const rows = await prisma.estoqueComodato.findMany({
+    where: { ...escopo(usuario), ...(excluidas ? lapides : vivos) },
+    orderBy: { criadoEm: "desc" },
+  });
   return rows.map((r) => EstoqueComodato.parse(iso(r)));
 }
 
+// Edição (áudio do Mateus, 25/08/2026).
+export async function editarEstoqueComodato(
+  usuario: SessaoUsuario,
+  id: string,
+  dados: EstoqueComodatoUpdate,
+): Promise<boolean> {
+  const r = await prisma.estoqueComodato.updateMany({
+    where: { id, ...escopo(usuario), ...vivos },
+    data: { ...dados, obs: dados.obs ?? null },
+  });
+  return r.count > 0;
+}
+
+// Excluir vira lápide (rota barra quem não é gestor); restaurar/definitivo só sobre lápides.
 export async function excluirEstoqueComodato(usuario: SessaoUsuario, id: string): Promise<boolean> {
-  const r = await prisma.estoqueComodato.deleteMany({ where: { id, ...escopo(usuario) } });
+  const r = await prisma.estoqueComodato.updateMany({ where: { id, ...escopo(usuario), ...vivos }, data: { excluidoEm: new Date() } });
+  return r.count > 0;
+}
+
+export async function restaurarEstoqueComodato(usuario: SessaoUsuario, id: string): Promise<boolean> {
+  const r = await prisma.estoqueComodato.updateMany({ where: { id, ...escopo(usuario), ...lapides }, data: { excluidoEm: null } });
+  return r.count > 0;
+}
+
+export async function excluirEstoqueComodatoDefinitivo(usuario: SessaoUsuario, id: string): Promise<boolean> {
+  const r = await prisma.estoqueComodato.deleteMany({ where: { id, ...escopo(usuario), ...lapides } });
   return r.count > 0;
 }

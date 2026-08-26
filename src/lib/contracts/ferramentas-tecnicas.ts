@@ -31,6 +31,11 @@ export const VisitaCarteiraCreate = z.object({
 });
 export type VisitaCarteiraCreate = z.infer<typeof VisitaCarteiraCreate>;
 
+// Edição (áudio do Mateus, 25/08/2026): usuário e gestor editam, mas a DATA não muda —
+// fica a da visita registrada (visita nova = registro novo); `area` também não migra.
+export const VisitaCarteiraUpdate = VisitaCarteiraCreate.omit({ area: true, data: true });
+export type VisitaCarteiraUpdate = z.infer<typeof VisitaCarteiraUpdate>;
+
 export const VisitaCarteira = z.object({
   id: z.string(),
   area: AreaVisita,
@@ -62,6 +67,11 @@ export const ContratoComodatoCreate = z.object({
 });
 export type ContratoComodatoCreate = z.infer<typeof ContratoComodatoCreate>;
 
+// Edição (áudio do Mateus, 25/08/2026): mesmos campos do cadastro; o PDF anexado não
+// passa por aqui (trocar contrato = excluir e cadastrar de novo).
+export const ContratoComodatoUpdate = ContratoComodatoCreate;
+export type ContratoComodatoUpdate = z.infer<typeof ContratoComodatoUpdate>;
+
 // `temContrato` derivado no servidor: a listagem não trafega os bytes — o PDF é servido
 // por /api/comodatos/<id>/pdf quando alguém clica.
 export const ContratoComodato = z.object({
@@ -83,6 +93,10 @@ export const EstoqueComodatoCreate = z.object({
   obs: z.string().max(4000).nullable().optional(),
 });
 export type EstoqueComodatoCreate = z.infer<typeof EstoqueComodatoCreate>;
+
+// Edição (áudio do Mateus, 25/08/2026): mesmos campos do lançamento.
+export const EstoqueComodatoUpdate = EstoqueComodatoCreate;
+export type EstoqueComodatoUpdate = z.infer<typeof EstoqueComodatoUpdate>;
 
 export const EstoqueComodato = z.object({
   id: z.string(),

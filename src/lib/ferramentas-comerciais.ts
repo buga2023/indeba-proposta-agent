@@ -5,7 +5,7 @@ import {
   type RelatorioProspeccaoUpdate,
   SolicitacaoComercial,
   type SolicitacaoComercialCreate,
-  type StatusSolicitacaoComercial,
+  type SolicitacaoComercialUpdate,
 } from "@/lib/contracts";
 import type { SessaoUsuario } from "@/lib/auth";
 
@@ -14,6 +14,12 @@ import type { SessaoUsuario } from "@/lib/auth";
 function escopo(usuario: SessaoUsuario) {
   return usuario.papel === "admin" ? {} : { autor: usuario.email };
 }
+
+// Lápide da aba Excluídos (áudio do Mateus, 25/08/2026) — mesmo desenho de
+// lib/ferramentas-tecnicas.ts: excluir marca `excluidoEm`, a aba Excluídos restaura
+// ou apaga definitivamente.
+const vivos = { excluidoEm: null } as const;
+const lapides = { excluidoEm: { not: null } } as const;
 
 const iso = <T extends { criadoEm: Date; atualizadoEm: Date }>(row: T) => ({
   ...row,
@@ -37,8 +43,11 @@ export async function criarRelatorioProspeccao(autor: string, dados: RelatorioPr
   return RelatorioProspeccao.parse(iso(row));
 }
 
-export async function listarRelatoriosProspeccao(usuario: SessaoUsuario): Promise<RelatorioProspeccao[]> {
-  const rows = await prisma.relatorioProspeccao.findMany({ where: escopo(usuario), orderBy: [{ data: "desc" }, { criadoEm: "desc" }] });
+export async function listarRelatoriosProspeccao(usuario: SessaoUsuario, excluidas = false): Promise<RelatorioProspeccao[]> {
+  const rows = await prisma.relatorioProspeccao.findMany({
+    where: { ...escopo(usuario), ...(excluidas ? lapides : vivos) },
+    orderBy: [{ data: "desc" }, { criadoEm: "desc" }],
+  });
   return rows.map((r) => RelatorioProspeccao.parse(iso(r)));
 }
 
@@ -51,11 +60,9 @@ export async function editarRelatorioProspeccao(
   dados: RelatorioProspeccaoUpdate,
 ): Promise<boolean> {
   const r = await prisma.relatorioProspeccao.updateMany({
-    where: { id, ...escopo(usuario) },
+    where: { id, ...escopo(usuario), ...vivos },
     data: {
       ...dados,
-      horario: dados.horario ?? null,
-      contato: dados.contato ?? null,
       telefone: dados.telefone ?? null,
       observacao: dados.observacao ?? null,
     },
@@ -64,9 +71,20 @@ export async function editarRelatorioProspeccao(
 }
 
 // Excluir é só do gestor (áudio do Mateus, 25/08/2026: o usuário só edita) — a rota barra
-// o papel antes de chegar aqui; o escopo continua por segurança em profundidade.
+// o papel antes de chegar aqui; o escopo continua por segurança em profundidade. Vira
+// lápide; restaurar e excluir definitivo operam só sobre lápides.
 export async function excluirRelatorioProspeccao(usuario: SessaoUsuario, id: string): Promise<boolean> {
-  const r = await prisma.relatorioProspeccao.deleteMany({ where: { id, ...escopo(usuario) } });
+  const r = await prisma.relatorioProspeccao.updateMany({ where: { id, ...escopo(usuario), ...vivos }, data: { excluidoEm: new Date() } });
+  return r.count > 0;
+}
+
+export async function restaurarRelatorioProspeccao(usuario: SessaoUsuario, id: string): Promise<boolean> {
+  const r = await prisma.relatorioProspeccao.updateMany({ where: { id, ...escopo(usuario), ...lapides }, data: { excluidoEm: null } });
+  return r.count > 0;
+}
+
+export async function excluirRelatorioProspeccaoDefinitivo(usuario: SessaoUsuario, id: string): Promise<boolean> {
+  const r = await prisma.relatorioProspeccao.deleteMany({ where: { id, ...escopo(usuario), ...lapides } });
   return r.count > 0;
 }
 
@@ -79,23 +97,39 @@ export async function criarSolicitacaoComercial(autor: string, dados: Solicitaca
   return SolicitacaoComercial.parse(iso(row));
 }
 
-export async function listarSolicitacoesComerciais(usuario: SessaoUsuario): Promise<SolicitacaoComercial[]> {
-  const rows = await prisma.solicitacaoComercial.findMany({ where: escopo(usuario), orderBy: { criadoEm: "desc" } });
+export async function listarSolicitacoesComerciais(usuario: SessaoUsuario, excluidas = false): Promise<SolicitacaoComercial[]> {
+  const rows = await prisma.solicitacaoComercial.findMany({
+    where: { ...escopo(usuario), ...(excluidas ? lapides : vivos) },
+    orderBy: { criadoEm: "desc" },
+  });
   return rows.map((r) => SolicitacaoComercial.parse(iso(r)));
 }
 
-// Pendente ⇄ atendida, com o MESMO escopo da listagem: o vendedor marca as suas
-// (ex.: a amostra chegou), o gestor marca qualquer uma. Alheia → false → 404 na rota.
-export async function atualizarStatusSolicitacao(
+// Edição com o MESMO escopo da listagem (áudio do Mateus, 25/08/2026: "editar para a
+// parte deles"): o vendedor ajusta as suas — status (a amostra chegou), tipo, cliente,
+// observação —, o gestor qualquer uma. Alheia → false → 404 na rota.
+export async function editarSolicitacaoComercial(
   usuario: SessaoUsuario,
   id: string,
-  status: StatusSolicitacaoComercial,
+  dados: SolicitacaoComercialUpdate,
 ): Promise<boolean> {
-  const r = await prisma.solicitacaoComercial.updateMany({ where: { id, ...escopo(usuario) }, data: { status } });
+  const r = await prisma.solicitacaoComercial.updateMany({ where: { id, ...escopo(usuario), ...vivos }, data: dados });
   return r.count > 0;
 }
 
+// Excluir é só do gestor (a rota barra o papel); vira lápide — restaurar e excluir
+// definitivo operam só sobre lápides.
 export async function excluirSolicitacaoComercial(usuario: SessaoUsuario, id: string): Promise<boolean> {
-  const r = await prisma.solicitacaoComercial.deleteMany({ where: { id, ...escopo(usuario) } });
+  const r = await prisma.solicitacaoComercial.updateMany({ where: { id, ...escopo(usuario), ...vivos }, data: { excluidoEm: new Date() } });
+  return r.count > 0;
+}
+
+export async function restaurarSolicitacaoComercial(usuario: SessaoUsuario, id: string): Promise<boolean> {
+  const r = await prisma.solicitacaoComercial.updateMany({ where: { id, ...escopo(usuario), ...lapides }, data: { excluidoEm: null } });
+  return r.count > 0;
+}
+
+export async function excluirSolicitacaoComercialDefinitivo(usuario: SessaoUsuario, id: string): Promise<boolean> {
+  const r = await prisma.solicitacaoComercial.deleteMany({ where: { id, ...escopo(usuario), ...lapides } });
   return r.count > 0;
 }

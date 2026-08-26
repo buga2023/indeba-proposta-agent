@@ -10,12 +10,13 @@ import { z } from "zod";
  */
 
 // Registro manual de prospecção feita pelo vendedor — diferente do módulo Prospecção,
-// que garimpa empresas por IA. Horário além da data (áudio do Mateus, 25/08/2026).
+// que garimpa empresas por IA. Horário além da data (áudio do Mateus, 25/08/2026), e
+// "com quem falou" OBRIGATÓRIO (áudio de 25/08: sem asterisco não registra).
 export const RelatorioProspeccaoCreate = z.object({
   data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "data no formato AAAA-MM-DD"),
-  horario: z.string().regex(/^\d{2}:\d{2}$/, "horário no formato HH:MM").nullable().optional(),
+  horario: z.string().regex(/^\d{2}:\d{2}$/, "horário no formato HH:MM"),
   empresa: z.string().min(2).max(200),
-  contato: z.string().max(200).nullable().optional(),
+  contato: z.string().min(2, "informe com quem falou").max(200),
   telefone: z.string().max(30).nullable().optional(),
   observacao: z.string().max(4000).nullable().optional(),
 });
@@ -55,8 +56,15 @@ export const SolicitacaoComercialCreate = z.object({
 });
 export type SolicitacaoComercialCreate = z.infer<typeof SolicitacaoComercialCreate>;
 
-// Só o status muda depois de criada (pendente → atendida, e volta se marcaram errado).
-export const SolicitacaoComercialUpdate = z.object({ status: StatusSolicitacaoComercial });
+// Edição (áudio do Mateus, 25/08/2026: "editar para a parte deles"): além do andamento
+// (pendente → atendida), o autor ajusta tipo, cliente e observação. Tudo opcional — o
+// PATCH manda só o que mudou.
+export const SolicitacaoComercialUpdate = z.object({
+  status: StatusSolicitacaoComercial.optional(),
+  tipo: TipoSolicitacaoComercial.optional(),
+  cliente: z.string().min(2).max(200).optional(),
+  observacao: z.string().max(4000).nullable().optional(),
+});
 export type SolicitacaoComercialUpdate = z.infer<typeof SolicitacaoComercialUpdate>;
 
 export const SolicitacaoComercial = z.object({

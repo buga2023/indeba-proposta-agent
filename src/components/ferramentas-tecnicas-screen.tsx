@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato } from "@/lib/contracts";
 import { encolherFoto } from "@/components/form-produto";
 
@@ -68,6 +68,18 @@ export const botaoExcluir = {
   flex: "none",
 } as const;
 
+export const botaoEditar = {
+  padding: "5px 11px",
+  borderRadius: "999px",
+  border: "1px solid var(--blue-600)",
+  background: "white",
+  color: "var(--blue-600)",
+  fontSize: "12px",
+  fontWeight: 600,
+  cursor: "pointer",
+  flex: "none",
+} as const;
+
 const STATUS_VISITA: Record<StatusVisita, { label: string; cor: string; bg: string }> = {
   resolvido: { label: "Resolvido", cor: "#15803d", bg: "#dcfce7" },
   nao_resolvido: { label: "Não resolvido", cor: "#b45309", bg: "#fef3c7" },
@@ -113,7 +125,8 @@ export function FerramentasTecnicasScreen() {
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "18px" }}>
         {(
           [
-            { key: "visitas", label: "Relatório de Visitas de Rotina" },
+            // "Registro", não "Relatório" — áudio do Mateus, 25/08/2026.
+            { key: "visitas", label: "Registro de Visitas de Rotina" },
             { key: "contratos", label: "Contratos e Comodatos" },
             { key: "estoque", label: "Estoque de Comodatos" },
           ] as { key: Aba; label: string }[]
@@ -162,6 +175,117 @@ export type AbaProps = {
   souGestor: boolean;
 };
 
+/* ═══════════ Aba Excluídos (compartilhada) ═══════════ */
+
+// Pedido do Mateus (25/08/2026): "a opção de excluir, eu preciso ter aba de excluídos e
+// excluí-lo definitivamente". Excluir vira lápide; aqui o gestor restaura ou apaga de vez.
+// Genérico porque o esquema é o MESMO em visitas, prospecções, solicitações, contratos e
+// estoque — só mudam o endpoint, o campo da resposta e como cada linha se apresenta.
+export function BotaoExcluidos({ ativo, onClick }: { ativo: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        marginLeft: "auto",
+        padding: "6px 14px",
+        borderRadius: "999px",
+        border: `1px solid ${ativo ? "#b91c1c" : "var(--gray-200)"}`,
+        background: ativo ? "#b91c1c" : "white",
+        color: ativo ? "white" : "var(--gray-500)",
+        fontSize: "12px",
+        fontWeight: 600,
+        cursor: "pointer",
+        flex: "none",
+      }}
+    >
+      {ativo ? "← Voltar aos registros" : "Excluídos"}
+    </button>
+  );
+}
+
+export function BlocoExcluidos<T extends { id: string }>({
+  endpoint,
+  chave,
+  render,
+  setErro,
+  aoMudar,
+}: {
+  endpoint: string; // a mesma URL da listagem (ex.: "/api/visitas?area=tecnica")
+  chave: string; // campo da resposta com a lista (ex.: "visitas")
+  render: (item: T) => ReactNode;
+  setErro: (e: string | null) => void;
+  aoMudar: () => void | Promise<void>; // recarrega a lista dos vivos após restaurar
+}) {
+  const [itens, setItens] = useState<T[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const sep = endpoint.includes("?") ? "&" : "?";
+
+  async function carregar() {
+    try {
+      const r = await fetch(`${endpoint}${sep}excluidas=1`);
+      const d = await r.json();
+      if (!r.ok) throw new Error(mensagemErro(d, "Falha ao carregar os excluídos."));
+      setErro(null);
+      setItens((d as Record<string, T[]>)[chave] ?? []);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao carregar os excluídos.");
+    } finally {
+      setCarregando(false);
+    }
+  }
+  useEffect(() => {
+    void Promise.resolve().then(carregar);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function restaurar(id: string) {
+    try {
+      const r = await fetch(`${endpoint}${sep}id=${encodeURIComponent(id)}&acao=restaurar`, { method: "PATCH" });
+      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao restaurar o registro."));
+      await carregar();
+      await aoMudar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao restaurar o registro.");
+    }
+  }
+
+  async function excluirDefinitivo(id: string) {
+    if (!window.confirm("Excluir DEFINITIVAMENTE? Esta ação não tem volta.")) return;
+    try {
+      const r = await fetch(`${endpoint}${sep}id=${encodeURIComponent(id)}&definitivo=1`, { method: "DELETE" });
+      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao excluir definitivamente."));
+      await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao excluir definitivamente.");
+    }
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div style={{ fontSize: "12px", fontWeight: 700, color: "#b91c1c", textTransform: "uppercase", letterSpacing: ".4px" }}>
+        Excluídos · {itens.length}
+      </div>
+      {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
+      {!carregando && itens.length === 0 && (
+        <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhum registro excluído.</div>
+      )}
+      {itens.map((item) => (
+        <div key={item.id} style={{ background: "#fff7f7", border: "1px solid #fecaca", borderRadius: "14px", padding: "14px 18px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: "200px" }}>{render(item)}</div>
+            <button onClick={() => restaurar(item.id)} style={botaoEditar}>
+              Restaurar
+            </button>
+            <button onClick={() => excluirDefinitivo(item.id)} style={botaoExcluir}>
+              Excluir definitivamente
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ═══════════ Aba 1 — Registro de Visitas da Carteira ═══════════ */
 
 // Exportada: a foto do bloco lista o MESMO relatório nas Ferramentas Comerciais e nas
@@ -186,6 +310,17 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
   const [fotos, setFotos] = useState<File[]>([]);
   const [documento, setDocumento] = useState<File | null>(null);
   const [inputKey, setInputKey] = useState(0); // reset dos <input type="file"> após salvar
+
+  // Edição (áudio do Mateus, 25/08/2026): usuário e gestor editam; a data NÃO muda.
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [ed, setEd] = useState({ horario: "", cliente: "", quemRecebeu: "", telefone: "", status: "nao_resolvido" as StatusVisita, observacao: "" });
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+  // Aba Excluídos (só o gestor exclui/restaura).
+  const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
+
+  // Status resolvido/não resolvido é só da visita TÉCNICA (áudio do Mateus, 25/08/2026:
+  // "isso aqui é uma visita de rotina… ferramenta comercial, não precisa").
+  const comStatus = area === "tecnica";
 
   async function carregar() {
     try {
@@ -287,14 +422,59 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
     }
   }
 
+  // Excluir é só do gestor (o botão nem aparece para o vendedor); vai para a aba
+  // Excluídos, de onde dá para restaurar ou excluir definitivamente.
   async function excluir(id: string) {
-    if (!window.confirm("Excluir este registro de visita?")) return;
+    if (!window.confirm("Excluir este registro de visita? Ele vai para a aba Excluídos.")) return;
     try {
       const r = await fetch(`/api/visitas?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao excluir a visita."));
       await carregar();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao excluir a visita.");
+    }
+  }
+
+  function abrirEdicao(v: VisitaCarteira) {
+    setEditandoId(v.id);
+    setEd({
+      horario: v.horario,
+      cliente: v.cliente,
+      quemRecebeu: v.quemRecebeu,
+      telefone: v.telefone ?? "",
+      status: v.status,
+      observacao: v.observacao ?? "",
+    });
+    setErro(null);
+  }
+
+  async function salvarEdicao(id: string) {
+    if (!ed.horario || ed.cliente.trim().length < 2 || ed.quemRecebeu.trim().length < 2) {
+      setErro("Preencha horário, cliente e quem recebeu.");
+      return;
+    }
+    setSalvandoEdicao(true);
+    setErro(null);
+    try {
+      const r = await fetch(`/api/visitas?id=${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          horario: ed.horario,
+          cliente: ed.cliente.trim(),
+          quemRecebeu: ed.quemRecebeu.trim(),
+          telefone: ed.telefone.trim() || null,
+          status: ed.status,
+          observacao: ed.observacao.trim() || null,
+        }),
+      });
+      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao editar a visita."));
+      setEditandoId(null);
+      await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao editar a visita.");
+    } finally {
+      setSalvandoEdicao(false);
     }
   }
 
@@ -311,13 +491,15 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
               Horário
               <input type="time" style={{ ...inputStyle, marginTop: "5px" }} value={horario} onChange={(e) => setHorario(e.target.value)} />
             </label>
-            <label style={{ ...labelStyle, flex: 1, minWidth: "170px" }}>
-              Status
-              <select style={{ ...inputStyle, marginTop: "5px" }} value={status} onChange={(e) => setStatus(e.target.value as StatusVisita)}>
-                <option value="nao_resolvido">Não resolvido</option>
-                <option value="resolvido">Resolvido</option>
-              </select>
-            </label>
+            {comStatus && (
+              <label style={{ ...labelStyle, flex: 1, minWidth: "170px" }}>
+                Status
+                <select style={{ ...inputStyle, marginTop: "5px" }} value={status} onChange={(e) => setStatus(e.target.value as StatusVisita)}>
+                  <option value="nao_resolvido">Não resolvido</option>
+                  <option value="resolvido">Resolvido</option>
+                </select>
+              </label>
+            )}
           </div>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <label style={{ ...labelStyle, flex: 2, minWidth: "200px" }}>
@@ -372,33 +554,128 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
         </div>
       </form>
 
+      {mostrarExcluidos && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <BotaoExcluidos ativo onClick={() => setMostrarExcluidos(false)} />
+          </div>
+          <BlocoExcluidos<VisitaCarteira>
+            endpoint={`/api/visitas?area=${area}`}
+            chave="visitas"
+            setErro={setErro}
+            aoMudar={carregar}
+            render={(v) => (
+              <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
+                <b>{fmtData(v.data)} às {v.horario}</b> · {v.cliente} · Recebeu: {v.quemRecebeu}
+                {souGestor ? ` · ${v.autor}` : ""}
+              </span>
+            )}
+          />
+        </div>
+      )}
+      {!mostrarExcluidos && (
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
-          {souGestor ? "Todas as visitas" : "Minhas visitas"} · {visitas.length}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
+            {souGestor ? "Todas as visitas" : "Minhas visitas"} · {visitas.length}
+          </div>
+          {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && visitas.length === 0 && <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhuma visita registrada ainda.</div>}
         {visitas.map((v) => {
           const st = STATUS_VISITA[v.status];
+          const emEdicao = editandoId === v.id;
           return (
             <div key={v.id} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "14px 18px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                <span style={{ fontWeight: 700, fontSize: "12px", padding: "3px 9px", borderRadius: "999px", color: st.cor, background: st.bg }}>{st.label}</span>
+                {comStatus && (
+                  <span style={{ fontWeight: 700, fontSize: "12px", padding: "3px 9px", borderRadius: "999px", color: st.cor, background: st.bg }}>{st.label}</span>
+                )}
                 <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)" }}>
                   {fmtData(v.data)} às {v.horario}
                 </span>
                 <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {v.cliente}</span>
                 {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {v.autor}</span>}
-                <button onClick={() => excluir(v.id)} style={{ ...botaoExcluir, marginLeft: "auto" }}>
-                  Excluir
-                </button>
+                {!emEdicao && (
+                  <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
+                    <button onClick={() => abrirEdicao(v)} style={botaoEditar}>
+                      Editar
+                    </button>
+                    {/* Excluir é só do gestor — o vendedor só edita (áudio 25/08/2026). */}
+                    {souGestor && (
+                      <button onClick={() => excluir(v.id)} style={botaoExcluir}>
+                        Excluir
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
+              {emEdicao ? (
+                <div style={{ display: "grid", gap: "10px", marginTop: "10px" }}>
+                  <div style={{ fontSize: "12px", color: "var(--gray-500)" }}>
+                    A data não muda na edição — visita nova é um registro novo.
+                  </div>
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    <label style={{ ...labelStyle, flex: 1, minWidth: "110px" }}>
+                      Horário
+                      <input type="time" style={{ ...inputStyle, marginTop: "5px" }} value={ed.horario} onChange={(e) => setEd({ ...ed, horario: e.target.value })} />
+                    </label>
+                    {comStatus && (
+                      <label style={{ ...labelStyle, flex: 1, minWidth: "150px" }}>
+                        Status
+                        <select style={{ ...inputStyle, marginTop: "5px" }} value={ed.status} onChange={(e) => setEd({ ...ed, status: e.target.value as StatusVisita })}>
+                          <option value="nao_resolvido">Não resolvido</option>
+                          <option value="resolvido">Resolvido</option>
+                        </select>
+                      </label>
+                    )}
+                    <label style={{ ...labelStyle, flex: 2, minWidth: "180px" }}>
+                      Cliente
+                      <input style={{ ...inputStyle, marginTop: "5px" }} maxLength={200} value={ed.cliente} onChange={(e) => setEd({ ...ed, cliente: e.target.value })} />
+                    </label>
+                  </div>
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    <label style={{ ...labelStyle, flex: 2, minWidth: "180px" }}>
+                      Quem recebeu
+                      <input style={{ ...inputStyle, marginTop: "5px" }} maxLength={200} value={ed.quemRecebeu} onChange={(e) => setEd({ ...ed, quemRecebeu: e.target.value })} />
+                    </label>
+                    <label style={{ ...labelStyle, flex: 1, minWidth: "140px" }}>
+                      Telefone
+                      <input style={{ ...inputStyle, marginTop: "5px" }} maxLength={30} value={ed.telefone} onChange={(e) => setEd({ ...ed, telefone: e.target.value })} />
+                    </label>
+                  </div>
+                  <label style={labelStyle}>
+                    Observação
+                    <textarea
+                      style={{ ...inputStyle, marginTop: "5px", minHeight: "70px", resize: "vertical" }}
+                      maxLength={4000}
+                      value={ed.observacao}
+                      onChange={(e) => setEd({ ...ed, observacao: e.target.value })}
+                    />
+                  </label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={() => salvarEdicao(v.id)} disabled={salvandoEdicao} style={botaoPrimario(salvandoEdicao)}>
+                      {salvandoEdicao ? "Salvando…" : "Salvar edição"}
+                    </button>
+                    <button
+                      onClick={() => setEditandoId(null)}
+                      style={{ ...botaoEditar, borderColor: "var(--gray-200)", color: "var(--gray-500)", padding: "11px 18px", borderRadius: "10px" }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
               <div style={{ fontSize: "13px", color: "var(--gray-700)", marginTop: "6px" }}>
                 Recebeu: <b>{v.quemRecebeu}</b>
                 {v.telefone ? ` · Tel: ${v.telefone}` : ""}
               </div>
               {v.observacao && (
                 <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "4px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{v.observacao}</div>
+              )}
+                </>
               )}
               {(v.fotos.length > 0 || v.temDocumento) && (
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
@@ -428,6 +705,7 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
           );
         })}
       </div>
+      )}
     </>
   );
 }
@@ -446,6 +724,12 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [observacoes, setObservacoes] = useState("");
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [inputKey, setInputKey] = useState(0); // reset do <input type="file"> após salvar
+
+  // Edição (áudio do Mateus, 25/08/2026) + aba Excluídos.
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [ed, setEd] = useState({ cliente: "", comodatos: "", observacoes: "" });
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+  const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
 
   async function carregar() {
     try {
@@ -504,8 +788,32 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
     }
   }
 
+  async function salvarEdicao(id: string) {
+    if (ed.cliente.trim().length < 2 || ed.comodatos.trim().length < 1) {
+      setErro("Preencha o nome do cliente e os comodatos do contrato.");
+      return;
+    }
+    setSalvandoEdicao(true);
+    setErro(null);
+    try {
+      const r = await fetch(`/api/comodatos?id=${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cliente: ed.cliente.trim(), comodatos: ed.comodatos.trim(), observacoes: ed.observacoes.trim() || null }),
+      });
+      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao editar o contrato."));
+      setEditandoId(null);
+      await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao editar o contrato.");
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  }
+
+  // Excluir é só do gestor; o contrato vai para a aba Excluídos (restaurável).
   async function excluir(id: string) {
-    if (!window.confirm("Excluir este contrato? O PDF anexado também será removido.")) return;
+    if (!window.confirm("Excluir este contrato? Ele vai para a aba Excluídos.")) return;
     try {
       const r = await fetch(`/api/comodatos?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao excluir o contrato."));
@@ -559,9 +867,32 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
         </div>
       </form>
 
+      {mostrarExcluidos && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <BotaoExcluidos ativo onClick={() => setMostrarExcluidos(false)} />
+          </div>
+          <BlocoExcluidos<ContratoComodato>
+            endpoint="/api/comodatos"
+            chave="contratos"
+            setErro={setErro}
+            aoMudar={carregar}
+            render={(c) => (
+              <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
+                <b>{c.cliente}</b> · {new Date(c.criadoEm).toLocaleDateString("pt-BR")}
+                {souGestor ? ` · ${c.autor}` : ""}
+              </span>
+            )}
+          />
+        </div>
+      )}
+      {!mostrarExcluidos && (
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
-          {souGestor ? "Todos os contratos" : "Meus contratos"} · {contratos.length}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
+            {souGestor ? "Todos os contratos" : "Meus contratos"} · {contratos.length}
+          </div>
+          {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && contratos.length === 0 && <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhum contrato cadastrado ainda.</div>}
@@ -598,7 +929,44 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
                   {new Date(c.criadoEm).toLocaleDateString("pt-BR")}
                 </span>
               </button>
-              {estaAberto && (
+              {estaAberto && editandoId === c.id && (
+                <div style={{ padding: "0 18px 15px 41px", display: "grid", gap: "10px" }}>
+                  <label style={labelStyle}>
+                    Nome do cliente
+                    <input style={{ ...inputStyle, marginTop: "5px" }} maxLength={200} value={ed.cliente} onChange={(e) => setEd({ ...ed, cliente: e.target.value })} />
+                  </label>
+                  <label style={labelStyle}>
+                    Comodatos deste cliente
+                    <textarea
+                      style={{ ...inputStyle, marginTop: "5px", minHeight: "80px", resize: "vertical" }}
+                      maxLength={8000}
+                      value={ed.comodatos}
+                      onChange={(e) => setEd({ ...ed, comodatos: e.target.value })}
+                    />
+                  </label>
+                  <label style={labelStyle}>
+                    Observações
+                    <textarea
+                      style={{ ...inputStyle, marginTop: "5px", minHeight: "60px", resize: "vertical" }}
+                      maxLength={4000}
+                      value={ed.observacoes}
+                      onChange={(e) => setEd({ ...ed, observacoes: e.target.value })}
+                    />
+                  </label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={() => salvarEdicao(c.id)} disabled={salvandoEdicao} style={botaoPrimario(salvandoEdicao)}>
+                      {salvandoEdicao ? "Salvando…" : "Salvar edição"}
+                    </button>
+                    <button
+                      onClick={() => setEditandoId(null)}
+                      style={{ ...botaoEditar, borderColor: "var(--gray-200)", color: "var(--gray-500)", padding: "11px 18px", borderRadius: "10px" }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+              {estaAberto && editandoId !== c.id && (
                 <div style={{ padding: "0 18px 15px 41px", display: "grid", gap: "10px" }}>
                   <div>
                     <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px", marginBottom: "3px" }}>Comodatos</div>
@@ -621,9 +989,22 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
                         Abrir contrato (PDF)
                       </a>
                     )}
-                    <button onClick={() => excluir(c.id)} style={botaoExcluir}>
-                      Excluir contrato
+                    <button
+                      onClick={() => {
+                        setEditandoId(c.id);
+                        setEd({ cliente: c.cliente, comodatos: c.comodatos, observacoes: c.observacoes ?? "" });
+                        setErro(null);
+                      }}
+                      style={botaoEditar}
+                    >
+                      Editar
                     </button>
+                    {/* Excluir é só do gestor — o vendedor só edita (áudio 25/08/2026). */}
+                    {souGestor && (
+                      <button onClick={() => excluir(c.id)} style={botaoExcluir}>
+                        Excluir contrato
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -631,6 +1012,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
           );
         })}
       </div>
+      )}
     </>
   );
 }
@@ -646,6 +1028,12 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [peca, setPeca] = useState("");
   const [quantidade, setQuantidade] = useState("");
   const [obs, setObs] = useState("");
+
+  // Edição (áudio do Mateus, 25/08/2026) + aba Excluídos.
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [ed, setEd] = useState({ codigo: "", peca: "", quantidade: "", obs: "" });
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+  const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
 
   async function carregar() {
     try {
@@ -694,8 +1082,33 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
     }
   }
 
+  async function salvarEdicao(id: string) {
+    const qtd = Number(ed.quantidade);
+    if (!ed.codigo.trim() || !ed.peca.trim() || !Number.isInteger(qtd) || qtd < 0) {
+      setErro("Preencha código, peça e uma quantidade válida.");
+      return;
+    }
+    setSalvandoEdicao(true);
+    setErro(null);
+    try {
+      const r = await fetch(`/api/estoque-comodatos?id=${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo: ed.codigo.trim(), peca: ed.peca.trim(), quantidade: qtd, obs: ed.obs.trim() || null }),
+      });
+      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao editar o item."));
+      setEditandoId(null);
+      await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao editar o item.");
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  }
+
+  // Excluir é só do gestor; o item vai para a aba Excluídos (restaurável).
   async function excluir(id: string) {
-    if (!window.confirm("Excluir este lançamento do estoque?")) return;
+    if (!window.confirm("Excluir este lançamento? Ele vai para a aba Excluídos.")) return;
     try {
       const r = await fetch(`/api/estoque-comodatos?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao excluir o item."));
@@ -724,7 +1137,7 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
     a.click();
   }
 
-  const cols = "110px 1fr 90px 1.2fr 120px";
+  const cols = "110px 1fr 90px 1.2fr 170px";
 
   return (
     <>
@@ -762,10 +1175,32 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
         </div>
       </form>
 
+      {mostrarExcluidos && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <BotaoExcluidos ativo onClick={() => setMostrarExcluidos(false)} />
+          </div>
+          <BlocoExcluidos<EstoqueComodato>
+            endpoint="/api/estoque-comodatos"
+            chave="itens"
+            setErro={setErro}
+            aoMudar={carregar}
+            render={(i) => (
+              <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
+                <b>{i.codigo}</b> · {i.peca} · Qtd: {i.quantidade}
+                {souGestor ? ` · ${i.autor}` : ""}
+              </span>
+            )}
+          />
+        </div>
+      )}
+      {!mostrarExcluidos && (
+      <>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
         <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
           {souGestor ? "Todos os lançamentos" : "Meus lançamentos"} · {itens.length}
         </div>
+        {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         <button
           onClick={exportar}
           disabled={itens.length === 0}
@@ -798,21 +1233,53 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
               <span>OBS</span>
               <span />
             </div>
-            {itens.map((i) => (
-              <div key={i.id} style={{ display: "grid", gridTemplateColumns: cols, gap: "10px", padding: "11px 18px", borderBottom: "1px solid var(--gray-100)", fontSize: "13.5px", color: "var(--gray-700)", alignItems: "center" }}>
-                <span style={{ fontWeight: 600, color: "var(--gray-900)" }}>{i.codigo}</span>
-                <span>{i.peca}</span>
-                <span>{i.quantidade}</span>
-                <span style={{ color: "var(--gray-500)" }}>{i.obs ?? ""}</span>
-                <span style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <button onClick={() => excluir(i.id)} style={botaoExcluir}>
-                    Excluir
-                  </button>
-                </span>
-              </div>
-            ))}
+            {itens.map((i) =>
+              editandoId === i.id ? (
+                <div key={i.id} style={{ display: "grid", gridTemplateColumns: cols, gap: "10px", padding: "11px 18px", borderBottom: "1px solid var(--gray-100)", fontSize: "13.5px", alignItems: "center" }}>
+                  <input style={inputStyle} maxLength={60} value={ed.codigo} onChange={(e) => setEd({ ...ed, codigo: e.target.value })} />
+                  <input style={inputStyle} maxLength={200} value={ed.peca} onChange={(e) => setEd({ ...ed, peca: e.target.value })} />
+                  <input type="number" min={0} step={1} style={inputStyle} value={ed.quantidade} onChange={(e) => setEd({ ...ed, quantidade: e.target.value })} />
+                  <input style={inputStyle} maxLength={4000} value={ed.obs} onChange={(e) => setEd({ ...ed, obs: e.target.value })} />
+                  <span style={{ display: "flex", justifyContent: "flex-end", gap: "6px" }}>
+                    <button onClick={() => salvarEdicao(i.id)} disabled={salvandoEdicao} style={botaoEditar}>
+                      {salvandoEdicao ? "…" : "Salvar"}
+                    </button>
+                    <button onClick={() => setEditandoId(null)} style={{ ...botaoEditar, borderColor: "var(--gray-200)", color: "var(--gray-500)" }}>
+                      Cancelar
+                    </button>
+                  </span>
+                </div>
+              ) : (
+                <div key={i.id} style={{ display: "grid", gridTemplateColumns: cols, gap: "10px", padding: "11px 18px", borderBottom: "1px solid var(--gray-100)", fontSize: "13.5px", color: "var(--gray-700)", alignItems: "center" }}>
+                  <span style={{ fontWeight: 600, color: "var(--gray-900)" }}>{i.codigo}</span>
+                  <span>{i.peca}</span>
+                  <span>{i.quantidade}</span>
+                  <span style={{ color: "var(--gray-500)" }}>{i.obs ?? ""}</span>
+                  <span style={{ display: "flex", justifyContent: "flex-end", gap: "6px" }}>
+                    <button
+                      onClick={() => {
+                        setEditandoId(i.id);
+                        setEd({ codigo: i.codigo, peca: i.peca, quantidade: String(i.quantidade), obs: i.obs ?? "" });
+                        setErro(null);
+                      }}
+                      style={botaoEditar}
+                    >
+                      Editar
+                    </button>
+                    {/* Excluir é só do gestor — o vendedor só edita (áudio 25/08/2026). */}
+                    {souGestor && (
+                      <button onClick={() => excluir(i.id)} style={botaoExcluir}>
+                        Excluir
+                      </button>
+                    )}
+                  </span>
+                </div>
+              ),
+            )}
           </div>
         </div>
+      )}
+      </>
       )}
     </>
   );

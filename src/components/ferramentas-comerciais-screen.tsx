@@ -4,11 +4,14 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { RelatorioProspeccao, SolicitacaoComercial, TipoSolicitacaoComercial } from "@/lib/contracts";
 import {
   AbaVisitas,
+  BlocoExcluidos,
+  BotaoExcluidos,
   inputStyle,
   labelStyle,
   cardStyle,
   botaoPrimario,
   botaoExcluir,
+  botaoEditar,
   mensagemErro,
   fmtData,
   type AbaProps,
@@ -36,18 +39,6 @@ const TIPOS_SOLICITACAO: { value: TipoSolicitacaoComercial; label: string }[] = 
   { value: "amostra_demonstracao", label: "Amostra para demonstração" },
 ];
 const rotuloTipo = (v: string) => TIPOS_SOLICITACAO.find((t) => t.value === v)?.label ?? v;
-
-const botaoEditar = {
-  padding: "5px 11px",
-  borderRadius: "999px",
-  border: "1px solid var(--blue-600)",
-  background: "white",
-  color: "var(--blue-600)",
-  fontSize: "12px",
-  fontWeight: 600,
-  cursor: "pointer",
-  flex: "none",
-} as const;
 
 export function FerramentasComerciaisScreen() {
   const [aba, setAba] = useState<Aba>("prospeccoes");
@@ -143,6 +134,8 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [ed, setEd] = useState({ horario: "", empresa: "", contato: "", telefone: "", observacao: "" });
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+  // Aba Excluídos (áudio do Mateus, 25/08/2026): restaurar ou excluir definitivamente.
+  const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
 
   async function carregar() {
     try {
@@ -167,8 +160,9 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
 
   async function lancar(e: FormEvent) {
     e.preventDefault();
-    if (!data || !horario || empresa.trim().length < 2) {
-      setErro("Preencha a data, o horário e a empresa prospectada.");
+    // "Com quem falou" é obrigatório (áudio do Mateus, 25/08/2026).
+    if (!data || !horario || empresa.trim().length < 2 || contato.trim().length < 2) {
+      setErro("Preencha a data, o horário, a empresa prospectada e com quem falou.");
       return;
     }
     setEnviando(true);
@@ -181,7 +175,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
           data,
           horario,
           empresa: empresa.trim(),
-          contato: contato.trim() || null,
+          contato: contato.trim(),
           telefone: telefone.trim() || null,
           observacao: observacao.trim() || null,
         }),
@@ -213,8 +207,8 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   }
 
   async function salvarEdicao(id: string) {
-    if (ed.empresa.trim().length < 2) {
-      setErro("Informe a empresa prospectada.");
+    if (ed.empresa.trim().length < 2 || !ed.horario || ed.contato.trim().length < 2) {
+      setErro("Informe a empresa prospectada, o horário e com quem falou.");
       return;
     }
     setSalvandoEdicao(true);
@@ -224,9 +218,9 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          horario: ed.horario || null,
+          horario: ed.horario,
           empresa: ed.empresa.trim(),
-          contato: ed.contato.trim() || null,
+          contato: ed.contato.trim(),
           telefone: ed.telefone.trim() || null,
           observacao: ed.observacao.trim() || null,
         }),
@@ -300,9 +294,32 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
         </div>
       </form>
 
+      {mostrarExcluidos && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <BotaoExcluidos ativo onClick={() => setMostrarExcluidos(false)} />
+          </div>
+          <BlocoExcluidos<RelatorioProspeccao>
+            endpoint="/api/novas-prospeccoes"
+            chave="relatorios"
+            setErro={setErro}
+            aoMudar={carregar}
+            render={(p) => (
+              <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
+                <b>{fmtData(p.data)}{p.horario ? ` às ${p.horario}` : ""}</b> · {p.empresa}
+                {souGestor ? ` · ${p.autor}` : ""}
+              </span>
+            )}
+          />
+        </div>
+      )}
+      {!mostrarExcluidos && (
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
-          {souGestor ? "Todas as prospecções" : "Minhas prospecções"} · {relatorios.length}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
+            {souGestor ? "Todas as prospecções" : "Minhas prospecções"} · {relatorios.length}
+          </div>
+          {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && relatorios.length === 0 && (
@@ -401,6 +418,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
           );
         })}
       </div>
+      )}
     </>
   );
 }
@@ -415,6 +433,12 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [tipo, setTipo] = useState<TipoSolicitacaoComercial>("analise_agua_tecidos");
   const [cliente, setCliente] = useState("");
   const [observacao, setObservacao] = useState("");
+
+  // Edição (áudio do Mateus, 25/08/2026: "editar para a parte deles") + aba Excluídos.
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [ed, setEd] = useState({ tipo: "analise_agua_tecidos" as TipoSolicitacaoComercial, cliente: "", observacao: "" });
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+  const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
 
   async function carregar() {
     try {
@@ -475,8 +499,32 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
     }
   }
 
+  async function salvarEdicao(id: string) {
+    if (ed.cliente.trim().length < 2) {
+      setErro("Informe o cliente da solicitação.");
+      return;
+    }
+    setSalvandoEdicao(true);
+    setErro(null);
+    try {
+      const r = await fetch(`/api/solicitacoes-comerciais?id=${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo: ed.tipo, cliente: ed.cliente.trim(), observacao: ed.observacao.trim() || null }),
+      });
+      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao editar a solicitação."));
+      setEditandoId(null);
+      await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao editar a solicitação.");
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  }
+
+  // Excluir é só do gestor; a solicitação vai para a aba Excluídos (restaurável).
   async function excluir(id: string) {
-    if (!window.confirm("Excluir esta solicitação?")) return;
+    if (!window.confirm("Excluir esta solicitação? Ela vai para a aba Excluídos.")) return;
     try {
       const r = await fetch(`/api/solicitacoes-comerciais?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao excluir a solicitação."));
@@ -522,9 +570,32 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
         </div>
       </form>
 
+      {mostrarExcluidos && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <BotaoExcluidos ativo onClick={() => setMostrarExcluidos(false)} />
+          </div>
+          <BlocoExcluidos<SolicitacaoComercial>
+            endpoint="/api/solicitacoes-comerciais"
+            chave="solicitacoes"
+            setErro={setErro}
+            aoMudar={carregar}
+            render={(s) => (
+              <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
+                <b>{rotuloTipo(s.tipo)}</b> · {s.cliente} · {new Date(s.criadoEm).toLocaleDateString("pt-BR")}
+                {souGestor ? ` · ${s.autor}` : ""}
+              </span>
+            )}
+          />
+        </div>
+      )}
+      {!mostrarExcluidos && (
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
-          {souGestor ? "Todas as solicitações" : "Minhas solicitações"} · {solicitacoes.length}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
+            {souGestor ? "Todas as solicitações" : "Minhas solicitações"} · {solicitacoes.length}
+          </div>
+          {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && solicitacoes.length === 0 && (
@@ -551,35 +622,79 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                 <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {s.cliente}</span>
                 {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {s.autor}</span>}
                 <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {new Date(s.criadoEm).toLocaleDateString("pt-BR")}</span>
-                <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
-                  <button
-                    onClick={() => marcar(s.id, atendida ? "pendente" : "atendida")}
-                    style={{
-                      padding: "5px 11px",
-                      borderRadius: "999px",
-                      border: "1px solid var(--blue-600)",
-                      background: "white",
-                      color: "var(--blue-600)",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      flex: "none",
-                    }}
-                  >
-                    {atendida ? "Reabrir" : "Marcar atendida"}
-                  </button>
-                  <button onClick={() => excluir(s.id)} style={botaoExcluir}>
-                    Excluir
-                  </button>
-                </div>
+                {editandoId !== s.id && (
+                  <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
+                    <button onClick={() => marcar(s.id, atendida ? "pendente" : "atendida")} style={botaoEditar}>
+                      {atendida ? "Reabrir" : "Marcar atendida"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditandoId(s.id);
+                        setEd({ tipo: s.tipo, cliente: s.cliente, observacao: s.observacao ?? "" });
+                        setErro(null);
+                      }}
+                      style={botaoEditar}
+                    >
+                      Editar
+                    </button>
+                    {/* Excluir é só do gestor — o vendedor só edita (áudio 25/08/2026). */}
+                    {souGestor && (
+                      <button onClick={() => excluir(s.id)} style={botaoExcluir}>
+                        Excluir
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
-              {s.observacao && (
-                <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "6px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{s.observacao}</div>
+              {editandoId === s.id ? (
+                <div style={{ display: "grid", gap: "10px", marginTop: "10px" }}>
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    <label style={{ ...labelStyle, flex: 1, minWidth: "220px" }}>
+                      Tipo da solicitação
+                      <select style={{ ...inputStyle, marginTop: "5px" }} value={ed.tipo} onChange={(e) => setEd({ ...ed, tipo: e.target.value as TipoSolicitacaoComercial })}>
+                        {TIPOS_SOLICITACAO.map((t) => (
+                          <option key={t.value} value={t.value}>
+                            {t.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label style={{ ...labelStyle, flex: 2, minWidth: "200px" }}>
+                      Cliente
+                      <input style={{ ...inputStyle, marginTop: "5px" }} maxLength={200} value={ed.cliente} onChange={(e) => setEd({ ...ed, cliente: e.target.value })} />
+                    </label>
+                  </div>
+                  <label style={labelStyle}>
+                    Observação
+                    <textarea
+                      style={{ ...inputStyle, marginTop: "5px", minHeight: "70px", resize: "vertical" }}
+                      maxLength={4000}
+                      value={ed.observacao}
+                      onChange={(e) => setEd({ ...ed, observacao: e.target.value })}
+                    />
+                  </label>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={() => salvarEdicao(s.id)} disabled={salvandoEdicao} style={botaoPrimario(salvandoEdicao)}>
+                      {salvandoEdicao ? "Salvando…" : "Salvar edição"}
+                    </button>
+                    <button
+                      onClick={() => setEditandoId(null)}
+                      style={{ ...botaoEditar, borderColor: "var(--gray-200)", color: "var(--gray-500)", padding: "11px 18px", borderRadius: "10px" }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                s.observacao && (
+                  <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "6px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{s.observacao}</div>
+                )
               )}
             </div>
           );
         })}
       </div>
+      )}
     </>
   );
 }

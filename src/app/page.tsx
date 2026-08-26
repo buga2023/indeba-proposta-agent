@@ -385,27 +385,25 @@ const TIPOS_SELECIONAVEIS = TIPOS.filter((t) => t.value === "consolidada");
 // Itens da command palette (Ctrl/Cmd+K) — só telas reais.
 // Os rótulos espelham a sidebar item a item: a paleta é a segunda porta para a mesma tela,
 // e um nome diferente aqui faria a busca por "Propostas Feitas" não achar o histórico.
+// Enxugada nos áudios do Mateus de 25/08/2026: saem Importar Orçamento, Visitas e
+// Prospecção, Contratos e Solicitações Internas ("pode excluir"); nos Módulos ficam só
+// Ferramentas Comerciais e Técnicas. As telas continuam no código — o que saiu foi a porta.
 const CMD_ITEMS: PaletteItem[] = [
   { key: "dashboard", label: "Dashboard" },
   { key: "manual", label: "Proposta de Solução" },
-  { key: "importar", label: "Importar Orçamento" },
   { key: "history", label: "Propostas Feitas" },
-  { key: "prospeccao", label: "Visitas e Prospecção" },
+  { key: "catalog", label: "Catálogo de Produtos" },
   { key: "ferramentas-comerciais", label: "Ferramentas Comerciais", hint: "Novas prospecções, visitas de rotina e solicitações" },
   { key: "ferramentas", label: "Ferramentas Técnicas", hint: "Visitas de rotina, contratos e estoque de comodatos" },
-  { key: "contrato", label: "Contratos" },
-  { key: "chamados", label: "Solicitações Internas" },
-  { key: "catalog", label: "Catálogo de Produtos" },
-  // Chave especial (como `produto:<codigo>`): não é uma tela, é o Catálogo com o formulário
-  // de cadastro aberto. Fica na paleta porque o card existe no Dashboard para todo mundo —
-  // quem não é gestor recebe o aviso explicando, não uma porta escondida.
-  { key: "cadastro-produto", label: "Cadastro de Produtos", hint: "Nome, imagem, ficha técnica e segmento" },
   { key: "perfil", label: "Meu perfil" },
 ];
 // Configurações é o painel do gestor (e-mails de cobrança, colaboradores). Fica fora da
 // lista base e entra só para admin — esconder no menu e deixar na paleta seria o mesmo que
 // não esconder: Ctrl+K chega na tela do mesmo jeito.
 const CMD_ITEM_CONFIG: PaletteItem = { key: "config", label: "Configurações" };
+// Cadastro de Produtos virou porta SÓ do gestor (áudio do Mateus, 25/08/2026: "deixar essa
+// aba de cadastro de produtos apenas pro adm") — entra na paleta junto com Configurações.
+const CMD_ITEM_CADASTRO: PaletteItem = { key: "cadastro-produto", label: "Cadastro de Produtos", hint: "Nome, imagem, ficha técnica e segmento" };
 // Cobrança fica fora da paleta também — ela não tem entrada nenhuma na interface (ver o
 // comentário na seção Sistema da sidebar). Deixá-la no ⌘K seria reabrir pela janela a porta
 // que se fechou.
@@ -957,13 +955,8 @@ export default function Home() {
             </svg>
             Proposta de Solução
           </Hoverable>
-          <Hoverable eager base={navItemStyle(["importar"])} hover={navHover} onClick={() => irPara("importar")} title="Importar Orçamento — suba um PDF do ERP">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8.5 10.5V3M5.5 6l3-3 3 3" />
-              <path d="M3 11v2a1 1 0 001 1h9a1 1 0 001-1v-2" />
-            </svg>
-            Importar Orçamento
-          </Hoverable>
+          {/* Importar Orçamento saiu da navegação (áudio do Mateus, 25/08/2026: "pode
+              excluir") — a tela e a rota continuam no código. */}
           <Hoverable eager base={navItemStyle(["history"])} hover={navHover} onClick={() => irPara("history")} title="Propostas Feitas — histórico">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
               <path d="M3 4.5h11M3 8.5h11M3 12.5h7" />
@@ -979,6 +972,28 @@ export default function Home() {
             </svg>
             Catálogo de Produtos
           </Hoverable>
+          {/* Cadastro de Produtos logo abaixo do Catálogo e SÓ para o gestor (áudio do
+              Mateus, 25/08/2026: "jogar abaixo de catálogo de produtos e deixar essa aba
+              apenas pro adm"). O cadastro é um modal DENTRO do Catálogo: o item liga o
+              mesmo sinal que a paleta ⌘K usa, e o formulário abre junto com a tela. */}
+          {ehAdmin && (
+            <Hoverable
+              eager
+              base={navItemStyle([])}
+              hover={navHover}
+              onClick={() => {
+                pedirCadastroProduto();
+                irPara("catalog");
+              }}
+              title="Cadastro de Produtos — nome, imagem, ficha técnica e segmento"
+            >
+              <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2.5" y="2.5" width="12" height="12" rx="2" />
+                <path d="M8.5 5.5v6M5.5 8.5h6" />
+              </svg>
+              Cadastro de Produtos
+            </Hoverable>
+          )}
 
           {/* Os outros módulos, abaixo do fluxo de proposta — como o Mateus pediu no áudio de
               06/08/2026: "solicitações internas, visitas, prospecções, contratos… é importante
@@ -991,14 +1006,10 @@ export default function Home() {
               depois das funções de proposta"). Comodatos entra como reserva de lugar, sem
               clique e com selo "Em breve": item de menu que navega para o nada lê como sistema
               quebrado, mas esmaecido e rotulado ele informa em vez de enganar. */}
+          {/* Enxugado nos áudios do Mateus de 25/08/2026: Visitas e Prospecção, Contratos e
+              Solicitações Internas saíram ("pode excluir… para só ficar ferramentas
+              comerciais e técnicas") — as telas continuam no código, sem porta. */}
           <div className="ies-side-text" style={navSection}>Módulos</div>
-          <Hoverable eager base={navItemStyle(["prospeccao"])} hover={navHover} onClick={() => irPara("prospeccao")} title="Visitas e Prospecção — encontre empresas e gere a abordagem">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8.5 14.5s4.25-4.05 4.25-7.25a4.25 4.25 0 10-8.5 0c0 3.2 4.25 7.25 4.25 7.25z" />
-              <circle cx="8.5" cy="7.1" r="1.6" />
-            </svg>
-            Visitas e Prospecção
-          </Hoverable>
           {/* As DUAS partes da foto do bloco do Mateus (21/08/2026): Ferramentas Comerciais
               (novas prospecções, visitas de rotina, solicitações comerciais) e Ferramentas
               Técnicas (visitas de rotina, contratos e comodatos com PDF, estoque). */}
@@ -1016,39 +1027,6 @@ export default function Home() {
               <path d="M2.5 5.5l6 3 6-3M8.5 8.5v6" />
             </svg>
             Ferramentas Técnicas
-          </Hoverable>
-          <Hoverable eager base={navItemStyle(["contrato"])} hover={navHover} onClick={() => irPara("contrato")} title="Contratos — gere e analise o contrato da proposta">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 2.5h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" />
-              <path d="M9 2.5v4h4" />
-              <path d="M5.5 9.5h6M5.5 12h4" />
-            </svg>
-            Contratos
-          </Hoverable>
-          <Hoverable eager base={navItemStyle(["chamados"])} hover={navHover} onClick={() => irPara("chamados")} title="Solicitações Internas — abra um chamado para o time">
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 9.5a2 2 0 01-2 2H7l-3.5 2.5V4.5a2 2 0 012-2h6.5a2 2 0 012 2z" />
-              <path d="M6.5 6.5h5M6.5 9h3" />
-            </svg>
-            Solicitações Internas
-          </Hoverable>
-          {/* O cadastro é um modal DENTRO do Catálogo: o item liga o mesmo sinal que o card do
-              Dashboard e a paleta ⌘K usam, e o formulário abre junto com a tela. */}
-          <Hoverable
-            eager
-            base={navItemStyle([])}
-            hover={navHover}
-            onClick={() => {
-              pedirCadastroProduto();
-              irPara("catalog");
-            }}
-            title="Cadastro de Produtos — nome, imagem, ficha técnica e segmento"
-          >
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2.5" y="2.5" width="12" height="12" rx="2" />
-              <path d="M8.5 5.5v6M5.5 8.5h6" />
-            </svg>
-            Cadastro de Produtos
           </Hoverable>
 
           {/* Configurações é o painel do gestor: e-mails de cobrança, GESTOR_EMAIL, cadastro
@@ -1211,7 +1189,7 @@ export default function Home() {
         onClose={() => setPalette(false)}
         items={[
           ...CMD_ITEMS,
-          ...(ehAdmin ? [CMD_ITEM_CONFIG] : []),
+          ...(ehAdmin ? [CMD_ITEM_CADASTRO, CMD_ITEM_CONFIG] : []),
           ...(catalogo ?? []).map((p) => ({
             key: `produto:${p.codigo}`,
             label: p.nome,
@@ -1261,7 +1239,7 @@ export default function Home() {
 // aparece na posição que o Mateus ditou, com selo "Em breve" e sem clique: some da lista ele
 // perde o lugar combinado, mas fingir que navega seria pior. `abreCadastroProduto` manda abrir
 // o Catálogo já com o formulário de cadastro na frente — o cadastro é modal de lá, não tela.
-const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; icone: ReactNode; abreCadastroProduto?: boolean }[] = [
+const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; icone: ReactNode; abreCadastroProduto?: boolean; soAdmin?: boolean }[] = [
   {
     screen: "manual",
     titulo: "Proposta de Solução",
@@ -1273,17 +1251,8 @@ const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; i
       </svg>
     ),
   },
-  {
-    screen: "importar",
-    titulo: "Importar Orçamento",
-    sub: "Suba um PDF do ERP e confira os itens",
-    icone: (
-      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8.5 10.5V3M5.5 6l3-3 3 3" />
-        <path d="M3 11v2a1 1 0 001 1h9a1 1 0 001-1v-2" />
-      </svg>
-    ),
-  },
+  // Importar Orçamento, Visitas e Prospecção, Contratos e Solicitações Internas saíram dos
+  // cards (áudios do Mateus, 25/08/2026: "pode excluir do dashboard") — telas no código.
   {
     screen: "history",
     titulo: "Propostas Feitas",
@@ -1291,17 +1260,6 @@ const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; i
     icone: (
       <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round">
         <path d="M3 4.5h11M3 8.5h11M3 12.5h7" />
-      </svg>
-    ),
-  },
-  {
-    screen: "prospeccao",
-    titulo: "Visitas e Prospecção",
-    sub: "Encontre empresas e gere a abordagem",
-    icone: (
-      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8.5 14.5s4.25-4.05 4.25-7.25a4.25 4.25 0 10-8.5 0c0 3.2 4.25 7.25 4.25 7.25z" />
-        <circle cx="8.5" cy="7.1" r="1.6" />
       </svg>
     ),
   },
@@ -1335,29 +1293,6 @@ const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; i
     ),
   },
   {
-    screen: "contrato",
-    titulo: "Contratos",
-    sub: "Gere e analise o contrato da proposta",
-    icone: (
-      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 2.5h5l4 4v8a1 1 0 01-1 1H4a1 1 0 01-1-1v-11a1 1 0 011-1z" />
-        <path d="M9 2.5v4h4" />
-        <path d="M5.5 9.5h6M5.5 12h4" />
-      </svg>
-    ),
-  },
-  {
-    screen: "chamados",
-    titulo: "Solicitações Internas",
-    sub: "Abra um chamado para o time",
-    icone: (
-      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 9.5a2 2 0 01-2 2H7l-3.5 2.5V4.5a2 2 0 012-2h6.5a2 2 0 012 2z" />
-        <path d="M6.5 6.5h5M6.5 9h3" />
-      </svg>
-    ),
-  },
-  {
     screen: "catalog",
     titulo: "Catálogo de Produtos",
     sub: "Consulte a linha, a ficha e cadastre novos",
@@ -1378,6 +1313,8 @@ const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; i
     // Catálogo abre com o aviso de sempre, explicando por quê, em vez de um modal negado.
     screen: "catalog",
     abreCadastroProduto: true,
+    // Só o gestor vê o card (áudio do Mateus, 25/08/2026: "apenas pro adm").
+    soAdmin: true,
     titulo: "Cadastro de Produtos",
     sub: "Nome, imagem, ficha técnica e segmento",
     icone: (
@@ -1555,7 +1492,7 @@ function DashboardScreen({
           <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Módulos</div>
           <div style={{ fontSize: "12.5px", color: "var(--text-subtle)", marginBottom: "14px" }}>Tudo o que dá para fazer por aqui</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(228px,1fr))", gap: "14px" }}>
-            {MODULOS_DASHBOARD.map((m, i) => {
+            {MODULOS_DASHBOARD.filter((m) => !m.soAdmin || ehAdmin).map((m, i) => {
               // Módulo pedido que ainda não existe (Comodatos): ocupa o lugar dele na grade,
               // mas não é botão — sem clique, sem hover, com o selo dizendo o que é. Um card
               // que parece clicável e não faz nada lê como tela quebrada.

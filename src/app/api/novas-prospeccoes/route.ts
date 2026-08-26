@@ -6,6 +6,8 @@ import {
   listarRelatoriosProspeccao,
   editarRelatorioProspeccao,
   excluirRelatorioProspeccao,
+  restaurarRelatorioProspeccao,
+  excluirRelatorioProspeccaoDefinitivo,
 } from "@/lib/ferramentas-comerciais";
 import { respostaErro } from "@/lib/erro";
 
@@ -16,8 +18,9 @@ export const runtime = "nodejs";
 export async function GET(req: NextRequest) {
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
+  const excluidas = req.nextUrl.searchParams.get("excluidas") === "1";
   try {
-    const relatorios = await listarRelatoriosProspeccao(usuario);
+    const relatorios = await listarRelatoriosProspeccao(usuario, excluidas);
     return NextResponse.json({ relatorios, souGestor: usuario.papel === "admin" });
   } catch (e) {
     return respostaErro(e, "Falha ao listar as prospecções.", 500);
@@ -44,6 +47,19 @@ export async function PATCH(req: NextRequest) {
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ erro: "Registro não informado." }, { status: 400 });
+
+  // `?acao=restaurar` tira o registro da aba Excluídos — operação de gestor.
+  if (req.nextUrl.searchParams.get("acao") === "restaurar") {
+    if (usuario.papel !== "admin") return NextResponse.json({ erro: "Apenas o gestor pode restaurar registros." }, { status: 403 });
+    try {
+      const ok = await restaurarRelatorioProspeccao(usuario, id);
+      if (!ok) return NextResponse.json({ erro: "Registro não encontrado." }, { status: 404 });
+      return NextResponse.json({ ok: true });
+    } catch (e) {
+      return respostaErro(e, "Falha ao restaurar a prospecção.", 500);
+    }
+  }
+
   const parsed = RelatorioProspeccaoUpdate.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   try {
@@ -62,8 +78,9 @@ export async function DELETE(req: NextRequest) {
   if (usuario.papel !== "admin") return NextResponse.json({ erro: "Apenas o gestor pode excluir prospecções." }, { status: 403 });
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ erro: "Registro não informado." }, { status: 400 });
+  const definitivo = req.nextUrl.searchParams.get("definitivo") === "1";
   try {
-    const ok = await excluirRelatorioProspeccao(usuario, id);
+    const ok = definitivo ? await excluirRelatorioProspeccaoDefinitivo(usuario, id) : await excluirRelatorioProspeccao(usuario, id);
     if (!ok) return NextResponse.json({ erro: "Registro não encontrado." }, { status: 404 });
     return NextResponse.json({ ok: true });
   } catch (e) {
