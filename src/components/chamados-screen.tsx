@@ -102,6 +102,23 @@ export function ChamadosScreen() {
     }
   }
 
+  // Exclusão definitiva — só o gestor (o botão nem aparece para o colaborador). Serve
+  // para limpar chamados de teste/QA; chamado real resolvido fica como histórico.
+  async function excluir(id: string) {
+    if (!window.confirm("Excluir DEFINITIVAMENTE este chamado? Esta ação não tem volta.")) return;
+    setErro(null);
+    try {
+      const r = await fetch(`/api/chamados/${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!r.ok) {
+        const d = await r.json();
+        throw new Error(typeof d.erro === "string" ? d.erro : "Falha ao excluir o chamado.");
+      }
+      await carregar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao excluir o chamado.");
+    }
+  }
+
   async function atualizar(id: string, patch: { status?: StatusChamado; respostaGestor?: string | null }) {
     setErro(null);
     try {
@@ -207,7 +224,7 @@ export function ChamadosScreen() {
           <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhum chamado ainda.</div>
         )}
         {chamados.map((c) => (
-          <CardChamado key={c.id} chamado={c} souGestor={souGestor} onAtualizar={atualizar} />
+          <CardChamado key={c.id} chamado={c} souGestor={souGestor} onAtualizar={atualizar} onExcluir={excluir} />
         ))}
       </div>
     </div>
@@ -218,10 +235,12 @@ function CardChamado({
   chamado: c,
   souGestor,
   onAtualizar,
+  onExcluir,
 }: {
   chamado: Chamado;
   souGestor: boolean;
   onAtualizar: (id: string, patch: { status?: StatusChamado; respostaGestor?: string | null }) => void;
+  onExcluir: (id: string) => void;
 }) {
   const [resposta, setResposta] = useState(c.respostaGestor ?? "");
   const st = STATUS_INFO[c.status];
@@ -247,6 +266,24 @@ function CardChamado({
       {souGestor && (
         <div style={{ marginTop: "12px", borderTop: "1px dashed var(--gray-200)", paddingTop: "12px", display: "grid", gap: "8px" }}>
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+            <button
+              onClick={() => onExcluir(c.id)}
+              style={{
+                order: 1,
+                marginLeft: "auto",
+                padding: "5px 11px",
+                borderRadius: "999px",
+                border: "1px solid #fecaca",
+                background: "white",
+                color: "#b91c1c",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: "pointer",
+                flex: "none",
+              }}
+            >
+              Excluir
+            </button>
             {STATUS_FLUXO.map((s) => {
               const ativo = c.status === s;
               return (

@@ -48,3 +48,10 @@ export async function atualizarChamado(id: string, dados: ChamadoUpdate): Promis
   const row = await prisma.chamado.update({ where: { id }, data: dados });
   return mapear(row);
 }
+
+// Exclusão definitiva — só o gestor (autorização na rota). Nasceu para limpar chamados de
+// teste/QA que ficavam presos na lista (pedido do Gustavo, 26/08/2026).
+export async function excluirChamado(id: string): Promise<boolean> {
+  const r = await prisma.chamado.deleteMany({ where: { id } });
+  return r.count > 0;
+}

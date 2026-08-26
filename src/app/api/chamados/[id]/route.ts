@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { ChamadoUpdate } from "@/lib/contracts";
-import { usuarioAtual, atualizarChamado } from "@/lib/chamados";
+import { usuarioAtual, atualizarChamado, excluirChamado } from "@/lib/chamados";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
@@ -26,5 +26,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ erro: "Chamado não encontrado." }, { status: 404 });
     }
     return respostaErro(e, "Falha ao atualizar o chamado.", 500);
+  }
+}
+
+// Excluir um chamado — SÓ o gestor. Exclusão definitiva: serve para limpar chamados de
+// teste/QA; chamado real resolvido fica na lista como histórico.
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const usuario = await usuarioAtual(req);
+  if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
+  if (usuario.papel !== "admin") {
+    return NextResponse.json({ erro: "Só o gestor pode excluir chamados." }, { status: 403 });
+  }
+  const { id } = await params;
+  try {
+    const ok = await excluirChamado(id);
+    if (!ok) return NextResponse.json({ erro: "Chamado não encontrado." }, { status: 404 });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return respostaErro(e, "Falha ao excluir o chamado.", 500);
   }
 }
