@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AnexoInfo } from "./anexos";
 
 /**
  * Ferramentas Comerciais (foto do bloco do Mateus, 21/08/2026 — a foto tem autoridade
@@ -35,6 +36,8 @@ export const RelatorioProspeccao = z.object({
   contato: z.string().nullable(),
   telefone: z.string().nullable(),
   observacao: z.string().nullable(),
+  // Anexos (áudio do Mateus, 27/08/2026): foto da fachada, cartão de quem foi visitado…
+  anexos: z.array(AnexoInfo).default([]),
   autor: z.string(),
   criadoEm: z.string(),
   atualizadoEm: z.string(),
@@ -72,6 +75,8 @@ export const SolicitacaoComercial = z.object({
   tipo: TipoSolicitacaoComercial,
   cliente: z.string(),
   observacao: z.string().nullable(),
+  // Anexos (áudio do Mateus, 27/08/2026): mesma opção de foto e documento das visitas.
+  anexos: z.array(AnexoInfo).default([]),
   status: StatusSolicitacaoComercial,
   autor: z.string(),
   criadoEm: z.string(),

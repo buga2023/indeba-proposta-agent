@@ -249,6 +249,25 @@ model EstoqueComodato {
   @@index([autor])
 }
 
+/// Anexos das ferramentas (áudio do Mateus, 27/08/2026: "aplicasse a essa opção de anexar
+/// arquivo e foto em todas as outras ferramentas"): fotos e documentos pendurados em
+/// qualquer registro de prospecção, solicitação, contrato/comodato ou estoque. Uma tabela
+/// só, sem FK — `registroTipo` + `registroId` dizem de quem é; a posse é verificada na
+/// leitura/escrita consultando a tabela do registro (lib/anexos.ts). As visitas ficam de
+/// fora: já têm VisitaFoto e o documento na própria linha.
+model Anexo {
+  id           String   @id @default(cuid())
+  registroTipo String // prospeccao | solicitacao | contrato | estoque
+  registroId   String
+  categoria    String // foto | documento
+  nome         String?
+  mime         String
+  bytes        Bytes
+  criadoEm     DateTime @default(now())
+
+  @@index([registroTipo, registroId])
+}
+
 /// `acesso` é o portão de entrada, separado de `papel` (que é o que a pessoa pode fazer
 /// DEPOIS de entrar): cadastro próprio é aberto, então quem se cadastra nasce `pendente` e
 /// só passa do login quando o gestor aprova no painel de Configurações.

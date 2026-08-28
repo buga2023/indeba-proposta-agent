@@ -4,8 +4,11 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { RelatorioProspeccao, SolicitacaoComercial, TipoSolicitacaoComercial } from "@/lib/contracts";
 import {
   AbaVisitas,
+  BlocoAnexos,
   BlocoExcluidos,
   BotaoExcluidos,
+  CampoAnexos,
+  enviarAnexos,
   inputStyle,
   labelStyle,
   cardStyle,
@@ -128,6 +131,10 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [contato, setContato] = useState("");
   const [telefone, setTelefone] = useState("");
   const [observacao, setObservacao] = useState("");
+  // Anexos (áudio do Mateus, 27/08/2026): foto da fachada, cartão de quem foi visitado…
+  const [fotosNovas, setFotosNovas] = useState<File[]>([]);
+  const [documentosNovos, setDocumentosNovos] = useState<File[]>([]);
+  const [inputKey, setInputKey] = useState(0);
 
   // Edição (áudio do Mateus, 25/08/2026): usuário e gestor editam; a data NÃO muda —
   // fica a da visita registrada (visita nova = registro novo).
@@ -180,12 +187,18 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
           observacao: observacao.trim() || null,
         }),
       });
-      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao registrar a prospecção."));
+      const criado = await r.json();
+      if (!r.ok) throw new Error(mensagemErro(criado, "Falha ao registrar a prospecção."));
+      const falhas = await enviarAnexos("prospeccao", criado.id, fotosNovas, documentosNovos);
+      if (falhas.length > 0) setErro(`Prospecção registrada, mas alguns anexos falharam: ${falhas.join(", ")}.`);
       setHorario("");
       setEmpresa("");
       setContato("");
       setTelefone("");
       setObservacao("");
+      setFotosNovas([]);
+      setDocumentosNovos([]);
+      setInputKey((k) => k + 1);
       await carregar();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao registrar a prospecção.");
@@ -288,6 +301,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
               onChange={(e) => setObservacao(e.target.value)}
             />
           </label>
+          <CampoAnexos fotos={fotosNovas} setFotos={setFotosNovas} documentos={documentosNovos} setDocumentos={setDocumentosNovos} inputKey={inputKey} />
           <button type="submit" disabled={enviando} style={botaoPrimario(enviando)}>
             {enviando ? "Registrando…" : "Registrar prospecção"}
           </button>
@@ -385,6 +399,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                       onChange={(e) => setEd({ ...ed, observacao: e.target.value })}
                     />
                   </label>
+                  <BlocoAnexos tipo="prospeccao" registroId={p.id} anexos={p.anexos} editavel aoMudar={carregar} setErro={setErro} />
                   <div style={{ display: "flex", gap: "8px" }}>
                     <button onClick={() => salvarEdicao(p.id)} disabled={salvandoEdicao} style={botaoPrimario(salvandoEdicao)}>
                       {salvandoEdicao ? "Salvando…" : "Salvar edição"}
@@ -412,6 +427,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                   {p.observacao && (
                     <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "4px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{p.observacao}</div>
                   )}
+                  <BlocoAnexos tipo="prospeccao" registroId={p.id} anexos={p.anexos} editavel={false} aoMudar={carregar} setErro={setErro} />
                 </>
               )}
             </div>
@@ -433,6 +449,10 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [tipo, setTipo] = useState<TipoSolicitacaoComercial>("analise_agua_tecidos");
   const [cliente, setCliente] = useState("");
   const [observacao, setObservacao] = useState("");
+  // Anexos (áudio do Mateus, 27/08/2026): mesma opção de foto e documento das visitas.
+  const [fotosNovas, setFotosNovas] = useState<File[]>([]);
+  const [documentosNovos, setDocumentosNovos] = useState<File[]>([]);
+  const [inputKey, setInputKey] = useState(0);
 
   // Edição (áudio do Mateus, 25/08/2026: "editar para a parte deles") + aba Excluídos.
   const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -473,10 +493,16 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tipo, cliente: cliente.trim(), observacao: observacao.trim() || null }),
       });
-      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao abrir a solicitação."));
+      const criada = await r.json();
+      if (!r.ok) throw new Error(mensagemErro(criada, "Falha ao abrir a solicitação."));
+      const falhas = await enviarAnexos("solicitacao", criada.id, fotosNovas, documentosNovos);
+      if (falhas.length > 0) setErro(`Solicitação aberta, mas alguns anexos falharam: ${falhas.join(", ")}.`);
       setCliente("");
       setObservacao("");
       setTipo("analise_agua_tecidos");
+      setFotosNovas([]);
+      setDocumentosNovos([]);
+      setInputKey((k) => k + 1);
       await carregar();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao abrir a solicitação.");
@@ -564,6 +590,7 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
               onChange={(e) => setObservacao(e.target.value)}
             />
           </label>
+          <CampoAnexos fotos={fotosNovas} setFotos={setFotosNovas} documentos={documentosNovos} setDocumentos={setDocumentosNovos} inputKey={inputKey} />
           <button type="submit" disabled={enviando} style={botaoPrimario(enviando)}>
             {enviando ? "Enviando…" : "Abrir solicitação"}
           </button>
@@ -673,6 +700,7 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                       onChange={(e) => setEd({ ...ed, observacao: e.target.value })}
                     />
                   </label>
+                  <BlocoAnexos tipo="solicitacao" registroId={s.id} anexos={s.anexos} editavel aoMudar={carregar} setErro={setErro} />
                   <div style={{ display: "flex", gap: "8px" }}>
                     <button onClick={() => salvarEdicao(s.id)} disabled={salvandoEdicao} style={botaoPrimario(salvandoEdicao)}>
                       {salvandoEdicao ? "Salvando…" : "Salvar edição"}
@@ -686,9 +714,12 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                   </div>
                 </div>
               ) : (
-                s.observacao && (
-                  <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "6px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{s.observacao}</div>
-                )
+                <>
+                  {s.observacao && (
+                    <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "6px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{s.observacao}</div>
+                  )}
+                  <BlocoAnexos tipo="solicitacao" registroId={s.id} anexos={s.anexos} editavel={false} aoMudar={carregar} setErro={setErro} />
+                </>
               )}
             </div>
           );

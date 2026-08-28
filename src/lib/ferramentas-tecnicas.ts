@@ -11,6 +11,7 @@ import {
   type EstoqueComodatoUpdate,
 } from "@/lib/contracts";
 import type { SessaoUsuario } from "@/lib/auth";
+import { anexosDe } from "@/lib/anexos";
 
 // Recorte único do módulo (áudio do Mateus, 21/08/2026: "todo mundo tem acesso a escrever…
 // só não ter acesso aos registros de todo mundo, apenas os deles"): gestor vê tudo,
@@ -160,6 +161,21 @@ export async function documentoDaVisita(
   return { bytes: row.documento, mime: row.documentoMime, nome: row.documentoNome };
 }
 
+// Tirar anexo errado (áudio do Mateus, 27/08/2026: "excluir a foto e o anexo que ela
+// colocou para substituir por outro") — quem pode editar a visita mexe nos anexos dela.
+export async function excluirFotoVisita(usuario: SessaoUsuario, visitaId: string, fotoId: string): Promise<boolean> {
+  const r = await prisma.visitaFoto.deleteMany({ where: { id: fotoId, visitaId, visita: escopo(usuario) } });
+  return r.count > 0;
+}
+
+export async function excluirDocumentoVisita(usuario: SessaoUsuario, visitaId: string): Promise<boolean> {
+  const r = await prisma.visitaCarteira.updateMany({
+    where: { id: visitaId, ...escopo(usuario), documentoMime: { not: null } },
+    data: { documento: null, documentoMime: null, documentoNome: null },
+  });
+  return r.count > 0;
+}
+
 // Excluir vira lápide (a rota barra quem não é gestor); restaurar e excluir definitivo
 // operam só sobre lápides. `updateMany`/`deleteMany` com o escopo no where: registro
 // alheio não acha linha → false → 404 na rota (posse não se revela).
@@ -213,7 +229,8 @@ export async function listarContratosComodato(usuario: SessaoUsuario, excluidas 
       atualizadoEm: true,
     },
   });
-  return rows.map((r) => ContratoComodato.parse({ ...iso(r), temContrato: r.contratoMime != null }));
+  const anexos = await anexosDe("contrato", rows.map((r) => r.id));
+  return rows.map((r) => ContratoComodato.parse({ ...iso(r), temContrato: r.contratoMime != null, anexos: anexos.get(r.id) ?? [] }));
 }
 
 // Edição (áudio do Mateus, 25/08/2026); o PDF não muda por aqui.
@@ -273,7 +290,8 @@ export async function listarEstoqueComodato(usuario: SessaoUsuario, excluidas = 
     where: { ...escopo(usuario), ...(excluidas ? lapides : vivos) },
     orderBy: { criadoEm: "desc" },
   });
-  return rows.map((r) => EstoqueComodato.parse(iso(r)));
+  const anexos = await anexosDe("estoque", rows.map((r) => r.id));
+  return rows.map((r) => EstoqueComodato.parse({ ...iso(r), anexos: anexos.get(r.id) ?? [] }));
 }
 
 // Edição (áudio do Mateus, 25/08/2026).

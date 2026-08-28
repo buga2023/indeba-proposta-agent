@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { usuarioAtual } from "@/lib/auth-db";
-import { fotoDaVisita } from "@/lib/ferramentas-tecnicas";
+import { fotoDaVisita, excluirFotoVisita } from "@/lib/ferramentas-tecnicas";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
@@ -23,5 +23,20 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string;
     });
   } catch (e) {
     return respostaErro(e, "Falha ao abrir a foto.", 500);
+  }
+}
+
+// Tirar foto anexada errado (áudio do Mateus, 27/08/2026) — mesmo escopo: o autor mexe
+// nas suas visitas, o gestor em todas.
+export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string; fotoId: string }> }) {
+  const usuario = await usuarioAtual(req);
+  if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
+  const { id, fotoId } = await ctx.params;
+  try {
+    const ok = await excluirFotoVisita(usuario, id, fotoId);
+    if (!ok) return NextResponse.json({ erro: "Foto não encontrada." }, { status: 404 });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return respostaErro(e, "Falha ao excluir a foto.", 500);
   }
 }

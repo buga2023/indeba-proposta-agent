@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AnexoInfo } from "./anexos";
 
 /**
  * Ferramentas Técnicas (áudio do Mateus, 21/08/2026): Registro de Visitas da Carteira,
@@ -80,6 +81,9 @@ export const ContratoComodato = z.object({
   comodatos: z.string(),
   observacoes: z.string().nullable(),
   temContrato: z.boolean(),
+  // Anexos (áudio do Mateus, 27/08/2026): "três ou quatro contratos… e fotos de diversos
+  // equipamentos" — vários documentos e fotos por cliente, além do PDF legado.
+  anexos: z.array(AnexoInfo).default([]),
   autor: z.string(),
   criadoEm: z.string(),
   atualizadoEm: z.string(),
@@ -104,6 +108,8 @@ export const EstoqueComodato = z.object({
   peca: z.string(),
   quantidade: z.number().int(),
   obs: z.string().nullable(),
+  // Anexos (áudio do Mateus, 27/08/2026): documento com o código da peça, foto da peça.
+  anexos: z.array(AnexoInfo).default([]),
   autor: z.string(),
   criadoEm: z.string(),
   atualizadoEm: z.string(),

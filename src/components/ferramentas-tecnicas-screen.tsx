@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato } from "@/lib/contracts";
+import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato, AnexoInfo, TipoRegistroAnexo } from "@/lib/contracts";
 import { encolherFoto } from "@/components/form-produto";
 
 /**
@@ -282,6 +282,371 @@ export function BlocoExcluidos<T extends { id: string }>({
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/* ═══════════ Anexos (compartilhado) ═══════════ */
+
+// Anexar foto e documento em TODAS as ferramentas (áudio do Mateus, 27/08/2026) — o mesmo
+// bloco serve prospecções, solicitações, contratos e estoque; as visitas têm rotas
+// próprias (VisitaFoto + documento na linha), mas a aparência é a mesma.
+
+const pillLink = {
+  padding: "6px 14px",
+  borderRadius: "999px",
+  border: "1px solid var(--blue-600)",
+  color: "var(--blue-600)",
+  fontSize: "12.5px",
+  fontWeight: 600,
+  textDecoration: "none",
+} as const;
+
+const botaoTirarAnexo = {
+  border: "1px solid #fecaca",
+  background: "white",
+  color: "#b91c1c",
+  borderRadius: "999px",
+  width: "20px",
+  height: "20px",
+  fontSize: "12px",
+  lineHeight: 1,
+  cursor: "pointer",
+  flex: "none",
+  padding: 0,
+} as const;
+
+// Campos de anexo do formulário de cadastro: fotos (várias) + documentos (vários — o
+// Mateus tem "três ou quatro contratos" por cliente).
+export function CampoAnexos({
+  fotos,
+  setFotos,
+  documentos,
+  setDocumentos,
+  inputKey,
+}: {
+  fotos: File[];
+  setFotos: (f: File[]) => void;
+  documentos: File[];
+  setDocumentos: (f: File[]) => void;
+  inputKey: number;
+}) {
+  return (
+    <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+      <label style={{ ...labelStyle, flex: 1, minWidth: "220px" }}>
+        Fotos ({fotos.length}/10)
+        <input
+          key={`f${inputKey}`}
+          type="file"
+          accept="image/*"
+          multiple
+          style={{ ...inputStyle, marginTop: "5px", padding: "8px 12px" }}
+          onChange={(e) => setFotos(Array.from(e.target.files ?? []).slice(0, 10))}
+        />
+      </label>
+      <label style={{ ...labelStyle, flex: 1, minWidth: "220px" }}>
+        Documentos ({documentos.length}/10 · PDF ou imagem, até 4 MB cada)
+        <input
+          key={`d${inputKey}`}
+          type="file"
+          accept="application/pdf,image/*"
+          multiple
+          style={{ ...inputStyle, marginTop: "5px", padding: "8px 12px" }}
+          onChange={(e) => setDocumentos(Array.from(e.target.files ?? []).slice(0, 10))}
+        />
+      </label>
+    </div>
+  );
+}
+
+// Sobe os anexos UM por requisição (cada uma fica abaixo do teto de ~4,5 MB da Vercel) e
+// devolve os nomes que falharam — falha de anexo não desfaz o registro.
+export async function enviarAnexos(
+  tipo: TipoRegistroAnexo,
+  registroId: string,
+  fotos: File[],
+  documentos: File[],
+): Promise<string[]> {
+  const falhas: string[] = [];
+  const subir = async (arquivo: File, categoria: "foto" | "documento") => {
+    const form = new FormData();
+    form.set("registroTipo", tipo);
+    form.set("registroId", registroId);
+    form.set("categoria", categoria);
+    form.set("arquivo", arquivo);
+    const r = await fetch("/api/anexos", { method: "POST", body: form });
+    if (!r.ok) falhas.push(arquivo.name);
+  };
+  for (const original of fotos) {
+    const leve = await encolherFoto(original);
+    if (leve.size > 4 * 1024 * 1024) {
+      falhas.push(`${original.name} (acima de 4 MB mesmo comprimida)`);
+      continue;
+    }
+    await subir(leve, "foto");
+  }
+  for (const doc of documentos) {
+    if (doc.size > 4 * 1024 * 1024) {
+      falhas.push(`${doc.name} (acima de 4 MB)`);
+      continue;
+    }
+    await subir(doc, "documento");
+  }
+  return falhas;
+}
+
+// Mostra os anexos de um registro; em modo editável dá o ✕ para tirar o anexo errado e o
+// "maisinho" para adicionar mais (áudio do Mateus, 27/08/2026).
+export function BlocoAnexos({
+  tipo,
+  registroId,
+  anexos,
+  editavel,
+  aoMudar,
+  setErro,
+}: {
+  tipo: TipoRegistroAnexo;
+  registroId: string;
+  anexos: AnexoInfo[];
+  editavel: boolean;
+  aoMudar: () => void | Promise<void>;
+  setErro: (e: string | null) => void;
+}) {
+  const [ocupado, setOcupado] = useState(false);
+  const fotos = anexos.filter((a) => a.categoria === "foto");
+  const documentos = anexos.filter((a) => a.categoria === "documento");
+  if (!editavel && anexos.length === 0) return null;
+
+  async function tirar(id: string) {
+    if (!window.confirm("Excluir este anexo?")) return;
+    setOcupado(true);
+    try {
+      const r = await fetch(`/api/anexos?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao excluir o anexo."));
+      setErro(null);
+      await aoMudar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Falha ao excluir o anexo.");
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  async function adicionar(arquivos: File[], categoria: "foto" | "documento") {
+    if (arquivos.length === 0) return;
+    setOcupado(true);
+    try {
+      const falhas = await enviarAnexos(
+        tipo,
+        registroId,
+        categoria === "foto" ? arquivos : [],
+        categoria === "documento" ? arquivos : [],
+      );
+      setErro(falhas.length > 0 ? `Alguns anexos falharam: ${falhas.join(", ")}.` : null);
+      await aoMudar();
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "8px", opacity: ocupado ? 0.6 : 1 }}>
+      {fotos.map((a) => (
+        <span key={a.id} style={{ position: "relative", display: "inline-block" }}>
+          <a href={`/api/anexos/${encodeURIComponent(a.id)}`} target="_blank" rel="noreferrer">
+            {/* eslint-disable-next-line @next/next/no-img-element -- rota autenticada, sem otimizador */}
+            <img
+              src={`/api/anexos/${encodeURIComponent(a.id)}`}
+              alt={a.nome ?? "Foto anexada"}
+              style={{ width: "54px", height: "54px", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--gray-200)", display: "block" }}
+            />
+          </a>
+          {editavel && (
+            <button title="Excluir foto" onClick={() => tirar(a.id)} style={{ ...botaoTirarAnexo, position: "absolute", top: "-7px", right: "-7px" }}>
+              ×
+            </button>
+          )}
+        </span>
+      ))}
+      {documentos.map((a) => (
+        <span key={a.id} style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+          <a href={`/api/anexos/${encodeURIComponent(a.id)}`} target="_blank" rel="noreferrer" style={pillLink}>
+            Abrir documento{a.nome ? ` (${a.nome})` : ""}
+          </a>
+          {editavel && (
+            <button title="Excluir documento" onClick={() => tirar(a.id)} style={botaoTirarAnexo}>
+              ×
+            </button>
+          )}
+        </span>
+      ))}
+      {editavel && (
+        <>
+          <label style={{ ...pillLink, cursor: "pointer" }}>
+            + foto
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              style={{ display: "none" }}
+              onChange={(e) => {
+                void adicionar(Array.from(e.target.files ?? []), "foto");
+                e.target.value = "";
+              }}
+            />
+          </label>
+          <label style={{ ...pillLink, cursor: "pointer" }}>
+            + documento
+            <input
+              type="file"
+              accept="application/pdf,image/*"
+              multiple
+              style={{ display: "none" }}
+              onChange={(e) => {
+                void adicionar(Array.from(e.target.files ?? []), "documento");
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </>
+      )}
+    </div>
+  );
+}
+
+// Anexos da visita em modo edição (áudio do Mateus, 27/08/2026: excluir/substituir a foto
+// e o anexo, e adicionar mais) — usa as rotas próprias da visita, visual do BlocoAnexos.
+function AnexosVisitaEditavel({
+  v,
+  aoMudar,
+  setErro,
+}: {
+  v: VisitaCarteira;
+  aoMudar: () => void | Promise<void>;
+  setErro: (e: string | null) => void;
+}) {
+  const [ocupado, setOcupado] = useState(false);
+
+  async function chamar(url: string, init: RequestInit, fallback: string) {
+    setOcupado(true);
+    try {
+      const r = await fetch(url, init);
+      if (!r.ok) throw new Error(mensagemErro(await r.json(), fallback));
+      setErro(null);
+      await aoMudar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : fallback);
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  async function adicionarFotos(arquivos: File[]) {
+    setOcupado(true);
+    const falhas: string[] = [];
+    try {
+      for (const original of arquivos) {
+        const leve = await encolherFoto(original);
+        if (leve.size > 4 * 1024 * 1024) {
+          falhas.push(`${original.name} (acima de 4 MB mesmo comprimida)`);
+          continue;
+        }
+        const form = new FormData();
+        form.set("foto", leve);
+        const r = await fetch(`/api/visitas/${encodeURIComponent(v.id)}/fotos`, { method: "POST", body: form });
+        if (!r.ok) falhas.push(original.name);
+      }
+      setErro(falhas.length > 0 ? `Alguns anexos falharam: ${falhas.join(", ")}.` : null);
+      await aoMudar();
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  function trocarDocumento(arquivo: File | undefined) {
+    if (!arquivo) return;
+    if (arquivo.size > 4 * 1024 * 1024) {
+      setErro("Documento acima de 4 MB — a plataforma recusa envios maiores.");
+      return;
+    }
+    const form = new FormData();
+    form.set("documento", arquivo);
+    void chamar(`/api/visitas/${encodeURIComponent(v.id)}/documento`, { method: "POST", body: form }, "Falha ao anexar o documento.");
+  }
+
+  return (
+    <div>
+      <div style={{ ...labelStyle, marginBottom: "2px" }}>Anexos</div>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", opacity: ocupado ? 0.6 : 1 }}>
+        {v.fotos.map((fotoId) => (
+          <span key={fotoId} style={{ position: "relative", display: "inline-block" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- rota autenticada, sem otimizador */}
+            <img
+              src={`/api/visitas/${encodeURIComponent(v.id)}/fotos/${encodeURIComponent(fotoId)}`}
+              alt="Foto da visita"
+              style={{ width: "54px", height: "54px", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--gray-200)", display: "block" }}
+            />
+            <button
+              title="Excluir foto"
+              onClick={() => {
+                if (window.confirm("Excluir esta foto?")) {
+                  void chamar(
+                    `/api/visitas/${encodeURIComponent(v.id)}/fotos/${encodeURIComponent(fotoId)}`,
+                    { method: "DELETE" },
+                    "Falha ao excluir a foto.",
+                  );
+                }
+              }}
+              style={{ ...botaoTirarAnexo, position: "absolute", top: "-7px", right: "-7px" }}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        {v.temDocumento && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+            <a href={`/api/visitas/${encodeURIComponent(v.id)}/documento`} target="_blank" rel="noreferrer" style={pillLink}>
+              Abrir documento{v.documentoNome ? ` (${v.documentoNome})` : ""}
+            </a>
+            <button
+              title="Excluir documento"
+              onClick={() => {
+                if (window.confirm("Excluir este documento?")) {
+                  void chamar(`/api/visitas/${encodeURIComponent(v.id)}/documento`, { method: "DELETE" }, "Falha ao excluir o documento.");
+                }
+              }}
+              style={botaoTirarAnexo}
+            >
+              ×
+            </button>
+          </span>
+        )}
+        <label style={{ ...pillLink, cursor: "pointer" }}>
+          + foto
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: "none" }}
+            onChange={(e) => {
+              void adicionarFotos(Array.from(e.target.files ?? []));
+              e.target.value = "";
+            }}
+          />
+        </label>
+        <label style={{ ...pillLink, cursor: "pointer" }}>
+          {v.temDocumento ? "substituir documento" : "+ documento"}
+          <input
+            type="file"
+            accept="application/pdf,image/*"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              trocarDocumento(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+        </label>
+      </div>
     </div>
   );
 }
@@ -654,6 +1019,7 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
                       onChange={(e) => setEd({ ...ed, observacao: e.target.value })}
                     />
                   </label>
+                  <AnexosVisitaEditavel v={v} aoMudar={carregar} setErro={setErro} />
                   <div style={{ display: "flex", gap: "8px" }}>
                     <button onClick={() => salvarEdicao(v.id)} disabled={salvandoEdicao} style={botaoPrimario(salvandoEdicao)}>
                       {salvandoEdicao ? "Salvando…" : "Salvar edição"}
@@ -677,7 +1043,7 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
               )}
                 </>
               )}
-              {(v.fotos.length > 0 || v.temDocumento) && (
+              {!emEdicao && (v.fotos.length > 0 || v.temDocumento) && (
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
                   {v.fotos.map((fotoId) => (
                     <a key={fotoId} href={`/api/visitas/${encodeURIComponent(v.id)}/fotos/${encodeURIComponent(fotoId)}`} target="_blank" rel="noreferrer">
@@ -723,6 +1089,9 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [comodatos, setComodatos] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [arquivo, setArquivo] = useState<File | null>(null);
+  // Anexos genéricos (áudio do Mateus, 27/08/2026): vários contratos e fotos por cliente.
+  const [fotosNovas, setFotosNovas] = useState<File[]>([]);
+  const [documentosNovos, setDocumentosNovos] = useState<File[]>([]);
   const [inputKey, setInputKey] = useState(0); // reset do <input type="file"> após salvar
 
   // Edição (áudio do Mateus, 25/08/2026) + aba Excluídos.
@@ -774,11 +1143,16 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
       );
       if (arquivo) form.set("contrato", arquivo);
       const r = await fetch("/api/comodatos", { method: "POST", body: form });
-      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao cadastrar o contrato."));
+      const criado = await r.json();
+      if (!r.ok) throw new Error(mensagemErro(criado, "Falha ao cadastrar o contrato."));
+      const falhas = await enviarAnexos("contrato", criado.id, fotosNovas, documentosNovos);
+      if (falhas.length > 0) setErro(`Contrato cadastrado, mas alguns anexos falharam: ${falhas.join(", ")}.`);
       setCliente("");
       setComodatos("");
       setObservacoes("");
       setArquivo(null);
+      setFotosNovas([]);
+      setDocumentosNovos([]);
       setInputKey((k) => k + 1);
       await carregar();
     } catch (e) {
@@ -861,6 +1235,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
               onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
             />
           </label>
+          <CampoAnexos fotos={fotosNovas} setFotos={setFotosNovas} documentos={documentosNovos} setDocumentos={setDocumentosNovos} inputKey={inputKey} />
           <button type="submit" disabled={enviando} style={botaoPrimario(enviando)}>
             {enviando ? "Salvando…" : "Cadastrar contrato"}
           </button>
@@ -953,6 +1328,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
                       onChange={(e) => setEd({ ...ed, observacoes: e.target.value })}
                     />
                   </label>
+                  <BlocoAnexos tipo="contrato" registroId={c.id} anexos={c.anexos} editavel aoMudar={carregar} setErro={setErro} />
                   <div style={{ display: "flex", gap: "8px" }}>
                     <button onClick={() => salvarEdicao(c.id)} disabled={salvandoEdicao} style={botaoPrimario(salvandoEdicao)}>
                       {salvandoEdicao ? "Salvando…" : "Salvar edição"}
@@ -989,6 +1365,9 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
                         Abrir contrato (PDF)
                       </a>
                     )}
+                  </div>
+                  <BlocoAnexos tipo="contrato" registroId={c.id} anexos={c.anexos} editavel={false} aoMudar={carregar} setErro={setErro} />
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                     <button
                       onClick={() => {
                         setEditandoId(c.id);
@@ -1028,6 +1407,10 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [peca, setPeca] = useState("");
   const [quantidade, setQuantidade] = useState("");
   const [obs, setObs] = useState("");
+  // Anexos (áudio do Mateus, 27/08/2026): documento com o código da peça, foto da peça.
+  const [fotosNovas, setFotosNovas] = useState<File[]>([]);
+  const [documentosNovos, setDocumentosNovos] = useState<File[]>([]);
+  const [inputKey, setInputKey] = useState(0);
 
   // Edição (áudio do Mateus, 25/08/2026) + aba Excluídos.
   const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -1069,11 +1452,17 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ codigo: codigo.trim(), peca: peca.trim(), quantidade: qtd, obs: obs.trim() || null }),
       });
-      if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao lançar o item."));
+      const criado = await r.json();
+      if (!r.ok) throw new Error(mensagemErro(criado, "Falha ao lançar o item."));
+      const falhas = await enviarAnexos("estoque", criado.id, fotosNovas, documentosNovos);
+      if (falhas.length > 0) setErro(`Item lançado, mas alguns anexos falharam: ${falhas.join(", ")}.`);
       setCodigo("");
       setPeca("");
       setQuantidade("");
       setObs("");
+      setFotosNovas([]);
+      setDocumentosNovos([]);
+      setInputKey((k) => k + 1);
       await carregar();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao lançar o item.");
@@ -1169,6 +1558,7 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
             OBS
             <input style={{ ...inputStyle, marginTop: "5px" }} placeholder="Observação (opcional)" maxLength={4000} value={obs} onChange={(e) => setObs(e.target.value)} />
           </label>
+          <CampoAnexos fotos={fotosNovas} setFotos={setFotosNovas} documentos={documentosNovos} setDocumentos={setDocumentosNovos} inputKey={inputKey} />
           <button type="submit" disabled={enviando} style={botaoPrimario(enviando)}>
             {enviando ? "Lançando…" : "Lançar no estoque"}
           </button>
@@ -1248,6 +1638,9 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
                       Cancelar
                     </button>
                   </span>
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <BlocoAnexos tipo="estoque" registroId={i.id} anexos={i.anexos} editavel aoMudar={carregar} setErro={setErro} />
+                  </div>
                 </div>
               ) : (
                 <div key={i.id} style={{ display: "grid", gridTemplateColumns: cols, gap: "10px", padding: "11px 18px", borderBottom: "1px solid var(--gray-100)", fontSize: "13.5px", color: "var(--gray-700)", alignItems: "center" }}>
@@ -1273,6 +1666,11 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
                       </button>
                     )}
                   </span>
+                  {i.anexos.length > 0 && (
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <BlocoAnexos tipo="estoque" registroId={i.id} anexos={i.anexos} editavel={false} aoMudar={carregar} setErro={setErro} />
+                    </div>
+                  )}
                 </div>
               ),
             )}
