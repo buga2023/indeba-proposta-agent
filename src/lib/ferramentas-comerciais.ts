@@ -9,6 +9,7 @@ import {
 } from "@/lib/contracts";
 import type { SessaoUsuario } from "@/lib/auth";
 import { anexosDe } from "@/lib/anexos";
+import { nomesDeAutores } from "@/lib/autores";
 
 // Mesmo recorte das Ferramentas Técnicas (áudio do Mateus, 21/08/2026): todo vendedor
 // escreve; cada um lê só os próprios registros, o gestor lê todos.
@@ -50,7 +51,11 @@ export async function listarRelatoriosProspeccao(usuario: SessaoUsuario, excluid
     orderBy: [{ data: "desc" }, { criadoEm: "desc" }],
   });
   const anexos = await anexosDe("prospeccao", rows.map((r) => r.id));
-  return rows.map((r) => RelatorioProspeccao.parse({ ...iso(r), anexos: anexos.get(r.id) ?? [] }));
+  // Nome de quem lançou (áudio do Mateus, 31/08/2026) — uma consulta para a lista toda.
+  const nomes = await nomesDeAutores(rows.map((r) => r.autor));
+  return rows.map((r) =>
+    RelatorioProspeccao.parse({ ...iso(r), anexos: anexos.get(r.id) ?? [], autorNome: nomes.get(r.autor) ?? null }),
+  );
 }
 
 // Edição (áudio do Mateus, 25/08/2026): o vendedor ajusta os próprios registros (ex.: o
@@ -105,7 +110,10 @@ export async function listarSolicitacoesComerciais(usuario: SessaoUsuario, exclu
     orderBy: { criadoEm: "desc" },
   });
   const anexos = await anexosDe("solicitacao", rows.map((r) => r.id));
-  return rows.map((r) => SolicitacaoComercial.parse({ ...iso(r), anexos: anexos.get(r.id) ?? [] }));
+  const nomes = await nomesDeAutores(rows.map((r) => r.autor));
+  return rows.map((r) =>
+    SolicitacaoComercial.parse({ ...iso(r), anexos: anexos.get(r.id) ?? [], autorNome: nomes.get(r.autor) ?? null }),
+  );
 }
 
 // Edição com o MESMO escopo da listagem (áudio do Mateus, 25/08/2026: "editar para a
