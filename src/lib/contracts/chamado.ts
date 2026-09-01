@@ -46,6 +46,9 @@ export const Chamado = z.object({
   categoria: CategoriaChamado,
   prioridade: PrioridadeChamado,
   status: StatusChamado,
+  // Nome de quem abriu, resolvido na leitura (áudio do Mateus, 31/08/2026: a tela
+  // mostra o NOME, não o e-mail). Null quando a conta não está mais no cadastro.
+  autorNome: z.string().nullable().default(null),
   autor: z.string(),
   respostaGestor: z.string().nullable(),
   criadoEm: z.string(),

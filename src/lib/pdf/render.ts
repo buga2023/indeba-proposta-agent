@@ -41,7 +41,7 @@ export function dentroDePublic(relPath: string): string | null {
 
 // Lê um asset de public/ e devolve como data-URI (Chromium headless não resolve
 // caminhos relativos via setContent). Detecta o mime pela extensão.
-function dataUri(relPath: string): string {
+export function dataUri(relPath: string): string {
   const abs = dentroDePublic(relPath);
   if (!abs) return "";
   try {
@@ -232,7 +232,21 @@ export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
   const banner = dataUri("/marca/header-ies.png");
 
   const doc = montarDocumento(scope, imagens, banner, dataUri);
-  const html = "<!DOCTYPE html>" + doc.html;
+  return htmlParaPdf(doc.html, doc);
+}
+
+/**
+ * HTML → Chromium headless → PDF. Extraído de `renderPdf` quando os comprovantes de
+ * registro (áudio do Mateus, 31/08/2026) passaram a precisar do MESMO motor: abertura do
+ * navegador conforme o ambiente, bloqueio de rede externa e as duas esperas (decode de
+ * imagem e fonts.ready) que já custaram PDF com foto em branco e fonte errada em
+ * produção. Duplicar isso seria repetir esses bugs num segundo lugar.
+ */
+export async function htmlParaPdf(
+  corpo: string,
+  opcoes: { footer: string; marginTop: string; marginBottom?: string },
+): Promise<Buffer> {
+  const html = "<!DOCTYPE html>" + corpo;
 
   const browser = await abrirNavegador();
   try {
@@ -263,12 +277,12 @@ export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
       printBackground: true,
       // Rodapé nativo só quando o template pede um (a Consolidada imprime a paginação
       // dentro do HTML — ver montarDocumento).
-      displayHeaderFooter: Boolean(doc.footer),
+      displayHeaderFooter: Boolean(opcoes.footer),
       headerTemplate: "<div></div>",
-      footerTemplate: doc.footer || "<div></div>",
+      footerTemplate: opcoes.footer || "<div></div>",
       // margens L/R zero: banner/imagens sangram full-width; conteúdo tem padding
       // próprio (.pg). Margem superior varia por tipo (ver montarDocumento).
-      margin: { top: doc.marginTop, bottom: doc.marginBottom ?? "15mm", left: "0", right: "0" },
+      margin: { top: opcoes.marginTop, bottom: opcoes.marginBottom ?? "15mm", left: "0", right: "0" },
     });
   } finally {
     await browser.close();

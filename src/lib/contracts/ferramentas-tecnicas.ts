@@ -53,6 +53,9 @@ export const VisitaCarteira = z.object({
   fotos: z.array(z.string()),
   temDocumento: z.boolean(),
   documentoNome: z.string().nullable(),
+  // Nome de quem lançou, resolvido na leitura (áudio do Mateus, 31/08/2026: a tela
+  // mostra o NOME, não o e-mail). Null quando a conta não está mais no cadastro.
+  autorNome: z.string().nullable().default(null),
   autor: z.string(),
   criadoEm: z.string(),
   atualizadoEm: z.string(),
@@ -84,6 +87,9 @@ export const ContratoComodato = z.object({
   // Anexos (áudio do Mateus, 27/08/2026): "três ou quatro contratos… e fotos de diversos
   // equipamentos" — vários documentos e fotos por cliente, além do PDF legado.
   anexos: z.array(AnexoInfo).default([]),
+  // Nome de quem lançou, resolvido na leitura (áudio do Mateus, 31/08/2026: a tela
+  // mostra o NOME, não o e-mail). Null quando a conta não está mais no cadastro.
+  autorNome: z.string().nullable().default(null),
   autor: z.string(),
   criadoEm: z.string(),
   atualizadoEm: z.string(),
@@ -110,6 +116,9 @@ export const EstoqueComodato = z.object({
   obs: z.string().nullable(),
   // Anexos (áudio do Mateus, 27/08/2026): documento com o código da peça, foto da peça.
   anexos: z.array(AnexoInfo).default([]),
+  // Nome de quem lançou, resolvido na leitura (áudio do Mateus, 31/08/2026: a tela
+  // mostra o NOME, não o e-mail). Null quando a conta não está mais no cadastro.
+  autorNome: z.string().nullable().default(null),
   autor: z.string(),
   criadoEm: z.string(),
   atualizadoEm: z.string(),

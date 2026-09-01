@@ -38,15 +38,28 @@ export const RelatorioProspeccao = z.object({
   observacao: z.string().nullable(),
   // Anexos (áudio do Mateus, 27/08/2026): foto da fachada, cartão de quem foi visitado…
   anexos: z.array(AnexoInfo).default([]),
+  // Nome de quem lançou, resolvido na leitura (áudio do Mateus, 31/08/2026: a tela
+  // mostra o NOME, não o e-mail). Null quando a conta não está mais no cadastro.
+  autorNome: z.string().nullable().default(null),
   autor: z.string(),
   criadoEm: z.string(),
   atualizadoEm: z.string(),
 });
 export type RelatorioProspeccao = z.infer<typeof RelatorioProspeccao>;
 
-// Os três tipos vêm da foto do bloco: análise de água e/ou tecidos, visita do setor
-// técnico, e solicitações de amostra para demonstrações.
-export const TipoSolicitacaoComercial = z.enum(["analise_agua_tecidos", "visita_setor_tecnico", "amostra_demonstracao"]);
+// Os três primeiros vêm da foto do bloco: análise de água e/ou tecidos, visita do setor
+// técnico, e solicitações de amostra para demonstrações. Os dois últimos são do áudio do
+// Mateus de 31/08/2026 ("bota análise de produtos químicos e outras solicitações"):
+// `outras_solicitacoes` é a saída para o que não cabe nas categorias — o que o vendedor
+// precisa fica na observação. Só se ACRESCENTA a este enum: remover um valor deixaria
+// órfãs as linhas já gravadas no banco.
+export const TipoSolicitacaoComercial = z.enum([
+  "analise_agua_tecidos",
+  "analise_produtos_quimicos",
+  "visita_setor_tecnico",
+  "amostra_demonstracao",
+  "outras_solicitacoes",
+]);
 export type TipoSolicitacaoComercial = z.infer<typeof TipoSolicitacaoComercial>;
 
 export const StatusSolicitacaoComercial = z.enum(["pendente", "atendida"]);
@@ -78,6 +91,9 @@ export const SolicitacaoComercial = z.object({
   // Anexos (áudio do Mateus, 27/08/2026): mesma opção de foto e documento das visitas.
   anexos: z.array(AnexoInfo).default([]),
   status: StatusSolicitacaoComercial,
+  // Nome de quem lançou, resolvido na leitura (áudio do Mateus, 31/08/2026: a tela
+  // mostra o NOME, não o e-mail). Null quando a conta não está mais no cadastro.
+  autorNome: z.string().nullable().default(null),
   autor: z.string(),
   criadoEm: z.string(),
   atualizadoEm: z.string(),

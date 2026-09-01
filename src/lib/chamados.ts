@@ -7,6 +7,7 @@ import { Chamado, type ChamadoCreate, type ChamadoUpdate } from "@/lib/contracts
 export { usuarioAtual } from "@/lib/auth-db";
 export type { SessaoUsuario } from "@/lib/auth";
 import type { SessaoUsuario } from "@/lib/auth";
+import { nomesDeAutores } from "@/lib/autores";
 
 // Linha do Prisma → contrato Chamado (datas em ISO; valida os enums via Zod).
 type ChamadoRow = {
@@ -22,9 +23,12 @@ type ChamadoRow = {
   atualizadoEm: Date;
 };
 
-function mapear(row: ChamadoRow): Chamado {
+// `nomes` chega da listagem (uma consulta para a lista toda); nas respostas de escrita
+// não há mapa e a tela cai no e-mail até o próximo carregamento.
+function mapear(row: ChamadoRow, nomes?: Map<string, string>): Chamado {
   return Chamado.parse({
     ...row,
+    autorNome: nomes?.get(row.autor) ?? null,
     criadoEm: row.criadoEm.toISOString(),
     atualizadoEm: row.atualizadoEm.toISOString(),
   });
@@ -40,7 +44,9 @@ export async function criarChamado(autor: string, dados: ChamadoCreate): Promise
 export async function listarChamados(usuario: SessaoUsuario): Promise<Chamado[]> {
   const where = usuario.papel === "admin" ? {} : { autor: usuario.email };
   const rows = await prisma.chamado.findMany({ where, orderBy: { criadoEm: "desc" } });
-  return rows.map(mapear);
+  // Nome de quem abriu (áudio do Mateus, 31/08/2026) — uma consulta para a lista toda.
+  const nomes = await nomesDeAutores(rows.map((r) => r.autor));
+  return rows.map((r) => mapear(r, nomes));
 }
 
 // Só o gestor chega aqui (autorização na rota): muda status e/ou responde.

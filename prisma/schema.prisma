@@ -198,7 +198,7 @@ model RelatorioProspeccao {
 /// `status` é o andamento (pendente → atendida) — quem atende marca; validado no Zod.
 model SolicitacaoComercial {
   id           String   @id @default(cuid())
-  tipo         String // analise_agua_tecidos | visita_setor_tecnico | amostra_demonstracao
+  tipo         String // analise_agua_tecidos | analise_produtos_quimicos | visita_setor_tecnico | amostra_demonstracao | outras_solicitacoes
   cliente      String
   observacao   String?
   status       String   @default("pendente") // pendente | atendida

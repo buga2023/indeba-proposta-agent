@@ -2,11 +2,13 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import type { RelatorioProspeccao, SolicitacaoComercial, TipoSolicitacaoComercial } from "@/lib/contracts";
+import { autorLabel } from "@/lib/utils";
 import {
   AbaVisitas,
   BlocoAnexos,
   BlocoExcluidos,
   BotaoExcluidos,
+  BotaoPdf,
   CampoAnexos,
   enviarAnexos,
   inputStyle,
@@ -38,8 +40,12 @@ type Aba = "prospeccoes" | "visitas" | "solicitacoes";
 
 const TIPOS_SOLICITACAO: { value: TipoSolicitacaoComercial; label: string }[] = [
   { value: "analise_agua_tecidos", label: "Análise de água e/ou tecidos" },
+  // Áudio do Mateus, 31/08/2026: análise de produtos químicos ao lado da de água/tecidos.
+  { value: "analise_produtos_quimicos", label: "Análise de produtos químicos" },
   { value: "visita_setor_tecnico", label: "Visita do setor técnico" },
   { value: "amostra_demonstracao", label: "Amostra para demonstração" },
+  // Último da lista de propósito: é o escape, não a primeira escolha.
+  { value: "outras_solicitacoes", label: "Outras solicitações" },
 ];
 const rotuloTipo = (v: string) => TIPOS_SOLICITACAO.find((t) => t.value === v)?.label ?? v;
 
@@ -47,6 +53,23 @@ export function FerramentasComerciaisScreen() {
   const [aba, setAba] = useState<Aba>("prospeccoes");
   const [souGestor, setSouGestor] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  // Selo de solicitações novas (áudio do Mateus, 31/08/2026). Só o gestor recebe número
+  // diferente de zero; abrir a aba carimba "vi" e zera. Falhar aqui não mostra erro: o
+  // selo é um extra, não pode atrapalhar quem só quer lançar uma prospecção.
+  const [novas, setNovas] = useState(0);
+  useEffect(() => {
+    fetch("/api/notificacoes")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setNovas(d?.novasSolicitacoes ?? 0))
+      .catch(() => {});
+  }, []);
+  // Carimbar o visto é reação a um ATO do gestor (ele abriu a aba), não sincronização de
+  // estado — por isso mora no clique, e não num efeito sobre `aba`.
+  function verSolicitacoes() {
+    if (novas === 0) return;
+    setNovas(0);
+    fetch("/api/notificacoes", { method: "POST" }).catch(() => {});
+  }
 
   return (
     <div style={{ padding: "28px", maxWidth: "980px" }}>
@@ -84,6 +107,7 @@ export function FerramentasComerciaisScreen() {
               onClick={() => {
                 setAba(t.key);
                 setErro(null);
+                if (t.key === "solicitacoes") verSolicitacoes();
               }}
               style={{
                 padding: "8px 16px",
@@ -97,6 +121,26 @@ export function FerramentasComerciaisScreen() {
               }}
             >
               {t.label}
+              {t.key === "solicitacoes" && novas > 0 && (
+                <span
+                  title={`${novas} solicitação(ões) nova(s) desde a sua última visita`}
+                  style={{
+                    marginLeft: "7px",
+                    display: "inline-block",
+                    minWidth: "18px",
+                    padding: "0 5px",
+                    borderRadius: "999px",
+                    background: ativo ? "white" : "#dc2626",
+                    color: ativo ? "var(--blue-600)" : "white",
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    lineHeight: "18px",
+                    textAlign: "center",
+                  }}
+                >
+                  {novas > 99 ? "99+" : novas}
+                </span>
+              )}
             </button>
           );
         })}
@@ -321,7 +365,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
             render={(p) => (
               <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
                 <b>{fmtData(p.data)}{p.horario ? ` às ${p.horario}` : ""}</b> · {p.empresa}
-                {souGestor ? ` · ${p.autor}` : ""}
+                {souGestor ? ` · ${autorLabel(p)}` : ""}
               </span>
             )}
           />
@@ -349,9 +393,10 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                   {p.horario ? ` às ${p.horario}` : ""}
                 </span>
                 <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {p.empresa}</span>
-                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {p.autor}</span>}
+                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {autorLabel(p)}</span>}
                 {!emEdicao && (
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
+                    <BotaoPdf tipo="prospeccao" id={p.id} />
                     <button onClick={() => abrirEdicao(p)} style={botaoEditar}>
                       Editar
                     </button>
@@ -610,7 +655,7 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
             render={(s) => (
               <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
                 <b>{rotuloTipo(s.tipo)}</b> · {s.cliente} · {new Date(s.criadoEm).toLocaleDateString("pt-BR")}
-                {souGestor ? ` · ${s.autor}` : ""}
+                {souGestor ? ` · ${autorLabel(s)}` : ""}
               </span>
             )}
           />
@@ -647,10 +692,11 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                 </span>
                 <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)" }}>{rotuloTipo(s.tipo)}</span>
                 <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {s.cliente}</span>
-                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {s.autor}</span>}
+                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {autorLabel(s)}</span>}
                 <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {new Date(s.criadoEm).toLocaleDateString("pt-BR")}</span>
                 {editandoId !== s.id && (
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
+                    <BotaoPdf tipo="solicitacao" id={s.id} />
                     <button onClick={() => marcar(s.id, atendida ? "pendente" : "atendida")} style={botaoEditar}>
                       {atendida ? "Reabrir" : "Marcar atendida"}
                     </button>

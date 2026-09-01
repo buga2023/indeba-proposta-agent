@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato, AnexoInfo, TipoRegistroAnexo } from "@/lib/contracts";
+import { autorLabel } from "@/lib/utils";
 import { encolherFoto } from "@/components/form-produto";
 
 /**
@@ -79,6 +80,27 @@ export const botaoEditar = {
   cursor: "pointer",
   flex: "none",
 } as const;
+
+/**
+ * Comprovante em PDF do registro (áudio do Mateus, 31/08/2026: "em todos os registros, dê
+ * a opção da gente também importar em PDF… como se fosse um documento de comprovação").
+ *
+ * É um link, não um botão com fetch: a rota é GET e responde com Content-Disposition
+ * attachment, então o próprio navegador baixa o arquivo. Com fetch seria preciso montar
+ * blob + link temporário à mão para chegar no mesmo lugar — e o render do Chromium leva
+ * alguns segundos, tempo em que o link já dá o feedback nativo de download.
+ */
+export function BotaoPdf({ tipo, id }: { tipo: "prospeccao" | "visita" | "solicitacao" | "contrato" | "estoque"; id: string }) {
+  return (
+    <a
+      href={`/api/comprovante?tipo=${tipo}&id=${encodeURIComponent(id)}`}
+      title="Baixar comprovante em PDF (com os dados e as fotos deste registro)"
+      style={{ ...botaoEditar, textDecoration: "none", display: "inline-block" }}
+    >
+      PDF
+    </a>
+  );
+}
 
 const STATUS_VISITA: Record<StatusVisita, { label: string; cor: string; bg: string }> = {
   resolvido: { label: "Resolvido", cor: "#15803d", bg: "#dcfce7" },
@@ -932,7 +954,7 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
             render={(v) => (
               <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
                 <b>{fmtData(v.data)} às {v.horario}</b> · {v.cliente} · Recebeu: {v.quemRecebeu}
-                {souGestor ? ` · ${v.autor}` : ""}
+                {souGestor ? ` · ${autorLabel(v)}` : ""}
               </span>
             )}
           />
@@ -961,9 +983,10 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
                   {fmtData(v.data)} às {v.horario}
                 </span>
                 <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {v.cliente}</span>
-                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {v.autor}</span>}
+                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {autorLabel(v)}</span>}
                 {!emEdicao && (
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
+                    <BotaoPdf tipo="visita" id={v.id} />
                     <button onClick={() => abrirEdicao(v)} style={botaoEditar}>
                       Editar
                     </button>
@@ -1255,7 +1278,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
             render={(c) => (
               <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
                 <b>{c.cliente}</b> · {new Date(c.criadoEm).toLocaleDateString("pt-BR")}
-                {souGestor ? ` · ${c.autor}` : ""}
+                {souGestor ? ` · ${autorLabel(c)}` : ""}
               </span>
             )}
           />
@@ -1299,7 +1322,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
                 {c.temContrato && (
                   <span style={{ fontSize: "11px", fontWeight: 700, padding: "3px 9px", borderRadius: "999px", background: "#e0edfb", color: "#1e6bb8", flex: "none" }}>PDF</span>
                 )}
-                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)", flex: "none" }}>{c.autor}</span>}
+                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)", flex: "none" }}>{autorLabel(c)}</span>}
                 <span style={{ fontSize: "12px", color: "var(--gray-400)", flex: "none" }}>
                   {new Date(c.criadoEm).toLocaleDateString("pt-BR")}
                 </span>
@@ -1368,6 +1391,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
                   </div>
                   <BlocoAnexos tipo="contrato" registroId={c.id} anexos={c.anexos} editavel={false} aoMudar={carregar} setErro={setErro} />
                   <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    <BotaoPdf tipo="contrato" id={c.id} />
                     <button
                       onClick={() => {
                         setEditandoId(c.id);
@@ -1517,7 +1541,7 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
     const linhas = [
       ["Código", "Peça em estoque", "Quantidade", "OBS", "Lançado por", "Lançado em"].join(";"),
       ...itens.map((i) =>
-        [cel(i.codigo), cel(i.peca), i.quantidade, cel(i.obs), cel(i.autor), new Date(i.criadoEm).toLocaleString("pt-BR")].join(";"),
+        [cel(i.codigo), cel(i.peca), i.quantidade, cel(i.obs), cel(autorLabel(i)), new Date(i.criadoEm).toLocaleString("pt-BR")].join(";"),
       ),
     ];
     const a = document.createElement("a");
@@ -1578,7 +1602,7 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
             render={(i) => (
               <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
                 <b>{i.codigo}</b> · {i.peca} · Qtd: {i.quantidade}
-                {souGestor ? ` · ${i.autor}` : ""}
+                {souGestor ? ` · ${autorLabel(i)}` : ""}
               </span>
             )}
           />
@@ -1649,6 +1673,7 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
                   <span>{i.quantidade}</span>
                   <span style={{ color: "var(--gray-500)" }}>{i.obs ?? ""}</span>
                   <span style={{ display: "flex", justifyContent: "flex-end", gap: "6px" }}>
+                    <BotaoPdf tipo="estoque" id={i.id} />
                     <button
                       onClick={() => {
                         setEditandoId(i.id);

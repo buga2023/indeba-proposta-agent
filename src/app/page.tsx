@@ -473,6 +473,7 @@ export default function Home() {
   const ehAdmin = usuario?.papel === "admin";
   // Quantos esperam liberação de acesso — vira o badge no item Configurações.
   const [pendentes, setPendentes] = useState(0);
+  const [novasSolicitacoes, setNovasSolicitacoes] = useState(0);
 
   // Usuário da sessão atual — personaliza saudação e sidebar. O /api/me também confere no
   // banco se o acesso continua liberado: quem foi revogado cai aqui, com a sessão apagada.
@@ -497,6 +498,17 @@ export default function Home() {
         setPendentes((d.colaboradores ?? []).filter((c) => c.acesso === "pendente").length),
       )
       .catch(() => setPendentes(0));
+  }, [ehAdmin, screen]);
+
+  // Íconezinho de solicitação comercial nova (áudio do Mateus, 31/08/2026: "talvez um
+  // íconezinho de notificação apareça para mim"). Recontado a cada troca de tela — o
+  // gestor não fica com o número velho na barra depois de abrir as solicitações.
+  useEffect(() => {
+    if (!ehAdmin) return;
+    fetch("/api/notificacoes")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
+      .then((d: { novasSolicitacoes?: number }) => setNovasSolicitacoes(d.novasSolicitacoes ?? 0))
+      .catch(() => setNovasSolicitacoes(0));
   }, [ehAdmin, screen]);
 
   // Command palette: Ctrl/Cmd+K alterna o overlay de navegação.
@@ -1020,6 +1032,17 @@ export default function Home() {
               <path d="M2.5 8.5h12" />
             </svg>
             Ferramentas Comerciais
+            {/* Áudio do Mateus, 31/08/2026: solicitação nova precisa "acusar" na barra —
+                sem isso o gestor só descobre se lembrar de abrir a aba. Zera quando ele
+                abre Solicitações Comerciais (a tela carimba o visto). */}
+            {novasSolicitacoes > 0 && (
+              <span
+                title={`${novasSolicitacoes} ${novasSolicitacoes === 1 ? "nova solicitação comercial" : "novas solicitações comerciais"}`}
+                style={{ marginLeft: "auto", minWidth: "19px", height: "19px", padding: "0 6px", borderRadius: "999px", background: "var(--accent)", color: "#fff", fontSize: "11px", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}
+              >
+                {novasSolicitacoes > 99 ? "99+" : novasSolicitacoes}
+              </span>
+            )}
           </Hoverable>
           <Hoverable eager base={navItemStyle(["ferramentas"])} hover={navHover} onClick={() => irPara("ferramentas")} title="Ferramentas Técnicas — visitas de rotina, contratos e estoque de comodatos">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">

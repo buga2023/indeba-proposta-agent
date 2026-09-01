@@ -9,6 +9,7 @@ import {
   restaurarSolicitacaoComercial,
   excluirSolicitacaoComercialDefinitivo,
 } from "@/lib/ferramentas-comerciais";
+import { avisarAdminsDeSolicitacao } from "@/lib/notificacoes";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
@@ -34,6 +35,9 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   try {
     const solicitacao = await criarSolicitacaoComercial(usuario.email, parsed.data);
+    // Aviso aos admins (áudio do Mateus, 31/08/2026). Aguardado, mas incapaz de falhar —
+    // ver o contrato best-effort em lib/notificacoes.ts: a solicitação já está salva.
+    await avisarAdminsDeSolicitacao({ autor: usuario.email, ...parsed.data });
     return NextResponse.json(solicitacao, { status: 201 });
   } catch (e) {
     return respostaErro(e, "Falha ao abrir a solicitação.", 500);
