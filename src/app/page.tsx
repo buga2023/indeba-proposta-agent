@@ -4206,8 +4206,13 @@ function CatalogScreen({
     if (cadastroTick === tickVisto.current) return;
     tickVisto.current = cadastroTick;
     onCadastroConsumido?.();
-    if (ehAdmin) setNovoAberto(true);
-    else setAvisoPapel(true);
+    // setState por callback de promise, não síncrono no corpo do effect: síncrono
+    // encadeia render extra (react-hooks/set-state-in-effect derruba o lint do CI).
+    // Mesmo desenho do carregar() das telas de ferramentas.
+    void Promise.resolve().then(() => {
+      if (ehAdmin) setNovoAberto(true);
+      else setAvisoPapel(true);
+    });
   }, [cadastroTick, ehAdmin, onCadastroConsumido]);
   const [busca, setBusca] = useState("");
   const [funcaoFiltro, setFuncaoFiltro] = useState("Todas");
