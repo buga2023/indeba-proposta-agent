@@ -340,6 +340,7 @@ type PropostaLog = {
   id: string;
   status: StatusProposta;
   autor: string;
+  autorNome: string | null;
   cliente: string;
   segmento: string | null;
   tipo: string;
@@ -731,6 +732,27 @@ export default function Home() {
       if (!r.ok) throw new Error();
     } catch {
       setPropostas(null);
+    }
+  }
+
+  // Transfere a proposta para outro consultor (só admin). Otimista como o status: a
+  // célula muda na hora e, se o servidor recusar, a lista é recarregada do banco.
+  async function transferirProposta(id: string, autor: string) {
+    setPropostas((ps) => (ps ? ps.map((p) => (p.id === id ? { ...p, autor, autorNome: null } : p)) : ps));
+    try {
+      const r = await fetch(`/api/propostas/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ autor }),
+      });
+      if (!r.ok) throw new Error();
+      // Recarrega: a resposta traz o autorNome resolvido e o scope já com o consultor
+      // novo na capa — manter o otimista deixaria a coluna sem nome até o próximo refetch.
+      setPropostas(null);
+      toast("Proposta transferida", "success");
+    } catch {
+      setPropostas(null);
+      toast("Não foi possível transferir a proposta", "danger");
     }
   }
 
@@ -1144,6 +1166,7 @@ export default function Home() {
             onReabrir={reabrirProposta}
             onEditar={editarProposta}
             onStatus={mudarStatus}
+            onTransferir={transferirProposta}
             onExcluirDefinitivo={excluirDefinitivo}
             onEsvaziarExcluidas={esvaziarExcluidas}
             ehAdmin={ehAdmin}
@@ -3853,6 +3876,7 @@ function HistoryScreen({
   onReabrir,
   onEditar,
   onStatus,
+  onTransferir,
   onExcluirDefinitivo,
   onEsvaziarExcluidas,
   ehAdmin,
@@ -3865,6 +3889,7 @@ function HistoryScreen({
   onReabrir: (id: string) => void;
   onEditar: (id: string) => void; // reabre na MONTAGEM para alterar a seleção
   onStatus: (id: string, status: StatusProposta) => void;
+  onTransferir: (id: string, autor: string) => void; // muda o consultor dono (só admin)
   onExcluirDefinitivo: (id: string) => void;
   onEsvaziarExcluidas: (ids: string[]) => void; // apaga TODAS as excluídas numa requisição só
   // Status/excluir/restaurar são ações de GESTÃO (a rota também barra por papel):
@@ -3877,7 +3902,22 @@ function HistoryScreen({
   // célula e cobriam o Valor (print do Matheus, 11/08). O minWidth da tabela cresce
   // junto — em tela estreita rola horizontal, não sobrepõe.
   // Na aba Excluídas cabem QUATRO botões (Abrir/Editar/Restaurar/Apagar de vez) — 300px.
-  const cols = `1.7fr 1fr 80px 130px 70px 110px ${verArquivadas ? "300px" : "210px"}`;
+  const cols = `1.7fr 1fr 150px 80px 130px 70px 110px ${verArquivadas ? "300px" : "210px"}`;
+
+  // Consultores para o select de transferência. Só o gestor: /api/colaboradores é do
+  // painel de admin e devolve 403 para o vendedor — pedir a lista sem ser admin seria
+  // uma requisição garantidamente perdida a cada abertura do histórico.
+  const [consultores, setConsultores] = useState<{ email: string; nome: string }[]>([]);
+  useEffect(() => {
+    if (!ehAdmin) return;
+    fetch("/api/colaboradores")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((d: { colaboradores: { email: string; nome: string; acesso: string }[] }) =>
+        // Conta bloqueada/pendente não recebe carteira.
+        setConsultores(d.colaboradores.filter((c) => c.acesso === "aprovado").map((c) => ({ email: c.email, nome: c.nome }))),
+      )
+      .catch(() => setConsultores([])); // sem lista, a célula cai no nome em leitura
+  }, [ehAdmin]);
   const lista = propostas ?? [];
   // Faturamento = só o que o cliente APROVOU (status comercial real, não o que foi gerado).
   const aprovado = lista.filter((p) => p.status === "aprovada").reduce((s, p) => s + (Number(p.total) || 0), 0);
@@ -3984,6 +4024,9 @@ function HistoryScreen({
             {[
               { t: "Cliente", a: "left" },
               { t: "Segmento", a: "left" },
+              // Quem lançou, pelo NOME (áudio do Mateus, 02/09/2026). Para o gestor a
+              // célula é o select que TRANSFERE a proposta para outro consultor.
+              { t: "Consultor", a: "left" },
               { t: "Data", a: "left" },
               { t: "Status", a: "center" },
               { t: "Itens", a: "center" },
@@ -4005,6 +4048,28 @@ function HistoryScreen({
               >
                 <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-900)" }}>{p.cliente}</div>
                 <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>{p.segmento ? segmentosLegiveis(p.segmento) : "—"}</div>
+                {/* Consultor dono da proposta. Para o vendedor é leitura (o nome de quem
+                    lançou); para o gestor é o select que TRANSFERE — e a transferência
+                    troca também o consultor que assina a capa do PDF. */}
+                <div style={{ fontSize: "13px", color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {ehAdmin && consultores.length > 0 ? (
+                    <select
+                      aria-label="Consultor responsável"
+                      value={p.autor}
+                      onChange={(e) => onTransferir(p.id, e.target.value)}
+                      title="Transferir esta proposta para outro consultor"
+                      style={{ maxWidth: "100%", padding: "3px 6px", borderRadius: "7px", fontSize: "12px", border: "1px solid var(--gray-200)", background: "white", color: "var(--gray-700)", cursor: "pointer" }}
+                    >
+                      {/* O dono atual entra na lista mesmo se a conta saiu do cadastro —
+                          senão o select mostraria o consultor errado. */}
+                      {(consultores.some((c) => c.email === p.autor) ? consultores : [{ email: p.autor, nome: p.autorNome ?? p.autor }, ...consultores]).map((c) => (
+                        <option key={c.email} value={c.email}>{c.nome}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    p.autorNome ?? p.autor
+                  )}
+                </div>
                 <div style={{ fontSize: "13px", color: "var(--gray-400)" }}>{data}</div>
                 <div style={{ display: "flex", justifyContent: "center" }}>
                   {/* Status comercial editável direto na lista (PATCH otimista) — só pelo

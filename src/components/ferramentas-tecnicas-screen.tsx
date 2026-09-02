@@ -932,7 +932,7 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
             render={(v) => (
               <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
                 <b>{fmtData(v.data)} às {v.horario}</b> · {v.cliente} · Recebeu: {v.quemRecebeu}
-                {souGestor ? ` · ${v.autor}` : ""}
+                {souGestor ? ` · ${v.autorNome ?? v.autor}` : ""}
               </span>
             )}
           />
@@ -961,7 +961,7 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
                   {fmtData(v.data)} às {v.horario}
                 </span>
                 <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {v.cliente}</span>
-                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {v.autor}</span>}
+                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {v.autorNome ?? v.autor}</span>}
                 {!emEdicao && (
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
                     <button onClick={() => abrirEdicao(v)} style={botaoEditar}>
@@ -1255,7 +1255,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
             render={(c) => (
               <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
                 <b>{c.cliente}</b> · {new Date(c.criadoEm).toLocaleDateString("pt-BR")}
-                {souGestor ? ` · ${c.autor}` : ""}
+                {souGestor ? ` · ${c.autorNome ?? c.autor}` : ""}
               </span>
             )}
           />
@@ -1299,7 +1299,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
                 {c.temContrato && (
                   <span style={{ fontSize: "11px", fontWeight: 700, padding: "3px 9px", borderRadius: "999px", background: "#e0edfb", color: "#1e6bb8", flex: "none" }}>PDF</span>
                 )}
-                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)", flex: "none" }}>{c.autor}</span>}
+                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)", flex: "none" }}>{c.autorNome ?? c.autor}</span>}
                 <span style={{ fontSize: "12px", color: "var(--gray-400)", flex: "none" }}>
                   {new Date(c.criadoEm).toLocaleDateString("pt-BR")}
                 </span>
@@ -1578,7 +1578,7 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
             render={(i) => (
               <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
                 <b>{i.codigo}</b> · {i.peca} · Qtd: {i.quantidade}
-                {souGestor ? ` · ${i.autor}` : ""}
+                {souGestor ? ` · ${i.autorNome ?? i.autor}` : ""}
               </span>
             )}
           />

@@ -5,6 +5,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { produtoPorCodigoCompleto } from "@/lib/catalogo";
+import { nomesDeAutores, nomeDeAutor } from "@/lib/autores";
 import { imagemDaCotada } from "@/lib/imagem-produto";
 import {
   PropostaResumo,
@@ -93,9 +94,11 @@ export async function comImagensDoCatalogo(scope: PropostaScope): Promise<Propos
 }
 
 // Valida via Zod ao mapear — garante que o que sai do banco respeita o contrato.
-const mapearResumo = (row: Row): PropostaResumo => PropostaResumo.parse(baseResumo(row));
+const mapearResumo = (row: Row, autorNome: string | null = null): PropostaResumo =>
+  PropostaResumo.parse({ ...baseResumo(row), autorNome });
 const mapearRegistro = async (row: Row): Promise<PropostaRegistro> => {
-  const registro = PropostaRegistro.parse({ ...baseResumo(row), scope: row.scope });
+  const autorNome = await nomeDeAutor(row.autor);
+  const registro = PropostaRegistro.parse({ ...baseResumo(row), autorNome, scope: row.scope });
   return { ...registro, scope: await comImagensDoCatalogo(registro.scope) };
 };
 
@@ -150,10 +153,13 @@ export async function listarPropostas(
   // outro campo divergente do contrato (tipo fora do enum, total nulo…) também lançava e
   // levava junto o histórico inteiro. Aqui a linha problemática é PULADA e registrada —
   // perder uma proposta da lista é ruim, perder TODAS é o que estava acontecendo.
+  // UMA consulta ao cadastro para a listagem inteira (lib/autores.ts) — a tela mostra o
+  // NOME de quem lançou, não o e-mail (áudio do Mateus, 02/09/2026).
+  const nomes = await nomesDeAutores(rows.map((r) => r.autor));
   const resumos: PropostaResumo[] = [];
   for (const row of rows) {
     try {
-      resumos.push(mapearResumo(row));
+      resumos.push(mapearResumo(row, nomes.get(row.autor) ?? null));
     } catch (e) {
       console.error(`[propostas] linha ${row.id} fora do contrato — fora da listagem:`, e);
     }
@@ -179,6 +185,58 @@ export async function autorDaProposta(id: string): Promise<string | null> {
 
 export async function atualizarStatusProposta(id: string, status: StatusProposta): Promise<PropostaRegistro> {
   const row = await prisma.proposta.update({ where: { id }, data: { status } });
+  return await mapearRegistro(row);
+}
+
+/**
+ * Transfere a proposta para outro consultor (áudio do Mateus, 02/09/2026: "lancei ontem
+ * uma proposta e não consigo transferir para ele, porque fica atrelada a quem lançou").
+ * É o que resolve também o "lançar no lugar do consultor": o gestor monta e transfere.
+ *
+ * Muda DUAS coisas de uma vez, porque só uma delas seria meia transferência:
+ *  - `autor`, que é o recorte de carteira (listagem, gate de leitura, painel);
+ *  - o consultor que ASSINA a capa/contato da consolidada dentro do scope — sem isso o
+ *    PDF continuaria saindo com o nome e o telefone de quem digitou.
+ * O destinatário precisa existir no cadastro: transferir para um e-mail solto criaria uma
+ * proposta órfã, invisível para todo mundo menos o admin.
+ */
+export class ConsultorInexistenteError extends Error {
+  constructor() {
+    super("Consultor não encontrado no cadastro.");
+  }
+}
+
+export async function transferirProposta(id: string, novoAutor: string): Promise<PropostaRegistro> {
+  const destino = await prisma.usuario.findUnique({
+    where: { email: novoAutor },
+    select: { nome: true, email: true, telefone: true },
+  });
+  if (!destino) throw new ConsultorInexistenteError();
+
+  const atual = await prisma.proposta.findUnique({ where: { id }, select: { scope: true } });
+  if (!atual) throw new Prisma.PrismaClientKnownRequestError("Proposta não encontrada", { code: "P2025", clientVersion: Prisma.prismaVersion.client });
+
+  // O scope é JSON livre no banco; mexe só nos campos do consultor e devolve o resto
+  // intocado — reescrever o scope inteiro aqui arriscaria perder o que o contrato não vê.
+  const scope = atual.scope as Record<string, unknown> | null;
+  const consolidada = scope?.consolidada as Record<string, unknown> | undefined;
+  if (consolidada) {
+    const capa = consolidada.capa as Record<string, unknown> | undefined;
+    if (capa) capa.consultor = destino.nome;
+    // `condicoes.consultor` é a assinatura do card de fechamento.
+    const condicoes = consolidada.condicoes as Record<string, unknown> | undefined;
+    if (condicoes) condicoes.consultor = destino.nome;
+    const contato = consolidada.contato as Record<string, unknown> | undefined;
+    if (contato) {
+      contato.whatsapp = destino.telefone ?? null;
+      contato.emailConsultor = destino.email;
+    }
+  }
+
+  const row = await prisma.proposta.update({
+    where: { id },
+    data: { autor: destino.email, ...(scope ? { scope: scope as Prisma.InputJsonValue } : {}) },
+  });
   return await mapearRegistro(row);
 }
 

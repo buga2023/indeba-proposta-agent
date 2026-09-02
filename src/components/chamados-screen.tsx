@@ -252,7 +252,7 @@ function CardChamado({
         <span style={{ fontWeight: 700, fontSize: "12px", padding: "3px 9px", borderRadius: "999px", color: st.cor, background: st.bg }}>{st.label}</span>
         <span style={{ fontSize: "11.5px", fontWeight: 700, color: PRIO_COR[c.prioridade], textTransform: "uppercase" }}>{c.prioridade}</span>
         <span style={{ fontSize: "12px", color: "var(--gray-500)" }}>· {rotuloCategoria(c.categoria)}</span>
-        <span style={{ marginLeft: "auto", fontSize: "12px", color: "var(--gray-400)" }}>{c.autor} · {data}</span>
+        <span style={{ marginLeft: "auto", fontSize: "12px", color: "var(--gray-400)" }}>{c.autorNome ?? c.autor} · {data}</span>
       </div>
       <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--gray-900)" }}>{c.titulo}</div>
       <div style={{ fontSize: "13.5px", color: "var(--gray-700)", marginTop: "4px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{c.descricao}</div>

@@ -47,9 +47,17 @@ export const RelatorioProspeccao = z.object({
 });
 export type RelatorioProspeccao = z.infer<typeof RelatorioProspeccao>;
 
-// Os três tipos vêm da foto do bloco: análise de água e/ou tecidos, visita do setor
-// técnico, e solicitações de amostra para demonstrações.
-export const TipoSolicitacaoComercial = z.enum(["analise_agua_tecidos", "visita_setor_tecnico", "amostra_demonstracao"]);
+// Os três primeiros vêm da foto do bloco: análise de água e/ou tecidos, visita do setor
+// técnico, e solicitações de amostra para demonstrações. Análise dos produtos químicos e
+// "outras solicitações" entraram no áudio do Mateus de 02/09/2026 ("tá faltando isso
+// aqui: análise de água e tecidos, análise dos produtos químicos e outras solicitações").
+export const TipoSolicitacaoComercial = z.enum([
+  "analise_agua_tecidos",
+  "analise_produtos_quimicos",
+  "visita_setor_tecnico",
+  "amostra_demonstracao",
+  "outras",
+]);
 export type TipoSolicitacaoComercial = z.infer<typeof TipoSolicitacaoComercial>;
 
 export const StatusSolicitacaoComercial = z.enum(["pendente", "atendida"]);

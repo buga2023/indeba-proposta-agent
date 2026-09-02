@@ -122,6 +122,10 @@ export const PropostaResumo = z.object({
   id: z.string(),
   status: StatusProposta,
   autor: z.string(),
+  // Nome de quem lançou, resolvido na leitura contra o cadastro (áudio do Mateus,
+  // 02/09/2026: "não está aparecendo o nome da pessoa que lançou"). Null = conta
+  // removida; a tela cai no e-mail.
+  autorNome: z.string().nullable().default(null),
   cliente: z.string(), // razão social (denormalizado do scope)
   segmento: z.string().nullable(),
   tipo: Tipo,
@@ -139,3 +143,10 @@ export type PropostaRegistro = z.infer<typeof PropostaRegistro>;
 // Mudança de status (PATCH).
 export const StatusUpdate = z.object({ status: StatusProposta });
 export type StatusUpdate = z.infer<typeof StatusUpdate>;
+
+// Transferência de carteira (PATCH, só admin — áudio do Mateus, 02/09/2026: "lancei
+// ontem uma proposta e não consigo transferir para ele, porque fica atrelada a quem
+// lançou"). Muda o DONO da proposta e, junto, o consultor que assina a capa: transferir
+// só a linha do banco deixaria o PDF saindo com o nome de quem digitou.
+export const TransferenciaUpdate = z.object({ autor: z.string().trim().email().max(200) });
+export type TransferenciaUpdate = z.infer<typeof TransferenciaUpdate>;

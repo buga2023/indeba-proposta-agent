@@ -38,8 +38,10 @@ type Aba = "prospeccoes" | "visitas" | "solicitacoes";
 
 const TIPOS_SOLICITACAO: { value: TipoSolicitacaoComercial; label: string }[] = [
   { value: "analise_agua_tecidos", label: "Análise de água e/ou tecidos" },
+  { value: "analise_produtos_quimicos", label: "Análise dos produtos químicos" },
   { value: "visita_setor_tecnico", label: "Visita do setor técnico" },
   { value: "amostra_demonstracao", label: "Amostra para demonstração" },
+  { value: "outras", label: "Outras solicitações" },
 ];
 const rotuloTipo = (v: string) => TIPOS_SOLICITACAO.find((t) => t.value === v)?.label ?? v;
 
@@ -321,7 +323,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
             render={(p) => (
               <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
                 <b>{fmtData(p.data)}{p.horario ? ` às ${p.horario}` : ""}</b> · {p.empresa}
-                {souGestor ? ` · ${p.autor}` : ""}
+                {souGestor ? ` · ${p.autorNome ?? p.autor}` : ""}
               </span>
             )}
           />
@@ -349,7 +351,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                   {p.horario ? ` às ${p.horario}` : ""}
                 </span>
                 <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {p.empresa}</span>
-                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {p.autor}</span>}
+                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {p.autorNome ?? p.autor}</span>}
                 {!emEdicao && (
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
                     <button onClick={() => abrirEdicao(p)} style={botaoEditar}>
@@ -610,7 +612,7 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
             render={(s) => (
               <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>
                 <b>{rotuloTipo(s.tipo)}</b> · {s.cliente} · {new Date(s.criadoEm).toLocaleDateString("pt-BR")}
-                {souGestor ? ` · ${s.autor}` : ""}
+                {souGestor ? ` · ${s.autorNome ?? s.autor}` : ""}
               </span>
             )}
           />
@@ -647,7 +649,7 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                 </span>
                 <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)" }}>{rotuloTipo(s.tipo)}</span>
                 <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {s.cliente}</span>
-                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {s.autor}</span>}
+                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {s.autorNome ?? s.autor}</span>}
                 <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {new Date(s.criadoEm).toLocaleDateString("pt-BR")}</span>
                 {editandoId !== s.id && (
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>

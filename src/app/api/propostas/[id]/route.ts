@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
-import { StatusUpdate } from "@/lib/contracts";
+import { StatusUpdate, TransferenciaUpdate } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth-db";
-import { obterProposta, autorDaProposta, autorEStatusDaProposta, atualizarStatusProposta, excluirPropostaDefinitivamente } from "@/lib/propostas";
+import { obterProposta, autorDaProposta, autorEStatusDaProposta, atualizarStatusProposta, transferirProposta, ConsultorInexistenteError, excluirPropostaDefinitivamente } from "@/lib/propostas";
 import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
@@ -50,8 +50,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // Para o dono não-admin a proposta EXISTE (ele a vê no GET), então aqui é 403, não 404.
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const parsed = StatusUpdate.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
+  const corpo = await req.json().catch(() => null);
+  // Dois PATCHes na mesma rota: status (o select do histórico) e transferência de
+  // carteira (o select de consultor, só admin). O corpo diz qual é — nunca os dois.
+  const transferencia = TransferenciaUpdate.safeParse(corpo);
+  const parsed = StatusUpdate.safeParse(corpo);
+  if (!parsed.success && !transferencia.success) {
+    return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
+  }
   try {
     // Aqui só o dono importa — a proposta inteira seria carregada e jogada fora.
     const autor = await autorDaProposta(id);
@@ -61,7 +67,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (usuario?.papel !== "admin") {
       return NextResponse.json({ erro: "Apenas o administrador pode alterar o status ou excluir." }, { status: 403 });
     }
-    return NextResponse.json(await atualizarStatusProposta(id, parsed.data.status));
+    if (transferencia.success) {
+      try {
+        return NextResponse.json(await transferirProposta(id, transferencia.data.autor));
+      } catch (e) {
+        if (e instanceof ConsultorInexistenteError) return NextResponse.json({ erro: e.message }, { status: 422 });
+        throw e;
+      }
+    }
+    return NextResponse.json(await atualizarStatusProposta(id, parsed.data!.status));
   } catch (e) {
     // Só o "registro não encontrado" (P2025) é 404 — a autoria já foi conferida acima, então
     // uma falha aqui costuma ser transitória (banco fora do ar). Mapear TUDO para 404 dizia
