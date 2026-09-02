@@ -12,6 +12,7 @@ import {
 } from "@/lib/contracts";
 import type { SessaoUsuario } from "@/lib/auth";
 import { anexosDe } from "@/lib/anexos";
+import { nomesDeAutores } from "@/lib/autores";
 
 // Recorte único do módulo (áudio do Mateus, 21/08/2026: "todo mundo tem acesso a escrever…
 // só não ter acesso aos registros de todo mundo, apenas os deles"): gestor vê tudo,
@@ -62,9 +63,10 @@ type RowVisita = {
   fotos: { id: string }[];
 };
 
-const paraContrato = (r: RowVisita) =>
+const paraContrato = (r: RowVisita, autorNome: string | null = null) =>
   VisitaCarteira.parse({
     ...iso(r),
+    autorNome,
     fotos: r.fotos.map((f) => f.id),
     temDocumento: r.documentoMime != null,
   });
@@ -89,7 +91,11 @@ export async function listarVisitas(
     orderBy: [{ data: "desc" }, { horario: "desc" }],
     select: selectVisita,
   });
-  return rows.map(paraContrato);
+  // UMA consulta ao cadastro para a lista inteira. A tela mostra o NOME de quem lançou
+  // (áudio do Mateus, 31/08/2026); sem resolver aqui, `autorNome` vinha null e o card caía
+  // no e-mail — foi o que o teste em produção de 02/09 pegou nas Visitas de Rotina.
+  const nomes = await nomesDeAutores(rows.map((r) => r.autor));
+  return rows.map((r) => paraContrato(r, nomes.get(r.autor) ?? null));
 }
 
 // Edição (áudio do Mateus, 25/08/2026): vendedor edita as suas, gestor qualquer uma; a
@@ -230,7 +236,8 @@ export async function listarContratosComodato(usuario: SessaoUsuario, excluidas 
     },
   });
   const anexos = await anexosDe("contrato", rows.map((r) => r.id));
-  return rows.map((r) => ContratoComodato.parse({ ...iso(r), temContrato: r.contratoMime != null, anexos: anexos.get(r.id) ?? [] }));
+  const nomes = await nomesDeAutores(rows.map((r) => r.autor));
+  return rows.map((r) => ContratoComodato.parse({ ...iso(r), temContrato: r.contratoMime != null, anexos: anexos.get(r.id) ?? [], autorNome: nomes.get(r.autor) ?? null }));
 }
 
 // Edição (áudio do Mateus, 25/08/2026); o PDF não muda por aqui.
@@ -291,7 +298,8 @@ export async function listarEstoqueComodato(usuario: SessaoUsuario, excluidas = 
     orderBy: { criadoEm: "desc" },
   });
   const anexos = await anexosDe("estoque", rows.map((r) => r.id));
-  return rows.map((r) => EstoqueComodato.parse({ ...iso(r), anexos: anexos.get(r.id) ?? [] }));
+  const nomes = await nomesDeAutores(rows.map((r) => r.autor));
+  return rows.map((r) => EstoqueComodato.parse({ ...iso(r), anexos: anexos.get(r.id) ?? [], autorNome: nomes.get(r.autor) ?? null }));
 }
 
 // Edição (áudio do Mateus, 25/08/2026).

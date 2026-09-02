@@ -3902,7 +3902,13 @@ function HistoryScreen({
   // célula e cobriam o Valor (print do Matheus, 11/08). O minWidth da tabela cresce
   // junto — em tela estreita rola horizontal, não sobrepõe.
   // Na aba Excluídas cabem QUATRO botões (Abrir/Editar/Restaurar/Apagar de vez) — 300px.
-  const cols = `1.7fr 1fr 150px 80px 130px 70px 110px ${verArquivadas ? "300px" : "210px"}`;
+  const cols = `1.7fr 1fr 180px 80px 130px 70px 110px ${verArquivadas ? "300px" : "210px"}`;
+  // Largura mínima da tabela: as colunas FIXAS somam 540px (+210 ou 300 de Ações), e
+  // Cliente/Segmento precisam de ~390px para não quebrar a razão social em quatro linhas.
+  // Abaixo disso o cabeçalho colapsa ("CLIENTESEGMENTOCONSULTOR" no celular). Com a coluna
+  // Consultor (02/09/2026) o antigo 820px deixou de servir — a tabela rola na horizontal
+  // dentro do .ies-tablewrap, que é o desenho pretendido em tela estreita.
+  const larguraMinima = verArquivadas ? "1260px" : "1170px";
 
   // Consultores para o select de transferência. Só o gestor: /api/colaboradores é do
   // painel de admin e devolve 403 para o vendedor — pedir a lista sem ser admin seria
@@ -4020,7 +4026,7 @@ function HistoryScreen({
         </div>
       ) : (
         <div className="ies-tablewrap" style={{ background: "white", borderRadius: "12px", border: "1px solid var(--gray-200)", overflowX: "auto", boxShadow: "var(--shadow-sm)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: cols, minWidth: "820px", padding: "11px 20px", background: "var(--gray-100)", borderBottom: "1px solid var(--gray-200)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: cols, minWidth: larguraMinima, padding: "11px 20px", background: "var(--gray-100)", borderBottom: "1px solid var(--gray-200)" }}>
             {[
               { t: "Cliente", a: "left" },
               { t: "Segmento", a: "left" },
@@ -4043,7 +4049,7 @@ function HistoryScreen({
               <Hoverable
                 key={p.id + idx}
                 as="div"
-                base={{ display: "grid", gridTemplateColumns: cols, minWidth: "820px", padding: "13px 20px", borderBottom: "1px solid var(--gray-100)", alignItems: "center", transition: "background .15s ease" }}
+                base={{ display: "grid", gridTemplateColumns: cols, minWidth: larguraMinima, padding: "13px 20px", borderBottom: "1px solid var(--gray-100)", alignItems: "center", transition: "background .15s ease" }}
                 hover={{ background: "var(--gray-50)" }}
               >
                 <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-900)" }}>{p.cliente}</div>
@@ -4051,7 +4057,7 @@ function HistoryScreen({
                 {/* Consultor dono da proposta. Para o vendedor é leitura (o nome de quem
                     lançou); para o gestor é o select que TRANSFERE — e a transferência
                     troca também o consultor que assina a capa do PDF. */}
-                <div style={{ fontSize: "13px", color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <div style={{ fontSize: "13px", color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis", paddingRight: "12px" }}>
                   {ehAdmin && consultores.length > 0 ? (
                     <select
                       aria-label="Consultor responsável"

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { Chamado, type ChamadoCreate, type ChamadoUpdate } from "@/lib/contracts";
+import { nomesDeAutores } from "@/lib/autores";
 
 // `usuarioAtual`/`SessaoUsuario` moraram aqui até 01/08/2026, quando a listagem de propostas
 // passou a precisar do mesmo escopo por autor. São de autenticação, não de chamados — foram
@@ -22,9 +23,10 @@ type ChamadoRow = {
   atualizadoEm: Date;
 };
 
-function mapear(row: ChamadoRow): Chamado {
+function mapear(row: ChamadoRow, autorNome: string | null = null): Chamado {
   return Chamado.parse({
     ...row,
+    autorNome,
     criadoEm: row.criadoEm.toISOString(),
     atualizadoEm: row.atualizadoEm.toISOString(),
   });
@@ -40,7 +42,9 @@ export async function criarChamado(autor: string, dados: ChamadoCreate): Promise
 export async function listarChamados(usuario: SessaoUsuario): Promise<Chamado[]> {
   const where = usuario.papel === "admin" ? {} : { autor: usuario.email };
   const rows = await prisma.chamado.findMany({ where, orderBy: { criadoEm: "desc" } });
-  return rows.map(mapear);
+  // Nome de quem abriu, numa consulta só — a tela mostra o NOME, não o e-mail.
+  const nomes = await nomesDeAutores(rows.map((r) => r.autor));
+  return rows.map((r) => mapear(r, nomes.get(r.autor) ?? null));
 }
 
 // Só o gestor chega aqui (autorização na rota): muda status e/ou responde.
