@@ -1526,7 +1526,9 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
     a.click();
   }
 
-  const cols = "110px 1fr 90px 1.2fr 170px";
+  // Coluna QUEM LANCOU so para o gestor (02/09/2026): as outras tres listagens do modulo
+  // ja mostram o autor, e o estoque era a unica sem -- inconsistencia apontada no teste.
+  const cols = souGestor ? "110px 1fr 80px 1fr 150px 170px" : "110px 1fr 90px 1.2fr 170px";
 
   return (
     <>
@@ -1615,12 +1617,13 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
       {!carregando && itens.length === 0 && <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhum lançamento ainda.</div>}
       {itens.length > 0 && (
         <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", overflowX: "auto" }}>
-          <div style={{ minWidth: "620px" }}>
+          <div style={{ minWidth: souGestor ? "770px" : "620px" }}>
             <div style={{ display: "grid", gridTemplateColumns: cols, gap: "10px", padding: "11px 18px", borderBottom: "1px solid var(--gray-200)", fontSize: "11px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
               <span>Código</span>
               <span>Peça</span>
               <span>Qtd.</span>
               <span>OBS</span>
+              {souGestor && <span>Quem lançou</span>}
               <span />
             </div>
             {itens.map((i) =>
@@ -1630,6 +1633,9 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
                   <input style={inputStyle} maxLength={200} value={ed.peca} onChange={(e) => setEd({ ...ed, peca: e.target.value })} />
                   <input type="number" min={0} step={1} style={inputStyle} value={ed.quantidade} onChange={(e) => setEd({ ...ed, quantidade: e.target.value })} />
                   <input style={inputStyle} maxLength={4000} value={ed.obs} onChange={(e) => setEd({ ...ed, obs: e.target.value })} />
+                  {/* Quem lançou não se edita — a coluna existe na grade, então a linha em
+                      edição precisa da célula vazia, senão os botões saem do lugar. */}
+                  {souGestor && <span />}
                   <span style={{ display: "flex", justifyContent: "flex-end", gap: "6px" }}>
                     <button onClick={() => salvarEdicao(i.id)} disabled={salvandoEdicao} style={botaoEditar}>
                       {salvandoEdicao ? "…" : "Salvar"}
@@ -1648,6 +1654,7 @@ function AbaEstoque({ setErro, setSouGestor, souGestor }: AbaProps) {
                   <span>{i.peca}</span>
                   <span>{i.quantidade}</span>
                   <span style={{ color: "var(--gray-500)" }}>{i.obs ?? ""}</span>
+                  {souGestor && <span style={{ color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{i.autorNome ?? i.autor}</span>}
                   <span style={{ display: "flex", justifyContent: "flex-end", gap: "6px" }}>
                     <button
                       onClick={() => {

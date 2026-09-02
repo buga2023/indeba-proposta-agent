@@ -27,6 +27,22 @@ export const esc = (s: string) =>
 const dec = (v: string) =>
   Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+/**
+ * Quem assina o Express. Sai do `scope.consultor` — quem montou a proposta, ou para quem
+ * ela foi transferida. Antes era a string "Matheus Resende · (71) 99196-2650" chumbada
+ * aqui: toda proposta de Orçamento/Implantação saía com esse nome, independentemente do
+ * consultor (achado no teste em produção de 02/09/2026). Propostas anteriores ao campo
+ * não têm o dado — para elas o texto antigo continua valendo, senão a assinatura sumiria
+ * de um histórico inteiro.
+ */
+export const CONSULTOR_PADRAO = { nome: "Matheus Resende", telefone: "(71) 99196-2650" };
+
+export function assinaturaConsultor(scope: PropostaScope): string {
+  const c = scope.consultor;
+  if (!c) return `${CONSULTOR_PADRAO.nome} · ${CONSULTOR_PADRAO.telefone}`;
+  return c.telefone ? `${c.nome} · ${c.telefone}` : c.nome;
+}
+
 type Marca = (typeof MARCAS)[keyof typeof MARCAS];
 type ExtraAssets = { seko?: string; painelEpi?: string; logoExpress?: string; simboloExpress?: string };
 
@@ -133,7 +149,7 @@ export function documentoHtml(
           ${icone(m.laranja, P_PESSOA)}
           <div class="v-tx">
             <div class="v-lbl">Atenciosamente</div>
-            <div class="v-val">Matheus Resende · (71) 99196-2650</div>
+            <div class="v-val">${esc(assinaturaConsultor(scope))}</div>
             <div class="ass-end">Rua Cosme de Farias, 05 — Galpão 01, Boca do Rio, Salvador — BA · CEP 41710-010</div>
           </div>
         </div>

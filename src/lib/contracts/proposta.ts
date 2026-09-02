@@ -103,6 +103,24 @@ export const PropostaScope = z.object({
     frete: z.string(),
   }),
   consolidada: ConsolidadaBloco.optional(),
+  /**
+   * Consultor que assina a proposta — vale para TODOS os tipos.
+   *
+   * Existia só dentro de `consolidada` (capa/condições/contato), então Orçamento e
+   * Implantação, que usam a capa Express, saíam com o nome chumbado no template
+   * ("Matheus Resende") não importa quem tivesse montado — achado no teste em produção de
+   * 02/09/2026. Aqui o nome viaja com a proposta: preenchido na montagem com quem está
+   * logado, reescrito na transferência de carteira, e o template cai no default antigo
+   * quando a proposta é anterior a este campo (por isso nullable, não obrigatório).
+   */
+  consultor: z
+    .object({
+      nome: z.string(),
+      email: z.string().nullable().default(null),
+      telefone: z.string().nullable().default(null),
+    })
+    .nullable()
+    .optional(),
 });
 export type PropostaScope = z.infer<typeof PropostaScope>;
 

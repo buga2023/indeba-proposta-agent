@@ -224,6 +224,8 @@ export async function montarPropostaEstruturada(
     itens,
     condicoesComerciais: { ...textos.condicoesComerciais, ...entrada.condicoes },
     consolidada,
+    // Idem ao caminho por briefing: o consultor viaja no scope para a capa Express também.
+    consultor: consultor ? { nome: consultor.nome, email: consultor.email ?? null, telefone: consultor.telefone ?? null } : null,
   });
 }
 

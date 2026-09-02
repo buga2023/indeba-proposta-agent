@@ -219,6 +219,9 @@ export async function transferirProposta(id: string, novoAutor: string): Promise
   // O scope é JSON livre no banco; mexe só nos campos do consultor e devolve o resto
   // intocado — reescrever o scope inteiro aqui arriscaria perder o que o contrato não vê.
   const scope = atual.scope as Record<string, unknown> | null;
+  // Vale para TODOS os tipos — a capa Express (Orçamento/Implantação) lê daqui, e sem
+  // isto a proposta transferida continuaria assinada por quem a montou.
+  if (scope) scope.consultor = { nome: destino.nome, email: destino.email, telefone: destino.telefone ?? null };
   const consolidada = scope?.consolidada as Record<string, unknown> | undefined;
   if (consolidada) {
     const capa = consolidada.capa as Record<string, unknown> | undefined;

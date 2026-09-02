@@ -13,8 +13,10 @@ const LARANJA = "#F58220";
 const CINZA_CLARO = "#EAEAEA";
 const CINZA_TEXTO = "#6B7280";
 
-// Mesmos dados fixos usados na assinatura do template Express (template.ts).
-const CONSULTOR = "Matheus Resende";
+// Fallback: propostas anteriores ao campo `scope.consultor` (02/09/2026) não carregam o
+// nome, e a capa não pode ficar sem assinatura. Proposta nova usa o consultor do scope —
+// antes TODA capa Express saía "Matheus Resende", tivesse quem tivesse montado.
+const CONSULTOR_PADRAO = "Matheus Resende";
 const CIDADE = "Salvador – BA";
 
 export type CapaExpressAssets = { logo?: string; simbolo?: string };
@@ -92,7 +94,7 @@ export function capaExpressHtml(scope: PropostaScope, assets: CapaExpressAssets 
       <div class="cx-consultor">
         <div class="cx-divisor"><span class="cx-fio-l"></span><span class="cx-ic-lar"><svg viewBox="0 0 24 24" fill="none" stroke="${LARANJA}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.6 3.8-5.4 7-5.4s6.2 1.8 7 5.4"/></svg></span><span class="cx-fio-l"></span></div>
         <div class="cx-lbl">Consultor Responsável</div>
-        <div class="cx-nome">${esc(CONSULTOR)}</div>
+        <div class="cx-nome">${esc(scope.consultor?.nome ?? CONSULTOR_PADRAO)}</div>
       </div>
       <div class="cx-local">
         ${IC_CALENDARIO}
