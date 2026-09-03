@@ -46,7 +46,11 @@ yarn-error.log*
 next-env.d.ts
 
 # ferramentas e notas internas de desenvolvimento (fora do repo)
-.claude/
+# As SKILLS são exceção: descrevem o processo do projeto (como fazer deploy, como
+# transcrever os áudios do Mateus) e valem para o time inteiro, não só para uma máquina.
+# O resto de .claude/ continua local — settings.local.json, locks e worktrees são de cada um.
+.claude/*
+!.claude/skills/
 CLAUDE.md
 Guia_Desenvolvimento_Agente_Proposta.md
 files.zip
