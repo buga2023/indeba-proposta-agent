@@ -967,7 +967,7 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
                     {/* Áudio do Mateus (10/09/2026): a ficha da visita em PDF, com as fotos,
                         para mandar ao cliente que pergunta pelo relatório da última visita. */}
-                    <BotaoPdf href={`/api/visitas/${encodeURIComponent(v.id)}/pdf`} titulo="Extrair esta visita em PDF" />
+                    <BotaoPdf href={`/api/registros/visita/${encodeURIComponent(v.id)}/pdf`} titulo="Extrair esta visita em PDF" />
                     <button onClick={() => abrirEdicao(v)} style={botaoEditar}>
                       Editar
                     </button>

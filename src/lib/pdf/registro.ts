@@ -49,7 +49,8 @@ function paragrafo(texto: string): string {
   return esc(texto).replace(/\r?\n/g, "<br/>");
 }
 
-function fichaHtml(ficha: Ficha, logo: string): string {
+/** Exportado para inspeção visual: o HTML da ficha antes de virar PDF. */
+export function fichaHtml(ficha: Ficha, logo: string): string {
   const selo = ficha.selo
     ? `<span class="selo ${ficha.selo.ok ? "ok" : "pend"}">${esc(ficha.selo.texto)}</span>`
     : "";
