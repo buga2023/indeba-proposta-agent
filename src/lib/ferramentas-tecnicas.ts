@@ -13,7 +13,8 @@ import {
 import type { SessaoUsuario } from "@/lib/auth";
 import { anexosDe } from "@/lib/anexos";
 import { nomeDeAutor, nomesDeAutores } from "@/lib/autores";
-import { dataBr, dataHoraBr, type Ficha } from "@/lib/pdf/registro";
+import { dataBr, dataHoraBr } from "@/lib/datas";
+import type { Ficha } from "@/lib/pdf/registro";
 
 // Recorte único do módulo (áudio do Mateus, 21/08/2026: "todo mundo tem acesso a escrever…
 // só não ter acesso aos registros de todo mundo, apenas os deles"): gestor vê tudo,

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { dataBr, dataHoraBr, nomeArquivo } from "@/lib/pdf/registro";
+import { nomeArquivo } from "@/lib/pdf/registro";
+import { dataBr, dataHoraBr } from "@/lib/datas";
 import { ipDoRequest } from "@/lib/acessos";
 
 // Pedidos do Mateus, 10/09/2026: ficha do registro em PDF ("cadê o relatório da última

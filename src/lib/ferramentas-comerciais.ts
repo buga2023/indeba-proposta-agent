@@ -10,7 +10,8 @@ import {
 import type { SessaoUsuario } from "@/lib/auth";
 import { anexosDe } from "@/lib/anexos";
 import { nomeDeAutor, nomesDeAutores } from "@/lib/autores";
-import { dataBr, dataHoraBr, type Ficha } from "@/lib/pdf/registro";
+import { dataBr, dataHoraBr } from "@/lib/datas";
+import type { Ficha } from "@/lib/pdf/registro";
 
 // Mesmo recorte das Ferramentas Técnicas (áudio do Mateus, 21/08/2026): todo vendedor
 // escreve; cada um lê só os próprios registros, o gestor lê todos.

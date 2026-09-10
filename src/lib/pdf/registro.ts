@@ -144,22 +144,3 @@ export function nomeArquivo(prefixo: string, cliente: string): string {
   const limpo = cliente.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 60) || "registro";
   return `${prefixo}-${limpo}.pdf`;
 }
-
-/**
- * Datas na ficha saem no formato de quem lê (DD/MM/AAAA) — o banco guarda "YYYY-MM-DD"
- * como texto justamente para não depender de fuso, e `new Date("2026-08-31")` seria lido
- * como UTC e voltaria um dia na hora de imprimir. Por isso a conversão é textual.
- */
-export function dataBr(iso: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
-  return m ? `${m[3]}/${m[2]}/${m[1]}` : iso;
-}
-
-/** Carimbo de criação (Date do banco) em horário de Brasília. */
-export function dataHoraBr(d: Date): string {
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-    timeZone: "America/Sao_Paulo",
-  }).format(d);
-}
