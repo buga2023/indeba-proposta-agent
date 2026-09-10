@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato, AnexoInfo, TipoRegistroAnexo } from "@/lib/contracts";
+import { BotaoPdf } from "@/components/ui/botao-pdf";
 import { encolherFoto } from "@/components/form-produto";
 
 /**
@@ -964,6 +965,9 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
                 {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {v.autorNome ?? v.autor}</span>}
                 {!emEdicao && (
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
+                    {/* Áudio do Mateus (10/09/2026): a ficha da visita em PDF, com as fotos,
+                        para mandar ao cliente que pergunta pelo relatório da última visita. */}
+                    <BotaoPdf href={`/api/visitas/${encodeURIComponent(v.id)}/pdf`} titulo="Extrair esta visita em PDF" />
                     <button onClick={() => abrirEdicao(v)} style={botaoEditar}>
                       Editar
                     </button>

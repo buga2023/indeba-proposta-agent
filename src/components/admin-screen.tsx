@@ -394,7 +394,155 @@ export function AdminScreen() {
           <button style={btn("var(--blue-600)")} onClick={salvarGestor}>Salvar</button>
         </div>
       </section>
+
+      <SecaoAcessos onErro={setErro} />
     </div>
+  );
+}
+
+/* ═══════════ Últimos acessos ═══════════ */
+
+type RegistroAcesso = {
+  id: string;
+  email: string;
+  nome: string | null;
+  resultado: "entrou" | "recusado";
+  motivo: string | null;
+  ip: string | null;
+  agente: string | null;
+  criadoEm: string;
+};
+
+const MOTIVO: Record<string, string> = {
+  senha_invalida: "senha inválida",
+  pendente: "conta ainda não liberada",
+  bloqueado: "acesso encerrado",
+};
+
+// "Chrome no Windows" a partir do User-Agent. Não é identificação — é só para o gestor
+// distinguir o acesso do celular do acesso da máquina, que é o que ele olha na prática.
+function dispositivo(agente: string | null): string {
+  if (!agente) return "—";
+  const navegador = /Edg\//.test(agente)
+    ? "Edge"
+    : /OPR\//.test(agente)
+      ? "Opera"
+      : /Chrome\//.test(agente)
+        ? "Chrome"
+        : /Firefox\//.test(agente)
+          ? "Firefox"
+          : /Safari\//.test(agente)
+            ? "Safari"
+            : "Navegador";
+  const sistema = /Android/.test(agente)
+    ? "Android"
+    : /iPhone|iPad|iOS/.test(agente)
+      ? "iPhone/iPad"
+      : /Windows/.test(agente)
+        ? "Windows"
+        : /Mac OS X/.test(agente)
+          ? "Mac"
+          : /Linux/.test(agente)
+            ? "Linux"
+            : "";
+  return sistema ? `${navegador} · ${sistema}` : navegador;
+}
+
+/**
+ * Últimos acessos — áudio do Mateus (10/09/2026): "é só por uma questão de proteção de
+ * dados… é bom ter você fazendo as manutenções acessando por um login, a gente ter o
+ * registro de toda vez que você fizer essas manutenções de acesso… eu não sei se você
+ * consegue gerar lá na plataforma para mim, como administrador, ver os últimos acessos".
+ *
+ * Lista as entradas E as tentativas recusadas: a tentativa negada é metade do valor de uma
+ * trilha de acesso — é ela que mostra alguém batendo na porta com a senha errada.
+ */
+function SecaoAcessos({ onErro }: { onErro: (m: string | null) => void }) {
+  const [acessos, setAcessos] = useState<RegistroAcesso[]>([]);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    void Promise.resolve().then(async () => {
+      try {
+        const r = await fetch("/api/acessos");
+        const d = await r.json();
+        if (!r.ok) throw new Error(typeof d?.erro === "string" ? d.erro : "Falha ao carregar os acessos.");
+        setAcessos(d.acessos ?? []);
+      } catch (e) {
+        onErro(e instanceof Error ? e.message : "Falha ao carregar os acessos.");
+      } finally {
+        setCarregando(false);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fmt = (iso: string) =>
+    new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(
+      new Date(iso),
+    );
+
+  return (
+    <section style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", marginTop: "22px" }}>
+      <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>
+        Últimos acessos{acessos.length > 0 ? ` · ${acessos.length}` : ""}
+      </h3>
+      <div style={{ fontSize: "12.5px", color: "var(--gray-500)", marginBottom: "12px" }}>
+        Quem entrou no sistema, quando e de onde — incluindo as tentativas recusadas.
+      </div>
+
+      {carregando && <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Carregando…</div>}
+      {!carregando && acessos.length === 0 && (
+        <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>Nenhum acesso registrado ainda.</div>
+      )}
+
+      {acessos.length > 0 && (
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: "560px" }}>
+            <thead>
+              <tr style={{ textAlign: "left", color: "var(--gray-500)", fontSize: "11px", textTransform: "uppercase", letterSpacing: ".4px" }}>
+                <th style={{ padding: "6px 8px 6px 0", fontWeight: 700 }}>Quando</th>
+                <th style={{ padding: "6px 8px", fontWeight: 700 }}>Quem</th>
+                <th style={{ padding: "6px 8px", fontWeight: 700 }}>Resultado</th>
+                <th style={{ padding: "6px 8px", fontWeight: 700 }}>Dispositivo</th>
+                <th style={{ padding: "6px 0 6px 8px", fontWeight: 700 }}>IP</th>
+              </tr>
+            </thead>
+            <tbody>
+              {acessos.map((a) => (
+                <tr key={a.id} style={{ borderTop: "1px solid var(--gray-100)" }}>
+                  <td style={{ padding: "9px 8px 9px 0", color: "var(--gray-700)", whiteSpace: "nowrap" }}>{fmt(a.criadoEm)}</td>
+                  <td style={{ padding: "9px 8px" }}>
+                    <div style={{ fontWeight: 600, color: "var(--gray-900)" }}>{a.nome ?? a.email}</div>
+                    {a.nome && <div style={{ fontSize: "11.5px", color: "var(--gray-400)" }}>{a.email}</div>}
+                  </td>
+                  <td style={{ padding: "9px 8px" }}>
+                    <span
+                      style={{
+                        fontSize: "11.5px",
+                        fontWeight: 700,
+                        padding: "2px 9px",
+                        borderRadius: "999px",
+                        color: a.resultado === "entrou" ? "#15803d" : "#b45309",
+                        background: a.resultado === "entrou" ? "#dcfce7" : "#fef3c7",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {a.resultado === "entrou" ? "Entrou" : "Recusado"}
+                    </span>
+                    {a.motivo && (
+                      <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginTop: "3px" }}>{MOTIVO[a.motivo] ?? a.motivo}</div>
+                    )}
+                  </td>
+                  <td style={{ padding: "9px 8px", color: "var(--gray-700)", whiteSpace: "nowrap" }}>{dispositivo(a.agente)}</td>
+                  <td style={{ padding: "9px 0 9px 8px", color: "var(--gray-400)", whiteSpace: "nowrap" }}>{a.ip ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 

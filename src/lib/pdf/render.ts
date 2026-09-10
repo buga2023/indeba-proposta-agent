@@ -41,7 +41,7 @@ export function dentroDePublic(relPath: string): string | null {
 
 // Lê um asset de public/ e devolve como data-URI (Chromium headless não resolve
 // caminhos relativos via setContent). Detecta o mime pela extensão.
-function dataUri(relPath: string): string {
+export function dataUri(relPath: string): string {
   const abs = dentroDePublic(relPath);
   if (!abs) return "";
   try {
@@ -217,23 +217,13 @@ async function dataUriDoBanco(caminho: string): Promise<string> {
   }
 }
 
-// PropostaScope → HTML → Chromium headless → PDF (motor estilo editorial-pdf).
-export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
-  // Foto vem da base (catálogo). Enquanto faltar, cai no placeholder — nunca quebra.
-  const generico = dataUri("/produtos/_generico.svg");
-  const imagens: Record<string, string> = {};
-  for (const item of scope.itens) {
-    imagens[chaveImagem(item)] =
-      (await resolverImagemProduto(item.imagemPath)) ||
-      (await dataUriFotoProduto(item.imagemPath)) ||
-      (await dataUriDoBanco(item.imagemPath)) ||
-      generico;
-  }
-  const banner = dataUri("/marca/header-ies.png");
+// HTML → Chromium headless → PDF. É o motor, sem saber de proposta nenhuma: a montagem do
+// HTML fica com quem chama. Extraído de `renderPdf` quando o Mateus pediu PDF dos registros
+// das Ferramentas (áudio de 10/09/2026) — as travas daqui (rede abortada, espera de imagem
+// e de fonte) foram todas pagas com bug em produção, e valem para qualquer documento.
+export type OpcoesPdf = { footer?: string; marginTop?: string; marginBottom?: string };
 
-  const doc = montarDocumento(scope, imagens, banner, dataUri);
-  const html = "<!DOCTYPE html>" + doc.html;
-
+export async function pdfDeHtml(html: string, opcoes: OpcoesPdf = {}): Promise<Buffer> {
   const browser = await abrirNavegador();
   try {
     const page = await browser.newPage();
@@ -263,14 +253,36 @@ export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
       printBackground: true,
       // Rodapé nativo só quando o template pede um (a Consolidada imprime a paginação
       // dentro do HTML — ver montarDocumento).
-      displayHeaderFooter: Boolean(doc.footer),
+      displayHeaderFooter: Boolean(opcoes.footer),
       headerTemplate: "<div></div>",
-      footerTemplate: doc.footer || "<div></div>",
+      footerTemplate: opcoes.footer || "<div></div>",
       // margens L/R zero: banner/imagens sangram full-width; conteúdo tem padding
       // próprio (.pg). Margem superior varia por tipo (ver montarDocumento).
-      margin: { top: doc.marginTop, bottom: doc.marginBottom ?? "15mm", left: "0", right: "0" },
+      margin: { top: opcoes.marginTop ?? "0", bottom: opcoes.marginBottom ?? "15mm", left: "0", right: "0" },
     });
   } finally {
     await browser.close();
   }
+}
+
+// PropostaScope → HTML → Chromium headless → PDF (motor estilo editorial-pdf).
+export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
+  // Foto vem da base (catálogo). Enquanto faltar, cai no placeholder — nunca quebra.
+  const generico = dataUri("/produtos/_generico.svg");
+  const imagens: Record<string, string> = {};
+  for (const item of scope.itens) {
+    imagens[chaveImagem(item)] =
+      (await resolverImagemProduto(item.imagemPath)) ||
+      (await dataUriFotoProduto(item.imagemPath)) ||
+      (await dataUriDoBanco(item.imagemPath)) ||
+      generico;
+  }
+  const banner = dataUri("/marca/header-ies.png");
+
+  const doc = montarDocumento(scope, imagens, banner, dataUri);
+  return pdfDeHtml("<!DOCTYPE html>" + doc.html, {
+    footer: doc.footer,
+    marginTop: doc.marginTop,
+    marginBottom: doc.marginBottom,
+  });
 }

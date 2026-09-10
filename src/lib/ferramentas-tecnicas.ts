@@ -12,7 +12,8 @@ import {
 } from "@/lib/contracts";
 import type { SessaoUsuario } from "@/lib/auth";
 import { anexosDe } from "@/lib/anexos";
-import { nomesDeAutores } from "@/lib/autores";
+import { nomeDeAutor, nomesDeAutores } from "@/lib/autores";
+import { dataBr, dataHoraBr, type Ficha } from "@/lib/pdf/registro";
 
 // Recorte único do módulo (áudio do Mateus, 21/08/2026: "todo mundo tem acesso a escrever…
 // só não ter acesso aos registros de todo mundo, apenas os deles"): gestor vê tudo,
@@ -329,4 +330,51 @@ export async function restaurarEstoqueComodato(usuario: SessaoUsuario, id: strin
 export async function excluirEstoqueComodatoDefinitivo(usuario: SessaoUsuario, id: string): Promise<boolean> {
   const r = await prisma.estoqueComodato.deleteMany({ where: { id, ...escopo(usuario), ...lapides } });
   return r.count > 0;
+}
+
+/* ───────── Ficha em PDF (áudio do Mateus, 10/09/2026) ───────── */
+
+// "Cadê o relatório da última visita?" — a ficha da visita, pronta para mandar ao cliente.
+// Mesmo recorte por autor da listagem e do PDF do contrato: o id é cuid não adivinhável,
+// mas a rota não pode ser a fresta por onde um vendedor abre a visita do colega.
+//
+// Aqui os bytes das fotos SOBEM (ao contrário da listagem, que só manda os ids): o PDF é
+// montado no servidor e o Chromium tem a rede bloqueada no render, então a foto precisa
+// viajar embutida como data-URI. São no máximo 10 por visita (MAX_FOTOS_VISITA).
+export async function fichaDaVisita(usuario: SessaoUsuario, id: string): Promise<Ficha | null> {
+  const row = await prisma.visitaCarteira.findFirst({
+    where: { id, ...escopo(usuario) },
+    select: {
+      area: true,
+      data: true,
+      horario: true,
+      cliente: true,
+      quemRecebeu: true,
+      telefone: true,
+      status: true,
+      observacao: true,
+      autor: true,
+      criadoEm: true,
+      fotos: { select: { foto: true, fotoMime: true }, orderBy: { criadoEm: "asc" as const } },
+    },
+  });
+  if (!row) return null;
+
+  const resolvido = row.status === "resolvido";
+  return {
+    titulo: "Relatório de Visita de Rotina",
+    cliente: row.cliente,
+    selo: { texto: resolvido ? "Resolvido" : "Não resolvido", ok: resolvido },
+    campos: [
+      { rotulo: "Data", valor: dataBr(row.data) },
+      { rotulo: "Horário", valor: row.horario },
+      { rotulo: "Quem recebeu", valor: row.quemRecebeu },
+      { rotulo: "Telefone", valor: row.telefone ?? "" },
+      { rotulo: "Área", valor: row.area === "comercial" ? "Comercial" : "Técnica" },
+    ],
+    blocos: [{ rotulo: "O que foi feito", texto: row.observacao ?? "" }],
+    fotos: row.fotos.map((f) => ({ dataUri: `data:${f.fotoMime};base64,` + Buffer.from(f.foto).toString("base64") })),
+    registradoPor: (await nomeDeAutor(row.autor)) ?? row.autor,
+    registradoEm: dataHoraBr(row.criadoEm),
+  };
 }

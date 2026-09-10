@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import type { RelatorioProspeccao, SolicitacaoComercial, TipoSolicitacaoComercial } from "@/lib/contracts";
+import { BotaoPdf } from "@/components/ui/botao-pdf";
 import {
   AbaVisitas,
   BlocoAnexos,
@@ -354,6 +355,8 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                 {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {p.autorNome ?? p.autor}</span>}
                 {!emEdicao && (
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
+                    {/* Áudio do Mateus (10/09/2026): extrair o registro em PDF. */}
+                    <BotaoPdf href={`/api/novas-prospeccoes/${encodeURIComponent(p.id)}/pdf`} titulo="Extrair esta prospecção em PDF" />
                     <button onClick={() => abrirEdicao(p)} style={botaoEditar}>
                       Editar
                     </button>
@@ -653,6 +656,8 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                 <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {new Date(s.criadoEm).toLocaleDateString("pt-BR")}</span>
                 {editandoId !== s.id && (
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
+                    {/* Áudio do Mateus (10/09/2026): extrair o registro em PDF. */}
+                    <BotaoPdf href={`/api/solicitacoes-comerciais/${encodeURIComponent(s.id)}/pdf`} titulo="Extrair esta solicitação em PDF" />
                     <button onClick={() => marcar(s.id, atendida ? "pendente" : "atendida")} style={botaoEditar}>
                       {atendida ? "Reabrir" : "Marcar atendida"}
                     </button>

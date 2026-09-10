@@ -9,7 +9,8 @@ import {
 } from "@/lib/contracts";
 import type { SessaoUsuario } from "@/lib/auth";
 import { anexosDe } from "@/lib/anexos";
-import { nomesDeAutores } from "@/lib/autores";
+import { nomeDeAutor, nomesDeAutores } from "@/lib/autores";
+import { dataBr, dataHoraBr, type Ficha } from "@/lib/pdf/registro";
 
 // Mesmo recorte das Ferramentas Técnicas (áudio do Mateus, 21/08/2026): todo vendedor
 // escreve; cada um lê só os próprios registros, o gestor lê todos.
@@ -143,4 +144,60 @@ export async function restaurarSolicitacaoComercial(usuario: SessaoUsuario, id: 
 export async function excluirSolicitacaoComercialDefinitivo(usuario: SessaoUsuario, id: string): Promise<boolean> {
   const r = await prisma.solicitacaoComercial.deleteMany({ where: { id, ...escopo(usuario), ...lapides } });
   return r.count > 0;
+}
+
+/* ───────── Fichas em PDF (áudio do Mateus, 10/09/2026) ───────── */
+
+// Rótulos dos tipos de solicitação. Espelham TIPOS_SOLICITACAO da tela
+// (components/ferramentas-comerciais-screen.tsx): o PDF que vai para o cliente não pode
+// dizer "analise_agua_tecidos".
+const ROTULO_TIPO: Record<string, string> = {
+  analise_agua_tecidos: "Análise de água e/ou tecidos",
+  analise_produtos_quimicos: "Análise dos produtos químicos",
+  visita_setor_tecnico: "Visita do setor técnico",
+  amostra_demonstracao: "Amostra para demonstração",
+  outras: "Outras solicitações",
+};
+
+// Mesmo recorte por autor da listagem — o id é cuid não adivinhável, mas a rota do PDF não
+// pode virar a fresta por onde um vendedor lê o registro do colega.
+export async function fichaDaProspeccao(usuario: SessaoUsuario, id: string): Promise<Ficha | null> {
+  const row = await prisma.relatorioProspeccao.findFirst({
+    where: { id, ...escopo(usuario) },
+    select: { data: true, horario: true, empresa: true, contato: true, telefone: true, observacao: true, autor: true, criadoEm: true },
+  });
+  if (!row) return null;
+  return {
+    titulo: "Relatório de Nova Prospecção",
+    cliente: row.empresa,
+    campos: [
+      { rotulo: "Data", valor: dataBr(row.data) },
+      { rotulo: "Horário", valor: row.horario ?? "" },
+      { rotulo: "Contato", valor: row.contato ?? "" },
+      { rotulo: "Telefone", valor: row.telefone ?? "" },
+    ],
+    blocos: [{ rotulo: "Anotações da prospecção", texto: row.observacao ?? "" }],
+    fotos: [],
+    registradoPor: (await nomeDeAutor(row.autor)) ?? row.autor,
+    registradoEm: dataHoraBr(row.criadoEm),
+  };
+}
+
+export async function fichaDaSolicitacao(usuario: SessaoUsuario, id: string): Promise<Ficha | null> {
+  const row = await prisma.solicitacaoComercial.findFirst({
+    where: { id, ...escopo(usuario) },
+    select: { tipo: true, cliente: true, observacao: true, status: true, autor: true, criadoEm: true },
+  });
+  if (!row) return null;
+  const atendida = row.status === "atendida";
+  return {
+    titulo: "Solicitação Comercial",
+    cliente: row.cliente,
+    selo: { texto: atendida ? "Atendida" : "Pendente", ok: atendida },
+    campos: [{ rotulo: "Tipo de solicitação", valor: ROTULO_TIPO[row.tipo] ?? row.tipo }],
+    blocos: [{ rotulo: "Observações", texto: row.observacao ?? "" }],
+    fotos: [],
+    registradoPor: (await nomeDeAutor(row.autor)) ?? row.autor,
+    registradoEm: dataHoraBr(row.criadoEm),
+  };
 }

@@ -283,3 +283,31 @@ model Usuario {
 
   @@index([acesso])
 }
+
+/// Registro de acessos (áudio do Mateus, 10/09/2026: "por uma questão de proteção de dados…
+/// é bom você fazer as manutenções acessando por um login, a gente ter o registro de toda
+/// vez que você fizer essas manutenções de acesso… gerar lá na plataforma para mim, como
+/// administrador, ver os últimos acessos").
+///
+/// Uma linha por ENTRADA no sistema (login bem-sucedido) e por tentativa recusada. Guarda o
+/// e-mail digitado, e não uma FK para Usuario: a tentativa falha pode ser de uma conta que
+/// não existe, e o registro tem que sobreviver à remoção da conta — é justamente para isso
+/// que ele serve. O nome é resolvido na leitura, como em lib/autores.ts.
+///
+/// Sem senha, sem cookie, sem corpo de requisição: só quem, quando, de onde e se entrou.
+model AcessoLog {
+  id        String   @id @default(cuid())
+  email     String
+  /// entrou | recusado — "recusado" cobre senha errada e conta sem liberação.
+  resultado String   @default("entrou")
+  /// Motivo da recusa ("senha_invalida", "pendente", "bloqueado"); nulo quando entrou.
+  motivo    String?
+  /// IP de origem, do cabeçalho da Vercel. Pode faltar (dev local) — é informativo.
+  ip        String?
+  /// User-Agent truncado: serve para distinguir celular de desktop, não para rastrear.
+  agente    String?
+  criadoEm  DateTime @default(now())
+
+  @@index([criadoEm])
+  @@index([email])
+}

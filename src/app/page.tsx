@@ -1031,7 +1031,14 @@ export default function Home() {
           {/* Enxugado nos áudios do Mateus de 25/08/2026: Visitas e Prospecção, Contratos e
               Solicitações Internas saíram ("pode excluir… para só ficar ferramentas
               comerciais e técnicas") — as telas continuam no código, sem porta. */}
-          <div className="ies-side-text" style={navSection}>Módulos</div>
+          {/* Áudio do Mateus (10/09/2026): "substituir a palavra módulos ou ferramentas onde
+              tem Ferramentas Comerciais e Ferramentas Técnicas" — a foto que ele mandou é
+              justamente "MÓDULOS > Ferramentas Comerciais / Ferramentas Técnicas", com a
+              palavra dita duas vezes em três linhas. O grupo passa a ser FERRAMENTAS e os
+              itens ficam só com o recorte: Comercial e Técnico. Os títulos das telas, os
+              cards do Dashboard e a paleta ⌘K continuam com o nome completo — lá não há
+              cabeçalho repetindo, e mudar a paleta quebraria a busca por "Ferramentas". */}
+          <div className="ies-side-text" style={navSection}>Ferramentas</div>
           {/* As DUAS partes da foto do bloco do Mateus (21/08/2026): Ferramentas Comerciais
               (novas prospecções, visitas de rotina, solicitações comerciais) e Ferramentas
               Técnicas (visitas de rotina, contratos e comodatos com PDF, estoque). */}
@@ -1041,14 +1048,14 @@ export default function Home() {
               <rect x="2.5" y="4.5" width="12" height="9" rx="1.5" />
               <path d="M2.5 8.5h12" />
             </svg>
-            Ferramentas Comerciais
+            Comercial
           </Hoverable>
           <Hoverable eager base={navItemStyle(["ferramentas"])} hover={navHover} onClick={() => irPara("ferramentas")} title="Ferramentas Técnicas — visitas de rotina, contratos e estoque de comodatos">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M2.5 5.5l6-3 6 3v6l-6 3-6-3z" />
               <path d="M2.5 5.5l6 3 6-3M8.5 8.5v6" />
             </svg>
-            Ferramentas Técnicas
+            Técnico
           </Hoverable>
 
           {/* Configurações é o painel do gestor: e-mails de cobrança, GESTOR_EMAIL, cadastro
