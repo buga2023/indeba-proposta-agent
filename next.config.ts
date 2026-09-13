@@ -31,6 +31,23 @@ const securityHeaders = [
   ...(isProd ? [{ key: "Content-Security-Policy", value: csp }] : []),
 ];
 
+// Tudo que uma função que renderiza PDF via Chromium precisa levar no bundle. Vale para
+// QUALQUER rota que use lib/pdf/render: cada rota do Next é uma Lambda própria, com
+// tracing próprio — incluir só em /api/pdf não cobre as outras.
+const ARQUIVOS_DO_CHROMIUM = [
+  "./public/marca/**/*",
+  "./public/fonts/**/*",
+  // browsers.json é dado interno do playwright-core exigido em runtime (coreBundle.js) —
+  // o tracing não o detecta sozinho e a função quebra com "Cannot find module
+  // .../browsers.json". Caminho REAL do pnpm (.pnpm/...), NUNCA o symlink
+  // node_modules/playwright-core (a Vercel rejeita arquivos em diretórios symlinkados).
+  "./node_modules/.pnpm/playwright-core@*/node_modules/playwright-core/browsers.json",
+  // Binários do Chromium serverless (chromium.br, fonts/swiftshader/al2023 .tar.br):
+  // são binários, o tracing não os segue. Sem eles: "The input directory .../bin
+  // does not exist". Caminho REAL do pnpm (nunca o symlink @sparticuz/chromium).
+  "./node_modules/.pnpm/@sparticuz+chromium@*/node_modules/@sparticuz/chromium/bin/**",
+];
+
 const nextConfig: NextConfig = {
   // Não revela o framework no header (OWASP A05).
   poweredByHeader: false,
@@ -52,16 +69,12 @@ const nextConfig: NextConfig = {
     // Incluímos pelo caminho REAL do pnpm (.pnpm/...), NUNCA pelo symlink
     // node_modules/playwright-core (a Vercel rejeita arquivos em diretórios
     // symlinkados no pacote serverless).
-    "/api/pdf": [
-      "./public/produtos/**/*",
-      "./public/marca/**/*",
-      "./public/fonts/**/*",
-      "./node_modules/.pnpm/playwright-core@*/node_modules/playwright-core/browsers.json",
-      // Binários do Chromium serverless (chromium.br, fonts/swiftshader/al2023 .tar.br):
-      // são binários, o tracing não os segue. Sem eles: "The input directory .../bin
-      // does not exist". Caminho REAL do pnpm (nunca o symlink @sparticuz/chromium).
-      "./node_modules/.pnpm/@sparticuz+chromium@*/node_modules/@sparticuz/chromium/bin/**",
-    ],
+    "/api/pdf": ["./public/produtos/**/*", ...ARQUIVOS_DO_CHROMIUM],
+    // Ficha dos registros das Ferramentas (visita/prospecção/solicitação) é OUTRA função
+    // serverless e renderiza com o mesmo Chromium — sem esta entrada ela subia sem o
+    // binário e toda ficha respondia 500 "Falha ao gerar o PDF." (Mateus, 13/09/2026).
+    // A chave é o caminho da rota com os segmentos dinâmicos entre colchetes.
+    "/api/registros/[tipo]/[id]/pdf": ARQUIVOS_DO_CHROMIUM,
     // pdfjs-dist tenta subir um worker (pdf.worker.mjs) por import dinâmico relativo ao
     // próprio pacote; sem isso no bundle serverless, quebra com "Setting up fake worker
     // failed: Cannot find module .../pdf.worker.mjs" (mesma classe de problema do
