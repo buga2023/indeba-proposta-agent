@@ -73,8 +73,11 @@ const nextConfig: NextConfig = {
     // Ficha dos registros das Ferramentas (visita/prospecção/solicitação) é OUTRA função
     // serverless e renderiza com o mesmo Chromium — sem esta entrada ela subia sem o
     // binário e toda ficha respondia 500 "Falha ao gerar o PDF." (Mateus, 13/09/2026).
-    // A chave é o caminho da rota com os segmentos dinâmicos entre colchetes.
-    "/api/registros/[tipo]/[id]/pdf": ARQUIVOS_DO_CHROMIUM,
+    // A chave NÃO pode ser "/api/registros/[tipo]/[id]/pdf": o Turbopack casa essas chaves
+    // com um glob (Rust) em que [tipo] é CLASSE DE CARACTERE (uma letra entre t/i/p/o), e a
+    // rota nunca bate — o deploy das 20:37 de 13/09/2026 subiu com essa chave e a ficha
+    // continuou 500 ("Cannot find module .../browsers.json"). Segmento dinâmico = "*".
+    "/api/registros/*/*/pdf": ARQUIVOS_DO_CHROMIUM,
     // pdfjs-dist tenta subir um worker (pdf.worker.mjs) por import dinâmico relativo ao
     // próprio pacote; sem isso no bundle serverless, quebra com "Setting up fake worker
     // failed: Cannot find module .../pdf.worker.mjs" (mesma classe de problema do
