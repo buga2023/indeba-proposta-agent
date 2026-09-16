@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   const excluidas = req.nextUrl.searchParams.get("excluidas") === "1";
   try {
     const visitas = await listarVisitas(usuario, area.data, excluidas);
-    return NextResponse.json({ visitas, souGestor: usuario.papel === "admin" });
+    return NextResponse.json({ visitas, souGestor: usuario.papel === "admin", eu: usuario.email });
   } catch (e) {
     return respostaErro(e, "Falha ao listar as visitas.", 500);
   }

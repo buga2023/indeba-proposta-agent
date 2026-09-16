@@ -9,15 +9,13 @@ export const runtime = "nodejs";
 // Histórico = propostas persistidas (store de trabalho, com status comercial mutável).
 // `?arquivadas=1` lista SÓ as arquivadas (aba Excluídas); sem o parâmetro, só as ativas.
 //
-// Gestor vê o time; vendedor vê a própria carteira. Mesmo recorte de listarChamados — e o
-// corte é aqui, no servidor: esconder no front deixaria o JSON com as propostas dos colegas
-// viajando pela rede de qualquer jeito.
+// Todo mundo logado vê a carteira inteira (áudio do Mateus, 16/09/2026: "que tenham acesso
+// às propostas feitas… visualizar, abrir, pegar o PDF"). O que continua do dono/gestor é a
+// ESCRITA: o POST abaixo e o PATCH em [id] seguem conferindo o autor.
 export async function GET(req: NextRequest) {
   try {
-    const usuario = await usuarioAtual(req);
     const somenteArquivadas = req.nextUrl.searchParams.get("arquivadas") === "1";
-    const autor = usuario && usuario.papel !== "admin" ? usuario.email : undefined;
-    return NextResponse.json({ propostas: await listarPropostas(200, somenteArquivadas, autor) });
+    return NextResponse.json({ propostas: await listarPropostas(200, somenteArquivadas) });
   } catch (e) {
     return respostaErro(e, "Falha ao listar propostas", 500);
   }

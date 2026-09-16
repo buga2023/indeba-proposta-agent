@@ -467,6 +467,10 @@ export default function Home() {
   // Ver arquivadas é opt-in: alternar zera a lista pra forçar refetch com o outro filtro.
   const [verArquivadas, setVerArquivadas] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  // Proposta de outro consultor aberta pelo vendedor (áudio do Mateus, 16/09/2026): ele vê
+  // e gera o PDF, mas nada do que mexer é gravado — o servidor negaria (404) de todo jeito;
+  // aqui a UI avisa e o auto-save não dispara. Guarda o nome do dono para o aviso.
+  const [somenteLeitura, setSomenteLeitura] = useState<string | null>(null);
   // Gestor e vendedor navegam telas diferentes. Enquanto /api/me não responde, `usuario` é
   // null e o app trata como vendedor: mostrar a mais e recolher depois piscaria a tela do
   // gestor para quem não é. As rotas de admin já barram por papel no servidor de qualquer
@@ -678,9 +682,11 @@ export default function Home() {
     }
   }
 
+
   // Auto-save (best-effort): grava/atualiza o registro pelo id do scope. Falha não trava a UI.
   function persistirProposta(s: PropostaScope) {
     if (!s.itens.length) return;
+    if (somenteLeitura) return;
     fetch("/api/propostas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -696,6 +702,7 @@ export default function Home() {
       const r = await fetch(`/api/propostas/${id}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const reg = await r.json();
+      setSomenteLeitura(!ehAdmin && !!usuario && reg.autor !== usuario.email ? (reg.autorNome ?? reg.autor) : null);
       setScope(reg.scope as PropostaScope);
       setExcluded(new Set());
       setScreen("review");
@@ -707,6 +714,7 @@ export default function Home() {
   // Proposta manual: a tela monta o scope via /api/montar-estruturado e entrega aqui;
   // cai no MESMO fluxo de revisão/PDF usado por qualquer forma de criar proposta.
   function aplicarScopeManual(novo: PropostaScope) {
+    setSomenteLeitura(null);
     setScope(novo);
     setExcluded(new Set());
     setScreen("review");
@@ -866,6 +874,7 @@ export default function Home() {
   function novaProposta() {
     setManualPrefill(null);
     setScopeParaEditar(null);
+    setSomenteLeitura(null);
     setScope(null);
     setExcluded(new Set());
     setBuilderKey((k) => k + 1);
@@ -888,6 +897,7 @@ export default function Home() {
       const r = await fetch(`/api/propostas/${id}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const reg = await r.json();
+      setSomenteLeitura(null);
       setScopeParaEditar(reg.scope as PropostaScope);
       setScope(reg.scope as PropostaScope);
       setExcluded(new Set());
@@ -1147,6 +1157,7 @@ export default function Home() {
             goToManual={novaProposta}
             onVoltarEditar={voltarParaMontagem}
             goToPDF={() => setScreen("pdf")}
+            somenteLeitura={somenteLeitura}
           />
         )}
         {screen === "pdf" && scope && (
@@ -1177,6 +1188,7 @@ export default function Home() {
             onExcluirDefinitivo={excluirDefinitivo}
             onEsvaziarExcluidas={esvaziarExcluidas}
             ehAdmin={ehAdmin}
+            meuEmail={usuario?.email ?? null}
             verArquivadas={verArquivadas}
             onVerArquivadas={(v) => {
               setVerArquivadas(v);
@@ -3039,6 +3051,7 @@ function ReviewScreen({
   refining,
   goToManual,
   onVoltarEditar,
+  somenteLeitura,
   goToPDF,
 }: {
   reviewVariant: "A" | "B";
@@ -3059,6 +3072,7 @@ function ReviewScreen({
   refining: boolean;
   goToManual: () => void; // nova proposta (descarta a seleção — confirmado no clique)
   onVoltarEditar: () => void; // volta pra montagem preservando 100% do rascunho
+  somenteLeitura: string | null; // nome do dono quando a proposta é de outro consultor (só visualiza/PDF)
   goToPDF: () => void;
 }) {
   const vTab = (v: "A" | "B"): CSSProperties => ({
@@ -3093,6 +3107,11 @@ function ReviewScreen({
 
   return (
     <div className="ies-fullcol" style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--gray-50)" }}>
+      {somenteLeitura && (
+        <div style={{ padding: "10px 24px", background: "#FFF7E6", borderBottom: "1px solid #F5D9A8", color: "#7A4B00", fontSize: "13px", fontWeight: 600 }}>
+          Proposta de {somenteLeitura} — você pode visualizar e gerar o PDF, mas as alterações não são salvas.
+        </div>
+      )}
       <ScreenHead
         title="Revisão da proposta"
         sub={`${scope.cliente.razaoSocial} · ${includedItems.length} produtos selecionados`}
@@ -3887,6 +3906,7 @@ function HistoryScreen({
   onExcluirDefinitivo,
   onEsvaziarExcluidas,
   ehAdmin,
+  meuEmail,
   verArquivadas,
   onVerArquivadas,
 }: {
@@ -3902,6 +3922,9 @@ function HistoryScreen({
   // Status/excluir/restaurar são ações de GESTÃO (a rota também barra por papel):
   // vendedor vê o status como selo fixo e não tem Excluir nem a aba Excluídas.
   ehAdmin: boolean;
+  // Todo mundo vê a carteira inteira (áudio do Mateus, 16/09/2026); "Editar" só aparece
+  // na proposta do próprio consultor (ou para o gestor) — Abrir e o PDF valem para todas.
+  meuEmail: string | null;
   verArquivadas: boolean;
   onVerArquivadas: (v: boolean) => void;
 }) {
@@ -4115,6 +4138,7 @@ function HistoryScreen({
                   </button>
                   {/* "Abrir" leva à revisão (ver/gerar PDF); "Editar" leva à MONTAGEM,
                       com a seleção hidratada — e regrava a mesma proposta, sem duplicar. */}
+                  {(ehAdmin || p.autor === meuEmail) && (
                   <button
                     onClick={() => onEditar(p.id)}
                     title="Editar a seleção desta proposta (atualiza a mesma, não cria outra)"
@@ -4122,6 +4146,7 @@ function HistoryScreen({
                   >
                     Editar
                   </button>
+                  )}
                   {/* Tirar da lista sem apagar (QA 10/08: não havia como limpar proposta de
                       teste). Excluir usa o status "arquivada", que a listagem já corta no
                       WHERE; é reversível pela aba "Excluídas". */}

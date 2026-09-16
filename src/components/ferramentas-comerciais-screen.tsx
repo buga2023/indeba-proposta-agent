@@ -66,7 +66,7 @@ export function FerramentasComerciaisScreen() {
         <h2 style={{ fontSize: "22px", fontWeight: 800, letterSpacing: "-.5px", margin: 0 }}>Ferramentas Comerciais</h2>
         <div style={{ fontSize: "13.5px", opacity: 0.9, marginTop: "6px", lineHeight: 1.5 }}>
           Registro de prospecções, registro de visitas de rotina e solicitações comerciais.{" "}
-          {souGestor ? "Como gestor, você vê os registros de toda a equipe." : "Você vê apenas os seus registros."}
+          {souGestor ? "Como gestor, você vê e edita os registros de toda a equipe." : "Você vê os registros de toda a equipe e edita os seus."}
         </div>
       </div>
 
@@ -142,6 +142,8 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   // Edição (áudio do Mateus, 25/08/2026): usuário e gestor editam; a data NÃO muda —
   // fica a da visita registrada (visita nova = registro novo).
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  // Quem sou eu (e-mail da sessão, vem na listagem): "Editar" só no registro próprio, salvo gestor.
+  const [eu, setEu] = useState<string | null>(null);
   const [ed, setEd] = useState({ horario: "", empresa: "", contato: "", telefone: "", observacao: "" });
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   // Aba Excluídos (áudio do Mateus, 25/08/2026): restaurar ou excluir definitivamente.
@@ -155,6 +157,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
       setErro(null);
       setRelatorios(d.relatorios);
       setSouGestor(d.souGestor);
+      setEu(d.eu ?? null);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao carregar as prospecções.");
     } finally {
@@ -334,7 +337,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
-            {souGestor ? "Todas as prospecções" : "Minhas prospecções"} · {relatorios.length}
+            Todas as prospecções · {relatorios.length}
           </div>
           {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
@@ -352,14 +355,16 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                   {p.horario ? ` às ${p.horario}` : ""}
                 </span>
                 <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {p.empresa}</span>
-                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {p.autorNome ?? p.autor}</span>}
+                <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {p.autorNome ?? p.autor}</span>
                 {!emEdicao && (
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
                     {/* Áudio do Mateus (10/09/2026): extrair o registro em PDF. */}
                     <BotaoPdf href={`/api/registros/prospeccao/${encodeURIComponent(p.id)}/pdf`} titulo="Extrair esta prospecção em PDF" />
-                    <button onClick={() => abrirEdicao(p)} style={botaoEditar}>
-                      Editar
-                    </button>
+                    {(souGestor || p.autor === eu) && (
+                      <button onClick={() => abrirEdicao(p)} style={botaoEditar}>
+                        Editar
+                      </button>
+                    )}
                     {/* Excluir é só do gestor — o vendedor só edita (áudio 25/08/2026). */}
                     {souGestor && (
                       <button onClick={() => excluir(p.id)} style={botaoExcluir}>
@@ -461,6 +466,8 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
 
   // Edição (áudio do Mateus, 25/08/2026: "editar para a parte deles") + aba Excluídos.
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  // Quem sou eu (e-mail da sessão, vem na listagem): "Editar" só no registro próprio, salvo gestor.
+  const [eu, setEu] = useState<string | null>(null);
   const [ed, setEd] = useState({ tipo: "analise_agua_tecidos" as TipoSolicitacaoComercial, cliente: "", observacao: "" });
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
@@ -473,6 +480,7 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
       setErro(null);
       setSolicitacoes(d.solicitacoes);
       setSouGestor(d.souGestor);
+      setEu(d.eu ?? null);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao carregar as solicitações.");
     } finally {
@@ -625,7 +633,7 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
-            {souGestor ? "Todas as solicitações" : "Minhas solicitações"} · {solicitacoes.length}
+            Todas as solicitações · {solicitacoes.length}
           </div>
           {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
@@ -652,12 +660,14 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                 </span>
                 <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)" }}>{rotuloTipo(s.tipo)}</span>
                 <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {s.cliente}</span>
-                {souGestor && <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {s.autorNome ?? s.autor}</span>}
+                <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {s.autorNome ?? s.autor}</span>
                 <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {new Date(s.criadoEm).toLocaleDateString("pt-BR")}</span>
                 {editandoId !== s.id && (
                   <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
                     {/* Áudio do Mateus (10/09/2026): extrair o registro em PDF. */}
                     <BotaoPdf href={`/api/registros/solicitacao/${encodeURIComponent(s.id)}/pdf`} titulo="Extrair esta solicitação em PDF" />
+                    {(souGestor || s.autor === eu) && (
+                    <>
                     <button onClick={() => marcar(s.id, atendida ? "pendente" : "atendida")} style={botaoEditar}>
                       {atendida ? "Reabrir" : "Marcar atendida"}
                     </button>
@@ -671,6 +681,8 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                     >
                       Editar
                     </button>
+                    </>
+                    )}
                     {/* Excluir é só do gestor — o vendedor só edita (áudio 25/08/2026). */}
                     {souGestor && (
                       <button onClick={() => excluir(s.id)} style={botaoExcluir}>

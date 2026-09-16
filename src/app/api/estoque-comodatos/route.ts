@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   const excluidas = req.nextUrl.searchParams.get("excluidas") === "1";
   try {
     const itens = await listarEstoqueComodato(usuario, excluidas);
-    return NextResponse.json({ itens, souGestor: usuario.papel === "admin" });
+    return NextResponse.json({ itens, souGestor: usuario.papel === "admin", eu: usuario.email });
   } catch (e) {
     return respostaErro(e, "Falha ao listar o estoque.", 500);
   }

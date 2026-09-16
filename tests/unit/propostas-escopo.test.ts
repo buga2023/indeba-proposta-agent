@@ -45,34 +45,40 @@ beforeEach(() => {
   listarPropostas.mockResolvedValue([]);
 });
 
-// Até 01/08/2026 o GET não lia a sessão: qualquer vendedor logado recebia o histórico da
-// empresa inteira — nome de cliente e valor de cada proposta dos colegas. O gestor pediu
-// como "deixa enxuto pros demais", mas o que está embaixo é isolamento de dado.
-describe("GET /api/propostas — vendedor vê só a própria carteira", () => {
-  it("vendedor: o e-mail dele vai como recorte de autor para o banco", async () => {
+// De 01/08 a 16/09/2026 o vendedor via só a própria carteira. Áudio do Mateus (16/09/2026):
+// "é bom que eles não consigam editar outras propostas que não sejam deles, mas que tenham
+// acesso às propostas feitas… visualizar, abrir, pegar o PDF". Leitura é de todos; o que
+// segue por autor é a ESCRITA (POST/PATCH abaixo).
+describe("GET /api/propostas — todo mundo logado vê a carteira inteira", () => {
+  it("vendedor: lista sem recorte de autor", async () => {
     usuarioAtual.mockResolvedValue(VENDEDOR_A);
     await LISTAR(reqLista());
-    expect(listarPropostas).toHaveBeenCalledWith(200, false, "a@indeba.com");
+    expect(listarPropostas).toHaveBeenCalledWith(200, false);
   });
 
-  it("admin: sem recorte — o gestor vê o time inteiro", async () => {
+  it("admin: idem", async () => {
     usuarioAtual.mockResolvedValue(ADMIN);
     await LISTAR(reqLista());
-    expect(listarPropostas).toHaveBeenCalledWith(200, false, undefined);
+    expect(listarPropostas).toHaveBeenCalledWith(200, false);
   });
 
-  it("o recorte por autor convive com ?arquivadas=1", async () => {
+  it("?arquivadas=1 continua trocando a aba", async () => {
     usuarioAtual.mockResolvedValue(VENDEDOR_A);
     await LISTAR(reqLista("arquivadas=1"));
-    expect(listarPropostas).toHaveBeenCalledWith(200, true, "a@indeba.com");
+    expect(listarPropostas).toHaveBeenCalledWith(200, true);
   });
 });
 
-// Escopar a listagem sem escopar o acesso direto seria fachada: bastava trocar o id na URL.
-// A resposta é 404 e não 403 de propósito — 403 confirmaria que a proposta existe.
-describe("GET /api/propostas/[id] — proposta de outro vendedor não existe", () => {
-  it("vendedor A pedindo a proposta de B → 404", async () => {
+// Abrir a proposta do colega é leitura (ver e gerar o PDF). Sem sessão continua 404.
+describe("GET /api/propostas/[id] — leitura aberta a qualquer sessão", () => {
+  it("vendedor A pedindo a proposta de B → 200 (vê, não edita)", async () => {
     usuarioAtual.mockResolvedValue(VENDEDOR_A);
+    obterProposta.mockResolvedValue(doOutro);
+    expect((await ABRIR(reqVazio(), params("p-do-b"))).status).toBe(200);
+  });
+
+  it("sem sessão → 404", async () => {
+    usuarioAtual.mockResolvedValue(null);
     obterProposta.mockResolvedValue(doOutro);
     const r = await ABRIR(reqVazio(), params("p-do-b"));
     expect(r.status).toBe(404);

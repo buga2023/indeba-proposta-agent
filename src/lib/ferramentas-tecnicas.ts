@@ -16,11 +16,17 @@ import { nomeDeAutor, nomesDeAutores } from "@/lib/autores";
 import { dataBr, dataHoraBr } from "@/lib/datas";
 import type { Ficha } from "@/lib/pdf/registro";
 
-// Recorte único do módulo (áudio do Mateus, 21/08/2026: "todo mundo tem acesso a escrever…
-// só não ter acesso aos registros de todo mundo, apenas os deles"): gestor vê tudo,
-// vendedor vê só o que é dele. Mesmo desenho de listarChamados/listarPropostas.
+// Dois recortes (áudio do Mateus, 16/09/2026: "é bom que eles não consigam editar outras
+// propostas que não sejam deles, mas que tenham acesso a todos os registros… visualização
+// é extremamente importante" — o João registra a visita no cliente do Washington e o
+// Washington pega o PDF): LEITURA é de todo mundo logado; ESCRITA (editar, anexar,
+// excluir) fica com o autor ou o gestor. Substitui o recorte único de 21/08/2026.
 function escopo(usuario: SessaoUsuario) {
   return usuario.papel === "admin" ? {} : { autor: usuario.email };
+}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function leitura(_usuario: SessaoUsuario) {
+  return {};
 }
 
 // Lápide da aba Excluídos (áudio do Mateus, 25/08/2026): excluir marca `excluidoEm`; as
@@ -89,7 +95,7 @@ export async function listarVisitas(
   excluidas = false,
 ): Promise<VisitaCarteira[]> {
   const rows = await prisma.visitaCarteira.findMany({
-    where: { ...escopo(usuario), area, ...(excluidas ? lapides : vivos) },
+    where: { ...leitura(usuario), area, ...(excluidas ? lapides : vivos) },
     orderBy: [{ data: "desc" }, { horario: "desc" }],
     select: selectVisita,
   });
@@ -151,7 +157,7 @@ export async function fotoDaVisita(
   fotoId: string,
 ): Promise<{ bytes: Uint8Array; mime: string } | null> {
   const row = await prisma.visitaFoto.findFirst({
-    where: { id: fotoId, visitaId, visita: escopo(usuario) },
+    where: { id: fotoId, visitaId, visita: leitura(usuario) },
     select: { foto: true, fotoMime: true },
   });
   return row ? { bytes: row.foto, mime: row.fotoMime } : null;
@@ -162,7 +168,7 @@ export async function documentoDaVisita(
   visitaId: string,
 ): Promise<{ bytes: Uint8Array; mime: string; nome: string | null } | null> {
   const row = await prisma.visitaCarteira.findFirst({
-    where: { id: visitaId, ...escopo(usuario) },
+    where: { id: visitaId, ...leitura(usuario) },
     select: { documento: true, documentoMime: true, documentoNome: true },
   });
   if (!row?.documento || !row.documentoMime) return null;
@@ -224,7 +230,7 @@ export async function criarContratoComodato(
 
 export async function listarContratosComodato(usuario: SessaoUsuario, excluidas = false): Promise<ContratoComodato[]> {
   const rows = await prisma.contratoComodato.findMany({
-    where: { ...escopo(usuario), ...(excluidas ? lapides : vivos) },
+    where: { ...leitura(usuario), ...(excluidas ? lapides : vivos) },
     orderBy: { criadoEm: "desc" },
     select: {
       id: true,
@@ -278,7 +284,7 @@ export async function pdfDoContrato(
   id: string,
 ): Promise<{ bytes: Uint8Array; mime: string; cliente: string } | null> {
   const row = await prisma.contratoComodato.findFirst({
-    where: { id, ...escopo(usuario) },
+    where: { id, ...leitura(usuario) },
     select: { contrato: true, contratoMime: true, cliente: true },
   });
   if (!row?.contrato || !row.contratoMime) return null;
@@ -296,7 +302,7 @@ export async function criarEstoqueComodato(autor: string, dados: EstoqueComodato
 
 export async function listarEstoqueComodato(usuario: SessaoUsuario, excluidas = false): Promise<EstoqueComodato[]> {
   const rows = await prisma.estoqueComodato.findMany({
-    where: { ...escopo(usuario), ...(excluidas ? lapides : vivos) },
+    where: { ...leitura(usuario), ...(excluidas ? lapides : vivos) },
     orderBy: { criadoEm: "desc" },
   });
   const anexos = await anexosDe("estoque", rows.map((r) => r.id));
@@ -344,7 +350,7 @@ export async function excluirEstoqueComodatoDefinitivo(usuario: SessaoUsuario, i
 // viajar embutida como data-URI. São no máximo 10 por visita (MAX_FOTOS_VISITA).
 export async function fichaDaVisita(usuario: SessaoUsuario, id: string): Promise<Ficha | null> {
   const row = await prisma.visitaCarteira.findFirst({
-    where: { id, ...escopo(usuario) },
+    where: { id, ...leitura(usuario) },
     select: {
       area: true,
       data: true,

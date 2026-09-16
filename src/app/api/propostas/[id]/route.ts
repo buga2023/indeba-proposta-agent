@@ -34,7 +34,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const registro = await obterProposta(id);
     if (!registro) return naoEncontrada();
-    if (await negar(req, registro.autor)) return naoEncontrada();
+    // Leitura aberta a qualquer sessão (áudio do Mateus, 16/09/2026): o colega abre a
+    // proposta e gera o PDF; só não grava — o POST /api/propostas e o PATCH aqui negam.
+    if (!(await usuarioAtual(req))) return naoEncontrada();
     return NextResponse.json(registro);
   } catch (e) {
     return respostaErro(e, "Falha ao carregar a proposta", 500);

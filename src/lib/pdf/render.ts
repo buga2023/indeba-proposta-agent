@@ -151,7 +151,9 @@ export function montarDocumento(
 ): { html: string; footer: string; marginTop: string; marginBottom?: string } {
   switch (scope.tipo) {
     case "orcamento":
-      return { html: orcamentoHtml(scope), footer: FOOTER_PAG, marginTop: "12mm" };
+      // Logo da marca no cabeçalho do orçamento (áudio do Mateus, 16/09/2026: "logo da
+      // Indeba no PDF" — o orçamento era o único modelo sem a imagem, só o quadrado "ies").
+      return { html: orcamentoHtml(scope, { logo: asset("/marca/indeba-express-logo.png") }), footer: FOOTER_PAG, marginTop: "12mm" };
     case "consolidada":
       // Logo Indeba Express (IES) — é a marca do modelo consolidado refinado.
       // Tipografia da marca (Geist/Geist Mono, mesma do app) embutida como data-URI —

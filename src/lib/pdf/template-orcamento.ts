@@ -20,7 +20,7 @@ function numeroDoc(id: string): string {
   return String((parseInt(hex, 16) % 9000) + 1000);
 }
 
-export function orcamentoHtml(scope: PropostaScope): string {
+export function orcamentoHtml(scope: PropostaScope, assets: { logo?: string } = {}): string {
   const navy = "#16335c";
   const azul = "#1f5fae";
   const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR");
@@ -58,6 +58,7 @@ body { font-family: "Segoe UI", Arial, sans-serif; color: #25303f; font-size: 11
 .empresa .left { display: flex; gap: 12px; align-items: flex-start; }
 .logo { width: 54px; height: 54px; flex: none; border-radius: 8px; background: linear-gradient(135deg, ${azul}, ${navy});
   display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 17px; letter-spacing: -.5px; }
+.logo-img { height: 54px; width: auto; max-width: 150px; flex: none; object-fit: contain; }
 .emp-nome { font-size: 16px; font-weight: 800; color: ${navy}; }
 .emp-info > div { margin-top: 2px; }
 .emp-end { font-size: 9px; color: #6b7787; line-height: 1.5; max-width: 320px; }
@@ -117,7 +118,7 @@ td.det .emb { color: #9aa7b8; }
 
   <div class="empresa">
     <div class="left">
-      <div class="logo">ies</div>
+      ${assets.logo ? `<img class="logo-img" src="${assets.logo}" alt="Indeba Express"/>` : `<div class="logo">ies</div>`}
       <div class="emp-info">
         <div class="emp-nome">INDEBA EXPRESS</div>
         <div class="emp-end">Rua Cosme de Farias, 05 - Galpão 01 - Boca do Rio - Salvador - BA - CEP: 41710-010</div>

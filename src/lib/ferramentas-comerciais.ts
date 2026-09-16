@@ -13,10 +13,14 @@ import { nomeDeAutor, nomesDeAutores } from "@/lib/autores";
 import { dataBr, dataHoraBr } from "@/lib/datas";
 import type { Ficha } from "@/lib/pdf/registro";
 
-// Mesmo recorte das Ferramentas Técnicas (áudio do Mateus, 21/08/2026): todo vendedor
-// escreve; cada um lê só os próprios registros, o gestor lê todos.
+// Mesmo desenho das Ferramentas Técnicas (áudio do Mateus, 16/09/2026): leitura de todo
+// mundo logado (lista, ficha em PDF); escrita só do autor ou do gestor.
 function escopo(usuario: SessaoUsuario) {
   return usuario.papel === "admin" ? {} : { autor: usuario.email };
+}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function leitura(_usuario: SessaoUsuario) {
+  return {};
 }
 
 // Lápide da aba Excluídos (áudio do Mateus, 25/08/2026) — mesmo desenho de
@@ -49,7 +53,7 @@ export async function criarRelatorioProspeccao(autor: string, dados: RelatorioPr
 
 export async function listarRelatoriosProspeccao(usuario: SessaoUsuario, excluidas = false): Promise<RelatorioProspeccao[]> {
   const rows = await prisma.relatorioProspeccao.findMany({
-    where: { ...escopo(usuario), ...(excluidas ? lapides : vivos) },
+    where: { ...leitura(usuario), ...(excluidas ? lapides : vivos) },
     orderBy: [{ data: "desc" }, { criadoEm: "desc" }],
   });
   const anexos = await anexosDe("prospeccao", rows.map((r) => r.id));
@@ -108,7 +112,7 @@ export async function criarSolicitacaoComercial(autor: string, dados: Solicitaca
 
 export async function listarSolicitacoesComerciais(usuario: SessaoUsuario, excluidas = false): Promise<SolicitacaoComercial[]> {
   const rows = await prisma.solicitacaoComercial.findMany({
-    where: { ...escopo(usuario), ...(excluidas ? lapides : vivos) },
+    where: { ...leitura(usuario), ...(excluidas ? lapides : vivos) },
     orderBy: { criadoEm: "desc" },
   });
   const anexos = await anexosDe("solicitacao", rows.map((r) => r.id));
@@ -164,7 +168,7 @@ const ROTULO_TIPO: Record<string, string> = {
 // pode virar a fresta por onde um vendedor lê o registro do colega.
 export async function fichaDaProspeccao(usuario: SessaoUsuario, id: string): Promise<Ficha | null> {
   const row = await prisma.relatorioProspeccao.findFirst({
-    where: { id, ...escopo(usuario) },
+    where: { id, ...leitura(usuario) },
     select: { data: true, horario: true, empresa: true, contato: true, telefone: true, observacao: true, autor: true, criadoEm: true },
   });
   if (!row) return null;
@@ -186,7 +190,7 @@ export async function fichaDaProspeccao(usuario: SessaoUsuario, id: string): Pro
 
 export async function fichaDaSolicitacao(usuario: SessaoUsuario, id: string): Promise<Ficha | null> {
   const row = await prisma.solicitacaoComercial.findFirst({
-    where: { id, ...escopo(usuario) },
+    where: { id, ...leitura(usuario) },
     select: { tipo: true, cliente: true, observacao: true, status: true, autor: true, criadoEm: true },
   });
   if (!row) return null;
