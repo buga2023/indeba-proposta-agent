@@ -108,6 +108,12 @@ const mapearRegistro = async (row: Row): Promise<PropostaRegistro> => {
 // leitura de registros antigos. Em updates o status é PRESERVADO (só muda por
 // atualizarStatusProposta) e o `autor` original é mantido.
 export async function salvarProposta(scope: PropostaScope, autor: string): Promise<PropostaRegistro> {
+  // Quem assina é o DONO (áudio do Mateus, 16/09/2026: "seleciono o vendedor e o PDF mantém
+  // meu nome"). A proposta transferida voltava a sair com o nome do gestor porque o "Editar"
+  // remontava com o consultor da sessão e o auto-save regravava esse scope. Aqui o carimbo
+  // é sempre o do autor do registro — na criação é a própria sessão, então nada muda.
+  const dono = await consultorDoDono(scope.id);
+  if (dono) assinarScope(scope as unknown as Record<string, unknown>, dono);
   const dados = {
     cliente: scope.cliente.razaoSocial,
     segmento: scope.cliente.segmento ?? null,
@@ -200,6 +206,35 @@ export async function atualizarStatusProposta(id: string, status: StatusProposta
  * O destinatário precisa existir no cadastro: transferir para um e-mail solto criaria uma
  * proposta órfã, invisível para todo mundo menos o admin.
  */
+export type Assinante = { nome: string; email: string; telefone: string | null };
+
+// Carimba o consultor que assina a proposta em TODOS os lugares do scope onde o nome
+// aparece: `scope.consultor` (capa Express de Orçamento/Implantação), e na consolidada a
+// capa, o card de fechamento (`condicoes.consultor`) e o bloco de contato.
+export function assinarScope(scope: Record<string, unknown>, destino: Assinante): void {
+  scope.consultor = { nome: destino.nome, email: destino.email, telefone: destino.telefone ?? null };
+  const consolidada = scope.consolidada as Record<string, unknown> | undefined;
+  if (!consolidada) return;
+  const capa = consolidada.capa as Record<string, unknown> | undefined;
+  if (capa) capa.consultor = destino.nome;
+  const condicoes = consolidada.condicoes as Record<string, unknown> | undefined;
+  if (condicoes) condicoes.consultor = destino.nome;
+  const contato = consolidada.contato as Record<string, unknown> | undefined;
+  if (contato) {
+    contato.whatsapp = destino.telefone ?? null;
+    contato.emailConsultor = destino.email;
+  }
+}
+
+// Dono atual da proposta (campo `autor`) resolvido no cadastro — null se a proposta ainda
+// não existe ou se o dono saiu do cadastro (aí o scope fica como veio).
+export async function consultorDoDono(id: string): Promise<Assinante | null> {
+  const p = await prisma.proposta.findUnique({ where: { id }, select: { autor: true } });
+  if (!p) return null;
+  const u = await prisma.usuario.findUnique({ where: { email: p.autor }, select: { nome: true, email: true, telefone: true } });
+  return u ? { nome: u.nome, email: u.email, telefone: u.telefone ?? null } : null;
+}
+
 export class ConsultorInexistenteError extends Error {
   constructor() {
     super("Consultor não encontrado no cadastro.");
@@ -219,22 +254,7 @@ export async function transferirProposta(id: string, novoAutor: string): Promise
   // O scope é JSON livre no banco; mexe só nos campos do consultor e devolve o resto
   // intocado — reescrever o scope inteiro aqui arriscaria perder o que o contrato não vê.
   const scope = atual.scope as Record<string, unknown> | null;
-  // Vale para TODOS os tipos — a capa Express (Orçamento/Implantação) lê daqui, e sem
-  // isto a proposta transferida continuaria assinada por quem a montou.
-  if (scope) scope.consultor = { nome: destino.nome, email: destino.email, telefone: destino.telefone ?? null };
-  const consolidada = scope?.consolidada as Record<string, unknown> | undefined;
-  if (consolidada) {
-    const capa = consolidada.capa as Record<string, unknown> | undefined;
-    if (capa) capa.consultor = destino.nome;
-    // `condicoes.consultor` é a assinatura do card de fechamento.
-    const condicoes = consolidada.condicoes as Record<string, unknown> | undefined;
-    if (condicoes) condicoes.consultor = destino.nome;
-    const contato = consolidada.contato as Record<string, unknown> | undefined;
-    if (contato) {
-      contato.whatsapp = destino.telefone ?? null;
-      contato.emailConsultor = destino.email;
-    }
-  }
+  if (scope) assinarScope(scope, destino);
 
   const row = await prisma.proposta.update({
     where: { id },

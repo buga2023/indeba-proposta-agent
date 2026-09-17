@@ -4,6 +4,7 @@ import { renderPdf } from "@/lib/pdf/render";
 import { validarSessao } from "@/lib/auth";
 import { eventoDe, registrarProposta } from "@/lib/log";
 import { respostaErro } from "@/lib/erro";
+import { assinarScope, consultorDoDono } from "@/lib/propostas";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // render do Chromium serverless (Vercel)
@@ -22,6 +23,16 @@ export async function POST(req: NextRequest) {
   // Render isolado em try/catch: falha de Chromium/bundle (ex.: asset do serverless
   // ausente) vira erro CLARO e logado, em vez de 500 opaco que só se vê nos logs da
   // plataforma. O cliente recebe uma mensagem acionável.
+  // O scope vem da tela e pode estar defasado (proposta transferida com a Revisão aberta):
+  // a assinatura sai sempre do dono atual do registro. Best-effort — proposta ainda não
+  // salva, ou sem banco, renderiza como veio.
+  try {
+    const dono = await consultorDoDono(parsed.data.id);
+    if (dono) assinarScope(parsed.data as unknown as Record<string, unknown>, dono);
+  } catch (e) {
+    console.error("falha ao resolver o consultor da proposta:", e);
+  }
+
   let pdf: Buffer;
   try {
     pdf = await renderPdf(parsed.data);
