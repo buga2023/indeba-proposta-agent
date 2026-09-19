@@ -4,10 +4,10 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato, AnexoInfo, TipoRegistroAnexo } from "@/lib/contracts";
 import { BotaoPdf } from "@/components/ui/botao-pdf";
 import { encolherFoto } from "@/components/form-produto";
-import { FILTRO_VAZIO, filtroAtivo, passaNoFiltro, contagem, type FiltroRegistros } from "@/lib/filtro-registros";
+import { FILTRO_VAZIO, filtroAtivo, passaNoFiltro, contagem, alvoBusca, type FiltroRegistros } from "@/lib/filtro-registros";
 
 // Re-exportados para a tela Comercial, que já importa o resto das Ferramentas daqui.
-export { FILTRO_VAZIO, passaNoFiltro, contagem, type FiltroRegistros };
+export { FILTRO_VAZIO, passaNoFiltro, contagem, alvoBusca, type FiltroRegistros };
 
 /**
  * Ferramentas Técnicas (áudio do Mateus 21/08/2026 + foto do bloco, que dá os rótulos),
@@ -1234,6 +1234,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [aberto, setAberto] = useState<string | null>(null);
 
   const [cliente, setCliente] = useState("");
+  const [cnpj, setCnpj] = useState("");
   const [comodatos, setComodatos] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -1246,14 +1247,16 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [editandoId, setEditandoId] = useState<string | null>(null);
   // Quem sou eu (e-mail da sessão, vem na listagem): "Editar" só no registro próprio, salvo gestor.
   const [eu, setEu] = useState<string | null>(null);
-  const [ed, setEd] = useState({ cliente: "", comodatos: "", observacoes: "" });
+  const [ed, setEd] = useState({ cliente: "", cnpj: "", comodatos: "", observacoes: "" });
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
 
   // Filtro (áudio com o João, 19/09/2026). Sem período: "os contratos é só botar para
   // pesquisar para o cliente" — contrato não tem data de visita, vale enquanto vale.
+  // Um campo só, casando cliente OU CNPJ, que é como ele pediu ("cliente ou CNPJ") — dois
+  // campos separados obrigariam a escolher por qual procurar antes de procurar.
   const [filtro, setFiltro] = useState<FiltroRegistros>(FILTRO_VAZIO);
-  const contratosFiltrados = contratos.filter((c) => passaNoFiltro(filtro, c.cliente));
+  const contratosFiltrados = contratos.filter((c) => passaNoFiltro(filtro, alvoBusca(c.cliente, c.cnpj)));
 
   async function carregar() {
     try {
@@ -1295,7 +1298,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
       const form = new FormData();
       form.set(
         "dados",
-        JSON.stringify({ cliente: cliente.trim(), comodatos: comodatos.trim(), observacoes: observacoes.trim() || null }),
+        JSON.stringify({ cliente: cliente.trim(), cnpj: cnpj.trim() || null, comodatos: comodatos.trim(), observacoes: observacoes.trim() || null }),
       );
       if (arquivo) form.set("contrato", arquivo);
       const r = await fetch("/api/comodatos", { method: "POST", body: form });
@@ -1304,6 +1307,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
       const falhas = await enviarAnexos("contrato", criado.id, fotosNovas, documentosNovos);
       if (falhas.length > 0) setErro(`Contrato cadastrado, mas alguns anexos falharam: ${falhas.join(", ")}.`);
       setCliente("");
+      setCnpj("");
       setComodatos("");
       setObservacoes("");
       setArquivo(null);
@@ -1329,7 +1333,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
       const r = await fetch(`/api/comodatos?id=${encodeURIComponent(id)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cliente: ed.cliente.trim(), comodatos: ed.comodatos.trim(), observacoes: ed.observacoes.trim() || null }),
+        body: JSON.stringify({ cliente: ed.cliente.trim(), cnpj: ed.cnpj.trim() || null, comodatos: ed.comodatos.trim(), observacoes: ed.observacoes.trim() || null }),
       });
       if (!r.ok) throw new Error(mensagemErro(await r.json(), "Falha ao editar o contrato."));
       setEditandoId(null);
@@ -1357,10 +1361,19 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
     <>
       <form onSubmit={salvar} style={cardStyle}>
         <div style={{ display: "grid", gap: "12px" }}>
-          <label style={labelStyle}>
-            Nome do cliente
-            <input style={{ ...inputStyle, marginTop: "5px" }} placeholder="Razão social ou nome do cliente" maxLength={200} value={cliente} onChange={(e) => setCliente(e.target.value)} />
-          </label>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <label style={{ ...labelStyle, flex: 2, minWidth: "200px" }}>
+              Nome do cliente
+              <input style={{ ...inputStyle, marginTop: "5px" }} placeholder="Razão social ou nome do cliente" maxLength={200} value={cliente} onChange={(e) => setCliente(e.target.value)} />
+            </label>
+            {/* CNPJ (áudio com o João, 19/09/2026): entra para a busca achar o contrato
+                por ele. Opcional — contrato antigo não tem, e travar o cadastro por causa
+                disso pararia o trabalho de quem só quer registrar o comodato. */}
+            <label style={{ ...labelStyle, flex: 1, minWidth: "170px" }}>
+              CNPJ <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>(opcional)</span>
+              <input style={{ ...inputStyle, marginTop: "5px" }} placeholder="00.000.000/0000-00" maxLength={20} value={cnpj} onChange={(e) => setCnpj(e.target.value)} />
+            </label>
+          </div>
           <label style={labelStyle}>
             Comodatos deste cliente
             <textarea
@@ -1426,7 +1439,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
           {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
         {contratos.length > 0 && (
-          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Cliente" placeholderTermo="Buscar por cliente…" comPeriodo={false} />
+          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Cliente ou CNPJ" placeholderTermo="Buscar por cliente ou CNPJ…" comPeriodo={false} />
         )}
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && contratos.length === 0 && <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhum contrato cadastrado ainda.</div>}
@@ -1456,6 +1469,11 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
                 <span style={{ fontWeight: 700, fontSize: "14px", color: "var(--gray-900)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {c.cliente}
                 </span>
+                {/* CNPJ ao lado do nome: é por ele que se confere o cliente certo quando
+                    duas filiais têm razão social parecida (áudio com o João, 19/09/2026). */}
+                {c.cnpj && (
+                  <span style={{ fontSize: "12px", color: "var(--gray-400)", flex: "none" }}>{c.cnpj}</span>
+                )}
                 {c.temContrato && (
                   <span style={{ fontSize: "11px", fontWeight: 700, padding: "3px 9px", borderRadius: "999px", background: "#e0edfb", color: "#1e6bb8", flex: "none" }}>PDF</span>
                 )}
@@ -1466,10 +1484,18 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
               </button>
               {estaAberto && editandoId === c.id && (
                 <div style={{ padding: "0 18px 15px 41px", display: "grid", gap: "10px" }}>
-                  <label style={labelStyle}>
-                    Nome do cliente
-                    <input style={{ ...inputStyle, marginTop: "5px" }} maxLength={200} value={ed.cliente} onChange={(e) => setEd({ ...ed, cliente: e.target.value })} />
-                  </label>
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    <label style={{ ...labelStyle, flex: 2, minWidth: "200px" }}>
+                      Nome do cliente
+                      <input style={{ ...inputStyle, marginTop: "5px" }} maxLength={200} value={ed.cliente} onChange={(e) => setEd({ ...ed, cliente: e.target.value })} />
+                    </label>
+                    {/* Aqui é onde os contratos antigos ganham o CNPJ: eles nasceram sem o
+                        campo, e a busca por número só passa a achá-los depois disto. */}
+                    <label style={{ ...labelStyle, flex: 1, minWidth: "170px" }}>
+                      CNPJ <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>(opcional)</span>
+                      <input style={{ ...inputStyle, marginTop: "5px" }} placeholder="00.000.000/0000-00" maxLength={20} value={ed.cnpj} onChange={(e) => setEd({ ...ed, cnpj: e.target.value })} />
+                    </label>
+                  </div>
                   <label style={labelStyle}>
                     Comodatos deste cliente
                     <textarea
@@ -1532,7 +1558,7 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
                     <button
                       onClick={() => {
                         setEditandoId(c.id);
-                        setEd({ cliente: c.cliente, comodatos: c.comodatos, observacoes: c.observacoes ?? "" });
+                        setEd({ cliente: c.cliente, cnpj: c.cnpj ?? "", comodatos: c.comodatos, observacoes: c.observacoes ?? "" });
                         setErro(null);
                       }}
                       style={botaoEditar}

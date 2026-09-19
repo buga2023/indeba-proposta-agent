@@ -218,6 +218,10 @@ model SolicitacaoComercial {
 model ContratoComodato {
   id           String   @id @default(cuid())
   cliente      String
+  /// CNPJ do cliente (áudio do Mateus com o João, 19/09/2026: buscar contrato por
+  /// "cliente ou CNPJ"). Opcional: os contratos cadastrados antes disso não têm, e
+  /// exigir preenchimento retroativo travaria a edição de todos eles.
+  cnpj         String?
   comodatos    String // texto livre: os comodatos deste cliente
   observacoes  String?
   contrato     Bytes?

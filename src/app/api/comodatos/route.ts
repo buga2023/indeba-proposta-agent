@@ -13,7 +13,7 @@ import { respostaErro } from "@/lib/erro";
 
 export const runtime = "nodejs";
 
-// Contratos e Comodatos (Ferramentas Técnicas): cliente, comodatos, observações e a cópia
+// Contratos e Comodatos (Ferramentas Técnicas): cliente, CNPJ, comodatos, observações e a cópia
 // do contrato em PDF. Escrita aberta a todo vendedor; leitura com o recorte por autor.
 
 // Mesmo teto do upload de ficha técnica: a função da Vercel corta o corpo em ~4,5 MB e
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Editar (áudio do Mateus, 25/08/2026): cliente, comodatos e observações — o PDF não
+// Editar (áudio do Mateus, 25/08/2026): cliente, CNPJ, comodatos e observações — o PDF não
 // muda por aqui. `?acao=restaurar` tira o contrato da aba Excluídos (só gestor).
 export async function PATCH(req: NextRequest) {
   const usuario = await usuarioAtual(req);

@@ -41,11 +41,39 @@ export function filtroAtivo(f: FiltroRegistros): boolean {
  */
 export function passaNoFiltro(f: FiltroRegistros, texto: string, data?: string | null): boolean {
   const termo = f.termo.trim().toLowerCase();
-  if (termo && !texto.toLowerCase().includes(termo)) return false;
+  if (termo && !casaTexto(termo, texto)) return false;
   if ((f.de || f.ate) && !data) return false;
   if (f.de && data && data < f.de) return false;
   if (f.ate && data && data > f.ate) return false;
   return true;
+}
+
+/**
+ * Casa por trecho e, quando o termo tem cara de número, tenta de novo só com os dígitos.
+ *
+ * É o que faz a busca por CNPJ funcionar (Mateus, 19/09/2026: procurar contrato por
+ * "cliente ou CNPJ"): o cadastro guarda como o vendedor digitou — "12.345.678/0001-90" ou
+ * "12345678000190" — e quem procura digita do outro jeito. Comparar só texto cru erraria
+ * exatamente nesse caso, que é o motivo do pedido.
+ *
+ * O piso de 3 dígitos evita que digitar "1" varra a lista inteira por coincidência de
+ * número dentro de qualquer razão social.
+ */
+function casaTexto(termo: string, texto: string): boolean {
+  const alvo = texto.toLowerCase();
+  if (alvo.includes(termo)) return true;
+  const digitosTermo = termo.replace(/\D/g, "");
+  if (digitosTermo.length < 3) return false;
+  return alvo.replace(/\D/g, "").includes(digitosTermo);
+}
+
+/**
+ * Junta os campos em que a busca olha. Usado onde há mais de um: o contrato casa por
+ * cliente OU CNPJ, que é como o Mateus pediu ("cliente ou CNPJ") — um campo só de busca,
+ * não dois.
+ */
+export function alvoBusca(...partes: (string | null | undefined)[]): string {
+  return partes.filter((p) => p != null && p !== "").join(" ");
 }
 
 /** Rótulo da contagem: "N de M" enquanto filtra, o total puro quando não há filtro. */

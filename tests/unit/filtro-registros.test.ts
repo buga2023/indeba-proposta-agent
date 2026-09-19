@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { FILTRO_VAZIO, filtroAtivo, passaNoFiltro, contagem } from "@/lib/filtro-registros";
+import { FILTRO_VAZIO, filtroAtivo, passaNoFiltro, contagem, alvoBusca } from "@/lib/filtro-registros";
 
 // Filtro das listas das Ferramentas (áudio do Mateus com o João, 19/09/2026).
 // O que estes testes protegem é a frase do João: "vários filtros que vão se juntando".
@@ -112,5 +112,68 @@ describe("filtroAtivo e contagem", () => {
 
   it("com filtro mostra o recorte sobre o total", () => {
     expect(contagem(3, 12, { ...FILTRO_VAZIO, termo: "boa vista" })).toBe("3 de 12");
+  });
+});
+
+// Busca de contrato por "cliente ou CNPJ" (áudio do Mateus com o João, 19/09/2026).
+// O ponto todo: o cadastro guarda o CNPJ como o vendedor digitou e quem procura digita
+// de outro jeito. Se a comparação voltar a ser só de texto cru, este bloco cai.
+describe("passaNoFiltro — CNPJ com ou sem pontuação", () => {
+  const alvo = alvoBusca("Frigorífico Boa Vista", "12.345.678/0001-90");
+
+  it("acha digitando o CNPJ sem pontuação", () => {
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, termo: "12345678000190" }, alvo)).toBe(true);
+  });
+
+  it("acha digitando com a pontuação", () => {
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, termo: "12.345.678/0001-90" }, alvo)).toBe(true);
+  });
+
+  it("acha por um pedaço do número", () => {
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, termo: "3456780" }, alvo)).toBe(true);
+  });
+
+  // O inverso: cadastrado sem pontuação, procurado com.
+  it("funciona com o cadastro sem pontuação e a busca com", () => {
+    const cru = alvoBusca("Laticínio Serra", "98765432000155");
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, termo: "98.765.432/0001-55" }, cru)).toBe(true);
+  });
+
+  it("o mesmo campo continua achando pelo nome", () => {
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, termo: "boa vista" }, alvo)).toBe(true);
+  });
+
+  it("CNPJ de outro cliente não passa", () => {
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, termo: "99999999000199" }, alvo)).toBe(false);
+  });
+
+  // O piso de 3 dígitos guarda só o caminho NORMALIZADO (o que atravessa a pontuação).
+  // A busca literal por trecho continua valendo para qualquer tamanho — é a mesma que
+  // sempre serviu ao nome do cliente, e mexer nela mudaria a busca por nome junto.
+  // "80" não existe no texto cru ("…678/0001-90" não tem "8" seguido de "0"), e só
+  // apareceria depois de tirar a pontuação — por isso é bloqueado.
+  it("dois dígitos não atravessam a pontuação", () => {
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, termo: "80" }, alvoBusca("Padaria Sol", "12.345.678/0001-90"))).toBe(false);
+  });
+
+  it("a partir de três dígitos, atravessa", () => {
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, termo: "800" }, alvoBusca("Padaria Sol", "12.345.678/0001-90"))).toBe(true);
+  });
+});
+
+describe("alvoBusca", () => {
+  it("junta os campos preenchidos", () => {
+    expect(alvoBusca("Cliente X", "123")).toBe("Cliente X 123");
+  });
+
+  // Contrato antigo não tem CNPJ — não pode virar "Cliente X null" nem "Cliente X ".
+  it("ignora campo vazio ou ausente", () => {
+    expect(alvoBusca("Cliente X", null)).toBe("Cliente X");
+    expect(alvoBusca("Cliente X", undefined)).toBe("Cliente X");
+    expect(alvoBusca("Cliente X", "")).toBe("Cliente X");
+  });
+
+  it("contrato sem CNPJ ainda é achado pelo nome", () => {
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, termo: "cliente" }, alvoBusca("Cliente X", null))).toBe(true);
   });
 });

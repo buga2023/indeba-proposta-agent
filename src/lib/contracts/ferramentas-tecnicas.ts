@@ -66,6 +66,11 @@ export type VisitaCarteira = z.infer<typeof VisitaCarteira>;
 // técnica de produto — MIME application/pdf, teto de 4 MB da função Vercel).
 export const ContratoComodatoCreate = z.object({
   cliente: z.string().min(2).max(200),
+  // CNPJ (áudio do Mateus com o João, 19/09/2026: procurar contrato por "cliente ou
+  // CNPJ"). Opcional e sem máscara obrigatória: o vendedor digita como vier do cliente,
+  // e a busca normaliza os dois lados — exigir formato aqui só faria o cadastro recusar
+  // um número certo digitado sem ponto.
+  cnpj: z.string().max(20).nullable().optional(),
   comodatos: z.string().min(1).max(8000),
   observacoes: z.string().max(4000).nullable().optional(),
 });
@@ -81,6 +86,7 @@ export type ContratoComodatoUpdate = z.infer<typeof ContratoComodatoUpdate>;
 export const ContratoComodato = z.object({
   id: z.string(),
   cliente: z.string(),
+  cnpj: z.string().nullable().default(null),
   comodatos: z.string(),
   observacoes: z.string().nullable(),
   temContrato: z.boolean(),

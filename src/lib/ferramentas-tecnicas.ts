@@ -220,6 +220,7 @@ export async function criarContratoComodato(
   const row = await prisma.contratoComodato.create({
     data: {
       ...dados,
+      cnpj: dados.cnpj ?? null,
       observacoes: dados.observacoes ?? null,
       autor,
       ...(pdf ? { contrato: pdf.bytes, contratoMime: pdf.mime } : {}),
@@ -235,6 +236,7 @@ export async function listarContratosComodato(usuario: SessaoUsuario, excluidas 
     select: {
       id: true,
       cliente: true,
+      cnpj: true,
       comodatos: true,
       observacoes: true,
       contratoMime: true,
@@ -256,7 +258,7 @@ export async function editarContratoComodato(
 ): Promise<boolean> {
   const r = await prisma.contratoComodato.updateMany({
     where: { id, ...escopo(usuario), ...vivos },
-    data: { ...dados, observacoes: dados.observacoes ?? null },
+    data: { ...dados, cnpj: dados.cnpj ?? null, observacoes: dados.observacoes ?? null },
   });
   return r.count > 0;
 }
