@@ -3937,13 +3937,25 @@ function HistoryScreen({
   // célula e cobriam o Valor (print do Matheus, 11/08). O minWidth da tabela cresce
   // junto — em tela estreita rola horizontal, não sobrepõe.
   // Na aba Excluídas cabem QUATRO botões (Abrir/Editar/Restaurar/Apagar de vez) — 300px.
-  const cols = `1.7fr 1fr 180px 80px 130px 70px 110px ${verArquivadas ? "300px" : "210px"}`;
-  // Largura mínima da tabela: as colunas FIXAS somam 540px (+210 ou 300 de Ações), e
-  // Cliente/Segmento precisam de ~390px para não quebrar a razão social em quatro linhas.
-  // Abaixo disso o cabeçalho colapsa ("CLIENTESEGMENTOCONSULTOR" no celular). Com a coluna
-  // Consultor (02/09/2026) o antigo 820px deixou de servir — a tabela rola na horizontal
-  // dentro do .ies-tablewrap, que é o desenho pretendido em tela estreita.
-  const larguraMinima = verArquivadas ? "1260px" : "1170px";
+  // Vídeo do Mateus (19/09/2026): "quando eu tô aqui em cima, eu não consigo editar essa
+  // proposta, tenho que ir lá no final… pra jogar isso aqui pro lado". A tabela passava de
+  // 1170px e as Ações caíam fora da tela; para alcançá-las era preciso descer até a barra
+  // de rolagem horizontal, no fim da lista, arrastar, e subir de novo — com a carteira
+  // cheia, uma vez por proposta.
+  // A saída que ele mesmo deu: "essas informações aqui você pode tirar, por exemplo essas
+  // de item… pode tirar, por exemplo, segmento e item, pra isso aqui chegar pra cá, pra
+  // ficar tudo dentro de uma página". Saem Segmento (1fr) e Itens (70px); Valor fica — ele
+  // deixou como opcional ("se você quiser também") e é a coluna que ele lê no dia a dia.
+  // O dado não some do sistema: segmento e itens continuam na proposta aberta.
+  const cols = `1.7fr 180px 80px 130px 110px ${verArquivadas ? "300px" : "210px"}`;
+  // Largura mínima: as fixas agora somam 500px (Consultor 180 + Data 80 + Status 130 +
+  // Valor 110) + Ações, e Cliente sozinho se vira com ~280px sem quebrar a razão social em
+  // quatro linhas — sem a coluna Segmento ao lado, ele não disputa mais espaço.
+  // 780px (990 nas Excluídas, que têm quatro botões) cabe inteiro num notebook comum
+  // depois de descontar a sidebar, que é o "tudo dentro de uma página" do pedido. Em tela
+  // mais estreita que isso ainda rola na horizontal dentro do .ies-tablewrap — o desenho
+  // de celular continua o mesmo.
+  const larguraMinima = verArquivadas ? "990px" : "780px";
 
   // Consultores para o select de transferência. Só o gestor: /api/colaboradores é do
   // painel de admin e devolve 403 para o vendedor — pedir a lista sem ser admin seria
@@ -4064,13 +4076,11 @@ function HistoryScreen({
           <div style={{ display: "grid", gridTemplateColumns: cols, minWidth: larguraMinima, padding: "11px 20px", background: "var(--gray-100)", borderBottom: "1px solid var(--gray-200)" }}>
             {[
               { t: "Cliente", a: "left" },
-              { t: "Segmento", a: "left" },
               // Quem lançou, pelo NOME (áudio do Mateus, 02/09/2026). Para o gestor a
               // célula é o select que TRANSFERE a proposta para outro consultor.
               { t: "Consultor", a: "left" },
               { t: "Data", a: "left" },
               { t: "Status", a: "center" },
-              { t: "Itens", a: "center" },
               { t: "Valor", a: "right" },
               { t: "Ações", a: "right" },
             ].map((h, i) => (
@@ -4088,7 +4098,6 @@ function HistoryScreen({
                 hover={{ background: "var(--gray-50)" }}
               >
                 <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--gray-900)" }}>{p.cliente}</div>
-                <div style={{ fontSize: "13px", color: "var(--gray-500)" }}>{p.segmento ? segmentosLegiveis(p.segmento) : "—"}</div>
                 {/* Consultor dono da proposta. Para o vendedor é leitura (o nome de quem
                     lançou); para o gestor é o select que TRANSFERE — e a transferência
                     troca também o consultor que assina a capa do PDF. */}
@@ -4132,8 +4141,15 @@ function HistoryScreen({
                     <span style={{ padding: "3px 10px", borderRadius: "999px", fontSize: "11.5px", fontWeight: 600, background: su.bg, color: su.fg, textAlign: "center" }}>{su.label}</span>
                   )}
                 </div>
-                <div style={{ textAlign: "center", fontSize: "13px", color: "var(--gray-500)" }}>{p.qtdItens} itens</div>
-                <div style={{ textAlign: "right", fontSize: "14px", fontWeight: 700, color: "var(--gray-900)" }}>{fmt(Number(p.total) || 0)}</div>
+                {/* Quantidade de itens saiu da tabela (vídeo do Mateus, 19/09/2026) para as
+                    Ações caberem na tela. Vai no title do valor: quem precisar do número
+                    passa o mouse, sem custar uma coluna. */}
+                <div
+                  title={`${p.qtdItens} ${p.qtdItens === 1 ? "item" : "itens"}`}
+                  style={{ textAlign: "right", fontSize: "14px", fontWeight: 700, color: "var(--gray-900)" }}
+                >
+                  {fmt(Number(p.total) || 0)}
+                </div>
                 <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end" }}>
                   <button
                     onClick={() => onReabrir(p.id)}
