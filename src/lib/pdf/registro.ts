@@ -18,6 +18,23 @@ import { pdfDeHtml } from "./render";
 
 // A marca do documento acompanha a da proposta (template.ts), para o cliente receber as
 // duas coisas com a mesma cara.
+
+/**
+ * Logo da ficha: Indeba EXPRESS, não a institucional.
+ *
+ * A ficha nasceu (10/09/2026) apontando para /marca/indeba-logo.png — a marca da indústria,
+ * "Indeba · Química e Soluções em Higiene". Mateus cobrou em 19/09/2026: "ainda está saindo
+ * a logo da Indeba errada, a mesma do início, a da identidade visual Indeba".
+ *
+ * A divisão é essa: a institucional só assina a PROPOSTA COMERCIAL, que é o documento da
+ * indústria (render.ts, case "comercial"). Todo o resto que sai do sistema — orçamento,
+ * consolidada, implantação e esta ficha — assina Indeba Express.
+ *
+ * Fica como constante, e não solta na rota, porque é decisão de marca: quem for trocar
+ * tropeça no teste em tests/unit/registro-pdf.test.ts antes de a ficha chegar ao cliente.
+ */
+export const LOGO_FICHA = "/marca/indeba-express-logo.png";
+
 const NAVY = "#0C355E";
 const LARANJA = "#F58220";
 const CINZA = "#6B7280";
@@ -77,7 +94,7 @@ export function fichaHtml(ficha: Ficha, logo: string): string {
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"/><style>${css()}</style></head>
   <body>
     <header class="topo">
-      ${logo ? `<img class="logo" src="${logo}" alt="Indeba"/>` : `<div class="marca">INDEBA</div>`}
+      ${logo ? `<img class="logo" src="${logo}" alt="Indeba Express"/>` : `<div class="marca">INDEBA EXPRESS</div>`}
     </header>
     <div class="pg">
       <div class="tit-linha">
@@ -100,7 +117,10 @@ function css(): string {
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; color: #25303f; font-size: 12px; -webkit-font-smoothing: antialiased; }
 .topo { padding: 6mm 14mm 4mm; border-bottom: 2px solid ${LARANJA}; }
-.topo .logo { width: 34mm; display: block; }
+/* 38mm: a logo Express é um lockup deitado (2,12:1) contra 1,44:1 da institucional que
+   estava aqui. Na mesma largura de antes ela encolheria 7mm de altura e sumiria ao lado
+   do filete laranja — a largura maior devolve o peso que o cabeçalho tinha. */
+.topo .logo { width: 38mm; display: block; }
 .topo .marca { color: ${NAVY}; font-size: 20px; font-weight: 800; letter-spacing: 2px; }
 .pg { padding: 10mm 14mm 0; }
 

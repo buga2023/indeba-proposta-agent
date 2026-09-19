@@ -3,7 +3,7 @@ import { usuarioAtual } from "@/lib/auth-db";
 import { fichaDaVisita } from "@/lib/ferramentas-tecnicas";
 import { fichaDaProspeccao, fichaDaSolicitacao } from "@/lib/ferramentas-comerciais";
 import { dataUri } from "@/lib/pdf/render";
-import { nomeArquivo, pdfDaFicha, type Ficha } from "@/lib/pdf/registro";
+import { nomeArquivo, pdfDaFicha, LOGO_FICHA, type Ficha } from "@/lib/pdf/registro";
 import { respostaErro } from "@/lib/erro";
 import type { SessaoUsuario } from "@/lib/auth";
 
@@ -39,7 +39,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ tipo
   try {
     const dados = await ficha.buscar(usuario, id);
     if (!dados) return NextResponse.json({ erro: `${ficha.oQue} não encontrada.` }, { status: 404 });
-    const pdf = await pdfDaFicha(dados, dataUri("/marca/indeba-logo.png"));
+    // Qual logo entra está em LOGO_FICHA, com o porquê (Mateus, 19/09/2026).
+    const pdf = await pdfDaFicha(dados, dataUri(LOGO_FICHA));
     // `inline` para abrir no visualizador do navegador, de onde a pessoa salva ou manda
     // pelo WhatsApp — mesmo desenho de /api/comodatos/<id>/pdf.
     return new NextResponse(new Uint8Array(pdf), {

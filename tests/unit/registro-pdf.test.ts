@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { nomeArquivo } from "@/lib/pdf/registro";
+import { nomeArquivo, fichaHtml, LOGO_FICHA } from "@/lib/pdf/registro";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { dataBr, dataHoraBr } from "@/lib/datas";
 import { ipDoRequest } from "@/lib/acessos";
 
@@ -64,5 +66,47 @@ describe("ipDoRequest — origem do acesso atrás do proxy", () => {
   it("devolve null quando nenhum cabeçalho veio", () => {
     expect(ipDoRequest(req({}))).toBeNull();
     expect(ipDoRequest(req({ "x-forwarded-for": "" }))).toBeNull();
+  });
+});
+
+// Marca da ficha (Mateus, 19/09/2026): "ainda está saindo a logo da Indeba errada, a mesma
+// do início, a da identidade visual Indeba". A ficha vai para o CLIENTE — sair com a marca
+// da indústria em vez da Indeba Express é erro que chega na mão dele, não bug interno.
+describe("LOGO_FICHA — a ficha assina Indeba Express", () => {
+  it("usa a logo Express, não a institucional", () => {
+    expect(LOGO_FICHA).toBe("/marca/indeba-express-logo.png");
+  });
+
+  // O arquivo errado tem nome parecido: indeba-logo.png vs indeba-express-logo.png.
+  it("não é a institucional (indeba-logo.png)", () => {
+    expect(LOGO_FICHA).not.toBe("/marca/indeba-logo.png");
+  });
+
+  it("o arquivo existe em public/", () => {
+    expect(existsSync(join(process.cwd(), "public", LOGO_FICHA))).toBe(true);
+  });
+});
+
+describe("fichaHtml — a logo entra no documento", () => {
+  const ficha = {
+    titulo: "Relatório de Visita de Rotina",
+    cliente: "Frigorífico Boa Vista",
+    campos: [],
+    blocos: [],
+    fotos: [],
+    registradoPor: "João",
+    registradoEm: "16/09/2026 às 14:30",
+  };
+
+  it("embute a logo recebida e a identifica como Indeba Express", () => {
+    const html = fichaHtml(ficha, "data:image/png;base64,XYZ");
+    expect(html).toContain('src="data:image/png;base64,XYZ"');
+    expect(html).toContain('alt="Indeba Express"');
+  });
+
+  // Sem logo o cabeçalho cai no texto — que também não pode voltar a dizer só "INDEBA".
+  it("o fallback de texto também assina Express", () => {
+    const html = fichaHtml(ficha, "");
+    expect(html).toContain("INDEBA EXPRESS");
   });
 });
