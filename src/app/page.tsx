@@ -1048,7 +1048,12 @@ export default function Home() {
               itens ficam só com o recorte: Comercial e Técnico. Os títulos das telas, os
               cards do Dashboard e a paleta ⌘K continuam com o nome completo — lá não há
               cabeçalho repetindo, e mudar a paleta quebraria a busca por "Ferramentas". */}
-          <div className="ies-side-text" style={navSection}>Ferramentas</div>
+          {/* Áudio do Mateus (18/09/2026): "aí em ferramentas, botar Ferramentas Comerciais
+              e Ferramentas Técnicas" — ele desfez o encurtamento de 10/09. Os itens voltam
+              ao nome inteiro; o grupo volta a ser MÓDULOS, como na foto original que ele
+              mandou em 21/08, senão "Ferramentas" apareceria três vezes em três linhas —
+              que foi exatamente a reclamação que gerou o pedido de 10/09. */}
+          <div className="ies-side-text" style={navSection}>Módulos</div>
           {/* As DUAS partes da foto do bloco do Mateus (21/08/2026): Ferramentas Comerciais
               (novas prospecções, visitas de rotina, solicitações comerciais) e Ferramentas
               Técnicas (visitas de rotina, contratos e comodatos com PDF, estoque). */}
@@ -1058,14 +1063,14 @@ export default function Home() {
               <rect x="2.5" y="4.5" width="12" height="9" rx="1.5" />
               <path d="M2.5 8.5h12" />
             </svg>
-            Comercial
+            Ferramentas Comerciais
           </Hoverable>
           <Hoverable eager base={navItemStyle(["ferramentas"])} hover={navHover} onClick={() => irPara("ferramentas")} title="Ferramentas Técnicas — visitas de rotina, contratos e estoque de comodatos">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M2.5 5.5l6-3 6 3v6l-6 3-6-3z" />
               <path d="M2.5 5.5l6 3 6-3M8.5 8.5v6" />
             </svg>
-            Técnico
+            Ferramentas Técnicas
           </Hoverable>
 
           {/* Configurações é o painel do gestor: e-mails de cobrança, GESTOR_EMAIL, cadastro

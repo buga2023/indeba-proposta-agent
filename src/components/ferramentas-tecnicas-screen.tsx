@@ -4,6 +4,10 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato, AnexoInfo, TipoRegistroAnexo } from "@/lib/contracts";
 import { BotaoPdf } from "@/components/ui/botao-pdf";
 import { encolherFoto } from "@/components/form-produto";
+import { FILTRO_VAZIO, filtroAtivo, passaNoFiltro, contagem, type FiltroRegistros } from "@/lib/filtro-registros";
+
+// Re-exportados para a tela Comercial, que já importa o resto das Ferramentas daqui.
+export { FILTRO_VAZIO, passaNoFiltro, contagem, type FiltroRegistros };
 
 /**
  * Ferramentas Técnicas (áudio do Mateus 21/08/2026 + foto do bloco, que dá os rótulos),
@@ -97,6 +101,126 @@ export const fmtData = (iso: string) => {
   const [a, m, d] = iso.split("-");
   return a && m && d ? `${d}/${m}/${a}` : iso;
 };
+
+/* ═══════════ Filtros dos registros (áudio do Mateus com o João, 19/09/2026) ═══════════
+   A regra do filtro mora em @/lib/filtro-registros — aqui ficam só os campos na tela. */
+const filtroCampo = { ...inputStyle, marginTop: "4px", padding: "7px 11px", fontSize: "13px" } as const;
+const filtroRotulo = { fontSize: "11.5px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".3px" } as const;
+
+export function BarraFiltros({
+  filtro,
+  setFiltro,
+  rotuloTermo,
+  placeholderTermo,
+  comPeriodo = true,
+}: {
+  filtro: FiltroRegistros;
+  setFiltro: (f: FiltroRegistros) => void;
+  rotuloTermo: string;
+  placeholderTermo: string;
+  comPeriodo?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: "10px",
+        flexWrap: "wrap",
+        alignItems: "flex-end",
+        background: "var(--gray-50, #f9fafb)",
+        border: "1px solid var(--gray-200)",
+        borderRadius: "12px",
+        padding: "10px 12px",
+      }}
+    >
+      <label style={{ ...filtroRotulo, display: "flex", flexDirection: "column", flex: 2, minWidth: "180px" }}>
+        {rotuloTermo}
+        <input
+          type="search"
+          value={filtro.termo}
+          placeholder={placeholderTermo}
+          onChange={(e) => setFiltro({ ...filtro, termo: e.target.value })}
+          style={filtroCampo}
+        />
+      </label>
+      {comPeriodo && (
+        <>
+          <label style={{ ...filtroRotulo, display: "flex", flexDirection: "column", flex: 1, minWidth: "140px" }}>
+            De
+            <input type="date" value={filtro.de} onChange={(e) => setFiltro({ ...filtro, de: e.target.value })} style={filtroCampo} />
+          </label>
+          <label style={{ ...filtroRotulo, display: "flex", flexDirection: "column", flex: 1, minWidth: "140px" }}>
+            Até
+            <input type="date" value={filtro.ate} onChange={(e) => setFiltro({ ...filtro, ate: e.target.value })} style={filtroCampo} />
+          </label>
+        </>
+      )}
+      {filtroAtivo(filtro) && (
+        <button type="button" onClick={() => setFiltro(FILTRO_VAZIO)} style={{ ...botaoEditar, padding: "7px 13px" }}>
+          Limpar
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* Recolher (mesmo áudio) — João: "pode ficar em aba, se você clica e abre, não precisa
+   estar assim, abertão". O cabeçalho continua visível (data, cliente, status): é por ele
+   que se varre a lista; o corpo só abre no clique. O chevron é um botão à parte porque a
+   linha do cabeçalho já tem PDF/Editar/Excluir — clicar neles não pode abrir o card. */
+export function BotaoRecolher({ aberto, onClick, rotulo }: { aberto: boolean; onClick: () => void; rotulo: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={aberto}
+      aria-label={`${aberto ? "Recolher" : "Abrir"} ${rotulo}`}
+      title={aberto ? "Recolher" : "Abrir"}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "22px",
+        height: "22px",
+        padding: 0,
+        flex: "none",
+        borderRadius: "6px",
+        border: "1px solid var(--gray-200)",
+        background: "white",
+        color: "var(--gray-500)",
+        cursor: "pointer",
+      }}
+    >
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ transform: aberto ? "rotate(90deg)" : "none", transition: "transform .15s" }}>
+        <path d="M4 2l4 4-4 4" />
+      </svg>
+    </button>
+  );
+}
+
+/** Conjunto de ids abertos. Começa vazio: a lista nasce recolhida, que é o pedido. */
+export function useRecolhiveis() {
+  const [abertos, setAbertos] = useState<Set<string>>(new Set());
+  const alternar = (id: string) =>
+    setAbertos((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  return { abertos, alternar };
+}
+
+export function SemResultado({ aoLimpar }: { aoLimpar: () => void }) {
+  return (
+    <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>
+      Nenhum registro bate com o filtro.{" "}
+      <button type="button" onClick={aoLimpar} style={{ background: "none", border: "none", padding: 0, color: "var(--blue-600)", fontWeight: 600, cursor: "pointer", fontSize: "14px" }}>
+        Limpar filtro
+      </button>
+    </div>
+  );
+}
 
 export function FerramentasTecnicasScreen() {
   const [aba, setAba] = useState<Aba>("visitas");
@@ -686,6 +810,11 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
   // Aba Excluídos (só o gestor exclui/restaura).
   const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
 
+  // Filtro por cliente + período e cards recolhidos (áudio com o João, 19/09/2026).
+  const [filtro, setFiltro] = useState<FiltroRegistros>(FILTRO_VAZIO);
+  const { abertos, alternar } = useRecolhiveis();
+  const visitasFiltradas = visitas.filter((v) => passaNoFiltro(filtro, v.cliente, v.data));
+
   // Status resolvido/não resolvido é só da visita TÉCNICA (áudio do Mateus, 25/08/2026:
   // "isso aqui é uma visita de rotina… ferramenta comercial, não precisa").
   const comStatus = area === "tecnica";
@@ -946,18 +1075,26 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
-            Todas as visitas · {visitas.length}
+            Todas as visitas · {contagem(visitasFiltradas.length, visitas.length, filtro)}
           </div>
           {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
+        {visitas.length > 0 && (
+          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Cliente" placeholderTermo="Buscar por cliente…" />
+        )}
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && visitas.length === 0 && <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhuma visita registrada ainda.</div>}
-        {visitas.map((v) => {
+        {!carregando && visitas.length > 0 && visitasFiltradas.length === 0 && <SemResultado aoLimpar={() => setFiltro(FILTRO_VAZIO)} />}
+        {visitasFiltradas.map((v) => {
           const st = STATUS_VISITA[v.status];
           const emEdicao = editandoId === v.id;
+          // Em edição o card fica aberto à força — recolher um formulário preenchido
+          // esconderia o que a pessoa está digitando.
+          const aberto = emEdicao || abertos.has(v.id);
           return (
             <div key={v.id} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "14px 18px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                {!emEdicao && <BotaoRecolher aberto={aberto} onClick={() => alternar(v.id)} rotulo={`visita de ${fmtData(v.data)} em ${v.cliente}`} />}
                 {comStatus && (
                   <span style={{ fontWeight: 700, fontSize: "12px", padding: "3px 9px", borderRadius: "999px", color: st.cor, background: st.bg }}>{st.label}</span>
                 )}
@@ -1042,6 +1179,7 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
                   </div>
                 </div>
               ) : (
+                aberto && (
                 <>
               <div style={{ fontSize: "13px", color: "var(--gray-700)", marginTop: "6px" }}>
                 Recebeu: <b>{v.quemRecebeu}</b>
@@ -1051,8 +1189,9 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
                 <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "4px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{v.observacao}</div>
               )}
                 </>
+                )
               )}
-              {!emEdicao && (v.fotos.length > 0 || v.temDocumento) && (
+              {!emEdicao && aberto && (v.fotos.length > 0 || v.temDocumento) && (
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
                   {v.fotos.map((fotoId) => (
                     <a key={fotoId} href={`/api/visitas/${encodeURIComponent(v.id)}/fotos/${encodeURIComponent(fotoId)}`} target="_blank" rel="noreferrer">
@@ -1110,6 +1249,11 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [ed, setEd] = useState({ cliente: "", comodatos: "", observacoes: "" });
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
+
+  // Filtro (áudio com o João, 19/09/2026). Sem período: "os contratos é só botar para
+  // pesquisar para o cliente" — contrato não tem data de visita, vale enquanto vale.
+  const [filtro, setFiltro] = useState<FiltroRegistros>(FILTRO_VAZIO);
+  const contratosFiltrados = contratos.filter((c) => passaNoFiltro(filtro, c.cliente));
 
   async function carregar() {
     try {
@@ -1277,13 +1421,17 @@ function AbaContratos({ setErro, setSouGestor, souGestor }: AbaProps) {
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
-            Todos os contratos · {contratos.length}
+            Todos os contratos · {contagem(contratosFiltrados.length, contratos.length, filtro)}
           </div>
           {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
+        {contratos.length > 0 && (
+          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Cliente" placeholderTermo="Buscar por cliente…" comPeriodo={false} />
+        )}
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && contratos.length === 0 && <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhum contrato cadastrado ainda.</div>}
-        {contratos.map((c) => {
+        {!carregando && contratos.length > 0 && contratosFiltrados.length === 0 && <SemResultado aoLimpar={() => setFiltro(FILTRO_VAZIO)} />}
+        {contratosFiltrados.map((c) => {
           const estaAberto = aberto === c.id;
           return (
             <div key={c.id} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", overflow: "hidden" }}>

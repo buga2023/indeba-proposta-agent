@@ -18,6 +18,14 @@ import {
   botaoEditar,
   mensagemErro,
   fmtData,
+  BarraFiltros,
+  BotaoRecolher,
+  SemResultado,
+  contagem,
+  passaNoFiltro,
+  useRecolhiveis,
+  FILTRO_VAZIO,
+  type FiltroRegistros,
   type AbaProps,
 } from "@/components/ferramentas-tecnicas-screen";
 
@@ -148,6 +156,13 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   // Aba Excluídos (áudio do Mateus, 25/08/2026): restaurar ou excluir definitivamente.
   const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
+
+  // Filtro + recolher (áudio com o João, 19/09/2026): "na parte do comercial, dos registros
+  // de rotina e de prospecções, a mesma coisa que o João fez lá no outro". Aqui o "cliente"
+  // do filtro é a empresa prospectada, que é o nome que a aba usa.
+  const [filtro, setFiltro] = useState<FiltroRegistros>(FILTRO_VAZIO);
+  const { abertos, alternar } = useRecolhiveis();
+  const relatoriosFiltrados = relatorios.filter((p) => passaNoFiltro(filtro, p.empresa, p.data));
 
   async function carregar() {
     try {
@@ -337,19 +352,25 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
-            Todas as prospecções · {relatorios.length}
+            Todas as prospecções · {contagem(relatoriosFiltrados.length, relatorios.length, filtro)}
           </div>
           {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
+        {relatorios.length > 0 && (
+          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Empresa" placeholderTermo="Buscar por empresa…" />
+        )}
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && relatorios.length === 0 && (
           <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhuma prospecção registrada ainda.</div>
         )}
-        {relatorios.map((p) => {
+        {!carregando && relatorios.length > 0 && relatoriosFiltrados.length === 0 && <SemResultado aoLimpar={() => setFiltro(FILTRO_VAZIO)} />}
+        {relatoriosFiltrados.map((p) => {
           const emEdicao = editandoId === p.id;
+          const aberto = emEdicao || abertos.has(p.id);
           return (
             <div key={p.id} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "14px 18px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                {!emEdicao && <BotaoRecolher aberto={aberto} onClick={() => alternar(p.id)} rotulo={`prospecção em ${p.empresa}`} />}
                 <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)" }}>
                   {fmtData(p.data)}
                   {p.horario ? ` às ${p.horario}` : ""}
@@ -423,6 +444,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                   </div>
                 </div>
               ) : (
+                aberto && (
                 <>
                   {(p.contato || p.telefone) && (
                     <div style={{ fontSize: "13px", color: "var(--gray-700)", marginTop: "6px" }}>
@@ -439,6 +461,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
                   )}
                   <BlocoAnexos tipo="prospeccao" registroId={p.id} anexos={p.anexos} editavel={false} aoMudar={carregar} setErro={setErro} />
                 </>
+                )
               )}
             </div>
           );
@@ -471,6 +494,12 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [ed, setEd] = useState({ tipo: "analise_agua_tecidos" as TipoSolicitacaoComercial, cliente: "", observacao: "" });
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
+
+  // Filtro (áudio com o João, 19/09/2026 — "só padronizar mesmo"). A solicitação não tem
+  // campo de data própria, então o período recorta pela data do lançamento (criadoEm, que
+  // é ISO: o slice pega o AAAA-MM-DD sem passar por fuso).
+  const [filtro, setFiltro] = useState<FiltroRegistros>(FILTRO_VAZIO);
+  const solicitacoesFiltradas = solicitacoes.filter((s) => passaNoFiltro(filtro, s.cliente, s.criadoEm.slice(0, 10)));
 
   async function carregar() {
     try {
@@ -633,15 +662,19 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".4px" }}>
-            Todas as solicitações · {solicitacoes.length}
+            Todas as solicitações · {contagem(solicitacoesFiltradas.length, solicitacoes.length, filtro)}
           </div>
           {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
+        {solicitacoes.length > 0 && (
+          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Cliente" placeholderTermo="Buscar por cliente…" />
+        )}
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && solicitacoes.length === 0 && (
           <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhuma solicitação ainda.</div>
         )}
-        {solicitacoes.map((s) => {
+        {!carregando && solicitacoes.length > 0 && solicitacoesFiltradas.length === 0 && <SemResultado aoLimpar={() => setFiltro(FILTRO_VAZIO)} />}
+        {solicitacoesFiltradas.map((s) => {
           const atendida = s.status === "atendida";
           return (
             <div key={s.id} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "14px 18px" }}>
