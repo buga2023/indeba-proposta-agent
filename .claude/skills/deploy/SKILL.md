@@ -46,7 +46,7 @@ o pacote), use o JSON e pare no estado final:
 
 ```bash
 npx vercel inspect <url> --json | node .claude/skills/deploy/estado-deploy.mjs
-# imprime: READY | production | indeba-propostas-agent.vercel.app
+# imprime: READY | production | indeba-express.vercel.app
 ```
 
 Use o SCRIPT, não um `node -e` inline: aspas e parênteses do one-liner se perdem no shell
@@ -65,7 +65,7 @@ npx playwright test tests/e2e/producao-smoke.spec.ts tests/e2e/anexos-smoke.spec
 ```
 
 Confirme também que o alias de produção aponta para o deployment novo — `aliases` do JSON acima
-tem que conter `indeba-propostas-agent.vercel.app`.
+tem que conter `indeba-express.vercel.app`.
 
 Telas novas se testam **localmente**, com as rotas de API interceptadas (esta máquina não tem
 Postgres nem Docker):

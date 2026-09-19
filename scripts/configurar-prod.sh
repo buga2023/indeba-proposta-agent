@@ -40,4 +40,4 @@ fi
 
 echo "→ Redeployando produção..."
 vercel --prod --yes
-echo "Pronto. Acesse https://indeba-propostas-agent.vercel.app"
+echo "Pronto. Acesse https://indeba-express.vercel.app"

@@ -23,7 +23,7 @@ repetível. Histórico do bug: `docs/spec-imagem-por-embalagem.md`.
 | Item | Valor |
 |---|---|
 | App local | `pnpm dev` → **http://127.0.0.1:3000** |
-| Produção | https://indeba-propostas-agent.vercel.app |
+| Produção | https://indeba-express.vercel.app |
 | Login | só existe se houver usuários cadastrados (em local fica aberto). Em produção, entrar em `/login` **antes** — o agente não cria conta |
 | Janela | `resize_window` ≥ 1440×900. Abaixo de 760px a sidebar vira gaveta e os passos mudam |
 

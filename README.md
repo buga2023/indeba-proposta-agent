@@ -191,8 +191,8 @@ sai e o prospect fica como estimado.
 
 ## Deploy
 
-Roda na Vercel (projeto `indeba-propostas-agent`,
-https://indeba-propostas-agent.vercel.app). O padrão é subir sem IA — a proposta cai no
+Roda na Vercel (projeto `indeba-express`,
+https://indeba-express.vercel.app). O padrão é subir sem IA — a proposta cai no
 determinístico e os agentes que dependem do modelo ficam indisponíveis. Para ligar a IA em
 produção, o Ollama roda no PC e é exposto por um túnel autenticado (proxy com bearer ou
 Cloudflare Access), com `OLLAMA_BASE_URL` apontando para ele. Vale lembrar que a Vercel

@@ -3,7 +3,7 @@
 Setup atual de produção dos agentes de IA (Financeiro, Contrato, Atendimento/RAG, Feedback).
 Complementa a skill `/deploy-prod` e a memória `agentes-ecossistema` / `deploy-vercel`.
 
-- **App:** https://indeba-propostas-agent.vercel.app · Projeto Vercel `indeba-propostas-agent`
+- **App:** https://indeba-express.vercel.app · Projeto Vercel `indeba-express`
 - **Repo:** github.com/buga2023/indeba-proposta-agent (deploy a partir de `main`)
 
 ## Arquitetura em prod
@@ -85,7 +85,7 @@ build silenciosamente) e `vercel.json` com `{"framework":"nextjs"}`.
 ## Validar produção
 
 ```bash
-P="https://indeba-propostas-agent.vercel.app"; JAR=$(mktemp)
+P="https://indeba-express.vercel.app"; JAR=$(mktemp)
 curl -s -L $P/login | grep -i "<title>"                       # Agente de Proposta — Indeba Express
 curl -s -c $JAR -X POST $P/api/login -H "Content-Type: application/json" \
   -d '{"login":"<user>","senha":"<senha>"}' -o /dev/null -w "login %{http_code}\n"   # 200
