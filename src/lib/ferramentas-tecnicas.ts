@@ -369,11 +369,15 @@ export async function fichaDaVisita(usuario: SessaoUsuario, id: string): Promise
   });
   if (!row) return null;
 
+  // Selo resolvido/não resolvido é só da visita TÉCNICA. Na comercial o campo nem é
+  // selecionável na tela, então o PDF não pode puxar o default do banco (vídeo do
+  // Mateus, 21/09/2026: "ele tá gerando como não resolvido… tem que corrigir").
   const resolvido = row.status === "resolvido";
+  const selo = row.area === "tecnica" ? { texto: resolvido ? "Resolvido" : "Não resolvido", ok: resolvido } : undefined;
   return {
     titulo: "Relatório de Visita de Rotina",
     cliente: row.cliente,
-    selo: { texto: resolvido ? "Resolvido" : "Não resolvido", ok: resolvido },
+    selo,
     campos: [
       { rotulo: "Data", valor: dataBr(row.data) },
       { rotulo: "Horário", valor: row.horario },
