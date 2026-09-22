@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Indeba Express · Planos e regras</title>
+<style>
+:root{--blue:#1257c4;--navy:#0e3a5f;--ink:#0f1b2d;--orange:#f7821b;--orange-soft:#fdf0e3;--bg:#f4f6f9;--muted:#5b6e7d;--line:#e2e8f0;--green:#16a34a;--blue-50:#eaf2fa}
+*{box-sizing:border-box;margin:0;padding:0}
+@page{size:A4;margin:0}
+html,body{background:#fff;font-family:"Segoe UI",system-ui,sans-serif;color:var(--ink);font-size:11.5pt;line-height:1.45}
+.page{width:210mm;min-height:297mm;padding:18mm 16mm 16mm;position:relative;page-break-after:always;break-after:page}
+.page:last-child{page-break-after:auto}
+.cover{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;display:flex;flex-direction:column;justify-content:center}
+.cover img{height:20mm;margin-bottom:14mm;align-self:flex-start}
+.kicker{font-size:9pt;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--orange);margin-bottom:4mm}
+h1{font-size:30pt;line-height:1.05;font-weight:800;letter-spacing:-.02em;max-width:22ch}
+h1 em,h2 em{font-style:normal;color:var(--orange)}
+.cover p{margin-top:6mm;color:#cfe0f3;max-width:60ch;font-size:12pt}
+.cover .rodape{position:absolute;bottom:14mm;left:16mm;right:16mm;display:flex;justify-content:space-between;color:#9fc0e6;font-size:9.5pt}
+h2{font-size:19pt;font-weight:800;letter-spacing:-.015em;line-height:1.1;margin-bottom:5mm}
+h3{font-size:12pt;font-weight:800;margin:6mm 0 2mm}
+p.lead{color:var(--muted);margin-bottom:5mm}
+.planos{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin:4mm 0 6mm}
+.plano{border:1px solid var(--line);border-radius:4mm;padding:5mm 4.5mm;background:#fff;position:relative}
+.plano.destaque{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange)}
+.plano .nome{font-size:9pt;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--blue)}
+.plano.destaque .nome{color:#c25d05}
+.plano .preco{font-size:21pt;font-weight:800;letter-spacing:-.02em;margin:2mm 0 1mm}
+.plano .preco small{font-size:9pt;font-weight:600;color:var(--muted);letter-spacing:0}
+.plano ul{list-style:none;margin-top:3mm;font-size:9.8pt}
+.plano li{padding:1.4mm 0;border-top:1px solid var(--line);display:flex;gap:2mm;align-items:flex-start}
+.plano li:before{content:"✓";color:var(--green);font-weight:800;flex:none}
+.plano li.n:before{content:"•";color:var(--orange)}
+.selo{display:inline-block;font-size:8pt;font-weight:700;padding:.8mm 2.5mm;border-radius:99px;background:var(--orange-soft);color:#c25d05;margin-left:2mm;vertical-align:middle}
+table{width:100%;border-collapse:collapse;font-size:10pt;margin:2mm 0 5mm}
+th{background:var(--navy);color:#fff;text-align:left;padding:2.6mm 3mm;font-size:8.5pt;letter-spacing:.06em;text-transform:uppercase}
+td{padding:2.4mm 3mm;border-bottom:1px solid var(--line);vertical-align:top}
+td.c,th.c{text-align:center}
+tr:nth-child(even) td{background:#f8fafc}
+.tag{display:inline-block;font-size:8.5pt;font-weight:700;padding:.6mm 2.4mm;border-radius:99px;background:var(--blue-50);color:var(--blue)}
+.tag.o{background:var(--orange-soft);color:#c25d05}.tag.g{background:#e3f6ea;color:var(--green)}.tag.gr{background:#eef2f6;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:4mm}
+.card{border:1px solid var(--line);border-radius:3.5mm;padding:4mm 4.5mm;background:#fff}
+.card h4{font-size:10.5pt;font-weight:800;margin-bottom:1.5mm}
+.card p,.card li{font-size:10pt;color:var(--muted)}
+.card ul{padding-left:4mm}
+.aviso{border-left:3px solid var(--orange);background:var(--orange-soft);padding:3mm 4mm;border-radius:2mm;font-size:10pt;margin:4mm 0}
+.num{position:absolute;bottom:9mm;right:16mm;font-size:8.5pt;color:var(--muted)}
+.marca{position:absolute;bottom:8mm;left:16mm;height:7mm}
+ol.passos{padding-left:5mm;font-size:10.5pt}
+ol.passos li{margin-bottom:2mm}
+</style>
+</head>
+<body>
+
+<section class="page cover">
+  <img src="marca/indeba-express-logo-white.png" alt="Indeba Express">
+  <div class="kicker">Plataforma IA para empresas · tabela comercial</div>
+  <h1>Planos, valores e <em>regras de venda</em>.</h1>
+  <p>Material interno para apresentar o Indeba Express a distribuidoras. Três planos, o que entra em cada um, regras de entrega, prazos e o roteiro de oferta.</p>
+  <div class="rodape"><span>Versão 1 · 22/09/2026 · a partir das definições do Matheus</span><span>indeba-express.vercel.app</span></div>
+</section>
+
+<section class="page">
+  <div class="kicker">1 · Planos</div>
+  <h2>Três planos. A base é a mesma, muda o número de ferramentas.</h2>
+  <p class="lead">Todo plano inclui o módulo de Propostas completo e a base do sistema. O cliente escolhe, na lista da página seguinte, quantas ferramentas o plano permite.</p>
+  <div class="planos">
+    <div class="plano">
+      <div class="nome">Basic</div>
+      <div class="preco">R$ 4.000<small> · implantação</small></div>
+      <ul>
+        <li>Propostas completo</li>
+        <li><b>3 ferramentas</b>&nbsp;à escolha</li>
+        <li>Base do sistema</li>
+        <li class="n">Prazo: 30 dias <span class="selo">a confirmar</span></li>
+      </ul>
+    </div>
+    <div class="plano destaque">
+      <div class="nome">Regular</div>
+      <div class="preco">R$ 7.000<small> · implantação</small></div>
+      <ul>
+        <li>Propostas completo</li>
+        <li><b>4 ferramentas</b>&nbsp;à escolha</li>
+        <li>Base do sistema</li>
+        <li class="n">Prazo: 45 dias <span class="selo">a confirmar</span></li>
+      </ul>
+    </div>
+    <div class="plano">
+      <div class="nome">Premium</div>
+      <div class="preco">R$ 10.000<small> · implantação</small></div>
+      <ul>
+        <li>Propostas completo</li>
+        <li><b>5 ferramentas</b>&nbsp;à escolha</li>
+        <li>Base do sistema</li>
+        <li class="n">Prazo: 60 dias <span class="selo">a confirmar</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>O que é "Propostas completo" (em todos os planos)</h3>
+  <table>
+    <tr><th>Tela</th><th>O que faz</th></tr>
+    <tr><td><b>Proposta de Solução</b></td><td>Montagem da proposta: cliente, condições comerciais, produtos do catálogo com ficha, embalagem e imagem, revisão e PDF no padrão da distribuidora.</td></tr>
+    <tr><td><b>Propostas Feitas</b></td><td>Histórico com consultor, data, status e valor. Busca por cliente ou CNPJ, reabrir, atualizar e gerar de novo.</td></tr>
+    <tr><td><b>Catálogo de Produtos</b></td><td>Consulta por linha, ficha técnica em PDF, embalagens e imagens. Cadastro de produtos pelo gestor.</td></tr>
+  </table>
+
+  <h3>O que é "Base do sistema" (em todos os planos, inclusive o Basic)</h3>
+  <div class="aviso"><b>Regra do Matheus:</b> o básico tem que estar 100%. Botão de voltar, menu no celular, layout, filtros. Nada disso é opcional nem pertence a plano maior.</div>
+  <div class="grid2">
+    <div class="card"><h4>Navegação e uso</h4><ul><li>Dashboard com números do mês e atalhos para os módulos</li><li>Botão Voltar em todas as telas e menu no celular</li><li>Busca rápida de telas e produtos (Ctrl + K)</li><li>Layout responsivo: computador, tablet e celular</li><li>Filtros por cliente e período nas listas</li></ul></div>
+    <div class="card"><h4>Acesso e marca</h4><ul><li>Login com liberação do gestor, perfis de administrador e usuário</li><li>Sessão protegida e limite de tentativas</li><li>PDFs com a logo e as cores da distribuidora</li><li>Chamados de suporte dentro da plataforma</li><li>Hospedagem e domínio próprio <span class="tag o">a definir</span></li></ul></div>
+  </div>
+  <img class="marca" src="marca/indeba-express-logo.png" alt=""><div class="num">02</div>
+</section>
+
+<section class="page">
+  <div class="kicker">2 · Ferramentas</div>
+  <h2>A lista de ferramentas que o cliente escolhe.</h2>
+  <p class="lead">Basic escolhe 3, Regular escolhe 4, Premium escolhe 5. A tabela mostra o que cada uma entrega e um combo sugerido por plano, para facilitar a conversa.</p>
+  <table>
+    <tr><th>#</th><th>Ferramenta</th><th>Módulo</th><th>O que entrega</th><th class="c">Basic</th><th class="c">Regular</th><th class="c">Premium</th></tr>
+    <tr><td>1</td><td><b>Registro de Prospecções</b></td><td>Comercial</td><td>Nova empresa visitada: contato, telefone, observação, fotos e documentos. Ficha em PDF.</td><td class="c">●</td><td class="c">●</td><td class="c">●</td></tr>
+    <tr><td>2</td><td><b>Visitas de Rotina (comercial)</b></td><td>Comercial</td><td>Registro da visita ao cliente da carteira, com fotos e quem recebeu. Ficha em PDF, filtro por cliente e período.</td><td class="c">●</td><td class="c">●</td><td class="c">●</td></tr>
+    <tr><td>3</td><td><b>Solicitações Comerciais</b></td><td>Comercial</td><td>Pedido do vendedor ao técnico: análise de água ou tecidos, visita técnica, amostra para demonstração. Status de andamento.</td><td class="c">○</td><td class="c">●</td><td class="c">●</td></tr>
+    <tr><td>4</td><td><b>Visitas de Rotina (técnica)</b></td><td>Técnico</td><td>Visita do técnico com status resolvido / não resolvido, fotos e documento. Ficha em PDF.</td><td class="c">●</td><td class="c">●</td><td class="c">●</td></tr>
+    <tr><td>5</td><td><b>Contratos e Comodatos</b></td><td>Técnico</td><td>Cliente, equipamentos em comodato, observações e o contrato em PDF anexado. Busca por cliente ou CNPJ.</td><td class="c">○</td><td class="c">○</td><td class="c">●</td></tr>
+    <tr><td>6</td><td><b>Estoque de Comodatos</b></td><td>Técnico</td><td>Controle dos equipamentos cedidos, por cliente, exportável para Excel.</td><td class="c">○</td><td class="c">○</td><td class="c">○</td></tr>
+    <tr><td>7</td><td><b>Gerador de Contratos</b></td><td>Técnico</td><td>Contrato de fornecimento com comodato gerado em PDF a partir de um formulário: razão social, CNPJ, valor, equipamentos, prazo e data.</td><td class="c">○</td><td class="c">○</td><td class="c">●</td></tr>
+  </table>
+  <p style="font-size:9.5pt;color:var(--muted)">● combo sugerido &nbsp;·&nbsp; ○ disponível como escolha do cliente. O cliente pode trocar qualquer item do combo por outro da lista, respeitando a quantidade do plano.</p>
+
+  <h3>Como explicar ao cliente, em uma frase</h3>
+  <div class="grid2">
+    <div class="card"><h4>Basic · R$ 4.000</h4><p>"Sua equipe inteira vendendo com a mesma proposta, mais o registro de prospecções e visitas. Tudo em PDF, com a sua marca."</p></div>
+    <div class="card"><h4>Regular · R$ 7.000</h4><p>"O Basic mais a ponte entre vendedor e técnico: o vendedor pede análise, visita ou amostra e acompanha o andamento."</p></div>
+    <div class="card"><h4>Premium · R$ 10.000</h4><p>"A operação completa: propostas, rotina comercial, rotina técnica, contratos gerados e controlados no mesmo lugar."</p></div>
+    <div class="card"><h4>Ferramenta extra fora do plano</h4><p>Valor por ferramenta adicional e valor de mensalidade de manutenção: <span class="tag o">a definir</span>. Sugestão para discutir: R$ 1.000 por ferramenta extra.</p></div>
+  </div>
+  <img class="marca" src="marca/indeba-express-logo.png" alt=""><div class="num">03</div>
+</section>
+
+<section class="page">
+  <div class="kicker">3 · Regras e prazos</div>
+  <h2>O que está incluído, o que não está e como entregamos.</h2>
+  <div class="grid2">
+    <div class="card"><h4>Incluído em todo plano</h4><ul><li>Cadastro inicial do catálogo da distribuidora (produtos, fichas, embalagens e imagens fornecidos pelo cliente)</li><li>Logo e cores da distribuidora nos PDFs</li><li>Criação dos acessos do time e liberação pelo gestor</li><li>Treinamento de uso: 1 sessão online com a equipe <span class="tag o">a confirmar</span></li><li>Suporte a erros por 30 dias após a entrega <span class="tag o">a confirmar</span></li></ul></div>
+    <div class="card"><h4>Não incluído</h4><ul><li>Digitação de fichas técnicas e catálogo que o cliente não tenha em arquivo</li><li>Ferramentas além da quantidade do plano</li><li>Novas telas ou regras fora da lista da página 3</li><li>Integração com ERP, sistema fiscal ou assinatura digital</li><li>Mensalidade de hospedagem e manutenção após a garantia <span class="tag o">a definir</span></li></ul></div>
+  </div>
+
+  <h3>Prazos de entrega <span class="selo">proposta para o Matheus confirmar</span></h3>
+  <table>
+    <tr><th>Plano</th><th>Prazo</th><th>Conta a partir de</th><th>Depende do cliente</th></tr>
+    <tr><td><b>Basic</b></td><td>30 dias</td><td>Pagamento da entrada e recebimento do catálogo</td><td>Enviar catálogo, logo e lista de usuários em até 5 dias</td></tr>
+    <tr><td><b>Regular</b></td><td>45 dias</td><td>Idem</td><td>Idem, mais o fluxo de solicitações que a equipe usa hoje</td></tr>
+    <tr><td><b>Premium</b></td><td>60 dias</td><td>Idem</td><td>Idem, mais o modelo de contrato e a lista de comodatos atual</td></tr>
+  </table>
+  <p style="font-size:9.5pt;color:var(--muted);margin-top:-3mm;margin-bottom:5mm">O Matheus perguntou se 30 dias é o prazo. Sugestão: 30 dias vale para o Basic, porque o sistema já existe e a implantação é só catálogo e acessos. Regular e Premium têm mais ferramentas para configurar e treinar.</p>
+
+  <h3>Pagamento <span class="selo">sugestão</span></h3>
+  <div class="grid2">
+    <div class="card"><h4>Implantação</h4><p>50% na assinatura, 50% na entrega. Ou à vista com 10% de desconto.</p></div>
+    <div class="card"><h4>Garantia</h4><p>Erros do sistema corrigidos sem custo nos primeiros 30 dias. Mudança de regra ou tela nova é escopo novo.</p></div>
+  </div>
+
+  <h3>Roteiro de oferta (como o Matheus definiu)</h3>
+  <ol class="passos">
+    <li><b>Indeba primeiro.</b> Divulgar o vídeo para a Indeba.</li>
+    <li><b>Distribuidores menores e próximos.</b> Tentar vender 1 plano e usar como caso de sucesso.</li>
+    <li><b>Grupo geral da Indeba</b> (180 pessoas). Oferecer com tudo organizado: vídeo, PDF e esta tabela.</li>
+  </ol>
+  <div class="aviso" style="margin-top:6mm"><b>Pendências para fechar antes do grupo geral:</b> confirmar prazos, valor da ferramenta extra, mensalidade, hospedagem por cliente e as anotações das fotos do Matheus, que ainda não entraram neste documento.</div>
+  <img class="marca" src="marca/indeba-express-logo.png" alt=""><div class="num">04</div>
+</section>
+
+</body>
+</html>
