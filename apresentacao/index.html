@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Indeba Express</title>
+<style>
+:root{--blue:#1257c4;--navy:#0e3a5f;--ink:#0f1b2d;--orange:#f7821b;--orange-soft:#fdf0e3;--bg:#f4f6f9;--card:#fff;--muted:#5b6e7d;--line:#e2e8f0;--green:#16a34a;--blue-50:#eaf2fa}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--navy);font-family:"Geist","Segoe UI",system-ui,sans-serif;color:var(--ink);overflow:hidden}
+.deck{position:relative;width:100vw;height:100vh}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:6vh 8vw;background:var(--bg);opacity:0;visibility:hidden;transform:translateX(24px);transition:opacity .35s,transform .35s,visibility .35s}
+.slide.active{opacity:1;visibility:visible;transform:none}
+.slide.dark{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff}
+.kicker{font-size:clamp(12px,1.1vw,16px);letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--orange);margin-bottom:2vh}
+h1{font-size:clamp(34px,5.4vw,84px);line-height:1.02;font-weight:800;letter-spacing:-.03em}
+h2{font-size:clamp(28px,3.8vw,58px);line-height:1.06;font-weight:800;letter-spacing:-.025em;margin-bottom:3vh;max-width:22ch}
+h2 em,h1 em{font-style:normal;color:var(--orange)}
+p.lead{font-size:clamp(16px,1.7vw,26px);line-height:1.45;color:var(--muted);max-width:48ch;margin-top:3vh}
+.dark p.lead{color:#cfe0f3}
+.logo{height:clamp(40px,7vh,72px);margin-bottom:5vh;align-self:flex-start}
+.grid{display:grid;gap:2vw;margin-top:1vh}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:2.4vh 1.6vw;box-shadow:0 2px 12px rgba(14,58,95,.06)}
+.card .ic{width:clamp(32px,3.2vw,48px);height:clamp(32px,3.2vw,48px);border-radius:12px;background:var(--blue-50);color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:clamp(15px,1.6vw,24px);margin-bottom:1.6vh}
+.card.o .ic{background:var(--orange-soft);color:#c25d05}
+.card h3{font-size:clamp(16px,1.6vw,24px);margin-bottom:.8vh;letter-spacing:-.01em}
+.card p{font-size:clamp(13px,1.15vw,18px);line-height:1.45;color:var(--muted)}
+.dark .card{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);box-shadow:none}
+.dark .card p{color:#cfe0f3}.dark .card .ic{background:rgba(255,255,255,.16);color:#fff}
+.steps{display:flex;gap:1.2vw;align-items:stretch;margin-top:2vh}
+.step{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:2.4vh 1.2vw;position:relative}
+.step b{display:grid;place-items:center;width:clamp(28px,2.6vw,40px);height:clamp(28px,2.6vw,40px);border-radius:50%;background:var(--blue);color:#fff;font-size:clamp(14px,1.3vw,20px);margin-bottom:1.4vh}
+.step:last-child b{background:var(--orange)}
+.step h3{font-size:clamp(15px,1.4vw,21px);margin-bottom:.6vh}
+.step p{font-size:clamp(12px,1.05vw,16px);color:var(--muted);line-height:1.4}
+.tags{display:flex;gap:.6vw;flex-wrap:wrap;margin-top:2.4vh}
+.tag{font-size:clamp(12px,1.05vw,16px);padding:.6vh .9vw;border-radius:99px;font-weight:600;background:var(--blue-50);color:var(--blue)}
+.tag.o{background:var(--orange-soft);color:#c25d05}.tag.g{background:#e3f6ea;color:var(--green)}.tag.gr{background:#eef2f6;color:var(--muted)}
+.big{font-size:clamp(50px,8vw,120px);font-weight:800;color:var(--orange);letter-spacing:-.04em;line-height:1}
+.two{display:grid;grid-template-columns:1.1fr .9fr;gap:4vw;align-items:center}
+ul.check{list-style:none;display:grid;gap:1.6vh;font-size:clamp(15px,1.5vw,23px)}
+ul.check li{display:flex;gap:.8vw;align-items:flex-start;line-height:1.35}
+ul.check li:before{content:"✓";flex:none;width:1.5em;height:1.5em;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-size:.8em;font-weight:800;margin-top:.1em}
+
+/* ---- Telas ilustrativas do sistema ---- */
+.shot{--fs:clamp(10px,.95vw,15px);font-size:var(--fs);margin-top:1vh;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 18px 50px rgba(14,58,95,.16);overflow:hidden;display:grid;grid-template-columns:15.5em 1fr;height:60vh}
+.shot .side{background:var(--navy);color:#fff;padding:1.4em 1.1em;display:flex;flex-direction:column;gap:.35em}
+.shot .side img{height:2.6em;align-self:flex-start;margin-bottom:1.2em}
+.shot .side div{padding:.6em .8em;border-radius:8px;color:#cfe0f3;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shot .side div.on{background:rgba(255,255,255,.14);color:#fff}
+.shot .main{background:var(--bg);padding:1.4em 1.6em;display:flex;flex-direction:column;gap:1em;min-width:0;overflow:hidden}
+.shot .top{display:flex;justify-content:space-between;align-items:center}
+.shot .top h4{font-size:1.5em;font-weight:800;letter-spacing:-.01em}
+.shot .btn{background:var(--orange);color:#fff;font-weight:700;padding:.6em 1.1em;border-radius:8px}
+.shot .btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.shot .box{background:#fff;border:1px solid var(--line);border-radius:10px;padding:1em 1.2em}
+.shot label{display:block;font-size:.85em;font-weight:700;color:var(--muted);margin-bottom:.4em}
+.shot .in{border:1px solid var(--line);border-radius:8px;padding:.65em .9em;background:#fff;color:var(--ink)}
+.shot .in.ph{color:#9aa8b5}
+.shot table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.shot th{font-size:.8em;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:.8em 1em;background:#f8fafc;font-weight:700}
+.shot td{padding:.85em 1em;border-top:1px solid var(--line);white-space:nowrap}
+.shot td.r,.shot th.r{text-align:right;font-weight:700}
+.shot .pill{font-size:.78em;font-weight:700;padding:.3em .7em;border-radius:99px}
+.shot .pill.g{background:#e3f6ea;color:var(--green)}.shot .pill.b{background:var(--blue-50);color:var(--blue)}.shot .pill.gr{background:#eef2f6;color:var(--muted)}.shot .pill.o{background:var(--orange-soft);color:#c25d05}
+.shot .prod{display:flex;gap:1em;align-items:center;background:#fff;border:1px solid var(--line);border-radius:10px;padding:.8em 1em}
+.shot .prod .img{width:3.2em;height:3.2em;border-radius:8px;flex:none}
+.shot .prod b{display:block}.shot .prod small{color:var(--muted)}
+.shot .prod .sp{margin-left:auto;text-align:right}
+.shot .cols{display:grid;grid-template-columns:1.25fr 1fr;gap:1em;min-height:0}
+.shot .stack{display:flex;flex-direction:column;gap:.7em}
+.shot .doc{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:0 8px 24px rgba(14,58,95,.12)}
+.shot .doc .hd{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:1.2em 1.3em}
+.shot .doc .hd img{height:1.8em;margin-bottom:.9em}
+.shot .doc .hd small{display:block;opacity:.75;letter-spacing:.1em;font-size:.75em;text-transform:uppercase}
+.shot .doc .hd b{font-size:1.25em}
+.shot .doc .bd{padding:1em 1.3em;display:grid;gap:.6em}
+.shot .ln{height:.55em;border-radius:99px;background:#e6ecf2}
+.shot .ln.s{width:60%}.shot .ln.o{background:var(--orange);width:30%;height:.7em}
+.shot .photos{display:grid;grid-template-columns:repeat(3,1fr);gap:.6em}
+.shot .photos div{aspect-ratio:4/3;border-radius:8px;background:linear-gradient(135deg,#d7e3ef,#b8cde3)}
+.shot .selo{font-size:.78em;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:.35em .8em;border-radius:99px;background:#e3f6ea;color:var(--green)}
+.shot .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1em}
+.shot .kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:1em 1.2em}
+.shot .kpi small{color:var(--muted);font-weight:700;text-transform:uppercase;font-size:.75em;letter-spacing:.06em}
+.shot .kpi b{display:block;font-size:1.9em;letter-spacing:-.02em;margin-top:.2em}
+.shot .kpi b.o{color:var(--orange)}
+.caption{position:absolute;left:0;right:0;bottom:0;padding:2.2vh 8vw;background:rgba(15,27,45,.82);color:#fff;font-size:clamp(16px,1.6vw,26px);line-height:1.35;text-align:center;font-weight:500;display:none}
+body.video .caption{display:block;padding-bottom:4.5vh}
+body.video .slide{padding-bottom:18vh}
+body.video .shot{height:52vh}
+body.video .num{display:none}
+body.video .nav,body.video .bar{display:none}
+
+.nav{position:fixed;bottom:2.4vh;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:1vw;z-index:9;pointer-events:none}
+.nav button{pointer-events:auto;border:0;background:rgba(15,27,45,.72);color:#fff;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer}
+.nav button:hover{background:var(--orange)}
+.count{pointer-events:auto;background:rgba(15,27,45,.72);color:#fff;padding:.9vh 1.2vw;border-radius:99px;font-size:13px;font-variant-numeric:tabular-nums}
+.bar{position:fixed;top:0;left:0;height:4px;background:var(--orange);transition:width .35s;z-index:9}
+.num{position:absolute;right:3vw;bottom:2.6vh;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.dark .num{color:#9fc0e6}
+@media(max-width:800px){.g3,.g4,.g2,.two,.shot .cols{grid-template-columns:1fr}.steps{flex-direction:column}.slide{overflow:auto;justify-content:flex-start;padding:8vh 6vw 12vh}.shot{height:auto;grid-template-columns:1fr}.shot .side{display:none}}
+@page{size:1280px 720px;margin:0}@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}html,body{overflow:visible;height:auto;background:#fff}.slide{position:relative;opacity:1;visibility:visible;transform:none;height:100vh;page-break-after:always;break-after:page}.nav,.bar,.caption{display:none!important}}
+</style>
+</head>
+<body>
+<div class="bar" id="bar"></div>
+<main class="deck" id="deck">
+
+<section class="slide dark" data-narracao="Este é o Indeba Express: a plataforma que padroniza a proposta comercial e organiza a rotina comercial e técnica da distribuidora, num lugar só.">
+  <img class="logo" src="marca/indeba-express-logo-white.png" alt="Indeba Express">
+  <div class="kicker">Plataforma comercial e técnica para distribuidoras</div>
+  <h1>Toda a sua equipe<br>vendendo com a<br><em>mesma proposta.</em></h1>
+  <p class="lead">Propostas padronizadas, catálogo confiável e a rotina comercial e técnica da distribuidora num só lugar.</p>
+</section>
+
+<section class="slide" data-narracao="Hoje, cada vendedor monta a proposta de um jeito. Perde tempo procurando ficha e imagem, o padrão muda de pessoa para pessoa, e a informação fica espalhada em planilha, e-mail e WhatsApp.">
+  <div class="kicker">O problema</div>
+  <h2>Cada vendedor monta a proposta de um jeito.</h2>
+  <div class="grid g3">
+    <div class="card o"><div class="ic">1</div><h3>Tempo perdido</h3><p>Montar proposta na mão, procurar ficha técnica, embalagem e imagem de cada produto.</p></div>
+    <div class="card o"><div class="ic">2</div><h3>Sem padrão</h3><p>Cada consultor apresenta com layout, texto e argumentos diferentes.</p></div>
+    <div class="card o"><div class="ic">3</div><h3>Informação espalhada</h3><p>Visitas, contratos, comodatos e solicitações ficam em planilhas, e-mails e WhatsApp.</p></div>
+  </div>
+</section>
+
+<section class="slide dark" data-narracao="A resposta é uma plataforma só, com quatro módulos: propostas, catálogo, ferramentas comerciais e ferramentas técnicas.">
+  <div class="kicker">A solução</div>
+  <h2>Uma plataforma que junta <em>proposta, catálogo e rotina</em>.</h2>
+  <div class="grid g4">
+    <div class="card"><div class="ic">✦</div><h3>Propostas</h3><p>Montagem guiada, em PDF padronizado com a sua marca.</p></div>
+    <div class="card"><div class="ic">▤</div><h3>Catálogo</h3><p>Linhas, fichas técnicas e embalagens sempre corretas.</p></div>
+    <div class="card"><div class="ic">☰</div><h3>Ferramentas comerciais</h3><p>Prospecção, visitas e solicitações ao técnico.</p></div>
+    <div class="card"><div class="ic">⚙</div><h3>Ferramentas técnicas</h3><p>Contratos, comodatos e estoque em comodato.</p></div>
+  </div>
+</section>
+
+<section class="slide" data-narracao="Funciona em quatro passos: informe o cliente, escolha os produtos no catálogo, revise os textos e gere o PDF. São três modelos de proposta, sempre com o mesmo padrão visual.">
+  <div class="kicker">Como funciona</div>
+  <h2>Quatro passos, do cliente ao PDF.</h2>
+  <div class="steps">
+    <div class="step"><b>1</b><h3>Informe o cliente</h3><p>O vendedor preenche quem é o cliente e qual a necessidade dele.</p></div>
+    <div class="step"><b>2</b><h3>Escolha os produtos</h3><p>Seleciona no catálogo. Ficha técnica, embalagem e imagem entram sozinhas.</p></div>
+    <div class="step"><b>3</b><h3>Revise e ajuste</h3><p>Textos padrão prontos para editar, com a revisão na própria tela.</p></div>
+    <div class="step"><b>4</b><h3>Gere o PDF</h3><p>Proposta com capa, produtos e fichas prontos para enviar ao cliente.</p></div>
+  </div>
+  <div class="tags"><span class="tag">Orçamento</span><span class="tag">Proposta de Implantação</span><span class="tag">Proposta Comercial</span><span class="tag o">Três modelos, mesmo padrão visual</span></div>
+</section>
+
+<section class="slide" data-narracao="Na montagem, o vendedor informa o cliente e escolhe os produtos. Ficha técnica, embalagem e imagem entram sozinhas, direto do catálogo, e os textos padrão já vêm prontos para ajustar.">
+  <div class="kicker">Na tela · Proposta de Solução</div>
+  <h2>O vendedor escolhe. O catálogo preenche.</h2>
+  <div class="shot">
+    <div class="side"><img src="marca/indeba-express-logo-white.png" alt=""><div class="on">Proposta de Solução</div><div>Propostas Feitas</div><div>Catálogo de Produtos</div><div>Ferramentas Comerciais</div><div>Ferramentas Técnicas</div></div>
+    <div class="main">
+      <div class="top"><h4>Nova proposta · Laticínio Taquipe</h4><span class="btn">Gerar PDF →</span></div>
+      <div class="cols">
+        <div class="stack">
+          <div><label>Cliente</label><div class="in">Laticínio Taquipe · Feira de Santana/BA</div></div>
+          <div><label>Produtos da proposta</label></div>
+          <div class="prod"><div class="img" style="background:#dbe9d6"></div><div><b>Detergente Clorado Alcalino CIP</b><small>Bombona 20 L · diluição 1:100</small></div><div class="sp"><span class="pill g">CATÁLOGO</span></div></div>
+          <div class="prod"><div class="img" style="background:#d6e3f0"></div><div><b>Sanitizante Ácido Peracético</b><small>Galão 5 L · diluição 1:200</small></div><div class="sp"><span class="pill g">CATÁLOGO</span></div></div>
+          <div class="prod"><div class="img" style="background:#f3e6d3"></div><div><b>Sabonete Espuma Neutro</b><small>Refil 800 ml · cx 6</small></div><div class="sp"><span class="pill g">CATÁLOGO</span></div></div>
+          <div class="in ph">＋ Adicionar produto do catálogo…</div>
+        </div>
+        <div class="stack">
+          <div class="box"><label>Texto de apresentação <span class="pill b">PADRÃO · editável</span></label><div style="color:var(--muted);line-height:1.5">A Indeba apresenta uma solução completa de higienização CIP para a linha de laticínios, unindo detergente clorado, sanitização segura e reposição dos banheiros, com suporte técnico e entrega na região.</div></div>
+          <div class="box"><label>Modelo</label><div class="tags" style="margin-top:.2em"><span class="tag gr">Orçamento</span><span class="tag">Proposta de Solução</span><span class="tag gr">Comercial</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-narracao="O PDF sai com capa, uma página rica por produto e as fichas técnicas, no padrão visual da distribuidora. Pronto para enviar ao cliente, sem retrabalho.">
+  <div class="kicker">Na tela · PDF pronto</div>
+  <h2>Sai no padrão da casa.</h2>
+  <div class="shot">
+    <div class="side"><img src="marca/indeba-express-logo-white.png" alt=""><div class="on">Proposta de Solução</div><div>Propostas Feitas</div><div>Catálogo de Produtos</div><div>Ferramentas Comerciais</div><div>Ferramentas Técnicas</div></div>
+    <div class="main">
+      <div class="top"><h4>Proposta pronta · Laticínio Taquipe</h4><span><span class="btn sec" style="margin-right:.6em">Voltar e editar</span><span class="btn">⬇ Baixar PDF</span></span></div>
+      <div class="cols" style="grid-template-columns:1fr 1fr 1fr;align-items:start">
+        <div class="doc"><div class="hd"><img src="marca/indeba-express-logo-white.png" alt=""><small>Proposta de Solução · 2026-0142</small><b>Laticínio Taquipe</b></div><div class="bd"><div class="ln"></div><div class="ln s"></div><div class="ln"></div><div class="ln s"></div><div class="ln o"></div></div></div>
+        <div class="doc"><div class="bd" style="padding-top:1.2em"><div style="display:flex;gap:.8em;align-items:center"><div class="img" style="width:3.6em;height:3.6em;border-radius:8px;background:#dbe9d6;flex:none"></div><div><b>Detergente Clorado Alcalino CIP</b><br><small style="color:var(--muted)">Higienização CIP</small></div></div><div class="ln"></div><div class="ln"></div><div class="ln s"></div><div style="display:flex;gap:.5em"><span class="pill gr">20 L</span><span class="pill gr">50 L</span><span class="pill o">Ficha técnica</span></div><div class="ln o"></div></div></div>
+        <div class="doc"><div class="bd" style="padding-top:1.2em"><b style="color:var(--navy)">Resumo do investimento</b><div class="ln"></div><div class="ln"></div><div class="ln s"></div><div class="ln"></div><div style="display:flex;justify-content:space-between;margin-top:.4em"><small style="color:var(--muted)">Total da proposta</small><b>R$ 598,40</b></div><div class="ln o"></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-narracao="Uma fonte só: o catálogo manda. Ninguém digita nem copia dado de produto. Por isso a proposta não sai com informação errada, seja qual for o vendedor.">
+  <div class="kicker">Confiança</div>
+  <div class="two">
+    <div>
+      <h2>Uma fonte só. <em>O catálogo manda.</em></h2>
+      <p class="lead" style="margin-top:0">Ficha técnica, embalagem e imagem vêm sempre do catálogo. O vendedor não digita nem copia dado de produto, então a proposta não sai com informação errada.</p>
+    </div>
+    <div class="grid" style="gap:1.4vh">
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Ficha técnica</h3><span class="tag g">CATÁLOGO</span></div>
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Embalagem e imagem</h3><span class="tag g">CATÁLOGO</span></div>
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Textos da proposta</h3><span class="tag">PADRÃO</span></div>
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Ajustes do consultor</h3><span class="tag o">MANUAL</span></div>
+    </div>
+  </div>
+  <p class="lead" style="font-size:clamp(13px,1.2vw,18px)">Resultado: toda proposta com o mesmo padrão, em qualquer vendedor.</p>
+</section>
+
+<section class="slide" data-narracao="Todo o histórico fica registrado, com status, cliente e valor. Reabra uma proposta, atualize e gere de novo. E o catálogo fica disponível para consulta por linha, com ficha técnica em PDF.">
+  <div class="kicker">Na tela · Propostas Feitas</div>
+  <h2>Tudo que você vendeu e tudo que você vende.</h2>
+  <div class="shot">
+    <div class="side"><img src="marca/indeba-express-logo-white.png" alt=""><div>Proposta de Solução</div><div class="on">Propostas Feitas</div><div>Catálogo de Produtos</div><div>Ferramentas Comerciais</div><div>Ferramentas Técnicas</div></div>
+    <div class="main">
+      <div class="top"><h4>Propostas Feitas</h4><div class="in ph" style="width:18em">Buscar por cliente ou CNPJ…</div></div>
+      <div class="kpis"><div class="kpi"><small>Propostas no mês</small><b>38</b></div><div class="kpi"><small>Enviadas</small><b class="o">27</b></div><div class="kpi"><small>Valor proposto</small><b>R$ 184 mil</b></div></div>
+      <table>
+        <tr><th>Cliente</th><th>Modelo</th><th>Consultor</th><th>Data</th><th>Status</th><th class="r">Valor</th></tr>
+        <tr><td>Laticínio Taquipe</td><td>Proposta de Solução</td><td>Marcos R.</td><td>18/09</td><td><span class="pill g">Enviada</span></td><td class="r">R$ 4.820,00</td></tr>
+        <tr><td>Restaurante Sabor da Bahia</td><td>Orçamento</td><td>Ana P.</td><td>17/09</td><td><span class="pill g">Enviada</span></td><td class="r">R$ 2.310,00</td></tr>
+        <tr><td>Padaria Pão Nobre</td><td>Proposta Comercial</td><td>Marcos R.</td><td>15/09</td><td><span class="pill gr">Rascunho</span></td><td class="r">R$ 1.240,00</td></tr>
+        <tr><td>Hospital Santa Clara</td><td>Proposta de Solução</td><td>Júlia M.</td><td>14/09</td><td><span class="pill b">Aprovada</span></td><td class="r">R$ 8.150,00</td></tr>
+        <tr><td>Hotel Barra Mar</td><td>Orçamento</td><td>Ana P.</td><td>12/09</td><td><span class="pill g">Enviada</span></td><td class="r">R$ 3.470,00</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="slide dark" data-narracao="O que acontece depois da proposta também está aqui. No comercial: novas prospecções, visitas de rotina com fotos e solicitações ao técnico. No técnico: visitas, contratos, comodatos e o estoque em comodato, exportável para Excel.">
+  <div class="kicker">Rotina comercial e técnica</div>
+  <h2>O que acontece depois da proposta também está aqui.</h2>
+  <div class="grid g3">
+    <div class="card"><div class="ic">☰</div><h3>Comercial</h3><p>Novas prospecções, visitas de rotina com fotos e solicitações: análise de água ou tecidos, visita técnica, amostra para demonstração.</p></div>
+    <div class="card"><div class="ic">⚙</div><h3>Técnico</h3><p>Visitas de rotina, contratos e comodatos com o PDF anexado e controle de estoque em comodato, exportável para Excel.</p></div>
+    <div class="card"><div class="ic">⎙</div><h3>Registros em PDF</h3><p>Visitas e comodatos viram PDF padronizado, com filtro por cliente e período.</p></div>
+  </div>
+</section>
+
+<section class="slide" data-narracao="Cada visita registrada, com fotos e quem recebeu, vira uma ficha em PDF padronizada. E dá para filtrar tudo por cliente e por período.">
+  <div class="kicker">Na tela · Ferramentas</div>
+  <h2>Visita registrada vira ficha em PDF.</h2>
+  <div class="shot">
+    <div class="side"><img src="marca/indeba-express-logo-white.png" alt=""><div>Proposta de Solução</div><div>Propostas Feitas</div><div>Catálogo de Produtos</div><div class="on">Ferramentas Comerciais</div><div>Ferramentas Técnicas</div></div>
+    <div class="main">
+      <div class="top"><h4>Visitas de rotina</h4><span><span class="in ph" style="display:inline-block;margin-right:.6em">Cliente · Período</span><span class="btn">＋ Nova visita</span></span></div>
+      <div class="cols">
+        <div class="box stack">
+          <div style="display:flex;justify-content:space-between;align-items:center"><b>Laticínio Taquipe</b><span class="pill b">18/09 · 09:30</span></div>
+          <div style="color:var(--muted)"><b style="color:var(--ink)">Quem recebeu:</b> Carla (compras) · (75) 9 9812-4410</div>
+          <div style="color:var(--muted);line-height:1.5"><b style="color:var(--ink)">O que foi feito:</b> reposição de dosadores na linha CIP, treinamento da equipe de turno e conferência do estoque em comodato.</div>
+          <div class="photos"><div></div><div></div><div></div></div>
+          <div style="display:flex;gap:.6em"><span class="btn sec">Extrair em PDF</span><span class="btn sec">Editar</span></div>
+        </div>
+        <div class="doc"><div class="hd"><img src="marca/indeba-express-logo-white.png" alt=""><small>Relatório de Visita de Rotina</small><b>Laticínio Taquipe</b></div><div class="bd"><div style="display:flex;gap:.5em;flex-wrap:wrap"><span class="pill gr">Data 18/09</span><span class="pill gr">09:30</span><span class="pill gr">Comercial</span></div><div class="ln"></div><div class="ln"></div><div class="ln s"></div><div class="photos"><div></div><div></div><div></div></div><small style="color:var(--muted)">Registrado por Marcos R. · 18/09/2026 11:02</small></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-narracao="Cada pessoa vê o que precisa ver. O gestor libera o acesso de cada colaborador, há perfis de administrador e de usuário, a sessão é protegida e o suporte acontece por chamados dentro da própria plataforma.">
+  <div class="kicker">Controle e segurança</div>
+  <h2>Cada pessoa vê o que precisa ver.</h2>
+  <div class="two">
+    <ul class="check">
+      <li>Cadastro do colaborador com liberação do gestor antes do primeiro acesso</li>
+      <li>Perfis de administrador e de usuário</li>
+      <li>Configurações e cadastro de produtos restritos ao gestor</li>
+      <li>Sessão protegida e limite de tentativas de acesso</li>
+      <li>Chamados para pedir suporte dentro da própria plataforma</li>
+    </ul>
+    <div class="card"><div class="ic">⌘</div><h3>Ctrl + K</h3><p>Busca rápida por qualquer tela. Menos cliques, mais velocidade para o time.</p></div>
+  </div>
+</section>
+
+<section class="slide dark" data-narracao="O resultado é uma operação que cresce sem perder o padrão: mesma qualidade em toda proposta, rapidez para o vendedor e controle para o gestor.">
+  <div class="kicker">Resultado</div>
+  <h2>Uma operação que <em>cresce sem perder o padrão</em>.</h2>
+  <div class="grid g3">
+    <div class="card"><div class="big" style="font-size:clamp(34px,4.6vw,68px)">Padrão</div><p>Mesma qualidade e mesma marca em toda proposta, de qualquer vendedor.</p></div>
+    <div class="card"><div class="big" style="font-size:clamp(34px,4.6vw,68px)">Rapidez</div><p>Proposta pronta sem montar nada do zero.</p></div>
+    <div class="card"><div class="big" style="font-size:clamp(34px,4.6vw,68px)">Controle</div><p>Histórico, contratos e comodatos num só lugar.</p></div>
+  </div>
+</section>
+
+<section class="slide dark" style="align-items:flex-start" data-narracao="Quer ver funcionando na sua distribuidora? Nós configuramos o catálogo com os seus produtos e liberamos o acesso do seu time. Indeba Express.">
+  <img class="logo" src="marca/indeba-express-logo-white.png" alt="Indeba Express">
+  <div class="kicker">Próximo passo</div>
+  <h1>Quer ver funcionando<br>na <em>sua</em> distribuidora?</h1>
+  <p class="lead">Configuramos o catálogo da sua distribuidora e liberamos o acesso do seu time.<br><strong style="color:#fff">indeba-express.vercel.app</strong></p>
+</section>
+
+</main>
+<div class="nav"><button id="prev" aria-label="Anterior">‹</button><span class="count" id="count"></span><button id="next" aria-label="Próximo">›</button></div>
+<script>
+(function(){
+  var s=[].slice.call(document.querySelectorAll('.slide')),i=0,
+      bar=document.getElementById('bar'),count=document.getElementById('count');
+  s.forEach(function(el,k){
+    var n=document.createElement('span');n.className='num';n.textContent=String(k+1).padStart(2,'0')+' / '+s.length;el.appendChild(n);
+    var c=document.createElement('div');c.className='caption';c.textContent=el.getAttribute('data-narracao')||'';el.appendChild(c);
+  });
+  function go(n){
+    i=Math.max(0,Math.min(s.length-1,n));
+    s.forEach(function(el,k){el.classList.toggle('active',k===i)});
+    bar.style.width=((i+1)/s.length*100)+'%';
+    count.textContent=(i+1)+' / '+s.length;
+    try{history.replaceState(null,'','#'+(i+1))}catch(e){}
+  }
+  window.__go=go;
+  document.addEventListener('keydown',function(e){
+    if(['ArrowRight','PageDown',' ','Enter'].indexOf(e.key)>-1){e.preventDefault();go(i+1)}
+    else if(['ArrowLeft','PageUp','Backspace'].indexOf(e.key)>-1){e.preventDefault();go(i-1)}
+    else if(e.key==='Home')go(0);else if(e.key==='End')go(s.length-1);
+    else if(e.key==='f'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}
+  });
+  document.getElementById('next').onclick=function(){go(i+1)};
+  document.getElementById('prev').onclick=function(){go(i-1)};
+  var x0=null;
+  document.addEventListener('touchstart',function(e){x0=e.touches[0].clientX},{passive:true});
+  document.addEventListener('touchend',function(e){if(x0===null)return;var d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>50)go(d<0?i+1:i-1);x0=null});
+  go((parseInt(location.hash.slice(1),10)||1)-1);
+})();
+</script>
+</body>
+</html>

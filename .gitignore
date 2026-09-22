@@ -113,3 +113,6 @@ Thumbs.db
 test-results/
 playwright-report/
 package-lock.json
+
+# apresentacao: intermediarios do build do video
+apresentacao/.build/
