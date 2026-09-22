@@ -1,0 +1,28 @@
+{
+  "collapse-filter": true,
+  "showTags": false,
+  "showAttachments": false,
+  "colorGroups": [
+    {
+      "query": "path:Sistema",
+      "color": {
+        "a": 1,
+        "rgb": 1201092
+      }
+    },
+    {
+      "query": "path:Comercial",
+      "color": {
+        "a": 1,
+        "rgb": 16220699
+      }
+    },
+    {
+      "query": "path:Histórico",
+      "color": {
+        "a": 1,
+        "rgb": 1483172
+      }
+    }
+  ]
+}
