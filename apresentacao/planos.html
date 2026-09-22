@@ -7,8 +7,8 @@
 :root{--blue:#1257c4;--navy:#0e3a5f;--ink:#0f1b2d;--orange:#f7821b;--orange-soft:#fdf0e3;--bg:#f4f6f9;--muted:#5b6e7d;--line:#e2e8f0;--green:#16a34a;--blue-50:#eaf2fa}
 *{box-sizing:border-box;margin:0;padding:0}
 @page{size:A4;margin:0}
-html,body{background:#fff;font-family:"Segoe UI",system-ui,sans-serif;color:var(--ink);font-size:11.5pt;line-height:1.45}
-.page{width:210mm;min-height:297mm;padding:18mm 16mm 16mm;position:relative;page-break-after:always;break-after:page}
+html,body{background:#fff;font-family:"Segoe UI",system-ui,sans-serif;color:var(--ink);font-size:10.5pt;line-height:1.4}
+.page{width:210mm;height:297mm;overflow:hidden;padding:15mm 15mm 16mm;position:relative;page-break-after:always;break-after:page}
 .page:last-child{page-break-after:auto}
 .cover{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;display:flex;flex-direction:column;justify-content:center}
 .cover img{height:20mm;margin-bottom:14mm;align-self:flex-start}
@@ -17,7 +17,7 @@ h1{font-size:30pt;line-height:1.05;font-weight:800;letter-spacing:-.02em;max-wid
 h1 em,h2 em{font-style:normal;color:var(--orange)}
 .cover p{margin-top:6mm;color:#cfe0f3;max-width:60ch;font-size:12pt}
 .cover .rodape{position:absolute;bottom:14mm;left:16mm;right:16mm;display:flex;justify-content:space-between;color:#9fc0e6;font-size:9.5pt}
-h2{font-size:19pt;font-weight:800;letter-spacing:-.015em;line-height:1.1;margin-bottom:5mm}
+h2{font-size:17pt;font-weight:800;letter-spacing:-.015em;line-height:1.1;margin-bottom:5mm}
 h3{font-size:12pt;font-weight:800;margin:6mm 0 2mm}
 p.lead{color:var(--muted);margin-bottom:5mm}
 .planos{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin:4mm 0 6mm}
@@ -32,9 +32,9 @@ p.lead{color:var(--muted);margin-bottom:5mm}
 .plano li:before{content:"✓";color:var(--green);font-weight:800;flex:none}
 .plano li.n:before{content:"•";color:var(--orange)}
 .selo{display:inline-block;font-size:8pt;font-weight:700;padding:.8mm 2.5mm;border-radius:99px;background:var(--orange-soft);color:#c25d05;margin-left:2mm;vertical-align:middle}
-table{width:100%;border-collapse:collapse;font-size:10pt;margin:2mm 0 5mm}
+table{width:100%;border-collapse:collapse;font-size:9.2pt;margin:2mm 0 4mm}
 th{background:var(--navy);color:#fff;text-align:left;padding:2.6mm 3mm;font-size:8.5pt;letter-spacing:.06em;text-transform:uppercase}
-td{padding:2.4mm 3mm;border-bottom:1px solid var(--line);vertical-align:top}
+td{padding:1.8mm 2.5mm;border-bottom:1px solid var(--line);vertical-align:top}
 td.c,th.c{text-align:center}
 tr:nth-child(even) td{background:#f8fafc}
 .tag{display:inline-block;font-size:8.5pt;font-weight:700;padding:.6mm 2.4mm;border-radius:99px;background:var(--blue-50);color:var(--blue)}
@@ -42,7 +42,7 @@ tr:nth-child(even) td{background:#f8fafc}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:4mm}
 .card{border:1px solid var(--line);border-radius:3.5mm;padding:4mm 4.5mm;background:#fff}
 .card h4{font-size:10.5pt;font-weight:800;margin-bottom:1.5mm}
-.card p,.card li{font-size:10pt;color:var(--muted)}
+.card p,.card li{font-size:9.5pt;color:var(--muted)}
 .card ul{padding-left:4mm}
 .aviso{border-left:3px solid var(--orange);background:var(--orange-soft);padding:3mm 4mm;border-radius:2mm;font-size:10pt;margin:4mm 0}
 .num{position:absolute;bottom:9mm;right:16mm;font-size:8.5pt;color:var(--muted)}
@@ -131,24 +131,30 @@ ol.passos li{margin-bottom:2mm}
   </table>
   <p style="font-size:9.5pt;color:var(--muted)">● combo sugerido &nbsp;·&nbsp; ○ disponível como escolha do cliente. O cliente pode trocar qualquer item do combo por outro da lista, respeitando a quantidade do plano.</p>
 
-  <h3>Como explicar ao cliente, em uma frase</h3>
+  <img class="marca" src="marca/indeba-express-logo.png" alt=""><div class="num">03</div>
+</section>
+
+<section class="page">
+  <div class="kicker">3 · Argumento de venda</div>
+  <h2>Como explicar cada plano ao cliente.</h2>
   <div class="grid2">
     <div class="card"><h4>Basic · R$ 4.000</h4><p>"Sua equipe inteira vendendo com a mesma proposta, mais o registro de prospecções e visitas. Tudo em PDF, com a sua marca."</p></div>
     <div class="card"><h4>Regular · R$ 7.000</h4><p>"O Basic mais a ponte entre vendedor e técnico: o vendedor pede análise, visita ou amostra e acompanha o andamento."</p></div>
     <div class="card"><h4>Premium · R$ 10.000</h4><p>"A operação completa: propostas, rotina comercial, rotina técnica, contratos gerados e controlados no mesmo lugar."</p></div>
     <div class="card"><h4>Ferramenta extra fora do plano</h4><p>Valor por ferramenta adicional e valor de mensalidade de manutenção: <span class="tag o">a definir</span>. Sugestão para discutir: R$ 1.000 por ferramenta extra.</p></div>
   </div>
-  <img class="marca" src="marca/indeba-express-logo.png" alt=""><div class="num">03</div>
-</section>
-
-<section class="page">
-  <div class="kicker">3 · Regras e prazos</div>
-  <h2>O que está incluído, o que não está e como entregamos.</h2>
+  <h3>O que está incluído e o que não está</h3>
   <div class="grid2">
     <div class="card"><h4>Incluído em todo plano</h4><ul><li>Cadastro inicial do catálogo da distribuidora (produtos, fichas, embalagens e imagens fornecidos pelo cliente)</li><li>Logo e cores da distribuidora nos PDFs</li><li>Criação dos acessos do time e liberação pelo gestor</li><li>Treinamento de uso: 1 sessão online com a equipe <span class="tag o">a confirmar</span></li><li>Suporte a erros por 30 dias após a entrega <span class="tag o">a confirmar</span></li></ul></div>
     <div class="card"><h4>Não incluído</h4><ul><li>Digitação de fichas técnicas e catálogo que o cliente não tenha em arquivo</li><li>Ferramentas além da quantidade do plano</li><li>Novas telas ou regras fora da lista da página 3</li><li>Integração com ERP, sistema fiscal ou assinatura digital</li><li>Mensalidade de hospedagem e manutenção após a garantia <span class="tag o">a definir</span></li></ul></div>
   </div>
 
+  <img class="marca" src="marca/indeba-express-logo.png" alt=""><div class="num">04</div>
+</section>
+
+<section class="page">
+  <div class="kicker">4 · Regras e prazos</div>
+  <h2>Prazos, pagamento e roteiro de oferta.</h2>
   <h3>Prazos de entrega <span class="selo">proposta para o Matheus confirmar</span></h3>
   <table>
     <tr><th>Plano</th><th>Prazo</th><th>Conta a partir de</th><th>Depende do cliente</th></tr>
@@ -171,7 +177,7 @@ ol.passos li{margin-bottom:2mm}
     <li><b>Grupo geral da Indeba</b> (180 pessoas). Oferecer com tudo organizado: vídeo, PDF e esta tabela.</li>
   </ol>
   <div class="aviso" style="margin-top:6mm"><b>Pendências para fechar antes do grupo geral:</b> confirmar prazos, valor da ferramenta extra, mensalidade, hospedagem por cliente e as anotações das fotos do Matheus, que ainda não entraram neste documento.</div>
-  <img class="marca" src="marca/indeba-express-logo.png" alt=""><div class="num">04</div>
+  <img class="marca" src="marca/indeba-express-logo.png" alt=""><div class="num">05</div>
 </section>
 
 </body>
