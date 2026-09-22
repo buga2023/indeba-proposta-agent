@@ -324,11 +324,14 @@ const ChromeContext = createContext<{
   // Default `false`: enquanto /api/me não responde, trata como vendedor. Mostrar a mais e
   // recolher depois piscaria a tela do gestor para quem não é.
   ehAdmin: boolean;
+  // Volta para a tela anterior (pilha de navegação). null no Dashboard, que é a raiz.
+  voltar: (() => void) | null;
 }>({
   openPalette: () => {},
   goTo: () => {},
   openNav: () => {},
   ehAdmin: false,
+  voltar: null,
 });
 
 /* tipo do registro do histórico (espelha EventoProposta da API, sem importar node) */
@@ -368,7 +371,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
 // mais oferecidos como opção.
 const STATUS_OPCOES: StatusProposta[] = ["em_andamento", "enviada", "aprovada", "recusada"];
 
-type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "ferramentas" | "ferramentas-comerciais" | "config" | "perfil";
+type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "ferramentas" | "ferramentas-comerciais" | "gerador-contratos" | "config" | "perfil";
 type TipoProposta = "orcamento" | "implantacao" | "comercial" | "consolidada";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -396,6 +399,7 @@ const CMD_ITEMS: PaletteItem[] = [
   { key: "catalog", label: "Catálogo de Produtos" },
   { key: "ferramentas-comerciais", label: "Ferramentas Comerciais", hint: "Novas prospecções, visitas de rotina e solicitações" },
   { key: "ferramentas", label: "Ferramentas Técnicas", hint: "Visitas de rotina, contratos e estoque de comodatos" },
+  { key: "gerador-contratos", label: "Gerador de Contratos", hint: "Contrato de fornecimento com comodato, em PDF" },
   { key: "perfil", label: "Meu perfil" },
 ];
 // Configurações é o painel do gestor (e-mails de cobrança, colaboradores). Fica fora da
@@ -435,6 +439,24 @@ export default function Home() {
   // Gaveta de navegação (≤760px). Acima disso o CSS ignora este estado e a
   // sidebar volta a ocupar a coluna fixa de sempre.
   const [navOpen, setNavOpen] = useState(false);
+  // Pilha de telas visitadas, para o botão "Voltar" (pedido do Gustavo, 22/09/2026: no
+  // celular as telas de Ferramentas não tinham menu nem volta — o vendedor ficava preso).
+  // Guarda só a tela de ONDE se veio; ao voltar, a tela atual não entra na pilha.
+  const pilhaTelas = useRef<Screen[]>([]);
+  const telaAtual = useRef<Screen>("dashboard");
+  const voltando = useRef(false);
+  useEffect(() => {
+    if (telaAtual.current === screen) return;
+    if (!voltando.current) pilhaTelas.current = [...pilhaTelas.current.slice(-19), telaAtual.current];
+    voltando.current = false;
+    telaAtual.current = screen;
+  }, [screen]);
+  const voltarTela = useCallback(() => {
+    const alvo = pilhaTelas.current.pop() ?? "dashboard";
+    voltando.current = true;
+    setNavOpen(false);
+    setScreen(alvo);
+  }, []);
   const [reviewVariant, setReviewVariant] = useState<"A" | "B">("A");
   const [downloading, setDownloading] = useState(false);
   const [refining, setRefining] = useState(false);
@@ -924,6 +946,7 @@ export default function Home() {
     openNav: () => setNavOpen(true),
     goTo: (s: string) => setScreen(s as Screen),
     ehAdmin,
+    voltar: screen === "dashboard" ? null : voltarTela,
   };
 
   return (
@@ -1072,6 +1095,16 @@ export default function Home() {
             </svg>
             Ferramentas Técnicas
           </Hoverable>
+          {/* Gerador de Contratos (pacote entregue em 21/09/2026): página estática em
+              public/gerador-contratos, mostrada dentro do layout (iframe de mesma origem).
+              O middleware protege o caminho — só quem está logado abre. */}
+          <Hoverable eager base={navItemStyle(["gerador-contratos"])} hover={navHover} onClick={() => irPara("gerador-contratos")} title="Gerador de Contratos — contrato de fornecimento com comodato, em PDF">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4.5 2.5h5l3 3v9h-8z" />
+              <path d="M9.5 2.5v3h3M6.5 9h4M6.5 11.5h4" />
+            </svg>
+            Gerador de Contratos
+          </Hoverable>
 
           {/* Configurações é o painel do gestor: e-mails de cobrança, GESTOR_EMAIL, cadastro
               de colaboradores. As rotas já respondem 403 para quem não é admin — aqui a
@@ -1219,8 +1252,20 @@ export default function Home() {
         {screen === "contrato" && <ContratoScreen scope={scope} onVerProposta={() => setScreen(scope ? "review" : "manual")} />}
         {screen === "atendimento" && <AtendimentoScreen ehAdmin={ehAdmin} />}
         {screen === "chamados" && <ChamadosScreen />}
+        {/* Telas de componentes externos não têm ScreenHead: ganham a barra de topo com
+            menu (celular) e Voltar. */}
+        {(screen === "ferramentas" || screen === "ferramentas-comerciais" || screen === "chamados" || screen === "gerador-contratos" || (screen === "config" && ehAdmin)) && (
+          <BarraTopo titulo={screen === "ferramentas" ? "Ferramentas Técnicas" : screen === "ferramentas-comerciais" ? "Ferramentas Comerciais" : screen === "chamados" ? "Chamados" : screen === "gerador-contratos" ? "Gerador de Contratos" : "Configurações"} />
+        )}
         {screen === "ferramentas" && <FerramentasTecnicasScreen />}
         {screen === "ferramentas-comerciais" && <FerramentasComerciaisScreen />}
+        {screen === "gerador-contratos" && (
+          <iframe
+            src="/gerador-contratos/index.html"
+            title="Gerador de Contratos — Indeba Express"
+            style={{ display: "block", width: "100%", height: "calc(100vh - 58px)", border: 0, background: "#fff" }}
+          />
+        )}
         {/* Segundo cadeado do painel do gestor: some do menu E não renderiza sem papel — quem
             chegar por outro caminho cai no Dashboard em vez de ver a tela vazia/quebrada. */}
         {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={pedirCadastroProduto} onNovaProposta={novaProposta} />)}
@@ -1336,6 +1381,17 @@ const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; i
       <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <path d="M2.5 5.5l6-3 6 3v6l-6 3-6-3z" />
         <path d="M2.5 5.5l6 3 6-3M8.5 8.5v6" />
+      </svg>
+    ),
+  },
+  {
+    screen: "gerador-contratos",
+    titulo: "Gerador de Contratos",
+    sub: "Contrato de fornecimento com comodato, em PDF",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4.5 2.5h5l3 3v9h-8z" />
+        <path d="M9.5 2.5v3h3M6.5 9h4M6.5 11.5h4" />
       </svg>
     ),
   },
@@ -5630,6 +5686,46 @@ function abrirRelatorio(titulo: string, subtitulo: string, blocos: BlocoRelatori
 }
 
 /* Cabeçalho de tela (design app.html) — barra branca fixa com título + subtítulo + ação. */
+/* Botão "Voltar" do cabeçalho: volta à tela anterior (pilha em Home). Some no Dashboard. */
+function BotaoVoltar() {
+  const { voltar } = useContext(ChromeContext);
+  if (!voltar) return null;
+  return (
+    <Hoverable
+      onClick={voltar}
+      title="Voltar para a tela anterior"
+      ariaLabel="Voltar"
+      base={{ display: "flex", alignItems: "center", gap: "6px", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", color: "var(--text-body)", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "13px", fontWeight: 600, flex: "none" }}
+      hover={{ background: "var(--surface-muted)" }}
+    >
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M10 3L5 8l5 5" /></svg>
+      <span className="ies-hide-sm">Voltar</span>
+    </Hoverable>
+  );
+}
+
+/* Barra de topo das telas que vivem em componentes próprios (Ferramentas, Chamados,
+   Configurações, Gerador de Contratos): elas não usam ScreenHead, então no celular
+   não tinham menu nem volta. Mesma altura/estilo do ScreenHead, só o essencial. */
+function BarraTopo({ titulo }: { titulo: string }) {
+  const { openNav } = useContext(ChromeContext);
+  return (
+    <div className="ies-head" style={{ display: "flex", alignItems: "center", gap: "10px", padding: "0 24px", height: "58px", background: "var(--surface)", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 20, flex: "none" }}>
+      <button
+        className="ies-menu-btn"
+        onClick={openNav}
+        aria-label="Abrir menu de navegação"
+        title="Menu"
+        style={{ width: "38px", height: "38px", flex: "none", alignItems: "center", justifyContent: "center", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", color: "var(--text-body)", cursor: "pointer" }}
+      >
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round"><path d="M2.5 4.5h12M2.5 8.5h12M2.5 12.5h12" /></svg>
+      </button>
+      <BotaoVoltar />
+      <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-strong)", minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{titulo}</div>
+    </div>
+  );
+}
+
 function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?: ReactNode }) {
   const { openPalette, openNav } = useContext(ChromeContext);
   return (
@@ -5647,6 +5743,7 @@ function ScreenHead({ title, sub, right }: { title: string; sub?: string; right?
           <path d="M2.5 4.5h12M2.5 8.5h12M2.5 12.5h12" />
         </svg>
       </button>
+      <BotaoVoltar />
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-strong)", letterSpacing: "-.01em", lineHeight: 1.15 }}>{title}</div>
         {sub && <div style={{ fontSize: "12.5px", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sub}</div>}

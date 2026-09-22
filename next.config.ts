@@ -104,7 +104,21 @@ const nextConfig: NextConfig = {
     "/api/pdf": ["./public/fichas-tecnicas/**/*"],
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // O Gerador de Contratos (public/gerador-contratos) é mostrado num iframe de MESMA
+      // origem dentro do layout. DENY / frame-ancestors 'none' bloqueariam o iframe, então
+      // só nesse caminho o frame é liberado para a própria origem. Cache no-cache para a
+      // nova versão do HTML chegar logo após o deploy (LEIA-ME do pacote, seção 5).
+      {
+        source: "/gerador-contratos/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Cache-Control", value: "no-cache" },
+          ...(isProd ? [{ key: "Content-Security-Policy", value: csp.replace("frame-ancestors 'none'", "frame-ancestors 'self'") }] : []),
+        ],
+      },
+    ];
   },
 };
 

@@ -482,7 +482,9 @@ body {
 /* KPIs: 4 → 2 → 1. Com repeat(4,1fr) fixo, "R$ 1.234.567,89" em 1/4 de 700px
    virava três linhas dentro do card. */
 @media (max-width: 1024px) { .ies-kpi { grid-template-columns: repeat(2, 1fr) !important; } }
-@media (max-width: 600px) { .ies-kpi { grid-template-columns: 1fr !important; } }
+/* Celular: 2 colunas em vez de 1 — quatro cartões empilhados empurravam os módulos
+   para fora da primeira tela (revisão mobile, 22/09/2026). */
+@media (max-width: 600px) { .ies-kpi { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; } }
 
 /* Grades de campos em duas colunas (dados do cliente, condições comerciais). */
 @media (max-width: 680px) { .ies-fields { grid-template-columns: 1fr !important; } }

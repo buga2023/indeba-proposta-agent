@@ -48,5 +48,7 @@ export async function middleware(req: NextRequest) {
 // gap de listar paths um a um (subrotas como /api/cobranca/disparar ou
 // /api/propostas/[id] ficavam de fora). Públicas são liberadas no corpo, não aqui.
 export const config = {
-  matcher: ["/", "/api/:path*"],
+  // /gerador-contratos é HTML estático em public/: sem esta entrada qualquer um com o
+  // link abriria o gerador sem login (LEIA-ME do pacote, seção 4).
+  matcher: ["/", "/api/:path*", "/gerador-contratos", "/gerador-contratos/:path*"],
 };
