@@ -24,7 +24,7 @@ const FFMPEG = process.env.FFMPEG ?? path.join(os.homedir(), ".claude", "tools",
 const require = createRequire(path.join(process.env.TTS_DIR ?? here, "package.json"));
 const { MsEdgeTTS, OUTPUT_FORMAT } = require("msedge-tts");
 
-const VOICE = process.env.VOICE ?? "pt-BR-AntonioNeural";
+const VOICE = process.env.VOICE ?? "pt-BR-ThalitaMultilingualNeural";
 const FPS = 30, W = 1920, H = 1080, XFADE = 0.6, PAD_IN = 0.5, PAD_OUT = 1.0;
 
 const ff = (args) => execFileSync(FFMPEG, ["-hide_banner", "-loglevel", "error", "-y", ...args], { stdio: ["ignore", "inherit", "inherit"] });
