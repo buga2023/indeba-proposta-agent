@@ -18,9 +18,14 @@ const { usuarioAtual, create, updateMany, findUnique, findMany, carregarCatalogo
 }));
 
 vi.mock("@/lib/auth-db", () => ({ usuarioAtual }));
-vi.mock("@/lib/db", () => ({ prisma: { produtoCustom: { create, updateMany, findUnique, findMany } } }));
+vi.mock("@/lib/db", () => ({
+  prisma: {
+    produtoCustom: { create, updateMany, findUnique, findMany },
+    imagemEmbalagem: { deleteMany: vi.fn().mockResolvedValue({ count: 0 }), upsert: vi.fn().mockResolvedValue({}), findMany: vi.fn().mockResolvedValue([]) },
+  },
+}));
 vi.mock("@/lib/catalogo", () => ({ carregarCatalogo }));
-vi.mock("@/lib/produto-custom", () => ({ listarProdutosCustom, listarExcluidos }));
+vi.mock("@/lib/produto-custom", () => ({ listarProdutosCustom, listarExcluidos, chaveEmbalagem: (e: { tamanho: number; unidade: string }) => `${e.tamanho}${e.unidade}` }));
 
 import { POST } from "@/app/api/produtos/route";
 

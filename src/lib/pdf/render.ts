@@ -208,11 +208,13 @@ export function montarDocumento(
 // sem isto o produto novo sairia no PDF com a arte genérica, apesar de ter foto cadastrada.
 // O PDF é montado no servidor, então dá para ler do banco direto, sem passar pela rota.
 async function dataUriDoBanco(caminho: string): Promise<string> {
-  const { codigoDaRotaDeImagem, imagemDoProduto } = await import("@/lib/produto-custom");
+  const { codigoDaRotaDeImagem, imagemDoProduto, rotaDeImagemEmbalagem, imagemDaEmbalagemDoProduto } = await import("@/lib/produto-custom");
   const codigo = codigoDaRotaDeImagem(caminho);
-  if (!codigo) return "";
+  const emb = rotaDeImagemEmbalagem(caminho);
+  if (!codigo && !emb) return "";
   try {
-    const img = await imagemDoProduto(codigo);
+    // Foto por embalagem (22/09/2026) vem de outra tabela, mas sai igual: data URI no PDF.
+    const img = emb ? await imagemDaEmbalagemDoProduto(emb.codigo, emb.chave) : await imagemDoProduto(codigo!);
     return img ? `data:${img.mime};base64,` + img.bytes.toString("base64") : "";
   } catch {
     return ""; // banco fora do ar: cai no genérico, o PDF continua saindo

@@ -5,7 +5,7 @@ import { usuarioAtual } from "@/lib/auth-db";
 import { Produto } from "@/lib/contracts";
 import { prisma } from "@/lib/db";
 import { carregarCatalogo } from "@/lib/catalogo";
-import { listarExcluidos } from "@/lib/produto-custom";
+import { chaveEmbalagem, listarExcluidos } from "@/lib/produto-custom";
 import { mesclarProduto } from "@/lib/produto-merge";
 import { respostaErro } from "@/lib/erro";
 
@@ -57,8 +57,8 @@ const LIMITE_ANEXO = 4 * MB;
 // Validação dos anexos, compartilhada por cadastro e edição: os dois aceitam os MESMOS
 // arquivos, e regra de upload duplicada é regra que diverge (um lado aperta, o outro fica
 // com o buraco). Devolve a resposta de erro pronta ou o arquivo, quando ele veio.
-function lerImagem(form: FormData): { erro: NextResponse } | { erro: null; imagem: File | null } {
-  const imagem = form.get("imagem");
+function lerImagem(form: FormData, campo = "imagem"): { erro: NextResponse } | { erro: null; imagem: File | null } {
+  const imagem = form.get(campo);
   if (!(imagem instanceof File) || imagem.size === 0) return { erro: null, imagem: null };
   if (!IMAGEM_MIMES.includes(imagem.type)) {
     return { erro: NextResponse.json({ erro: "Foto deve ser PNG, JPG ou WebP." }, { status: 400 }) };
@@ -67,6 +67,46 @@ function lerImagem(form: FormData): { erro: NextResponse } | { erro: null; image
     return { erro: NextResponse.json({ erro: "Foto acima de 4 MB — a plataforma recusa envios maiores." }, { status: 400 }) };
   }
   return { erro: null, imagem };
+}
+
+// Fotos POR EMBALAGEM (áudio do Mateus, 22/09/2026: "só tem espaço pra uma imagem"). O
+// formulário manda `imagemEmbalagem:<chave>` com o arquivo e `removerImagemEmbalagem:<chave>`
+// = "1" para apagar a que estava no banco. A chave é tamanho+unidade ("0.5L", "5L"), a mesma
+// que `chaveEmbalagem` (produto-custom.ts) usa na leitura. Só as embalagens que o produto de
+// fato tem: uma foto de uma chave órfã nunca apareceria e só ocuparia espaço.
+type FotosEmbalagem = { gravar: { chave: string; imagem: File }[]; remover: string[] };
+function lerFotosEmbalagem(form: FormData, embalagens: { tamanho: number; unidade: string }[]): { erro: NextResponse } | { erro: null; fotos: FotosEmbalagem } {
+  const validas = new Set(embalagens.map(chaveEmbalagem));
+  const fotos: FotosEmbalagem = { gravar: [], remover: [] };
+  for (const campo of form.keys()) {
+    const grava = /^imagemEmbalagem:(.+)$/.exec(campo);
+    if (grava && validas.has(grava[1])) {
+      const r = lerImagem(form, campo);
+      if (r.erro) return r;
+      if (r.imagem) fotos.gravar.push({ chave: grava[1], imagem: r.imagem });
+      continue;
+    }
+    const remove = /^removerImagemEmbalagem:(.+)$/.exec(campo);
+    if (remove && String(form.get(campo)) === "1") fotos.remover.push(remove[1]);
+  }
+  return { erro: null, fotos };
+}
+
+// Grava/apaga as fotos por embalagem DEPOIS do produto: sem transação, porque a linha do
+// produto já foi validada e gravada, e uma foto que falhe no meio não pode desfazer o cadastro
+// que o gestor acabou de conferir. Chave que o produto deixou de ter também sai — a foto
+// acompanhava uma embalagem que não existe mais.
+async function gravarFotosEmbalagem(codigo: string, email: string, fotos: FotosEmbalagem, embalagens: { tamanho: number; unidade: string }[]) {
+  const validas = embalagens.map(chaveEmbalagem);
+  await prisma.imagemEmbalagem.deleteMany({ where: { codigo, OR: [{ chave: { in: fotos.remover } }, { chave: { notIn: validas } }] } });
+  for (const { chave, imagem } of fotos.gravar) {
+    const bytes = Buffer.from(await imagem.arrayBuffer());
+    await prisma.imagemEmbalagem.upsert({
+      where: { codigo_chave: { codigo, chave } },
+      create: { codigo, chave, imagem: bytes, mime: imagem.type, autor: email },
+      update: { imagem: bytes, mime: imagem.type, autor: email },
+    });
+  }
 }
 
 function lerFicha(form: FormData): { erro: NextResponse } | { erro: null; ficha: File | null } {
@@ -140,6 +180,8 @@ export async function POST(req: NextRequest) {
   const fch = lerFicha(form);
   if (fch.erro) return fch.erro;
   const ficha = fch.ficha;
+  const fe = lerFotosEmbalagem(form, parsed.data.embalagens);
+  if (fe.erro) return fe.erro;
 
   try {
     // Nasce ATIVO: o gestor acabou de cadastrar querendo usar. `ativo` é flag de negócio —
@@ -169,6 +211,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ erro: `O código ${codigo} já existe no catálogo.` }, { status: 409 });
       }
     }
+    await gravarFotosEmbalagem(codigo, email, fe.fotos, parsed.data.embalagens);
     return NextResponse.json({ ok: true, codigo }, { status: 201 });
   } catch (e) {
     return respostaErro(e, "Falha ao cadastrar o produto", 500);
@@ -225,6 +268,8 @@ export async function PUT(req: NextRequest) {
   if (img.erro) return img.erro;
   const fch = lerFicha(form);
   if (fch.erro) return fch.erro;
+  const fe = lerFotosEmbalagem(form, parsed.data.embalagens);
+  if (fe.erro) return fe.erro;
   // Trocar a ficha e removê-la são pedidos distintos: sem o sinal explícito, "não anexei
   // nada" (o caso comum ao editar só o texto) apagaria a ficha que já estava lá.
   const removerFicha = String(form.get("removerFicha") ?? "") === "1";
@@ -287,6 +332,7 @@ export async function PUT(req: NextRequest) {
       // produto segue exibindo a que está versionada em public/ (ver produto-custom.ts).
       await prisma.produtoCustom.create({ data: { codigo, dados, autor: email, ...anexos } });
     }
+    await gravarFotosEmbalagem(codigo, email, fe.fotos, dados.embalagens);
     return NextResponse.json({ ok: true, codigo });
   } catch (e) {
     return respostaErro(e, "Falha ao salvar o produto", 500);

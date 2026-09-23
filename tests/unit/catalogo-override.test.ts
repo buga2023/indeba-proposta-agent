@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // ORDEM da lista não embaralha (é ela que numera as páginas do PDF) e banco fora do ar degrada
 // para o JSON em vez de esvaziar o catálogo.
 const { findMany } = vi.hoisted(() => ({ findMany: vi.fn() }));
-vi.mock("@/lib/db", () => ({ prisma: { produtoCustom: { findMany, findUnique: vi.fn() } } }));
+vi.mock("@/lib/db", () => ({ prisma: { produtoCustom: { findMany, findUnique: vi.fn() }, imagemEmbalagem: { findMany: vi.fn().mockResolvedValue([]) } } }));
 
 import { catalogoCompleto, carregarCatalogo } from "@/lib/catalogo";
 

@@ -14,6 +14,14 @@ import { produtoPorCodigo } from "@/lib/catalogo";
 export const caminhoImagem = (codigo: string) => `/api/produtos/${encodeURIComponent(codigo)}/imagem`;
 export const caminhoFicha = (codigo: string) => `/api/produtos/${encodeURIComponent(codigo)}/ficha`;
 
+// Foto de UMA embalagem, cadastrada pela tela (áudio do Mateus, 22/09/2026). A chave é a
+// mesma identidade que o catálogo usa para a embalagem — tamanho + unidade —, então "5L" e
+// "0.5L" do HTC Expolidor são duas fotos, e `imagemDaCotada` (lib/imagem-produto.ts) já sabe
+// escolher a certa quando o consultor troca o tamanho.
+export const chaveEmbalagem = (e: { tamanho: number; unidade: string }) => `${e.tamanho}${e.unidade}`;
+export const caminhoImagemEmbalagem = (codigo: string, chave: string) =>
+  `/api/produtos/${encodeURIComponent(codigo)}/embalagens/${encodeURIComponent(chave)}/imagem`;
+
 // `imagemPath`/`fichaTecnicaPath` são DERIVADOS do código, nunca confiados ao que veio
 // gravado: assim um `dados` antigo (ou adulterado) não aponta para fora do sistema.
 //
@@ -21,7 +29,11 @@ export const caminhoFicha = (codigo: string) => `/api/produtos/${encodeURICompon
 // um produto do data/catalogo.json (o gestor corrigiu o preço de um dos ~150), e aí a foto e
 // a ficha continuam sendo as versionadas em public/. O fallback também vem do JSON — fonte
 // nossa, não do cliente —, então a garantia acima continua de pé.
-function comCaminhos(codigo: string, dados: unknown, temFicha: boolean, temImagem: boolean): Produto | null {
+//
+// `fotosEmbalagem`: chaves das embalagens que TÊM foto própria no banco. Elas entram em
+// `embalagens[].imagemPath` por cima do que veio gravado (que, num override da base, pode ser
+// a foto versionada daquele tamanho) — o gestor anexou para valer no lugar da antiga.
+function comCaminhos(codigo: string, dados: unknown, temFicha: boolean, temImagem: boolean, fotosEmbalagem: string[] = []): Produto | null {
   const r = Produto.safeParse(dados);
   if (!r.success) {
     console.error(`[produto-custom] ${codigo} fora do contrato — fora do catálogo:`, r.error.flatten());
@@ -33,7 +45,22 @@ function comCaminhos(codigo: string, dados: unknown, temFicha: boolean, temImage
     codigo,
     imagemPath: temImagem ? caminhoImagem(codigo) : (base?.imagemPath ?? caminhoImagem(codigo)),
     fichaTecnicaPath: temFicha ? caminhoFicha(codigo) : (base?.fichaTecnicaPath ?? null),
+    embalagens: r.data.embalagens.map((e) =>
+      fotosEmbalagem.includes(chaveEmbalagem(e)) ? { ...e, imagemPath: caminhoImagemEmbalagem(codigo, chaveEmbalagem(e)) } : e,
+    ),
   };
+}
+
+// Chaves com foto própria, agrupadas por produto. Uma consulta só para a lista inteira: a
+// vitrine carrega o catálogo de uma vez, e uma ida ao banco por produto não escala.
+async function fotosEmbalagemPorCodigo(codigos?: string[]): Promise<Map<string, string[]>> {
+  const linhas = await prisma.imagemEmbalagem.findMany({
+    ...(codigos ? { where: { codigo: { in: codigos } } } : {}),
+    select: { codigo: true, chave: true },
+  });
+  const m = new Map<string, string[]>();
+  for (const l of linhas) m.set(l.codigo, [...(m.get(l.codigo) ?? []), l.chave]);
+  return m;
 }
 
 // Lista tolerante a linha podre, mesma postura de `listarPropostas`: um produto fora do
@@ -49,8 +76,9 @@ export async function listarProdutosCustom(): Promise<Produto[]> {
     select: { codigo: true, dados: true, fichaMime: true, imagemMime: true },
     orderBy: { criadoEm: "desc" },
   });
+  const fotos = await fotosEmbalagemPorCodigo();
   return linhas
-    .map((l) => comCaminhos(l.codigo, l.dados, l.fichaMime !== null, l.imagemMime !== null))
+    .map((l) => comCaminhos(l.codigo, l.dados, l.fichaMime !== null, l.imagemMime !== null, fotos.get(l.codigo)))
     .filter((p): p is Produto => p !== null);
 }
 
@@ -90,7 +118,8 @@ export async function linhaCustom(codigo: string): Promise<{ produto: Produto | 
   });
   if (!l) return null;
   if (l.excluido) return { produto: null, excluido: true };
-  return { produto: comCaminhos(l.codigo, l.dados, l.fichaMime !== null, l.imagemMime !== null), excluido: false };
+  const fotos = await fotosEmbalagemPorCodigo([codigo]);
+  return { produto: comCaminhos(l.codigo, l.dados, l.fichaMime !== null, l.imagemMime !== null, fotos.get(codigo)), excluido: false };
 }
 
 export async function produtoCustomPorCodigo(codigo: string): Promise<Produto | null> {
@@ -105,6 +134,12 @@ export async function imagemDoProduto(codigo: string): Promise<{ bytes: Buffer; 
   return { bytes: Buffer.from(l.imagem), mime: l.imagemMime };
 }
 
+export async function imagemDaEmbalagemDoProduto(codigo: string, chave: string): Promise<{ bytes: Buffer; mime: string } | null> {
+  const l = await prisma.imagemEmbalagem.findUnique({ where: { codigo_chave: { codigo, chave } }, select: { imagem: true, mime: true } });
+  if (!l) return null;
+  return { bytes: Buffer.from(l.imagem), mime: l.mime };
+}
+
 export async function fichaDoProduto(codigo: string): Promise<{ bytes: Buffer; mime: string } | null> {
   const l = await prisma.produtoCustom.findUnique({ where: { codigo }, select: { ficha: true, fichaMime: true } });
   if (!l?.ficha || !l.fichaMime) return null;
@@ -116,4 +151,10 @@ export async function fichaDoProduto(codigo: string): Promise<{ bytes: Buffer; m
 export function codigoDaRotaDeImagem(caminho: string): string | null {
   const m = /^\/api\/produtos\/([^/]+)\/imagem$/.exec(caminho);
   return m ? decodeURIComponent(m[1]) : null;
+}
+
+// Idem para a rota de foto por embalagem — o PDF precisa reconhecer as duas.
+export function rotaDeImagemEmbalagem(caminho: string): { codigo: string; chave: string } | null {
+  const m = /^\/api\/produtos\/([^/]+)\/embalagens\/([^/]+)\/imagem$/.exec(caminho);
+  return m ? { codigo: decodeURIComponent(m[1]), chave: decodeURIComponent(m[2]) } : null;
 }

@@ -54,6 +54,12 @@ type Embalagem = {
   unidade: (typeof UNIDADES)[number];
   diluicaoMax: string;
   resto?: Omit<Produto["embalagens"][number], "tamanho" | "unidade" | "diluicaoMax">;
+  // Foto DESTA embalagem (áudio do Mateus, 22/09/2026: o HTC Expolidor de 500 ml e o de 5 L
+  // são recipientes diferentes e "só tinha espaço pra uma imagem"). `foto` é o arquivo novo,
+  // `removerFoto` apaga a que está no banco. Nenhum dos dois vai para o rascunho — arquivo
+  // não sobrevive ao localStorage, e o aviso de rascunho já diz que anexos se anexam de novo.
+  foto?: File | null;
+  removerFoto?: boolean;
 };
 type Diluicao = { uso: string; razao: string; comoAplicar: string };
 
@@ -312,7 +318,7 @@ export function FormProduto({
   // gravar continuamente, e não só na saída, cobre também o fechar da aba e o F5.
   const rascunho: Rascunho = {
     codigo, nome, marca, linha, descricaoCurta, descricaoUso, segmentos, funcoes, metodos,
-    embalagens, ativo, fichaTitulo, subtitulo, fichaDescricao, beneficios, composicao,
+    embalagens: embalagens.map(({ foto: _f, removerFoto: _r, ...e }) => e), ativo, fichaTitulo, subtitulo, fichaDescricao, beneficios, composicao,
     aplicacao, pH, aspecto, cor, odor, rendimento, diluicoes,
   };
   const serializado = JSON.stringify(rascunho);
@@ -436,7 +442,7 @@ export function FormProduto({
     if (!editando && !imagem) return setErro("A foto do produto é obrigatória.");
     // O corte de ~4,5 MB é da plataforma e vale para o ENVIO INTEIRO (foto + ficha + campos).
     // Barrar aqui é o que transforma um "HTTP 413" em uma frase que diz o que fazer.
-    const pesoAnexos = (imagem?.size ?? 0) + (ficha?.size ?? 0);
+    const pesoAnexos = (imagem?.size ?? 0) + (ficha?.size ?? 0) + embalagens.reduce((t, x) => t + (x.foto?.size ?? 0), 0);
     if (pesoAnexos > LIMITE_ENVIO) {
       return setErro(
         `Os anexos somam ${pesoLegivel(pesoAnexos)} e o envio aceita até ${pesoLegivel(LIMITE_ENVIO)}. ` +
@@ -491,6 +497,14 @@ export function FormProduto({
     const form = new FormData();
     form.append("dados", JSON.stringify(dados));
     if (imagem) form.append("imagem", imagem);
+    // Foto por embalagem: a chave é tamanho+unidade, a mesma com que o servidor identifica a
+    // embalagem (`chaveEmbalagem`, lib/produto-custom.ts).
+    for (const x of embalagens) {
+      if (!x.tamanho.trim()) continue;
+      const chave = `${Number(x.tamanho.replace(",", "."))}${x.unidade}`;
+      if (x.foto) form.append(`imagemEmbalagem:${chave}`, x.foto);
+      else if (x.removerFoto) form.append(`removerImagemEmbalagem:${chave}`, "1");
+    }
     if (ficha) form.append("ficha", ficha);
     if (editando && removerFicha && !ficha) form.append("removerFicha", "1");
 
@@ -725,11 +739,11 @@ export function FormProduto({
           <input style={campo} value={rendimento} onChange={(e) => setRendimento(e.target.value)} placeholder="1 L rende até 100 L de solução" />
         </div>
 
-        <div style={secao}>Embalagens <span style={dica}>— os tamanhos que a ficha lista</span></div>
+        <div style={secao}>Embalagens <span style={dica}>— os tamanhos que a ficha lista, cada um com a foto do seu recipiente</span></div>
         {/* A diluição máx. por embalagem saiu da tela (07/08/2026): as diluições já são
             cadastradas acima, como na ficha. O valor gravado por embalagem é preservado. */}
         {embalagens.map((emb, i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 90px 34px", gap: "8px", marginBottom: "8px", alignItems: "end" }}>
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "minmax(70px, 1fr) 70px minmax(150px, 2fr) 34px", gap: "8px", marginBottom: "8px", alignItems: "end" }}>
             <div>
               {i === 0 && <label style={rotulo}>Tamanho *</label>}
               <input style={campo} value={emb.tamanho} onChange={(e) => setEmbalagens(embalagens.map((x, j) => (j === i ? { ...x, tamanho: e.target.value } : x)))} placeholder="5" />
@@ -739,6 +753,34 @@ export function FormProduto({
               <select style={campo} value={emb.unidade} onChange={(e) => setEmbalagens(embalagens.map((x, j) => (j === i ? { ...x, unidade: e.target.value as Embalagem["unidade"] } : x)))}>
                 {UNIDADES.map((u) => <option key={u} value={u}>{u}</option>)}
               </select>
+            </div>
+            <div>
+              {i === 0 && <label style={rotulo}>Foto desta embalagem <span style={dica}>opcional</span></label>}
+              {/* Sem foto própria, a embalagem usa a foto do produto (ou a arte do recipiente
+                  cotado, quando a foto é de outro tamanho — lib/imagem-produto.ts). */}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={async (e) => {
+                  const original = e.target.files?.[0] ?? null;
+                  setTocado(true);
+                  const leve = original ? await encolherFoto(original) : null;
+                  setEmbalagens((atual) => atual.map((x, j) => (j === i ? { ...x, foto: leve, removerFoto: false } : x)));
+                }}
+                style={{ ...campo, padding: "7px", fontSize: "12px" }}
+              />
+              {emb.resto?.imagemPath && !emb.foto && (
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px", fontSize: "11px", color: "var(--text-muted)" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={emb.resto.imagemPath} alt="" style={{ width: "28px", height: "28px", objectFit: "contain", border: "1px solid var(--gray-100)", borderRadius: "6px", background: "white", opacity: emb.removerFoto ? 0.35 : 1 }} />
+                  {emb.removerFoto ? "Será removida ao salvar." : "Foto atual."}
+                  {emb.resto.imagemPath.startsWith("/api/") && (
+                    <button type="button" onClick={() => { setTocado(true); setEmbalagens(embalagens.map((x, j) => (j === i ? { ...x, removerFoto: !x.removerFoto } : x))); }} style={{ background: "none", border: "none", color: emb.removerFoto ? "var(--primary)" : "var(--danger)", cursor: "pointer", padding: 0, fontSize: "11px", fontWeight: 600 }}>
+                      {emb.removerFoto ? "Manter" : "Remover"}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             <button type="button" onClick={() => setEmbalagens(embalagens.length > 1 ? embalagens.filter((_, j) => j !== i) : embalagens)} style={{ height: "38px", border: "1px solid var(--gray-200)", background: "white", borderRadius: "9px", cursor: "pointer", color: "var(--danger)" }} title="Remover">×</button>
           </div>

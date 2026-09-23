@@ -7,7 +7,9 @@ import type { NextRequest } from "next/server";
 // O que precisa ficar de pé aqui: quem pode escrever, o que a edição NÃO pode apagar sem
 // pedido explícito (foto, ficha, estado de arquivado) e a fronteira com o catálogo-base —
 // os 150 do JSON são versionados no git e não se editam por esta rota.
-const { usuarioAtual, findUnique, update, create, remover, carregarCatalogo, listarProdutosCustom, listarExcluidos } = vi.hoisted(() => ({
+const { usuarioAtual, findUnique, update, create, remover, carregarCatalogo, listarProdutosCustom, listarExcluidos, embDeleteMany, embUpsert } = vi.hoisted(() => ({
+  embDeleteMany: vi.fn(),
+  embUpsert: vi.fn(),
   usuarioAtual: vi.fn(),
   findUnique: vi.fn(),
   update: vi.fn(),
@@ -20,10 +22,13 @@ const { usuarioAtual, findUnique, update, create, remover, carregarCatalogo, lis
 
 vi.mock("@/lib/auth-db", () => ({ usuarioAtual }));
 vi.mock("@/lib/db", () => ({
-  prisma: { produtoCustom: { create, findMany: vi.fn(), findUnique, update, delete: remover, upsert: vi.fn() } },
+  prisma: {
+    produtoCustom: { create, findMany: vi.fn(), findUnique, update, delete: remover, upsert: vi.fn() },
+    imagemEmbalagem: { deleteMany: embDeleteMany, upsert: embUpsert, findMany: vi.fn().mockResolvedValue([]) },
+  },
 }));
 vi.mock("@/lib/catalogo", () => ({ carregarCatalogo }));
-vi.mock("@/lib/produto-custom", () => ({ listarProdutosCustom, listarExcluidos }));
+vi.mock("@/lib/produto-custom", () => ({ listarProdutosCustom, listarExcluidos, chaveEmbalagem: (e: { tamanho: number; unidade: string }) => `${e.tamanho}${e.unidade}` }));
 
 import { PUT, DELETE, PATCH } from "@/app/api/produtos/route";
 
@@ -68,7 +73,9 @@ const dadosCriados = () => create.mock.calls[0][0].data.dados;
 const NA_BASE = { codigo: "PRIMMAX-PLUS", ativo: true, fichaTecnicaPath: "/fichas-tecnicas/primmax-plus.pdf" };
 
 beforeEach(() => {
-  for (const m of [usuarioAtual, findUnique, update, create, remover, carregarCatalogo]) m.mockReset();
+  for (const m of [usuarioAtual, findUnique, update, create, remover, carregarCatalogo, embDeleteMany, embUpsert]) m.mockReset();
+  embDeleteMany.mockResolvedValue({ count: 0 });
+  embUpsert.mockResolvedValue({});
   carregarCatalogo.mockReturnValue({ marca: "indeba_express", produtos: [NA_BASE] });
   findUnique.mockResolvedValue(NO_BANCO);
   update.mockResolvedValue({});
@@ -330,5 +337,46 @@ describe("PATCH /api/produtos — restaurar", () => {
     usuarioAtual.mockResolvedValue(GESTOR);
     findUnique.mockResolvedValue({ excluido: false });
     expect((await PATCH(reqPatch({ codigo: "TESTE-NOVO" }))).status).toBe(404);
+  });
+});
+
+// Foto POR EMBALAGEM (áudio do Mateus, 22/09/2026): o HTC Expolidor de 500 ml e o de 5 L são
+// recipientes diferentes e o cadastro só tinha espaço para uma foto.
+describe("PUT /api/produtos — foto por embalagem", () => {
+  const DUAS = { ...EDICAO, embalagens: [{ tamanho: 0.5, unidade: "L", preco: null, diluicaoMax: null, custoDiluido: null }, { tamanho: 5, unidade: "L", preco: null, diluicaoMax: null, custoDiluido: null }] };
+
+  it("grava a foto na chave tamanho+unidade da embalagem", async () => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+    const r = await PUT(req(DUAS, { "imagemEmbalagem:0.5L": png() }));
+    expect(r.status).toBe(200);
+    expect(embUpsert).toHaveBeenCalledTimes(1);
+    const arg = embUpsert.mock.calls[0][0];
+    expect(arg.where).toEqual({ codigo_chave: { codigo: "TESTE-NOVO", chave: "0.5L" } });
+    expect(arg.create.mime).toBe("image/png");
+    expect(arg.create.autor).toBe(GESTOR.email);
+  });
+
+  it("ignora foto de uma embalagem que o produto não tem", async () => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+    const r = await PUT(req(DUAS, { "imagemEmbalagem:20L": png() }));
+    expect(r.status).toBe(200);
+    expect(embUpsert).not.toHaveBeenCalled();
+  });
+
+  it("recusa foto por embalagem que não é imagem", async () => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+    const r = await PUT(req(DUAS, { "imagemEmbalagem:5L": pdf() }));
+    expect(r.status).toBe(400);
+    expect(embUpsert).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("remove a foto pedida e as de embalagens que o produto deixou de ter", async () => {
+    usuarioAtual.mockResolvedValue(GESTOR);
+    const r = await PUT(req(DUAS, { "removerImagemEmbalagem:5L": "1" }));
+    expect(r.status).toBe(200);
+    const where = embDeleteMany.mock.calls[0][0].where;
+    expect(where.codigo).toBe("TESTE-NOVO");
+    expect(where.OR).toEqual([{ chave: { in: ["5L"] } }, { chave: { notIn: ["0.5L", "5L"] } }]);
   });
 });

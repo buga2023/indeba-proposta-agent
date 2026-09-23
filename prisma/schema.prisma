@@ -126,6 +126,28 @@ model ProdutoCustom {
   atualizadoEm DateTime @updatedAt
 }
 
+/// Foto de UMA embalagem de um produto cadastrado/editado pela tela (áudio do Mateus,
+/// 22/09/2026: "só tem espaço pra uma imagem" — o HTC Expolidor de 500 ml e o de 5 L são
+/// recipientes diferentes). O catálogo já sabia trocar a foto pelo tamanho cotado
+/// (`embalagens[].imagemPath`, lib/imagem-produto.ts), mas só para os que vinham com as duas
+/// fotos versionadas em public/. Esta tabela dá ao gestor o mesmo poder pela tela: uma linha
+/// por (produto, embalagem), servida por /api/produtos/<codigo>/embalagens/<chave>/imagem.
+/// `chave` é tamanho+unidade como o catálogo identifica a embalagem ("0.5L", "5L", "20kg").
+/// Separada de ProdutoCustom para o override de um produto da base não precisar carregar a
+/// foto principal só para ter a de uma embalagem.
+model ImagemEmbalagem {
+  id           String   @id @default(cuid())
+  codigo       String
+  chave        String
+  imagem       Bytes
+  mime         String
+  autor        String
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@unique([codigo, chave])
+}
+
 /// Relatório de Visitas de Rotina (áudio do Mateus 21/08/2026 + foto do bloco, que tem
 /// autoridade sobre o áudio): data, horário, cliente, quem recebeu, telefone, status
 /// (resolvido/não resolvido) e observação. A foto lista o MESMO relatório nas duas partes
