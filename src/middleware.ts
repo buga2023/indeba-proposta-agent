@@ -6,6 +6,15 @@ import { rateLimitOk } from "@/lib/ratelimit";
 // Rotas de API públicas: a própria autenticação. Tudo o mais exige sessão.
 const API_PUBLICAS = ["/api/login", "/api/logout", "/api/cadastro"];
 
+// Leitura pública da ficha técnica anexada pelo gestor. O PDF da Proposta de Solução linka
+// "Ver ficha técnica completa" para /api/produtos/<codigo>/ficha quando a ficha veio pelo
+// cadastro (produto-custom.ts); as versionadas em public/fichas-tecnicas sempre foram
+// públicas. Quem clica é o CLIENTE, que não tem (nem deve ter) login: exigir sessão aqui
+// dava 401 e "a ficha técnica não abre" (relato do Mateus, 08/10/2026). Só GET, só este
+// caminho exato — foto, cadastro e edição continuam atrás do login. Rate limit segue valendo.
+const FICHA_PUBLICA = /^\/api\/produtos\/[^/]+\/ficha$/;
+const leituraPublica = (req: NextRequest) => req.method === "GET" && FICHA_PUBLICA.test(req.nextUrl.pathname);
+
 function ipDe(req: NextRequest): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";
 }
@@ -30,7 +39,7 @@ export async function middleware(req: NextRequest) {
   if (!authAtiva()) return NextResponse.next();
 
   // Login/logout não exigem sessão (senão não há como autenticar).
-  if (API_PUBLICAS.includes(pathname)) return NextResponse.next();
+  if (API_PUBLICAS.includes(pathname) || leituraPublica(req)) return NextResponse.next();
 
   const usuario = await validarSessao(req.cookies.get("sessao")?.value);
   if (usuario) return NextResponse.next();

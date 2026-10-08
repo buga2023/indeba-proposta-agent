@@ -45,6 +45,27 @@ describe("middleware — gate de auth abrangente (fecha o matcher gap)", () => {
     expect((await middleware(reqDe("/api/logout"))).status).toBe(200);
   });
 
+  // Ficha técnica anexada pelo gestor: o PDF da proposta linka /api/produtos/<codigo>/ficha
+  // ("Ver ficha técnica completa"). Quem abre é o CLIENTE, sem sessão — exigir login aqui
+  // devolvia 401 e "a ficha técnica não abre" (relato do Mateus, 08/10/2026). As fichas
+  // versionadas em public/fichas-tecnicas já eram públicas; esta é o mesmo documento.
+  it("GET da ficha técnica de produto é público (link do PDF aberto pelo cliente)", async () => {
+    authAtiva.mockReturnValue(true);
+    validarSessao.mockResolvedValue(null);
+    expect((await middleware(reqDe("/api/produtos/AUTOCAR-1000/ficha"))).status).toBe(200);
+    expect((await middleware(reqDe("/api/produtos/HTC%20EXPOLIDOR/ficha"))).status).toBe(200);
+  });
+
+  it("outras rotas de produto (imagem, PUT, subrotas) continuam exigindo sessão", async () => {
+    authAtiva.mockReturnValue(true);
+    validarSessao.mockResolvedValue(null);
+    expect((await middleware(reqDe("/api/produtos/AUTOCAR-1000/imagem"))).status).toBe(401);
+    expect((await middleware(reqDe("/api/produtos/AUTOCAR-1000/ficha/extra"))).status).toBe(401);
+    expect((await middleware(reqDe("/api/produtos"))).status).toBe(401);
+    const put = new NextRequest(new URL("http://localhost/api/produtos/AUTOCAR-1000/ficha"), { method: "PUT" });
+    expect((await middleware(put)).status).toBe(401);
+  });
+
   it("com sessão válida → passa", async () => {
     authAtiva.mockReturnValue(true);
     validarSessao.mockResolvedValue({ email: "gustavo@indeba.com", papel: "admin" });
