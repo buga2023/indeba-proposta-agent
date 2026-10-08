@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { join, resolve, sep } from "node:path";
 import type { Browser } from "playwright-core";
 import type { PropostaScope } from "../contracts";
@@ -12,7 +13,7 @@ import { consolidadaHtml, MARGEM_INFERIOR_CONSOLIDADA } from "./template-consoli
 //  - Vercel (serverless): Chromium enxuto do @sparticuz/chromium + playwright-core.
 //  - Local/on-premise: Playwright completo (browser já instalado).
 // Import dinâmico para não empacotar o binário errado em cada alvo.
-async function abrirNavegador(): Promise<Browser> {
+export async function abrirNavegador(): Promise<Browser> {
   if (process.env.VERCEL) {
     const chromium = (await import("@sparticuz/chromium")).default;
     const { chromium: pw } = await import("playwright-core");
@@ -23,7 +24,70 @@ async function abrirNavegador(): Promise<Browser> {
     });
   }
   const { chromium: pw } = await import("playwright");
-  return pw.launch();
+  try {
+    return await pw.launch();
+  } catch (e) {
+    // Causa real do "geração de PDF falha" (out/2026): o Playwright pede o build EXATO da
+    // sua versão (ex.: chromium_headless_shell-1234) e a máquina tinha outras revisões
+    // (1223/1228) — "Executable doesn't exist". O Chromium instalado serve igual: procuramos
+    // outro build do cache do Playwright e, por fim, o Chrome/Edge do sistema.
+    const motivo = e instanceof Error ? e.message.split("\n")[0] : String(e);
+    console.warn("[pdf] launch padrão do Playwright falhou, tentando alternativas:", motivo);
+    for (const exe of executaveisAlternativos()) {
+      try {
+        return await pw.launch({ executablePath: exe });
+      } catch {
+        /* próximo candidato */
+      }
+    }
+    for (const channel of ["chrome", "msedge"]) {
+      try {
+        return await pw.launch({ channel });
+      } catch {
+        /* próximo canal */
+      }
+    }
+    throw e;
+  }
+}
+
+// Candidatos a executável do Chromium: variável de ambiente, depois os builds do cache do
+// Playwright (revisão mais nova primeiro; headless-shell antes do chromium completo).
+export function executaveisAlternativos(): string[] {
+  const achados: string[] = [];
+  const env = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+  if (env && existsSync(env)) achados.push(env);
+  const raiz =
+    process.env.PLAYWRIGHT_BROWSERS_PATH && process.env.PLAYWRIGHT_BROWSERS_PATH !== "0"
+      ? process.env.PLAYWRIGHT_BROWSERS_PATH
+      : process.platform === "win32"
+        ? join(process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local"), "ms-playwright")
+        : process.platform === "darwin"
+          ? join(homedir(), "Library", "Caches", "ms-playwright")
+          : join(homedir(), ".cache", "ms-playwright");
+  try {
+    const pastas = readdirSync(raiz);
+    const rev = (n: string) => Number(n.split("-").pop()) || 0;
+    const sub: Record<string, string[]> = {
+      win32: ["chrome-headless-shell-win64/chrome-headless-shell.exe", "chrome-win64/chrome.exe", "chrome-win/chrome.exe"],
+      darwin: ["chrome-headless-shell-mac-arm64/chrome-headless-shell", "chrome-mac/Chromium.app/Contents/MacOS/Chromium"],
+      linux: ["chrome-headless-shell-linux64/chrome-headless-shell", "chrome-linux/chrome"],
+    };
+    for (const prefixo of ["chromium_headless_shell-", "chromium-"]) {
+      pastas
+        .filter((n) => n.startsWith(prefixo))
+        .sort((a, b) => rev(b) - rev(a))
+        .forEach((n) => {
+          for (const rel of sub[process.platform] ?? sub.linux) {
+            const exe = join(raiz, n, rel);
+            if (existsSync(exe)) achados.push(exe);
+          }
+        });
+    }
+  } catch {
+    /* cache do Playwright inexistente */
+  }
+  return achados;
 }
 
 const PUBLIC_DIR = join(process.cwd(), "public");
@@ -208,11 +272,11 @@ export function montarDocumento(
 // sem isto o produto novo sairia no PDF com a arte genérica, apesar de ter foto cadastrada.
 // O PDF é montado no servidor, então dá para ler do banco direto, sem passar pela rota.
 async function dataUriDoBanco(caminho: string): Promise<string> {
-  const { codigoDaRotaDeImagem, imagemDoProduto, rotaDeImagemEmbalagem, imagemDaEmbalagemDoProduto } = await import("@/lib/produto-custom");
-  const codigo = codigoDaRotaDeImagem(caminho);
-  const emb = rotaDeImagemEmbalagem(caminho);
-  if (!codigo && !emb) return "";
   try {
+    const { codigoDaRotaDeImagem, imagemDoProduto, rotaDeImagemEmbalagem, imagemDaEmbalagemDoProduto } = await import("@/lib/produto-custom");
+    const codigo = codigoDaRotaDeImagem(caminho);
+    const emb = rotaDeImagemEmbalagem(caminho);
+    if (!codigo && !emb) return "";
     // Foto por embalagem (22/09/2026) vem de outra tabela, mas sai igual: data URI no PDF.
     const img = emb ? await imagemDaEmbalagemDoProduto(emb.codigo, emb.chave) : await imagemDoProduto(codigo!);
     return img ? `data:${img.mime};base64,` + img.bytes.toString("base64") : "";
@@ -227,10 +291,23 @@ async function dataUriDoBanco(caminho: string): Promise<string> {
 // e de fonte) foram todas pagas com bug em produção, e valem para qualquer documento.
 export type OpcoesPdf = { footer?: string; marginTop?: string; marginBottom?: string };
 
+const TIMEOUT_ETAPA_MS = 20_000;
+
+// Teto para etapas que o Playwright não cobre com timeout próprio (page.evaluate).
+function comTeto<T>(p: Promise<T>, etapa: string, ms = TIMEOUT_ETAPA_MS): Promise<T> {
+  let t: NodeJS.Timeout;
+  const limite = new Promise<never>((_, rej) => {
+    t = setTimeout(() => rej(new Error(`tempo esgotado em: ${etapa}`)), ms);
+  });
+  return Promise.race([p, limite]).finally(() => clearTimeout(t));
+}
+
 export async function pdfDeHtml(html: string, opcoes: OpcoesPdf = {}): Promise<Buffer> {
-  const browser = await abrirNavegador();
+  const browser = await comTeto(abrirNavegador(), "abertura do navegador", 30_000);
   try {
     const page = await browser.newPage();
+    // Nenhuma etapa pode pendurar a requisição: tudo tem teto.
+    page.setDefaultTimeout(TIMEOUT_ETAPA_MS);
     // Defesa em profundidade: durante o render só liberamos recursos embutidos
     // (data:/about:/blob:). Qualquer requisição externa — exfiltração/SSRF via
     // HTML injetado — é abortada. Tudo roda local, nada sai da máquina.
@@ -239,19 +316,26 @@ export async function pdfDeHtml(html: string, opcoes: OpcoesPdf = {}): Promise<B
       if (u.startsWith("data:") || u.startsWith("about:") || u.startsWith("blob:")) route.continue();
       else route.abort();
     });
-    await page.setContent(html, { waitUntil: "networkidle" });
+    // "load" e não "networkidle": toda requisição externa é abortada acima e as imagens/fontes
+    // são data:, então não há rede a esperar — networkidle só adicionava um ponto de travamento
+    // (e 500ms de espera fixa). O decode e as fontes são aguardados explicitamente abaixo.
+    await page.setContent(html, { waitUntil: "load", timeout: TIMEOUT_ETAPA_MS });
     // "networkidle" não cobre imagens embutidas via data: URI (não fazem fetch de rede) —
     // o decode delas ainda é assíncrono no Chromium. Sem esperar, o PDF às vezes sai com
     // uma foto de produto em branco (visto em produção: 1 de 5 produtos sem imagem, sempre
     // um diferente — race condition clássica, não dado/arquivo quebrado). `img.decode()`
     // garante que todo <img> já pintou antes de tirar o "print".
-    await page.evaluate(() =>
-      Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => {}))),
-    );
+    await comTeto(
+      page.evaluate(() => Promise.all(Array.from(document.images).map((img) => img.decode().catch(() => {})))),
+      "decode das imagens",
+    ).catch((e) => console.warn("[pdf]", e instanceof Error ? e.message : e));
     // Fontes embutidas (@font-face data-URI) também carregam de forma assíncrona: sem
     // esperar, o PDF saía com a fonte RESERVA do Chromium serverless — a "letra
     // grosseira/de resolução ruim" vista nas propostas. fonts.ready garante a Geist.
-    await page.evaluate(() => (document as unknown as { fonts: { ready: Promise<unknown> } }).fonts.ready);
+    await comTeto(
+      page.evaluate(() => (document as unknown as { fonts: { ready: Promise<unknown> } }).fonts.ready),
+      "carga das fontes",
+    ).catch((e) => console.warn("[pdf]", e instanceof Error ? e.message : e));
     return await page.pdf({
       format: "A4",
       printBackground: true,
@@ -275,10 +359,12 @@ export async function renderPdf(scope: PropostaScope): Promise<Buffer> {
   const generico = dataUri("/produtos/_generico.svg");
   const imagens: Record<string, string> = {};
   for (const item of scope.itens) {
+    // Foto nunca derruba o PDF: qualquer falha (sharp, disco, banco) cai no genérico.
+    const tenta = async (f: () => Promise<string>) => f().catch(() => "");
     imagens[chaveImagem(item)] =
-      (await resolverImagemProduto(item.imagemPath)) ||
-      (await dataUriFotoProduto(item.imagemPath)) ||
-      (await dataUriDoBanco(item.imagemPath)) ||
+      (await tenta(() => resolverImagemProduto(item.imagemPath))) ||
+      (await tenta(() => dataUriFotoProduto(item.imagemPath))) ||
+      (await tenta(() => dataUriDoBanco(item.imagemPath))) ||
       generico;
   }
   const banner = dataUri("/marca/header-ies.png");
