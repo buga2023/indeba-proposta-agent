@@ -118,6 +118,15 @@ const nextConfig: NextConfig = {
           ...(isProd ? [{ key: "Content-Security-Policy", value: csp.replace("frame-ancestors 'none'", "frame-ancestors 'self'") }] : []),
         ],
       },
+      // Gerador de Certificados: mesmo tratamento (iframe de mesma origem, sem cache).
+      {
+        source: "/gerador-certificados/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Cache-Control", value: "no-cache" },
+          ...(isProd ? [{ key: "Content-Security-Policy", value: csp.replace("frame-ancestors 'none'", "frame-ancestors 'self'") }] : []),
+        ],
+      },
     ];
   },
 };

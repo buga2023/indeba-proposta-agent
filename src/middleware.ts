@@ -50,5 +50,5 @@ export async function middleware(req: NextRequest) {
 export const config = {
   // /gerador-contratos é HTML estático em public/: sem esta entrada qualquer um com o
   // link abriria o gerador sem login (LEIA-ME do pacote, seção 4).
-  matcher: ["/", "/api/:path*", "/gerador-contratos", "/gerador-contratos/:path*"],
+  matcher: ["/", "/api/:path*", "/gerador-contratos", "/gerador-contratos/:path*", "/gerador-certificados", "/gerador-certificados/:path*"],
 };

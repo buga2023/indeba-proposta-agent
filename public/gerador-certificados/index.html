@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gerador de Certificados — Indeba Express</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a3253; --orange: #eb5a1a;
+    --ink: #1c2433; --ink-soft: #55607a; --paper: #f3f5f9; --panel: #ffffff; --line: #dde2ec;
+    --brand: #1a3253; --brand-soft: #e8edf5;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e8ecf4; --ink-soft: #a6b0c6; --paper: #0e1626; --panel: #152036; --line: #263450;
+      --brand: #8fb0e6; --brand-soft: #1c2b47;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #e8ecf4; --ink-soft: #a6b0c6; --paper: #0e1626; --panel: #152036; --line: #263450;
+    --brand: #8fb0e6; --brand-soft: #1c2b47;
+  }
+  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); }
+  body { display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+  .card { max-width: 480px; width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 32px 28px; text-align: center; }
+  .badge { display: inline-block; background: var(--brand-soft); color: var(--brand); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; }
+  h1 { font-size: 20px; margin: 14px 0 8px; color: var(--brand); }
+  p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+  <main class="card">
+    <span class="badge">Em breve</span>
+    <h1>Gerador de Certificados</h1>
+    <p>Em breve — aguardando arquivo do Matheus.</p>
+  </main>
+</body>
+</html>

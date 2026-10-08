@@ -1,5 +1,19 @@
 import type { ConsolidadaBloco } from "./contracts";
 
+// Rótulos padrão editáveis por proposta (ConsolidadaBloco.rotulos). Vazio/ausente cai aqui.
+export const ROTULOS_PADRAO = {
+  tituloProposta: "Proposta de Solução",
+  comodatosTitulo: "Comodatos Oferecidos",
+  comodatosSubtitulo: "Equipamentos em Comodato",
+} as const;
+export type RotuloChave = keyof typeof ROTULOS_PADRAO;
+
+export function rotulosConsolidada(c?: Pick<ConsolidadaBloco, "rotulos"> | null): Record<RotuloChave, string> {
+  const r = c?.rotulos;
+  const pick = (k: RotuloChave) => (r?.[k]?.trim() ? r[k]!.trim() : ROTULOS_PADRAO[k]);
+  return { tituloProposta: pick("tituloProposta"), comodatosTitulo: pick("comodatosTitulo"), comodatosSubtitulo: pick("comodatosSubtitulo") };
+}
+
 // Conteúdo institucional padrão do modelo Proposta Consolidada (marca IES),
 // transcrito de proposta-indeba-consolidada.pdf. É só default: cada campo é
 // editável por proposta (Fase 2). Nada de dado crítico (preço/produto) aqui.

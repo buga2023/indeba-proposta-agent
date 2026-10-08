@@ -72,6 +72,15 @@ export const ConsolidadaBloco = z.object({
     consultor: z.string(),
     cargo: z.string(),
   }),
+  // Rótulos/títulos editáveis por proposta (ex.: "Comodatos Oferecidos" → "Tecnologia
+  // Oferecida"). Opcional: ausente/vazio = rótulo padrão (ver rotulosConsolidada).
+  rotulos: z
+    .object({
+      tituloProposta: z.string().optional(),
+      comodatosTitulo: z.string().optional(),
+      comodatosSubtitulo: z.string().optional(),
+    })
+    .optional(),
   // Contatos exibidos no rodapé da ficha de produto e no card de fechamento das
   // condições. Payload/config — nunca chumbado no template. null = não exibe.
   // Default: propostas antigas persistidas continuam parseando.

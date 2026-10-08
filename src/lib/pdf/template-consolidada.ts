@@ -1,5 +1,5 @@
 import type { PropostaItem, PropostaScope } from "../contracts";
-import { consolidadaDefaults } from "../consolidada-defaults";
+import { consolidadaDefaults, rotulosConsolidada } from "../consolidada-defaults";
 import { custoLitroDiluido } from "../diluicao";
 import { linhaDoSegmento, segmentosLegiveis } from "../segmento";
 import { chaveImagem, imagemEhIlustrativa } from "../imagem-produto";
@@ -112,6 +112,7 @@ export function paginaProduto(
   siteUrl = "",
   totalPag?: number,
   segmento?: string | null,
+  tituloProposta = "Proposta de Solução",
 ): string {
   const f = item.ficha ?? null;
   const titulo = esc(item.nome); // nome comercial real — sempre bate com a ficha técnica em PDF (nunca a categoria de marketing)
@@ -270,11 +271,11 @@ export function paginaProduto(
   // de uso. Sem diluição informada → não aparece (produto pronto pra uso).
   const diluido = cotada ? custoLitroDiluido(item.embalagens) : null;
   const valores = cotada
-    ? `<div class="pp-price"><div class="pp-v-label">Valor</div><div class="pp-v-row"><span class="pp-v-size">${esc(tamanhoLegivel(cotada.tamanho, cotada.unidade))}</span><span class="pp-v-price">${brl(cotada.preco)}</span></div>${
+    ? `<div class="pp-price">${
         diluido
           ? `<div class="pp-diluido"><div class="pp-d-label">Valor por litro diluído</div><div class="pp-d-row"><span class="pp-d-price">${esc(diluido.texto)}</span><span class="pp-d-rat">diluição de ${esc(diluido.rotulo)}</span></div></div>`
           : ""
-      }<p class="pp-v-note">Consulte condições especiais para compras de maiores volumes.</p></div>`
+      }<div class="pp-v-label">Valor embalagem</div><div class="pp-v-row"><span class="pp-v-size">${esc(tamanhoLegivel(cotada.tamanho, cotada.unidade))}</span><span class="pp-v-price">${brl(cotada.preco)}</span></div><p class="pp-v-note">Consulte condições especiais para compras de maiores volumes.</p></div>`
     : "";
 
   // Link pra ficha técnica real (PDF em public/fichas-tecnicas/) — só quando o produto
@@ -301,7 +302,7 @@ export function paginaProduto(
   // Modelo onda-v3: a numeração vive SÓ no cabeçalho ("Proposta de Solução | 04") —
   // sem rodapé de página em lugar nenhum do documento. O runmark replica o .hpg das
   // seções, no topo direito da coluna de conteúdo.
-  const runmark = numero ? `<div class="pp-runmark">Proposta de Solução <b>${esc(numero)}</b></div>` : "";
+  const runmark = numero ? `<div class="pp-runmark">${esc(tituloProposta)} <b>${esc(numero)}</b></div>` : "";
 
   const wm = logoWhite
     ? `<img class="pp-wm-logo" src="${logoWhite}" alt="Indeba Express"/>`
@@ -376,11 +377,12 @@ export function consolidadaHtml(
   assets: { logo: string; logoWhite: string; fontSans: string; fontMono: string; siteUrl?: string; simbolo?: string },
 ): string {
   const c = scope.consolidada ?? consolidadaDefaults();
+  const rot = rotulosConsolidada(c);
   const cli = scope.cliente;
   const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
   // Cabeçalho (Fase E): "Proposta de Solução" 10,5px + divisória + número 15px navy —
   // proporção medida na referência (§2: --fs-cab / --fs-cab-num).
-  const header = (n: string) => `<div class="pg-head"><img class="hlogo" src="${assets.logo}" alt="IES"/><div class="hpg">Proposta de Solução <b>${n}</b></div></div>`;
+  const header = (n: string) => `<div class="pg-head">${assets.logo ? `<img class="hlogo" src="${assets.logo}" alt="IES"/>` : ""}<div class="hpg">${esc(rot.tituloProposta)} <b>${n}</b></div></div>`;
   // Fase E: o dash laranja fica sozinho acima do H1 — o H1 já é caixa alta (preset A),
   // repetir o rótulo pequeno em cima duplicava o título (ver referência, pág. 02).
   const secLbl = () => `<div class="lbl"><span></span></div>`;
@@ -396,8 +398,8 @@ export function consolidadaHtml(
   const capa = `<section class="capa">
     ${wave("wave")}
     ${timbre || `<div class="capa-wm">indeba express</div>`}
-    <img class="capa-logo" src="${assets.logo}" alt="Indeba Express"/>
-    <div class="capa-tit">PROPOSTA DE SOLUÇÃO</div>
+    ${assets.logo ? `<img class="capa-logo" src="${assets.logo}" alt="Indeba Express"/>` : ""}
+    <div class="capa-tit">${esc(rot.tituloProposta.toLocaleUpperCase("pt-BR"))}</div>
     <div class="capa-sub">${esc(c.capa.subtitulo)}</div>
     <div class="capa-card">
       ${capaRow("pessoa", "Cliente", cli.razaoSocial)}
@@ -435,7 +437,7 @@ export function consolidadaHtml(
     ${timbre}
     ${header("03")}
     ${secLbl()}
-    <h1 class="sec-tit">Comodatos Oferecidos</h1><div class="sec-sub">Equipamentos em Comodato</div>
+    <h1 class="sec-tit">${esc(rot.comodatosTitulo)}</h1><div class="sec-sub">${esc(rot.comodatosSubtitulo)}</div>
     <p class="pt">${esc(c.comodatos.intro)}</p>
     <div class="equip">${c.comodatos.equipamentos
       .map((e) => `<div class="eq"><span class="ei">${iconeSvg(e.icone, "#fff")}</span><h3>${esc(e.titulo)}</h3>${e.descricao ? `<p>${esc(e.descricao)}</p>` : ""}</div>`)
@@ -457,7 +459,7 @@ export function consolidadaHtml(
     .map((it, idx) =>
       // `cli.segmento` alimenta o rótulo "LINHA {SEGMENTO}" da ficha (spec Item 2) —
       // é o segmento que o consultor informou na montagem, não um rótulo do produto.
-      paginaProduto(it, imagens[chaveImagem(it)] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite, assets.siteUrl, total, cli.segmento),
+      paginaProduto(it, imagens[chaveImagem(it)] ?? "", contato, String(PRIMEIRO_PRODUTO + idx).padStart(2, "0"), assets.logoWhite, assets.siteUrl, total, cli.segmento, rot.tituloProposta),
     )
     .join("");
 
@@ -493,8 +495,8 @@ export function consolidadaHtml(
    reserva e o PDF podia ser tirado ANTES da troca: a "letra grosseira/serrilhada"
    era a fonte substituta do Chromium serverless, não a Geist. O render também
    espera document.fonts.ready antes do page.pdf (render.ts). */
-@font-face { font-family: "Geist"; src: url("${assets.fontSans}") format("woff2"); font-weight: 100 900; font-display: block; }
-@font-face { font-family: "Geist Mono"; src: url("${assets.fontMono}") format("woff2"); font-weight: 100 900; font-display: block; }
+${assets.fontSans ? `@font-face { font-family: "Geist"; src: url("${assets.fontSans}") format("woff2"); font-weight: 100 900; font-display: block; }` : ""}
+${assets.fontMono ? `@font-face { font-family: "Geist Mono"; src: url("${assets.fontMono}") format("woff2"); font-weight: 100 900; font-display: block; }` : ""}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 /* Escala Fase E v3 — medida na referência do Mateus (§2 da spec: unidade u × 0,7846),
    não estimada: H1 28px · sub 13px · corpo 11px/1,6 · card 11/9px · cabeçalho 10,5px ·
@@ -676,14 +678,14 @@ b, strong { font-weight: 700; }
 .pp-v-label { font-size: 11.9px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .pp-v-row { display: flex; align-items: baseline; gap: 10px; margin-top: 7px; }
 .pp-v-size { font-size: 15px; font-weight: 700; color: ${ORANGE}; letter-spacing: .5px; }
-.pp-v-price { font-family: "Geist Mono", monospace; font-size: 33.8px; font-weight: 700; letter-spacing: .3px; }
+.pp-v-price { font-family: "Geist Mono", monospace; font-size: 33.8px; font-weight: 700; letter-spacing: .3px; color: #fff; }
 .pp-v-note { font-size: 11.3px; line-height: 1.4; color: rgba(255,255,255,.5); margin-top: 8px; max-width: 250px; }
-/* Valor por litro diluído — segundo destaque da rail (o preço da embalagem manda
-   no tamanho; este manda na cor). Fio superior separa do preço sem virar outro card. */
-.pp-diluido { margin-top: 12px; padding-top: 11px; border-top: 1px dashed rgba(255,255,255,.22); }
-.pp-d-label { font-size: 11.3px; letter-spacing: 1.6px; color: rgba(255,255,255,.55); text-transform: uppercase; }
-.pp-d-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 5px; }
-.pp-d-price { font-family: "Geist Mono", monospace; font-size: 21.3px; font-weight: 700; color: ${ORANGE}; }
+/* Valor por litro diluído — primeiro destaque da rail, ACIMA do valor da embalagem, no MESMO
+   tamanho de fonte (33,8px); a diferença é só a cor (laranja = diluído, branco = embalagem). Fio superior separa do preço sem virar outro card. */
+.pp-diluido { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px dashed rgba(255,255,255,.22); }
+.pp-d-label { font-size: 11.9px; letter-spacing: 2.4px; color: rgba(255,255,255,.55); text-transform: uppercase; }
+.pp-d-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 7px; }
+.pp-d-price { font-family: "Geist Mono", monospace; font-size: 33.8px; font-weight: 700; letter-spacing: .3px; color: ${ORANGE}; }
 .pp-d-rat { font-size: 10.6px; color: rgba(255,255,255,.6); }
 .pp-ficha-link { display: inline-block; margin-top: 12px; font-size: 11.3px; font-weight: 700; color: ${ORANGE}; text-decoration: underline; }
 /* Coluna de conteúdo: o bloco principal começa do TOPO (flex-start) — a centralização

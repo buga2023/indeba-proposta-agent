@@ -15,10 +15,12 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
 import type { StatusProposta, PropostaScope, PropostaItem, Produto, Funcao, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
 import type { Usuario } from "@/lib/auth";
-import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo } from "@/lib/proposta-edit";
+import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setRotuloConsolidada, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo } from "@/lib/proposta-edit";
 import { custoLitroDiluido, diluicaoSugeridaDaFicha } from "@/lib/diluicao";
-import { consolidadaDefaults } from "@/lib/consolidada-defaults";
+import { consolidadaDefaults, rotulosConsolidada, ROTULOS_PADRAO } from "@/lib/consolidada-defaults";
 import { mascaraCnpj, erroCnpj } from "@/lib/cnpj";
+import { agruparPorAnoMes, SEM_DATA } from "@/lib/agrupar-registros";
+import { FILTRO_VAZIO, filtrarPropostas, filtroAtivo, type FiltroPropostas, type PeriodoFiltro } from "@/lib/filtrar-propostas";
 import { SEGMENTOS, rotuloSegmento, linhaDoSegmento, segmentosLegiveis } from "@/lib/segmento";
 import { imagemEhIlustrativa } from "@/lib/imagem-produto";
 import { tamanhoLegivel } from "@/lib/embalagem";
@@ -371,7 +373,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
 // mais oferecidos como opção.
 const STATUS_OPCOES: StatusProposta[] = ["em_andamento", "enviada", "aprovada", "recusada"];
 
-type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "ferramentas" | "ferramentas-comerciais" | "gerador-contratos" | "config" | "perfil";
+type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "ferramentas" | "ferramentas-comerciais" | "gerador-contratos" | "gerador-certificados" | "config" | "perfil";
 type TipoProposta = "orcamento" | "implantacao" | "comercial" | "consolidada";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -400,6 +402,7 @@ const CMD_ITEMS: PaletteItem[] = [
   { key: "ferramentas-comerciais", label: "Ferramentas Comerciais", hint: "Novas prospecções, visitas de rotina e solicitações" },
   { key: "ferramentas", label: "Ferramentas Técnicas", hint: "Visitas de rotina, contratos e estoque de comodatos" },
   { key: "gerador-contratos", label: "Gerador de Contratos", hint: "Contrato de fornecimento com comodato, em PDF" },
+  { key: "gerador-certificados", label: "Gerador de Certificados", hint: "Certificados em PDF (em breve)" },
   { key: "perfil", label: "Meu perfil" },
 ];
 // Configurações é o painel do gestor (e-mails de cobrança, colaboradores). Fica fora da
@@ -588,6 +591,11 @@ export default function Home() {
   // campo que o PDF final realmente renderiza (ver setCondicaoConsolidadaTexto).
   function editarCondicaoConsolidada(index: number, texto: string) {
     setScope((s) => (s ? setCondicaoConsolidadaTexto(s, index, texto) : s));
+  }
+
+  // Rótulos/títulos da Proposta de Solução, editáveis por proposta (preview + PDF).
+  function editarRotulo(chave: "tituloProposta" | "comodatosTitulo" | "comodatosSubtitulo", texto: string) {
+    setScope((s) => (s ? setRotuloConsolidada(s, chave, texto) : s));
   }
 
   // Dados do cliente editáveis direto (antes só dava pra mudar via chat de correção —
@@ -1105,6 +1113,15 @@ export default function Home() {
             </svg>
             Gerador de Contratos
           </Hoverable>
+          {/* Gerador de Certificados: encaixe com placeholder em public/gerador-certificados
+              (aguardando o arquivo final do Matheus). */}
+          <Hoverable eager base={navItemStyle(["gerador-certificados"])} hover={navHover} onClick={() => irPara("gerador-certificados")} title="Gerador de Certificados — em breve">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2.5" y="3" width="12" height="8.5" rx="1" />
+              <path d="M5.5 6h6M5.5 8.5h3M10.5 11.5l.5 3 1.5-1 1.5 1 .5-3" />
+            </svg>
+            Gerador de Certificados
+          </Hoverable>
 
           {/* Configurações é o painel do gestor: e-mails de cobrança, GESTOR_EMAIL, cadastro
               de colaboradores. As rotas já respondem 403 para quem não é admin — aqui a
@@ -1188,6 +1205,7 @@ export default function Home() {
             onRefinar={refinarTexto}
             onEditarTexto={editarTexto}
             onEditarCondicaoConsolidada={editarCondicaoConsolidada}
+            onEditarRotulo={editarRotulo}
             onEditarCliente={editarCliente}
             onDefinirTeto={(teto) => toast(aplicarTeto(teto), "info")}
             onComandoChat={aplicarComandoChat}
@@ -1254,8 +1272,8 @@ export default function Home() {
         {screen === "chamados" && <ChamadosScreen />}
         {/* Telas de componentes externos não têm ScreenHead: ganham a barra de topo com
             menu (celular) e Voltar. */}
-        {(screen === "ferramentas" || screen === "ferramentas-comerciais" || screen === "chamados" || screen === "gerador-contratos" || (screen === "config" && ehAdmin)) && (
-          <BarraTopo titulo={screen === "ferramentas" ? "Ferramentas Técnicas" : screen === "ferramentas-comerciais" ? "Ferramentas Comerciais" : screen === "chamados" ? "Chamados" : screen === "gerador-contratos" ? "Gerador de Contratos" : "Configurações"} />
+        {(screen === "ferramentas" || screen === "ferramentas-comerciais" || screen === "chamados" || screen === "gerador-contratos" || screen === "gerador-certificados" || (screen === "config" && ehAdmin)) && (
+          <BarraTopo titulo={screen === "ferramentas" ? "Ferramentas Técnicas" : screen === "ferramentas-comerciais" ? "Ferramentas Comerciais" : screen === "chamados" ? "Chamados" : screen === "gerador-contratos" ? "Gerador de Contratos" : screen === "gerador-certificados" ? "Gerador de Certificados" : "Configurações"} />
         )}
         {screen === "ferramentas" && <FerramentasTecnicasScreen />}
         {screen === "ferramentas-comerciais" && <FerramentasComerciaisScreen />}
@@ -1263,6 +1281,13 @@ export default function Home() {
           <iframe
             src="/gerador-contratos/index.html"
             title="Gerador de Contratos — Indeba Express"
+            style={{ display: "block", width: "100%", height: "calc(100vh - 58px)", border: 0, background: "#fff" }}
+          />
+        )}
+        {screen === "gerador-certificados" && (
+          <iframe
+            src="/gerador-certificados/index.html"
+            title="Gerador de Certificados — Indeba Express"
             style={{ display: "block", width: "100%", height: "calc(100vh - 58px)", border: 0, background: "#fff" }}
           />
         )}
@@ -1392,6 +1417,17 @@ const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; i
       <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <path d="M4.5 2.5h5l3 3v9h-8z" />
         <path d="M9.5 2.5v3h3M6.5 9h4M6.5 11.5h4" />
+      </svg>
+    ),
+  },
+  {
+    screen: "gerador-certificados",
+    titulo: "Gerador de Certificados",
+    sub: "Certificados em PDF (em breve)",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2.5" y="3" width="12" height="8.5" rx="1" />
+        <path d="M5.5 6h6M5.5 8.5h3M10.5 11.5l.5 3 1.5-1 1.5 1 .5-3" />
       </svg>
     ),
   },
@@ -3106,6 +3142,7 @@ function ReviewScreen({
   onRefinar,
   onEditarTexto,
   onEditarCondicaoConsolidada,
+  onEditarRotulo,
   onEditarCliente,
   onDefinirTeto,
   onComandoChat,
@@ -3127,6 +3164,7 @@ function ReviewScreen({
   onRefinar: (texto: string) => void;
   onEditarTexto: (texto: string) => void;
   onEditarCondicaoConsolidada: (index: number, texto: string) => void;
+  onEditarRotulo: (chave: "tituloProposta" | "comodatosTitulo" | "comodatosSubtitulo", texto: string) => void;
   onEditarCliente: (campo: "razaoSocial" | "cnpj" | "segmento" | "responsavel", valor: string) => void;
   onDefinirTeto: (teto: number) => void;
   onComandoChat: (r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null }) => string | void;
@@ -3324,6 +3362,33 @@ function ReviewScreen({
                 ))}
               </div>
             </div>
+
+            {/* Rótulos/títulos da Proposta de Solução — editáveis por proposta (sugestão do
+                Marcelo: "Comodatos oferecidos" → "Tecnologia oferecida"). Vazio = padrão. */}
+            {scope.consolidada && (
+              <div style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "8px", padding: "12px 16px", boxShadow: "var(--shadow-sm)" }}>
+                <div style={{ fontSize: "11.5px", color: "var(--gray-400)", marginBottom: "8px" }}>Títulos da proposta — deixe vazio para usar o padrão</div>
+                <div className="ies-fields" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }}>
+                  {(
+                    [
+                      ["tituloProposta", "Título da proposta"],
+                      ["comodatosTitulo", "Título da seção de equipamentos"],
+                      ["comodatosSubtitulo", "Subtítulo da seção de equipamentos"],
+                    ] as const
+                  ).map(([chave, rotulo]) => (
+                    <label key={chave}>
+                      <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", marginBottom: "4px" }}>{rotulo}</div>
+                      <input
+                        value={scope.consolidada?.rotulos?.[chave] ?? ""}
+                        onChange={(e) => onEditarRotulo(chave, e.target.value)}
+                        placeholder={ROTULOS_PADRAO[chave]}
+                        style={{ width: "100%", height: "34px", padding: "0 10px", borderRadius: "6px", border: "1px solid var(--gray-200)", background: "var(--gray-50)", fontSize: "13px", color: "var(--gray-900)", fontFamily: "var(--font-sans), sans-serif", outline: "none", boxSizing: "border-box" }}
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Chat de correção pontual — adicional ao Refinar com IA acima */}
             <EdicaoChat scope={scope} onComando={onComandoChat} />
@@ -3850,6 +3915,7 @@ function ComercialPreview({ scope, itens }: { scope: PropostaScope; itens: Propo
 // não paginado: a ficha rica por produto e as seções institucionais completas só saem no PDF).
 function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: PropostaItem[] }) {
   const c = scope.consolidada;
+  const rot = rotulosConsolidada(c);
   const cli = scope.cliente;
   const data = new Date(scope.criadoEm).toLocaleDateString("pt-BR");
   const navy = "#0b2a4a";
@@ -3860,17 +3926,17 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
       <div style={{ fontSize: "12px", fontWeight: 700, color: "#1f3a52" }}>{value || "—"}</div>
     </div>
   );
-  const box = (label: string, value: string, sub?: string) => (
+  const box = (label: string, value: string, sub?: string, destaque?: boolean) => (
     <div style={{ flex: 1, background: "#f2f5f9", border: "1px solid #e5ebf2", borderRadius: "8px", padding: "8px 10px", textAlign: "center" }}>
       <div style={{ fontSize: "8.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".03em", color: navy, marginBottom: "4px" }}>{label}</div>
-      <div style={{ fontSize: "13px", fontWeight: 700, color: navy }}>{value}{sub && <span style={{ fontSize: "9px", fontWeight: 400, color: "#7a8696" }}> {sub}</span>}</div>
+      <div style={{ fontSize: "13px", fontWeight: 700, color: destaque ? orange : navy }}>{value}{sub && <span style={{ fontSize: "9px", fontWeight: 400, color: "#7a8696" }}> {sub}</span>}</div>
     </div>
   );
   return (
     <div className="ies-doc" style={{ maxWidth: "820px", margin: "0 auto", background: "white", boxShadow: "0 8px 40px rgba(0,0,0,.18)", borderRadius: "2px", padding: "36px 44px", color: "#25303f" }}>
       {/* capa compacta */}
       <div style={{ textAlign: "center", paddingBottom: "18px", borderBottom: "2px solid #e5ebf2", marginBottom: "18px" }}>
-        <div style={{ fontSize: "20px", fontWeight: 800, color: navy, letterSpacing: "3px" }}>PROPOSTA DE SOLUÇÃO</div>
+        <div style={{ fontSize: "20px", fontWeight: 800, color: navy, letterSpacing: "3px" }}>{rot.tituloProposta.toLocaleUpperCase("pt-BR")}</div>
         <div style={{ fontSize: "11px", color: orange, fontWeight: 700, marginTop: "4px" }}>{c?.capa.subtitulo ?? "Soluções em Higienização Profissional"}</div>
       </div>
       <div style={{ display: "flex", gap: "10px", marginBottom: "14px" }}>
@@ -3912,9 +3978,9 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
               )}
               <div style={{ fontSize: "11px", color: "#5a6878", lineHeight: 1.45, margin: "4px 0 10px" }}>{p.ficha?.descricao ?? p.descricaoUso}</div>
               <div style={{ display: "flex", gap: "10px" }}>
+                {box("Custo final por litro diluído", custoLitroDiluido(p.embalagens)?.texto ?? "—", custoLitroDiluido(p.embalagens) ? `diluição ${custoLitroDiluido(p.embalagens)!.rotulo}` : undefined, true)}
                 {box("Embalagem", e ? tamanhoLegivel(e.tamanho, e.unidade) : "—")}
                 {box("Preço", fmt(precoUnit(p)))}
-                {box("Custo final por litro diluído", custoLitroDiluido(p.embalagens)?.texto ?? "—", custoLitroDiluido(p.embalagens) ? `diluição ${custoLitroDiluido(p.embalagens)!.rotulo}` : undefined)}
               </div>
             </div>
           </div>
@@ -3922,7 +3988,7 @@ function ConsolidadaPreview({ scope, itens }: { scope: PropostaScope; itens: Pro
       })}
 
       <div style={{ marginTop: "8px", padding: "12px 14px", background: "var(--gray-50)", border: "1px dashed var(--gray-300)", borderRadius: "8px", fontSize: "11.5px", color: "var(--gray-500)" }}>
-        Fechamento no PDF: capa + apresentação institucional + <b>comodatos oferecidos</b> + <b>1 ficha rica por produto</b> + condições comerciais. Aqui é o resumo — o documento final é multi-página.
+        Fechamento no PDF: capa + apresentação institucional + <b>{rot.comodatosTitulo.toLocaleLowerCase("pt-BR")}</b> + <b>1 ficha rica por produto</b> + condições comerciais. Aqui é o resumo — o documento final é multi-página.
       </div>
 
       <h2 style={{ fontSize: "14px", fontWeight: 800, color: navy, borderBottom: "2px solid #e5ebf2", paddingBottom: "5px", margin: "18px 0 12px" }}>Condições Comerciais</h2>
@@ -4028,6 +4094,13 @@ function HistoryScreen({
       .catch(() => setConsultores([])); // sem lista, a célula cai no nome em leitura
   }, [ehAdmin]);
   const lista = propostas ?? [];
+  // Filtro da lista (termo cliente/consultor + período + status) e agrupamento ano > mês.
+  // Os totais dos cartões seguem a carteira inteira; o filtro só recorta a tabela.
+  const [filtro, setFiltro] = useState<FiltroPropostas>(FILTRO_VAZIO);
+  const filtrada = filtrarPropostas(lista, filtro);
+  const grupos = agruparPorAnoMes(filtrada.map((p) => ({ data: p.atualizadoEm, p })));
+  const MESES_PT = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  const campoFiltro: CSSProperties = { height: "36px", padding: "0 12px", fontSize: "13px", borderRadius: "9px", border: "1px solid var(--gray-200)", background: "white", color: "var(--gray-700)" };
   // Faturamento = só o que o cliente APROVOU (status comercial real, não o que foi gerado).
   const aprovado = lista.filter((p) => p.status === "aprovada").reduce((s, p) => s + (Number(p.total) || 0), 0);
   const totalItens = lista.reduce((s, p) => s + p.qtdItens, 0);
@@ -4115,6 +4188,52 @@ function HistoryScreen({
         ))}
       </div>
 
+      {!erro && lista.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", marginBottom: "16px" }}>
+          <input
+            type="search"
+            aria-label="Buscar por cliente ou consultor"
+            placeholder="Buscar cliente ou consultor…"
+            value={filtro.termo}
+            onChange={(e) => setFiltro((f) => ({ ...f, termo: e.target.value }))}
+            style={{ ...campoFiltro, flex: "1 1 240px", minWidth: "200px" }}
+          />
+          <select
+            aria-label="Período"
+            value={filtro.periodo}
+            onChange={(e) => setFiltro((f) => ({ ...f, periodo: e.target.value as PeriodoFiltro }))}
+            style={campoFiltro}
+          >
+            <option value="todos">Todo o período</option>
+            <option value="mes">Este mês</option>
+            <option value="30d">Últimos 30 dias</option>
+            <option value="ano">Este ano</option>
+          </select>
+          <select
+            aria-label="Status"
+            value={filtro.status}
+            onChange={(e) => setFiltro((f) => ({ ...f, status: e.target.value }))}
+            style={campoFiltro}
+          >
+            <option value="todos">Todos os status</option>
+            {STATUS_OPCOES.map((s) => (
+              <option key={s} value={s}>{STATUS_UI[s].label}</option>
+            ))}
+          </select>
+          {filtroAtivo(filtro) && (
+            <>
+              <span style={{ fontSize: "12.5px", color: "var(--gray-500)" }}>{filtrada.length} de {lista.length}</span>
+              <button
+                onClick={() => setFiltro(FILTRO_VAZIO)}
+                style={{ height: "36px", padding: "0 14px", fontSize: "12.5px", fontWeight: 600, color: "var(--gray-700)", background: "white", border: "1px solid var(--gray-200)", borderRadius: "9px", cursor: "pointer" }}
+              >
+                Limpar filtros
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {erro ? (
         <div style={{ textAlign: "center", padding: "60px 40px", color: "#DC2626", fontSize: "14px" }}>Não foi possível carregar o histórico: {erro}</div>
       ) : propostas !== null && lista.length === 0 ? (
@@ -4143,7 +4262,20 @@ function HistoryScreen({
               <div key={i} style={{ fontSize: "11px", fontWeight: 600, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: ".05em", textAlign: h.a as CSSProperties["textAlign"] }}>{h.t}</div>
             ))}
           </div>
-          {lista.map((p, idx) => {
+          {filtrada.length === 0 && (
+            <div style={{ textAlign: "center", padding: "40px 20px", fontSize: "13.5px", color: "var(--gray-500)" }}>
+              Nenhuma proposta com esses filtros.
+            </div>
+          )}
+          {grupos.flatMap((g) => g.meses.flatMap((m) => [
+            <div
+              key={`g-${g.ano}-${m.mes}`}
+              style={{ minWidth: larguraMinima, padding: "9px 20px", background: "var(--gray-50)", borderBottom: "1px solid var(--gray-200)", fontSize: "12px", fontWeight: 700, color: "var(--gray-700)", letterSpacing: ".03em", display: "flex", justifyContent: "space-between" }}
+            >
+              <span>{g.ano === SEM_DATA ? SEM_DATA : `${MESES_PT[Number(m.mes) - 1]} de ${g.ano}`}</span>
+              <span style={{ fontWeight: 500, color: "var(--gray-500)" }}>{m.itens.length} proposta(s)</span>
+            </div>,
+            ...m.itens.map(({ p }, idx) => {
             const data = new Date(p.atualizadoEm).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
             const su = STATUS_UI[p.status];
             return (
@@ -4258,7 +4390,8 @@ function HistoryScreen({
                 </div>
               </Hoverable>
             );
-          })}
+          }),
+          ]))}
         </div>
       )}
     </div>

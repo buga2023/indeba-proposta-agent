@@ -106,6 +106,20 @@ export function setCondicaoConsolidadaTexto(scope: PropostaScope, index: number,
   };
 }
 
+// Edita um rótulo/título da Proposta de Solução (scope.consolidada.rotulos) — persistido
+// com a proposta, refletido no preview e no PDF. Texto vazio = volta ao padrão.
+export function setRotuloConsolidada(
+  scope: PropostaScope,
+  chave: "tituloProposta" | "comodatosTitulo" | "comodatosSubtitulo",
+  texto: string,
+): PropostaScope {
+  if (!scope.consolidada) return scope;
+  return {
+    ...scope,
+    consolidada: { ...scope.consolidada, rotulos: { ...scope.consolidada.rotulos, [chave]: texto } },
+  };
+}
+
 // Mesma edição de cima, mas pelo "campo" clássico (validade/prazoEntrega/pagamento/
 // frete) que o chat de correção já classifica (comando.campoCondicao) — casa
 // deterministicamente pelo ícone do item padrão (consolidada-defaults.ts), nunca por
