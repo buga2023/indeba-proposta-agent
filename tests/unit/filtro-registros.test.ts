@@ -177,3 +177,30 @@ describe("alvoBusca", () => {
     expect(passaNoFiltro({ ...FILTRO_VAZIO, termo: "cliente" }, alvoBusca("Cliente X", null))).toBe(true);
   });
 });
+
+
+describe("passaNoFiltro por vendedor", () => {
+  it("vendedor vazio ou so espacos nao filtra ninguem", () => {
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, vendedor: "" }, "ACME", "2026-09-01", "Ana")).toBe(true);
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, vendedor: "  " }, "ACME", "2026-09-01", null)).toBe(true);
+    expect(passaNoFiltro({ termo: "", de: "", ate: "" }, "ACME", "2026-09-01", null)).toBe(true);
+  });
+  it("casa por trecho sem diferenciar maiuscula", () => {
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, vendedor: "ana" }, "ACME", null, "Ana Souza")).toBe(true);
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, vendedor: "bruno" }, "ACME", null, "Ana Souza")).toBe(false);
+  });
+  it("autorNome nulo nao quebra; com filtro ativo sai", () => {
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, vendedor: "ana" }, "ACME", null, null)).toBe(false);
+    expect(passaNoFiltro({ ...FILTRO_VAZIO, vendedor: "ana" }, "ACME", null)).toBe(false);
+  });
+  it("combina em E com cliente e periodo", () => {
+    const f = { termo: "acme", de: "2026-09-01", ate: "2026-09-30", vendedor: "ana" };
+    expect(passaNoFiltro(f, "ACME", "2026-09-10", "Ana")).toBe(true);
+    expect(passaNoFiltro(f, "ACME", "2026-10-10", "Ana")).toBe(false);
+    expect(passaNoFiltro(f, "Outra", "2026-09-10", "Ana")).toBe(false);
+  });
+  it("filtroAtivo considera vendedor", () => {
+    expect(filtroAtivo({ ...FILTRO_VAZIO, vendedor: "x" })).toBe(true);
+    expect(filtroAtivo(FILTRO_VAZIO)).toBe(false);
+  });
+});

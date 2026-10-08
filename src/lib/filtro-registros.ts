@@ -24,12 +24,14 @@ export type FiltroRegistros = {
   de: string;
   /** Fim do período, AAAA-MM-DD. Vazio = sem limite. Inclusivo. */
   ate: string;
+  /** Nome de quem lançou. Casa por trecho, sem diferenciar maiúscula. Vazio/ausente = sem filtro. */
+  vendedor?: string;
 };
 
-export const FILTRO_VAZIO: FiltroRegistros = { termo: "", de: "", ate: "" };
+export const FILTRO_VAZIO: FiltroRegistros = { termo: "", de: "", ate: "", vendedor: "" };
 
 export function filtroAtivo(f: FiltroRegistros): boolean {
-  return f.termo.trim() !== "" || f.de !== "" || f.ate !== "";
+  return f.termo.trim() !== "" || f.de !== "" || f.ate !== "" || (f.vendedor ?? "").trim() !== "";
 }
 
 /**
@@ -39,7 +41,15 @@ export function filtroAtivo(f: FiltroRegistros): boolean {
  * `data` undefined/null = registro sem data (contrato). Só atrapalha se houver recorte de
  * período: aí ele sai, porque não dá para afirmar que cai na janela.
  */
-export function passaNoFiltro(f: FiltroRegistros, texto: string, data?: string | null): boolean {
+export function passaNoFiltro(
+  f: FiltroRegistros,
+  texto: string,
+  data?: string | null,
+  vendedorNome?: string | null,
+): boolean {
+  const vendedor = (f.vendedor ?? "").trim().toLowerCase();
+  // Vendedor vazio não filtra ninguém; com filtro, registro sem nome não dá para afirmar -> sai.
+  if (vendedor && !(vendedorNome ?? "").toLowerCase().includes(vendedor)) return false;
   const termo = f.termo.trim().toLowerCase();
   if (termo && !casaTexto(termo, texto)) return false;
   if ((f.de || f.ate) && !data) return false;

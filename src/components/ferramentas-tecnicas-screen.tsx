@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato, AnexoInfo, TipoRegistroAnexo } from "@/lib/contracts";
 import { BotaoPdf } from "@/components/ui/botao-pdf";
 import { encolherFoto } from "@/components/form-produto";
+import { agruparPorAnoMes, SEM_DATA } from "@/lib/agrupar-registros";
 import { FILTRO_VAZIO, filtroAtivo, passaNoFiltro, contagem, alvoBusca, type FiltroRegistros } from "@/lib/filtro-registros";
 
 // Re-exportados para a tela Comercial, que já importa o resto das Ferramentas daqui.
@@ -113,12 +114,14 @@ export function BarraFiltros({
   rotuloTermo,
   placeholderTermo,
   comPeriodo = true,
+  comVendedor = false,
 }: {
   filtro: FiltroRegistros;
   setFiltro: (f: FiltroRegistros) => void;
   rotuloTermo: string;
   placeholderTermo: string;
   comPeriodo?: boolean;
+  comVendedor?: boolean;
 }) {
   return (
     <div
@@ -154,6 +157,18 @@ export function BarraFiltros({
             <input type="date" value={filtro.ate} onChange={(e) => setFiltro({ ...filtro, ate: e.target.value })} style={filtroCampo} />
           </label>
         </>
+      )}
+      {comVendedor && (
+        <label style={{ ...filtroRotulo, display: "flex", flexDirection: "column", flex: 1, minWidth: "160px" }}>
+          Vendedor
+          <input
+            type="search"
+            value={filtro.vendedor ?? ""}
+            placeholder="Nome de quem lançou…"
+            onChange={(e) => setFiltro({ ...filtro, vendedor: e.target.value })}
+            style={filtroCampo}
+          />
+        </label>
       )}
       {filtroAtivo(filtro) && (
         <button type="button" onClick={() => setFiltro(FILTRO_VAZIO)} style={{ ...botaoEditar, padding: "7px 13px" }}>
@@ -209,6 +224,32 @@ export function useRecolhiveis() {
       return n;
     });
   return { abertos, alternar };
+}
+
+const MESES_PT = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+export const rotuloMes = (mes: string) => (mes === SEM_DATA ? SEM_DATA : MESES_PT[Number(mes) - 1] ?? mes);
+
+/** Pasta colapsável de ano/mês. Com filtro ativo abre à força: o resultado não pode ficar escondido. */
+export function PastaRegistros({ titulo, total, nivel, aberta, children }: { titulo: string; total: number; nivel: "ano" | "mes"; aberta: boolean; children: ReactNode }) {
+  const [manual, setManual] = useState<boolean | null>(null);
+  const aberto = manual ?? aberta;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginLeft: nivel === "mes" ? "14px" : 0 }}>
+      <button
+        type="button"
+        onClick={() => setManual(!aberto)}
+        aria-expanded={aberto}
+        style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", border: "1px solid var(--gray-200)", borderRadius: "10px", background: nivel === "ano" ? "var(--gray-100)" : "white", cursor: "pointer", fontSize: nivel === "ano" ? "14px" : "13px", fontWeight: 700, color: "var(--gray-900)", textAlign: "left" }}
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ transform: aberto ? "rotate(90deg)" : "none", transition: "transform .15s" }}>
+          <path d="M4 2l4 4-4 4" />
+        </svg>
+        {titulo}
+        <span style={{ fontWeight: 500, fontSize: "12px", color: "var(--gray-500)" }}>({total})</span>
+      </button>
+      {aberto && children}
+    </div>
+  );
 }
 
 export function SemResultado({ aoLimpar }: { aoLimpar: () => void }) {
@@ -813,7 +854,7 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
   // Filtro por cliente + período e cards recolhidos (áudio com o João, 19/09/2026).
   const [filtro, setFiltro] = useState<FiltroRegistros>(FILTRO_VAZIO);
   const { abertos, alternar } = useRecolhiveis();
-  const visitasFiltradas = visitas.filter((v) => passaNoFiltro(filtro, v.cliente, v.data));
+  const visitasFiltradas = visitas.filter((v) => passaNoFiltro(filtro, v.cliente, v.data, v.autorNome ?? v.autor));
 
   // Status resolvido/não resolvido é só da visita TÉCNICA (áudio do Mateus, 25/08/2026:
   // "isso aqui é uma visita de rotina… ferramenta comercial, não precisa").
@@ -1080,12 +1121,16 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
           {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
         {visitas.length > 0 && (
-          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Cliente" placeholderTermo="Buscar por cliente…" />
+          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Cliente" placeholderTermo="Buscar por cliente…" comVendedor />
         )}
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && visitas.length === 0 && <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhuma visita registrada ainda.</div>}
         {!carregando && visitas.length > 0 && visitasFiltradas.length === 0 && <SemResultado aoLimpar={() => setFiltro(FILTRO_VAZIO)} />}
-        {visitasFiltradas.map((v) => {
+        {agruparPorAnoMes(visitasFiltradas).map((g, gi) => (
+          <PastaRegistros key={g.ano} titulo={g.ano} total={g.meses.reduce((n, m) => n + m.itens.length, 0)} nivel="ano" aberta={gi === 0 || filtroAtivo(filtro)}>
+            {g.meses.map((m, mi) => (
+              <PastaRegistros key={m.mes} titulo={rotuloMes(m.mes)} total={m.itens.length} nivel="mes" aberta={(gi === 0 && mi === 0) || filtroAtivo(filtro)}>
+        {m.itens.map((v) => {
           const st = STATUS_VISITA[v.status];
           const emEdicao = editandoId === v.id;
           // Em edição o card fica aberto à força — recolher um formulário preenchido
@@ -1218,6 +1263,10 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
             </div>
           );
         })}
+              </PastaRegistros>
+            ))}
+          </PastaRegistros>
+        ))}
       </div>
       )}
     </>

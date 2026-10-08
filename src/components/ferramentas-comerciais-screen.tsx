@@ -162,7 +162,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   // do filtro é a empresa prospectada, que é o nome que a aba usa.
   const [filtro, setFiltro] = useState<FiltroRegistros>(FILTRO_VAZIO);
   const { abertos, alternar } = useRecolhiveis();
-  const relatoriosFiltrados = relatorios.filter((p) => passaNoFiltro(filtro, p.empresa, p.data));
+  const relatoriosFiltrados = relatorios.filter((p) => passaNoFiltro(filtro, p.empresa, p.data, p.autorNome ?? p.autor));
 
   async function carregar() {
     try {
@@ -357,7 +357,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
           {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
         {relatorios.length > 0 && (
-          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Empresa" placeholderTermo="Buscar por empresa…" />
+          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Empresa" placeholderTermo="Buscar por empresa…" comVendedor />
         )}
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && relatorios.length === 0 && (
@@ -499,7 +499,7 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   // campo de data própria, então o período recorta pela data do lançamento (criadoEm, que
   // é ISO: o slice pega o AAAA-MM-DD sem passar por fuso).
   const [filtro, setFiltro] = useState<FiltroRegistros>(FILTRO_VAZIO);
-  const solicitacoesFiltradas = solicitacoes.filter((s) => passaNoFiltro(filtro, s.cliente, s.criadoEm.slice(0, 10)));
+  const solicitacoesFiltradas = solicitacoes.filter((s) => passaNoFiltro(filtro, s.cliente, s.criadoEm.slice(0, 10), s.autorNome ?? s.autor));
 
   async function carregar() {
     try {
@@ -667,7 +667,7 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
           {souGestor && <BotaoExcluidos ativo={false} onClick={() => setMostrarExcluidos(true)} />}
         </div>
         {solicitacoes.length > 0 && (
-          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Cliente" placeholderTermo="Buscar por cliente…" />
+          <BarraFiltros filtro={filtro} setFiltro={setFiltro} rotuloTermo="Cliente" placeholderTermo="Buscar por cliente…" comVendedor />
         )}
         {carregando && <div style={{ color: "var(--gray-500)", fontSize: "14px" }}>Carregando…</div>}
         {!carregando && solicitacoes.length === 0 && (
