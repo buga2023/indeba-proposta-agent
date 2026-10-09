@@ -513,6 +513,9 @@ export default function Home() {
   // proposta. Agora cada troca de tela entra no histórico do navegador como `?tela=…&id=…`,
   // Voltar/Avançar do navegador trocam a tela, e abrir `?tela=review&id=X` reabre a proposta.
   const navegacaoDoNavegador = useRef(false);
+  // A busca da carga é lida AQUI, antes de qualquer efeito: o efeito de sincronia abaixo
+  // reescreve a URL na primeira pintura e apagaria o `?tela=…` do deep-link.
+  const buscaInicial = useRef(typeof window !== "undefined" ? window.location.search : "");
   useEffect(() => {
     if (typeof window === "undefined") return;
     const id = (screen === "review" || screen === "pdf") && scope?.id ? `&id=${encodeURIComponent(scope.id)}` : "";
@@ -541,7 +544,7 @@ export default function Home() {
   // Deep-link na carga: `?tela=history` abre o histórico; `?tela=review&id=X` reabre a
   // proposta X. Fora do corpo do effect (microtask) por causa da regra react-hooks/set-state-in-effect.
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search);
+    const q = new URLSearchParams(buscaInicial.current);
     const tela = q.get("tela") as Screen | null;
     const id = q.get("id");
     if (!tela || tela === "dashboard") return;
