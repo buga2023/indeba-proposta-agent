@@ -14,6 +14,9 @@ import { dirname, join, resolve } from "node:path";
 // do Prisma para Windows (~20 MB), então o número do CI (Linux) é o que vale.
 const AVISO_MB = Number(process.env.PDF_BUNDLE_AVISO_MB ?? 220);
 const TETO_MB = Number(process.env.PDF_BUNDLE_TETO_MB ?? 250);
+// Modo: por padrao AVISA (exit 0) e imprime o numero; com PDF_BUNDLE_STRICT=1 FALHA acima do
+// teto. Comeca em aviso para calibrar o numero do Linux no CI antes de bloquear deploy.
+const ESTRITO = process.env.PDF_BUNDLE_STRICT === "1";
 const nft = resolve(".next/server/app/api/pdf/route.js.nft.json");
 
 let lista;
@@ -32,6 +35,9 @@ for (const rel of lista.files ?? []) {
   try {
     const st = statSync(abs);
     if (!st.isFile()) continue;
+    // Engine do Prisma de OUTRA plataforma (ex.: query_engine-windows.dll.node medido no Windows)
+    // nunca vai para a Lambda Linux: nao conta.
+    if (/query_engine-(windows|darwin)/.test(rel)) continue;
     total += st.size;
     maiores.push([st.size, rel]);
   } catch {
@@ -49,5 +55,5 @@ if (total > AVISO_MB * 1024 * 1024 && total <= TETO_MB * 1024 * 1024) {
 }
 if (total > TETO_MB * 1024 * 1024) {
   console.error(`[bundle-pdf] ESTOUROU: ${mb(total)} MB > ${TETO_MB} MB. O deploy vai morrer em "Deploying outputs". Veja outputFileTracingIncludes em next.config.ts.`);
-  process.exit(1);
+  process.exit(ESTRITO ? 1 : 0);
 }

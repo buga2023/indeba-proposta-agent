@@ -4,6 +4,26 @@ allowBuilds:
   prisma: true
   sharp: true
   unrs-resolver: true
-# Força versão corrigida (GHSA-qx2v-qp2m-jg93 — postcss XSS no stringify).
+
+# Overrides de seguranca: forcam a versao corrigida de pacotes transitivos que os mantenedores
+# ainda nao atualizaram. pnpm >= 10 le daqui (o campo "pnpm" do package.json deixou de ser
+# lido no pnpm 12). Historico: postcss >=8.5.10 (GHSA-qx2v-qp2m-jg93, XSS no stringify);
+# demais entradas vieram da auditoria do CI em 09/10/2026 (3 criticos no next 16.2.9).
 overrides:
-  postcss: ">=8.5.10"
+  next: "16.4.0"
+  "brace-expansion@<2": "^1.1.20"
+  "brace-expansion@>=2": ">=5.0.11"
+  "js-yaml@>=4 <4.3.2": ">=4.3.2"
+  "@xmldom/xmldom@<0.8.15": ">=0.8.15"
+  "deepmerge-ts@<8": ">=8.0.0"
+  "postcss@<8.5.18": ">=8.5.18"
+  "nanoid@<3.3.18": ">=3.3.18"
+  "browserslist@<4.28.7": ">=4.28.7"
+  "source-map-js@<1.2.2": ">=1.2.2"
+  "sharp@<0.35.5": ">=0.35.5"
+
+auditConfig:
+  # braces (fast-glob < eslint-config-next): sem versao corrigida publicada. Dependencia so de
+  # lint, nunca roda em producao. Rever quando sair patch.
+  ignoreGhsas:
+    - GHSA-vfj7-8cjw-p6xm
