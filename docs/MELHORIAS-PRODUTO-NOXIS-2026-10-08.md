@@ -255,7 +255,7 @@ Cada item: commit na `main`, lint/tsc/testes verdes, deploy READY e smoke de pro
 
 | Hora | Item | Commit |
 |---|---|---|
-| 23:26 | #5 CI verde: ESLint ignora `public/**`, `*.min.js`, `apresentacao/**`; build do CI compila sem `migrate deploy`. Primeiro run verde desde 23/09. | `26b784b` |
+| 23:26 | #5 CI verde: ESLint ignora `public/**`, `*.min.js`, `apresentacao/**`; build do CI compila sem `migrate deploy`. Lint, typecheck, testes e build voltaram a rodar no CI (desde 23/09 nada passava do lint). **Correção (00:20):** o passo de auditoria de dependências continuou vermelho até a rodada 4 — eu tinha lido o resultado errado. | `26b784b` |
 | 23:31 | #12 erros de refinar/reabrir/editar/montar em toast com mensagem humana; toast `role=status`, erro dura 7s. #26 campo de preço controlado em PT-BR. #27 overlay honesto. #23 `maxDuration` na rota de PDF dos registros. | `9382364` |
 | 23:35 | #11 item tirado na Revisão persiste (`incluido: false`), volta excluído ao reabrir, total salvo ignora. | `521bc4b` |
 | 23:43 | #9 upload valida tipo pelos bytes (PNG/JPEG/WebP/PDF) em anexos, fotos, documento, foto/ficha de produto; entrega inline só para a allowlist. Fecha o XSS por SVG. | `fc5386a` |
@@ -287,6 +287,15 @@ Conferido em produção: `?tela=history` abre a lista direto; Voltar do navegado
 | #13 (parte 3) auto-save da Revisão com debounce de 1,5s e indicador "Salvando… / Salvo às HH:MM / Não foi possível salvar" no rodapé. | `cc9d0a8` |
 
 Conferido em produção: `?tela=review&id=<Engepack>` reabre a proposta direto na Revisão com "Salvo às 00:12" no rodapé; smoke 9/9; ficha 200.
+### Rodada 4 (00:15 → 00:30)
+
+| Item | Commit |
+|---|---|
+| #2 (passo 2) prompts de IA (escrever-texto, responder, extrair-pedido), textos padrão da proposta, assuntos de e-mail de cobrança, assistente de ajuda, título/descrição do app e `alt` das logos leem `EMPRESA`. Contrato do template `indeba_express` sai com CNPJ e endereço reais em vez de "[preencher]". | `be04b05`, `d3a76a7` |
+| #23 (parte 3) `scripts/conferir-bundle-pdf.mjs`: soma os arquivos traçados para `/api/pdf` e avisa acima de 220 MB / falha acima de 250 MB (modo estrito via `PDF_BUNDLE_STRICT=1`; começa só avisando até calibrar o número do Linux). No CI após o build. Local (sem engine Windows do Prisma): 239,7 MB. | `d3a76a7`, `58ba31d` |
+| **Segurança de dependências** (achado novo, veio do CI): `next` 16.2.9 tinha 3 avisos **críticos** de execução remota de código. Subiu para 16.4.0 com `eslint-config-next`; `pdfjs-dist` 6.4, `nodemailer` 10, `sharp` 0.35.5, `fast-xml-parser` 5.10; overrides em `pnpm-workspace.yaml` para 10 transitivas. Auditoria: de 3 críticos + 41 altos para 0/0 (1 ignorado: `braces`, só lint, sem patch publicado). Build, 654 testes e render de PDF verdes na versão nova. | `58ba31d` |
+
+**CI (run 37879401601, 00:31): verde do início ao fim** — lint, typecheck, testes, auditoria, build e guardião de bundle. É o primeiro run completamente verde do repositório.
 **#17 (telas mortas) fica para decisão sua:** elas usam `Hoverable` e `brl` definidos dentro de `page.tsx`, e um `page.tsx` do Next não pode exportar helpers. Ou apagamos as 9 telas (ficam no git), ou movemos `Hoverable`/`brl` para um módulo e as telas para `src/components/legacy/`. Não fiz nenhum dos dois sem você.
 
 **Deixado de fora de propósito nesta noite:** mudanças de auth/env/segredos (healthcheck público, sessão revogável, cadastro por convite, Sentry DSN) e qualquer migração de schema (auditoria em tabela), por não haver banco local para ensaiar a migração antes do build de produção.
