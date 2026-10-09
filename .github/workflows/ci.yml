@@ -35,5 +35,12 @@ jobs:
       - name: Auditoria de dependências (OWASP A06)
         run: pnpm audit --audit-level=high
 
-      - name: Build de produção
-        run: pnpm build
+      # `pnpm build` roda `prisma migrate deploy` (package.json), que exige um banco real —
+      # o CI não tem (e não deve ter) acesso ao Postgres de produção. Aqui o build só compila:
+      # a migração continua acontecendo no build da Vercel, como sempre.
+      - name: Build de produção (sem migração)
+        env:
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+          DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+          AUTH_SESSION_SECRET: ci-dummy-secret-0123456789abcdef
+        run: pnpm exec prisma generate && pnpm exec next build

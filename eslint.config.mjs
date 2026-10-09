@@ -24,6 +24,13 @@ const eslintConfig = defineConfig([
     ".antigravity/**",
     ".kimi/**",
     ".github/agents/**",
+    // Bibliotecas vendorizadas servidas como estático (pdf-lib do gerador de contratos):
+    // código minificado de terceiro reprovava o lint e derrubava o CI inteiro desde set/2026,
+    // escondendo typecheck, testes e build atrás de um "Unexpected aliasing of this".
+    "public/**",
+    "**/*.min.js",
+    // Material comercial (deck em HTML + scripts de montagem), não é código do app.
+    "apresentacao/**",
   ]),
 ]);
 
