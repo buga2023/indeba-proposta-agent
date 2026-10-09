@@ -1910,6 +1910,8 @@ function ManualScreen({
   // faz a remontagem regravar o mesmo registro, sem duplicar (spec Item 4).
   scopeParaEditar?: PropostaScope | null;
 }) {
+  const toastGlobal = useToast();
+  const toastErro = (msg: string) => toastGlobal(msg, "danger");
   const [catalogo, setCatalogo] = useState<Produto[] | null>(null);
   const [erroCat, setErroCat] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
@@ -2248,33 +2250,37 @@ function ManualScreen({
     };
   }, [arrastando]);
 
+  // Mostra o erro de validação ONDE o vendedor está: o banner fica entre Condições e o
+  // catálogo, fora da viewport no celular (revisão de UX, 08/10/2026). Rola até ele e repete
+  // a primeira pendência num toast, que aparece em qualquer tela.
+  function falharValidacao(pendencias: string[]) {
+    setErro(pendencias.join(" "));
+    toastErro(pendencias[0]);
+    setTimeout(() => document.getElementById("erro-montagem")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
+  }
+
   async function montar() {
     if (montando) return;
-    if (!razaoSocial.trim()) {
-      setErro("Informe a razão social do cliente.");
-      return;
-    }
-    if (rows.length === 0) {
-      setErro("Adicione ao menos um produto (catálogo ou item próprio).");
-      return;
-    }
+    // TODAS as pendências de uma vez: antes era uma por clique (razão social → produto →
+    // preço → diluição), e quem tinha 8 itens clicava "Montar" quatro vezes.
+    const pendencias: string[] = [];
+    if (!razaoSocial.trim()) pendencias.push("Informe a razão social do cliente.");
+    if (rows.length === 0) pendencias.push("Adicione ao menos um produto (catálogo ou item próprio).");
     // Preço em branco/zerado — inclusive o que o consultor esvaziou editando no painel de
     // selecionados. Item próprio entra na mesma checagem: o campo dele também é editável lá.
     const semPreco = [
       ...selCat.filter((x) => precoDe(x.produto, x.idx) == null).map((x) => x.produto.nome),
       ...custom.filter((c) => !(numeroBR(c.preco) > 0)).map((c) => c.nome),
     ];
-    if (semPreco.length > 0) {
-      setErro(`Defina o preço de: ${semPreco.join(", ")}.`);
-      return;
-    }
+    if (semPreco.length > 0) pendencias.push(`Defina o preço de: ${semPreco.join(", ")}.`);
     // Diluição obrigatória por produto (decisão do Gustavo 25/07): ou o consultor informa a
     // diluição, ou marca "não dilui" (produto pronto pra uso). Sem um dos dois, não monta.
     const semDiluicao = selCat.filter(
       (x) => !naoDilui[x.k] && !normalizaDiluicao(diluicaoEfetiva(x.k, x.produto.embalagens[x.idx]?.diluicaoMax ?? null)),
     );
-    if (semDiluicao.length > 0) {
-      setErro(`Informe a diluição (ou marque "não dilui") de: ${semDiluicao.map((x) => x.produto.nome).join(", ")}.`);
+    if (semDiluicao.length > 0) pendencias.push(`Informe a diluição (ou marque "não dilui") de: ${semDiluicao.map((x) => x.produto.nome).join(", ")}.`);
+    if (pendencias.length > 0) {
+      falharValidacao(pendencias);
       return;
     }
     setMontando(true);
@@ -2484,7 +2490,7 @@ function ManualScreen({
           </div>
         )}
 
-        {erro && <div style={{ padding: "11px 14px", background: "var(--danger-soft)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
+        {erro && <div id="erro-montagem" role="alert" style={{ padding: "11px 14px", background: "var(--danger-soft)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
 
         <div className="ies-split" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "18px", alignItems: "start" }}>
           {/* Catálogo */}
