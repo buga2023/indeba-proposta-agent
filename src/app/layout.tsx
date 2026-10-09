@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { EMPRESA } from "@/lib/empresa";
 // Fontes empacotadas localmente (sem fetch ao Google Fonts no build).
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
@@ -6,8 +7,8 @@ import { ToastProvider } from "./_app/toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Indeba Express PRO IA",
-  description: "Indeba Express PRO IA: propostas, prospecção, posts e atendimento. Preço sempre do catálogo.",
+  title: `${EMPRESA.nomeFantasia} PRO IA`,
+  description: `${EMPRESA.nomeFantasia} PRO IA: propostas, prospecção, posts e atendimento. Preço sempre do catálogo.`,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

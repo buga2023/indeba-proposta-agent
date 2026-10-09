@@ -7,6 +7,7 @@
 // sidebar, rodapé). O recorte do símbolo e do wordmark saiu da própria logo
 // oficial, então nada aqui é redesenho.
 
+import { EMPRESA } from "@/lib/empresa";
 type Variante = "color" | "white";
 
 const SIMBOLO: Record<Variante, string> = {
@@ -32,7 +33,7 @@ type Props = {
 };
 
 /** Só o símbolo "ies". É o que sobra quando a sidebar colapsa em trilha de ícones. */
-export function Logo({ altura = 34, variante = "color", alt = "Indeba Express", className }: Props) {
+export function Logo({ altura = 34, variante = "color", alt = EMPRESA.nomeFantasia, className }: Props) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
@@ -45,7 +46,7 @@ export function Logo({ altura = 34, variante = "color", alt = "Indeba Express", 
 }
 
 /** Só o lettering "indeba express". */
-export function Wordmark({ altura = 18, variante = "color", alt = "Indeba Express", className }: Props) {
+export function Wordmark({ altura = 18, variante = "color", alt = EMPRESA.nomeFantasia, className }: Props) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
@@ -58,7 +59,7 @@ export function Wordmark({ altura = 18, variante = "color", alt = "Indeba Expres
 }
 
 /** Logo completa (símbolo sobre o lettering) — a assinatura das telas de acesso. */
-export function LogoCompleta({ altura = 84, variante = "color", alt = "Indeba Express", className }: Props) {
+export function LogoCompleta({ altura = 84, variante = "color", alt = EMPRESA.nomeFantasia, className }: Props) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img

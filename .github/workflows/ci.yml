@@ -44,3 +44,8 @@ jobs:
           DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/ci
           AUTH_SESSION_SECRET: ci-dummy-secret-0123456789abcdef
         run: pnpm exec prisma generate && pnpm exec next build
+
+      # A funcao /api/pdf carrega o Chromium; se o tracing arrastar arquivo demais o deploy
+      # morre em "Deploying outputs" sem mensagem. Mede aqui, antes (scripts/conferir-bundle-pdf.mjs).
+      - name: Tamanho da funcao de PDF
+        run: node scripts/conferir-bundle-pdf.mjs
