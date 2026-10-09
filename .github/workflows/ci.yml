@@ -49,3 +49,35 @@ jobs:
       # morre em "Deploying outputs" sem mensagem. Mede aqui, antes (scripts/conferir-bundle-pdf.mjs).
       - name: Tamanho da funcao de PDF
         run: node scripts/conferir-bundle-pdf.mjs
+
+  # E2E de tela (Playwright) contra `next start` local, com auth desligada e as rotas de API
+  # interceptadas pelos specs — não precisa de banco. Cobre o que os testes unitários não
+  # veem: sidebar, abas, botões de PDF, transferência de consultor (revisão de 08/10/2026, #28).
+  e2e-tela:
+    runs-on: ubuntu-latest
+    needs: verificar
+    env:
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+      DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/ci
+      AUTH_SESSION_SECRET: ci-dummy-secret-0123456789abcdef
+      AUTH_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec prisma generate && pnpm exec next build
+      - name: Sobe o app e roda os specs de tela
+        run: |
+          pnpm exec next start -H 127.0.0.1 -p 3123 > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3123/login && break; sleep 2; done
+          E2E_BASE_URL=http://127.0.0.1:3123 pnpm exec playwright test tests/e2e/pedidos-mateus-10-09.spec.ts tests/e2e/transferencia-consultor.spec.ts tests/e2e/solicitacoes-tipos.spec.ts
+      - name: Log do servidor (se falhou)
+        if: failure()
+        run: tail -50 server.log

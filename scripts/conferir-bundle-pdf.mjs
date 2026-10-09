@@ -48,6 +48,9 @@ maiores.sort((a, b) => b[0] - a[0]);
 const mb = (n) => (n / 1024 / 1024).toFixed(1);
 
 console.log(`[bundle-pdf] ${lista.files?.length ?? 0} arquivos traçados, ${mb(total)} MB (aviso ${AVISO_MB} MB, teto ${TETO_MB} MB)`);
+// No GitHub Actions, vira anotação do run (visível em `gh run view` e na aba do commit) —
+// é como se lê o número do Linux sem precisar baixar o log.
+if (process.env.GITHUB_ACTIONS) console.log(`::notice title=bundle-pdf::${mb(total)} MB em ${lista.files?.length ?? 0} arquivos (aviso ${AVISO_MB} MB, teto ${TETO_MB} MB)`);
 for (const [tam, rel] of maiores.slice(0, 8)) console.log(`  ${mb(tam).padStart(7)} MB  ${rel}`);
 
 if (total > AVISO_MB * 1024 * 1024 && total <= TETO_MB * 1024 * 1024) {
