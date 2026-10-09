@@ -2566,7 +2566,7 @@ function ManualScreen({
 
         {erro && <div id="erro-montagem" role="alert" style={{ padding: "11px 14px", background: "var(--danger-soft)", border: "1px solid #FECACA", borderRadius: "10px", color: "#B91C1C", fontSize: "13px" }}>{erro}</div>}
 
-        <div className="ies-split" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "18px", alignItems: "start" }}>
+        <div className="ies-split ies-montagem-split" style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "18px", alignItems: "start" }}>
           {/* Catálogo */}
           <div style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
@@ -2604,7 +2604,7 @@ function ManualScreen({
             )}
             {erroCat && <div style={{ fontSize: "13px", color: "#B91C1C" }}>{erroCat}</div>}
             {catalogo === null && !erroCat && <div style={{ fontSize: "13px", color: "var(--text-subtle)", padding: "12px 0" }}>Carregando catálogo…</div>}
-            <div className="ies-scroll" style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "440px", overflowY: "auto" }}>
+            <div className="ies-scroll ies-catalogo-lista" style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "440px", overflowY: "auto" }}>
               {filtrados.map((p) => {
                 // "Incluído" é por produto + TAMANHO em foco: com o 5 L já na proposta, o
                 // consultor troca o seletor pro 20 L e o "+" volta a habilitar (mesmo produto,
@@ -2742,7 +2742,7 @@ function ManualScreen({
           </div>
 
           {/* Selecionados */}
-          <div className="ies-side-panel" style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", position: "sticky", top: "78px" }}>
+          <div className="ies-side-panel ies-montagem-sel" style={{ background: "var(--surface-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "18px 20px", boxShadow: "var(--shadow-sm)", position: "sticky", top: "78px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "9px", marginBottom: "14px" }}>
               <span style={{ width: "26px", height: "26px", borderRadius: "8px", background: "var(--success-soft)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--success)", flex: "none" }}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 7.5l3 3 6-6.5" /></svg>

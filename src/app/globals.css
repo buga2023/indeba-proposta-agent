@@ -478,6 +478,14 @@ body {
   .ies-split { grid-template-columns: 1fr !important; }
   .ies-side-panel { position: static !important; top: auto !important; }
 }
+/* Montagem no celular (revisão de UX, 08/10/2026): o painel Selecionados ia parar DEPOIS
+   do catálogo e do "Item próprio", então quem adicionava produto não via a lista nem o total
+   mudar. Sobe para logo abaixo das Condições; e a lista do catálogo deixa de ter scroll
+   próprio dentro do main rolável (armadilha de scroll no toque). */
+@media (max-width: 1180px) {
+  .ies-montagem-split > .ies-montagem-sel { order: -1; }
+  .ies-montagem-split .ies-catalogo-lista { max-height: none !important; overflow: visible !important; }
+}
 
 /* KPIs: 4 → 2 → 1. Com repeat(4,1fr) fixo, "R$ 1.234.567,89" em 1/4 de 700px
    virava três linhas dentro do card. */
