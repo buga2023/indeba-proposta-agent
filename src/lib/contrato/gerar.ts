@@ -7,6 +7,7 @@
  * é tocado pelo modelo: as cláusulas só referenciam os valores que o motor já fixou (§2).
  */
 import type { Clausula, ContratoScope, ParteContrato } from "../contracts";
+import { EMPRESA, enderecoCompleto } from "../empresa";
 import type { PropostaScope } from "../contracts";
 import { gerarJson, ollamaDisponivel, MODEL_TEXTO } from "../llm/ollama";
 
@@ -14,7 +15,8 @@ import { gerarJson, ollamaDisponivel, MODEL_TEXTO } from "../llm/ollama";
 // no escopo, então saem como "[preencher]" — sinaliza a lacuna, não inventa dado legal (§2).
 const CONTRATADA: Record<PropostaScope["template"], ParteContrato> = {
   indeba: { razaoSocial: "Indeba", cnpj: "[preencher]", endereco: "[preencher]" },
-  indeba_express: { razaoSocial: "Indeba Express", cnpj: "[preencher]", endereco: "[preencher]" },
+  // Indeba Express tem os dados em lib/empresa.ts — o contrato sai com CNPJ e endereço reais.
+  indeba_express: { razaoSocial: EMPRESA.razaoSocial, cnpj: EMPRESA.cnpj, endereco: enderecoCompleto() },
 };
 
 /** Σ (preço da 1ª embalagem × quantidade) — mesma convenção determinística do log.ts. */
@@ -89,7 +91,7 @@ function clausulasFixas(scope: ContratoScope): Clausula[] {
 
 export async function gerarContrato(proposta: PropostaScope): Promise<ContratoScope> {
   const { itens, valorTotal } = calcularItens(proposta);
-  const objeto = `o fornecimento, pela CONTRATADA à CONTRATANTE, de ${itens.length} ${itens.length === 1 ? "item" : "itens"} de produtos do catálogo Indeba`;
+  const objeto = `o fornecimento, pela CONTRATADA à CONTRATANTE, de ${itens.length} ${itens.length === 1 ? "item" : "itens"} de produtos do catálogo ${EMPRESA.marcaProdutos}`;
 
   const scope: ContratoScope = {
     id: crypto.randomUUID(),

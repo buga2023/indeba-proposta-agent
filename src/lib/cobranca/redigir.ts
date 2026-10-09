@@ -4,6 +4,7 @@
  * nunca vê nem emite número). Sem Ollama, cai num modelo fixo (degradação graciosa, §5).
  */
 import { gerarJson, ollamaDisponivel } from "../llm/ollama";
+import { EMPRESA } from "../empresa";
 
 export type ReguaTemplates = { leve: string; media: string; grave: string };
 
@@ -23,7 +24,7 @@ const SCHEMA = {
   required: ["leve", "media", "grave"],
 };
 
-export async function gerarRegua(empresa = "Indeba"): Promise<ReguaTemplates> {
+export async function gerarRegua(empresa = EMPRESA.nomeFantasia): Promise<ReguaTemplates> {
   if (!(await ollamaDisponivel())) return FIXOS;
   const prompt = `Você escreve mensagens de cobrança para a empresa "${empresa}". Gere 3 templates de mensagem (WhatsApp/e-mail), em português, em tom ESCALONADO:
 - "leve": cordial, assume esquecimento (1º aviso).

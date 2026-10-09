@@ -4,6 +4,7 @@
 // Separado do componente para ser testável (tests/unit/ajuda-chat.test.ts).
 
 import type { Produto } from "@/lib/contracts";
+import { EMPRESA } from "@/lib/empresa";
 
 export const LINHA_LABEL: Record<string, string> = {
   alimentos_bebidas: "Alimentos & Bebidas",
@@ -105,7 +106,7 @@ export const FAQ: QA[] = [
     kw: ["o que faz", "o que e", "serve", "para que"],
     q: "O que esse agente faz?",
     a: L(
-      "Gera **propostas comerciais em PDF** no padrão Indeba a partir do catálogo real: você monta os itens e o PDF sai pronto para enviar.",
+      `Gera **propostas comerciais em PDF** no padrão ${EMPRESA.nomeFantasia} a partir do catálogo real: você monta os itens e o PDF sai pronto para enviar.`,
       "",
       "**De onde vem cada coisa:**",
       "• **Do catálogo** — ficha técnica, foto e embalagens (nunca da IA)",
@@ -178,7 +179,7 @@ export const FAQ: QA[] = [
 ];
 
 export const WELCOME = L(
-  "**Oi! Sou o assistente do Indeba Express PRO IA.**",
+  `**Oi! Sou o assistente do ${EMPRESA.nomeFantasia} PRO IA.**`,
   "",
   "Posso te ajudar com:",
   "• **Catálogo** — ficha técnica, linha e embalagens de cada produto",

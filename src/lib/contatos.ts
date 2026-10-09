@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { EMPRESA } from "./empresa";
 import { avisarDegradacao } from "./log-servidor";
 import { prisma } from "@/lib/db";
 import type { Inadimplente } from "@/lib/contracts";
@@ -99,7 +100,7 @@ export async function dispararCobranca(
       transport.sendMail({
         from,
         to: i.email!,
-        subject: `Indeba — aviso de pagamento em aberto (${i.cliente})`,
+        subject: `${EMPRESA.nomeFantasia} — aviso de pagamento em aberto (${i.cliente})`,
         text: i.mensagem,
       }),
     ),
@@ -123,7 +124,7 @@ export async function dispararCobranca(
   await transport.sendMail({
     from,
     to: gestorEmail,
-    subject: `Resumo de cobrança Indeba — ${enviados}/${inadimplentes.length} enviados`,
+    subject: `Resumo de cobrança ${EMPRESA.nomeFantasia} — ${enviados}/${inadimplentes.length} enviados`,
     text: corpo,
   });
 

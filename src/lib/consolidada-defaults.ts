@@ -26,20 +26,20 @@ export function consolidadaDefaults(opts?: { consultor?: string; cidade?: string
     apresentacao: {
       saudacao: "Prezado(a),",
       paragrafos: [
-        "A Indeba Express agradece a oportunidade de apresentar esta proposta comercial.",
+        `A ${EMPRESA.nomeFantasia} agradece a oportunidade de apresentar esta proposta comercial.`,
         "Somos especializados em fornecer soluções completas em higienização profissional, oferecendo produtos de alta performance, equipamentos e suporte técnico para empresas que buscam eficiência, economia e segurança em seus processos de limpeza.",
         "Nosso compromisso é entender as necessidades de cada cliente e entregar soluções personalizadas que geram resultados reais, com qualidade, agilidade e confiabilidade.",
         "Esta proposta foi elaborada especialmente para sua empresa e esperamos que ela seja o início de uma parceria sólida e duradoura.",
       ],
       cards: [
-        { titulo: "Produtos Certificados", texto: "Produtos Indeba certificados pela Anvisa.", icone: "selo" },
+        { titulo: "Produtos Certificados", texto: `Produtos ${EMPRESA.marcaProdutos} certificados pela Anvisa.`, icone: "selo" },
         { titulo: "Atendimento Consultivo", texto: "Entendemos sua necessidade e indicamos a melhor solução.", icone: "pessoa" },
         { titulo: "Entrega Ágil", texto: "Logística eficiente para garantir rapidez e segurança nas entregas.", icone: "entrega" },
         { titulo: "Suporte Técnico", texto: "Equipe especializada pronta para oferecer todo o suporte necessário.", icone: "suporte" },
       ],
     },
     comodatos: {
-      intro: "A Indeba Express disponibiliza equipamentos em comodato para atender às necessidades operacionais da sua empresa, com tecnologia de ponta e assistência inclusa.",
+      intro: `A ${EMPRESA.nomeFantasia} disponibiliza equipamentos em comodato para atender às necessidades operacionais da sua empresa, com tecnologia de ponta e assistência inclusa.`,
       // Cards só com título + ícone (pedido do Matheus, jul/2026) — sem descricao.
       equipamentos: [
         { titulo: "Diluidores Automáticos", icone: "diluidor" },

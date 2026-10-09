@@ -1,4 +1,5 @@
 import { FacetasDetectadas, PedidoScope } from "../contracts";
+import { EMPRESA } from "../empresa";
 import { gerarJson, ollamaDisponivel } from "./ollama";
 
 // Vocabulário fechado entregue à IA e usado no fallback por palavra-chave.
@@ -42,7 +43,7 @@ const JSON_SCHEMA = {
 function prompt(briefing: string): string {
   // Briefing é dado não-confiável: tira o delimitador e limita o tamanho.
   const seguro = briefing.replace(/"""/g, '"').slice(0, 2000);
-  return `Você é um classificador da Indeba. Leia o briefing de um vendedor e extraia as facetas de busca de produtos de limpeza profissional. Responda APENAS o JSON pedido.
+  return `Você é um classificador da ${EMPRESA.nomeFantasia}. Leia o briefing de um vendedor e extraia as facetas de busca de produtos de limpeza profissional. Responda APENAS o JSON pedido.
 
 Linhas possíveis: ${LINHAS.join(", ")}.
 Funções possíveis: ${FUNCOES.join(", ")}.

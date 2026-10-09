@@ -19,6 +19,10 @@ export type Empresa = {
   /** Área de entrega citada nas condições comerciais padrão. */
   regiaoEntrega: string;
   consultorPadrao: { nome: string; telefone: string };
+  /** Marca dos produtos vendidos (fabricante), citada em textos como "Produtos X certificados". */
+  marcaProdutos: string;
+  /** Uma linha para prompts de IA: quem é a empresa. */
+  descricaoCurta: string;
 };
 
 export const EMPRESA: Empresa = {
@@ -35,6 +39,8 @@ export const EMPRESA: Empresa = {
   emailGerencia: "gerencia@indebaexpress.com.br",
   regiaoEntrega: "na cidade de Salvador e região metropolitana",
   consultorPadrao: { nome: "Matheus Resende", telefone: "(71) 99196-2650" },
+  marcaProdutos: "Indeba",
+  descricaoCurta: "distribuidora de produtos de limpeza profissional",
 };
 
 /** "Rua …, Bairro, Cidade — UF · CEP 00000-000" — rodapé/assinatura dos PDFs. */
