@@ -2062,7 +2062,8 @@ function ManualScreen({
 
   const campoLabel: CSSProperties = { fontSize: "11.5px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "5px" };
   const campoInput: CSSProperties = { width: "100%", height: "38px", padding: "0 12px", borderRadius: "10px", border: "1px solid var(--border-strong)", background: "var(--surface)", fontSize: "13.5px", color: "var(--text-strong)", fontFamily: "var(--font-sans)", outline: "none" };
-  const qtdBtn: CSSProperties = { width: "26px", height: "26px", borderRadius: "7px", border: "1px solid var(--border-strong)", background: "var(--surface)", cursor: "pointer", color: "var(--text-muted)", fontSize: "15px", lineHeight: 1, flex: "none" };
+  // 36px: alvo de toque mínimo no celular (antes 26px — revisão de UX, 08/10/2026).
+  const qtdBtn: CSSProperties = { width: "36px", height: "36px", borderRadius: "7px", border: "1px solid var(--border-strong)", background: "var(--surface)", cursor: "pointer", color: "var(--text-muted)", fontSize: "15px", lineHeight: 1, flex: "none" };
 
   // Todo o catálogo entra na busca — inclusive produtos arquivados (sem preço), que
   // ganham preço digitado na hora (ver precoDe/precoManual). A IA nunca vê isso: é
@@ -2762,9 +2763,9 @@ function ManualScreen({
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: "none" }}>
-                        <button onClick={() => r.onQtd(r.qtd - 1)} style={qtdBtn}>−</button>
+                        <button onClick={() => r.onQtd(r.qtd - 1)} style={qtdBtn} aria-label={`Diminuir quantidade de ${r.nome}`}>−</button>
                         <span style={{ minWidth: "22px", textAlign: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "13px" }}>{r.qtd}</span>
-                        <button onClick={() => r.onQtd(r.qtd + 1)} style={qtdBtn}>+</button>
+                        <button onClick={() => r.onQtd(r.qtd + 1)} style={qtdBtn} aria-label={`Aumentar quantidade de ${r.nome}`}>+</button>
                       </div>
                       <button onClick={() => r.onQtd(0)} title="Remover" style={{ ...qtdBtn, color: "var(--danger)", borderColor: "transparent", background: "transparent" }}>×</button>
                     </div>
@@ -3250,8 +3251,8 @@ function ReviewScreen({
   const orangeHover: CSSProperties = { background: "#D2680F", boxShadow: "0 4px 14px rgba(236,122,28,.5)", transform: "translateY(-1px)" };
   const orangeActive: CSSProperties = { transform: "translateY(0)", background: "#A8530C" };
 
-  const qtyBtn: CSSProperties = { width: "26px", height: "26px", borderRadius: "6px", border: "1px solid var(--gray-200)", background: "white", cursor: "pointer", fontSize: "15px", color: "var(--gray-500)", display: "flex", alignItems: "center", justifyContent: "center" };
-  const qtyBtnSm: CSSProperties = { ...qtyBtn, width: "24px", height: "24px", borderRadius: "5px", fontSize: "13px" };
+  const qtyBtn: CSSProperties = { width: "36px", height: "36px", borderRadius: "6px", border: "1px solid var(--gray-200)", background: "white", cursor: "pointer", fontSize: "15px", color: "var(--gray-500)", display: "flex", alignItems: "center", justifyContent: "center" };
+  const qtyBtnSm: CSSProperties = { ...qtyBtn, width: "32px", height: "32px", borderRadius: "5px", fontSize: "13px" };
 
   const [ajuste, setAjuste] = useState("");
   // Painel de ajustes (texto/refino/chat/condições) começa fechado: colapsado ele é
@@ -3541,9 +3542,9 @@ function ReviewScreen({
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "10px", borderTop: "1px solid var(--gray-100)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      <button onClick={() => changeQty(pos, -1)} style={qtyBtn}>−</button>
+                      <button onClick={() => changeQty(pos, -1)} style={qtyBtn} aria-label={`Diminuir quantidade de ${p.nome}`}>−</button>
                       <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--gray-900)", minWidth: "18px", textAlign: "center" }}>{p.quantidade}</span>
-                      <button onClick={() => changeQty(pos, 1)} style={qtyBtn}>+</button>
+                      <button onClick={() => changeQty(pos, 1)} style={qtyBtn} aria-label={`Aumentar quantidade de ${p.nome}`}>+</button>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
@@ -3588,9 +3589,9 @@ function ReviewScreen({
                     <span style={{ fontSize: "13px", color: "var(--gray-500)" }}>{procLabel(p.procedenciaSelecao)}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
-                    <button onClick={() => changeQty(pos, -1)} style={qtyBtnSm}>−</button>
+                    <button onClick={() => changeQty(pos, -1)} style={qtyBtnSm} aria-label={`Diminuir quantidade de ${p.nome}`}>−</button>
                     <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)", minWidth: "16px", textAlign: "center" }}>{p.quantidade}</span>
-                    <button onClick={() => changeQty(pos, 1)} style={qtyBtnSm}>+</button>
+                    <button onClick={() => changeQty(pos, 1)} style={qtyBtnSm} aria-label={`Aumentar quantidade de ${p.nome}`}>+</button>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <CampoPreco
@@ -3612,7 +3613,7 @@ function ReviewScreen({
       </div>
 
       {/* paddingRight extra abre espaço para o launcher do chatbot (fixed, canto inf. dir.) */}
-      <div style={{ flex: "none", padding: "14px 96px 14px 28px", background: "white", borderTop: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ flex: "none", padding: "14px 28px", background: "white", borderTop: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ fontSize: "14px", color: "var(--gray-500)" }}>
           <strong style={{ color: "var(--gray-900)" }}>{includedItems.length} produtos</strong> incluídos · ajuste a seleção acima
         </div>
