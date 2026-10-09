@@ -29,8 +29,10 @@ test("o select de tipo traz os cinco tipos de solicitação", async ({ page }) =
   await page.getByRole("button", { name: /ferramentas comerciais/i }).first().click();
   await page.getByRole("button", { name: "Solicitações Comerciais" }).click();
 
-  const tipos = await page.locator("select").first().locator("option").allTextContents();
-  expect(tipos).toEqual([
+  // O select da solicitação, não "o primeiro select da página": a montagem de proposta fica
+  // montada escondida (rascunho vivo) e, num runner lento, o primeiro select era o de tamanho
+  // de embalagem ("20 kg", "200 kg") — flake no CI em 09/10/2026. toHaveText espera.
+  await expect(page.getByLabel("Tipo da solicitação").locator("option")).toHaveText([
     "Análise de água e/ou tecidos",
     "Análise dos produtos químicos",
     "Visita do setor técnico",

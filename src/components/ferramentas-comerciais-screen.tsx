@@ -632,7 +632,7 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <label style={{ ...labelStyle, flex: 1, minWidth: "220px" }}>
               Tipo da solicitação
-              <select style={{ ...inputStyle, marginTop: "5px" }} value={tipo} onChange={(e) => setTipo(e.target.value as TipoSolicitacaoComercial)}>
+              <select aria-label="Tipo da solicitação" style={{ ...inputStyle, marginTop: "5px" }} value={tipo} onChange={(e) => setTipo(e.target.value as TipoSolicitacaoComercial)}>
                 {TIPOS_SOLICITACAO.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
