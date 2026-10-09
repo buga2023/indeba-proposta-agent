@@ -1,0 +1,51 @@
+# Backup diário do Postgres (revisão de ops, 08/10/2026, item #8).
+#
+# O plano free do Supabase não tem point-in-time recovery e não havia nenhum dump no repo;
+# `prisma migrate deploy` roda a cada build sem snapshot antes. Este workflow faz um
+# `pg_dump` lógico todo dia às 03:30 (BRT) e guarda como artefato do GitHub por 30 dias.
+#
+# Para ligar: Settings → Secrets and variables → Actions → New repository secret
+#   BACKUP_DATABASE_URL = a conexão DIRETA (porta 5432, não o pooler 6543).
+# Sem o secret o job termina em "pulado", sem erro — assim o arquivo pode viver no repo
+# antes de a Noxis decidir onde guardar os dumps de cada distribuidora.
+name: Backup do banco
+
+on:
+  schedule:
+    - cron: "30 6 * * *" # 06:30 UTC = 03:30 America/Bahia
+  workflow_dispatch:
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verifica o secret
+        id: cfg
+        env:
+          URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          if [ -z "$URL" ]; then echo "ligado=false" >> "$GITHUB_OUTPUT"; echo "::notice title=backup::BACKUP_DATABASE_URL não configurado — backup pulado"; else echo "ligado=true" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Instala o cliente do Postgres
+        if: steps.cfg.outputs.ligado == 'true'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: pg_dump
+        if: steps.cfg.outputs.ligado == 'true'
+        env:
+          URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          nome="indeba-$(date -u +%Y%m%d-%H%M).sql.gz"
+          pg_dump --no-owner --no-privileges "$URL" | gzip -9 > "$nome"
+          ls -la "$nome"
+          echo "nome=$nome" >> "$GITHUB_ENV"
+          echo "::notice title=backup::$(du -h "$nome" | cut -f1) em $nome"
+
+      - name: Guarda o dump (30 dias)
+        if: steps.cfg.outputs.ligado == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.nome }}
+          path: ${{ env.nome }}
+          retention-days: 30
+          if-no-files-found: error
