@@ -1,4 +1,5 @@
 import type { PropostaScope } from "../contracts";
+import { EMPRESA } from "../empresa";
 import { segmentosLegiveis } from "../segmento";
 import { tamanhoLegivel } from "../embalagem";
 
@@ -120,15 +121,15 @@ td.det .emb { color: #9aa7b8; }
     <div class="left">
       ${assets.logo ? `<img class="logo-img" src="${assets.logo}" alt="Indeba Express"/>` : `<div class="logo">ies</div>`}
       <div class="emp-info">
-        <div class="emp-nome">INDEBA EXPRESS</div>
-        <div class="emp-end">Rua Cosme de Farias, 05 - Galpão 01 - Boca do Rio - Salvador - BA - CEP: 41710-010</div>
-        <div class="emp-razao">IES Equipamentos, Soluções e Produtos de Limpeza Ltda</div>
-        <div class="emp-doc">CNPJ: 13.313.568/0001-04 &nbsp; IE: 150336336</div>
+        <div class="emp-nome">${esc(EMPRESA.nomeFantasia.toUpperCase())}</div>
+        <div class="emp-end">${esc(`${EMPRESA.endereco} - ${EMPRESA.bairro} - ${EMPRESA.cidade} - ${EMPRESA.uf} - CEP: ${EMPRESA.cep}`.replace(" — ", " - "))}</div>
+        <div class="emp-razao">${esc(EMPRESA.razaoSocial)}</div>
+        <div class="emp-doc">CNPJ: ${esc(EMPRESA.cnpj)} &nbsp; IE: ${esc(EMPRESA.inscricaoEstadual)}</div>
       </div>
     </div>
     <div class="right">
-      <div class="emp-fone">(71) 3369-2306</div>
-      <div class="emp-mail">gerencia@indebaexpress.com.br</div>
+      <div class="emp-fone">${esc(EMPRESA.telefone)}</div>
+      <div class="emp-mail">${esc(EMPRESA.emailGerencia)}</div>
     </div>
   </div>
 

@@ -1,4 +1,5 @@
 import type { ConsolidadaBloco } from "./contracts";
+import { EMPRESA } from "./empresa";
 
 // Rótulos padrão editáveis por proposta (ConsolidadaBloco.rotulos). Vazio/ausente cai aqui.
 export const ROTULOS_PADRAO = {
@@ -19,7 +20,7 @@ export function rotulosConsolidada(c?: Pick<ConsolidadaBloco, "rotulos"> | null)
 // editável por proposta (Fase 2). Nada de dado crítico (preço/produto) aqui.
 export function consolidadaDefaults(opts?: { consultor?: string; cidade?: string; whatsapp?: string | null; emailConsultor?: string | null }): ConsolidadaBloco {
   const consultor = opts?.consultor ?? "Matheus Maristane Resende";
-  const cidade = opts?.cidade ?? "Salvador - BA";
+  const cidade = opts?.cidade ?? `${EMPRESA.cidade} - ${EMPRESA.uf}`;
   return {
     capa: { consultor, cidade, subtitulo: "Soluções em Higienização Profissional" },
     apresentacao: {
@@ -58,7 +59,7 @@ export function consolidadaDefaults(opts?: { consultor?: string; cidade?: string
         { titulo: "Validade da Proposta", texto: "Esta proposta é válida por 30 (trinta) dias a partir da data de emissão.", icone: "validade" },
         { titulo: "Prazo de Implantação", texto: "Até 15 (quinze) dias úteis após a confirmação do pedido.", icone: "prazo" },
         { titulo: "Forma de Pagamento", texto: "Boleto bancário com vencimento para 30 dias.", icone: "pagamento" },
-        { titulo: "Frete e Entrega", texto: "Entrega e instalação inclusas na cidade de Salvador e região metropolitana.", icone: "frete" },
+        { titulo: "Frete e Entrega", texto: `Entrega e instalação inclusas ${EMPRESA.regiaoEntrega}.`, icone: "frete" },
         { titulo: "Suporte e Atendimento", texto: "Suporte técnico e atendimento consultivo durante toda a vigência do contrato.", icone: "suporte" },
         { titulo: "Contrato Mínimo", texto: "Contrato mínimo de 12 (doze) meses.", icone: "contrato" },
         { titulo: "Pedido Mínimo", texto: "Pedido mínimo para entrega e faturamento: R$ 400,00.", icone: "caixa" },

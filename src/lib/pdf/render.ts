@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { join, resolve, sep } from "node:path";
 import type { Browser } from "playwright-core";
 import type { PropostaScope } from "../contracts";
+import { EMPRESA, enderecoCompleto } from "../empresa";
 import { chaveImagem } from "../imagem-produto";
 import { documentoHtml } from "./template";
 import { orcamentoHtml } from "./template-orcamento";
@@ -196,7 +197,7 @@ export async function resolverImagemProduto(imagemPath: string): Promise<string>
 // Rodapé institucional repetido em toda página (Playwright footerTemplate).
 const FOOTER = `
 <div style="width:100%;font-family:Arial,sans-serif;font-size:7px;color:#5b6b82;padding:0 12mm;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e3e8ef;">
-  <span>Rua Cosme de Farias, 05 — Galpão 01, Boca do Rio, Salvador — BA · CEP 41710-010 · (71) 3369-2306</span>
+  <span>${enderecoCompleto()} · ${EMPRESA.telefone}</span>
   <span>Página <span class="pageNumber"></span>/<span class="totalPages"></span></span>
 </div>`;
 

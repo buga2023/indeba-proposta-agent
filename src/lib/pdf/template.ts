@@ -1,4 +1,5 @@
 import type { PropostaScope, PropostaItem } from "../contracts";
+import { EMPRESA, enderecoCompleto } from "../empresa";
 import { capaExpressHtml, capaExpressCss } from "./capa-express";
 import { tamanhoLegivel } from "../embalagem";
 import { chaveImagem } from "../imagem-produto";
@@ -35,7 +36,7 @@ const dec = (v: string) =>
  * não têm o dado — para elas o texto antigo continua valendo, senão a assinatura sumiria
  * de um histórico inteiro.
  */
-export const CONSULTOR_PADRAO = { nome: "Matheus Resende", telefone: "(71) 99196-2650" };
+export const CONSULTOR_PADRAO = EMPRESA.consultorPadrao;
 
 export function assinaturaConsultor(scope: PropostaScope): string {
   const c = scope.consultor;
@@ -150,7 +151,7 @@ export function documentoHtml(
           <div class="v-tx">
             <div class="v-lbl">Atenciosamente</div>
             <div class="v-val">${esc(assinaturaConsultor(scope))}</div>
-            <div class="ass-end">Rua Cosme de Farias, 05 — Galpão 01, Boca do Rio, Salvador — BA · CEP 41710-010</div>
+            <div class="ass-end">${esc(enderecoCompleto())}</div>
           </div>
         </div>
       </section>

@@ -1,4 +1,5 @@
 import type { PropostaScope } from "../contracts";
+import { EMPRESA } from "../empresa";
 import { segmentosLegiveis } from "../segmento";
 
 // Capa "Proposta de Solução" — marca Indeba Express. Espelha a spec
@@ -16,8 +17,8 @@ const CINZA_TEXTO = "#6B7280";
 // Fallback: propostas anteriores ao campo `scope.consultor` (02/09/2026) não carregam o
 // nome, e a capa não pode ficar sem assinatura. Proposta nova usa o consultor do scope —
 // antes TODA capa Express saía "Matheus Resende", tivesse quem tivesse montado.
-const CONSULTOR_PADRAO = "Matheus Resende";
-const CIDADE = "Salvador – BA";
+const CONSULTOR_PADRAO = EMPRESA.consultorPadrao.nome;
+const CIDADE = `${EMPRESA.cidade} – ${EMPRESA.uf}`;
 
 export type CapaExpressAssets = { logo?: string; simbolo?: string };
 
