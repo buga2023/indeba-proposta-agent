@@ -520,6 +520,8 @@ export default function Home() {
   // e gera o PDF, mas nada do que mexer é gravado — o servidor negaria (404) de todo jeito;
   // aqui a UI avisa e o auto-save não dispara. Guarda o nome do dono para o aviso.
   const [somenteLeitura, setSomenteLeitura] = useState<string | null>(null);
+  const [salvo, setSalvo] = useState<{ estado: "salvando" | "salvo" | "erro"; quando: Date } | null>(null);
+  const ultimoSalvo = useRef<string>("");
 
   // URL ↔ tela (revisão de UX, 08/10/2026). A tela vivia só em useState: F5 voltava ao
   // Dashboard, o botão Voltar do Chrome saía do app e não dava para mandar o link de uma
@@ -553,21 +555,6 @@ export default function Home() {
     };
     window.addEventListener("popstate", aoVoltar);
     return () => window.removeEventListener("popstate", aoVoltar);
-  }, []);
-  // Deep-link na carga: `?tela=history` abre o histórico; `?tela=review&id=X` reabre a
-  // proposta X. Fora do corpo do effect (microtask) por causa da regra react-hooks/set-state-in-effect.
-  useEffect(() => {
-    const q = new URLSearchParams(buscaInicial.current);
-    const tela = q.get("tela") as Screen | null;
-    const id = q.get("id");
-    if (!tela || tela === "dashboard") return;
-    const abriveis: Screen[] = ["manual", "history", "catalog", "config", "perfil", "ferramentas", "ferramentas-comerciais", "gerador-contratos", "gerador-certificados", "review", "pdf"];
-    if (!abriveis.includes(tela)) return;
-    void Promise.resolve().then(() => {
-      if ((tela === "review" || tela === "pdf") && id) void reabrirProposta(id);
-      else if (tela !== "review" && tela !== "pdf") setScreen(tela);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- só na carga
   }, []);
   // Rascunho em andamento: avisa antes de fechar/recarregar a aba (o estado da montagem e da
   // Revisão ainda vive em memória; o auto-save só roda em montar/PDF/refino).
@@ -802,19 +789,38 @@ export default function Home() {
 
 
   // Auto-save (best-effort): grava/atualiza o registro pelo id do scope. Falha não trava a UI.
+  // Estado do auto-save, mostrado no rodapé da Revisão ("Salvo às 14:32" / "Não foi possível
+  // salvar"). Antes a edição de preço/quantidade ficava só em memória até gerar o PDF, sem
+  // nenhum sinal (revisão de UX, 08/10/2026).
   function persistirProposta(s: PropostaScope) {
     if (!s.itens.length) return;
     if (somenteLeitura) return;
+    const corpo = JSON.stringify(marcarIncluidos(s, excluded));
+    if (corpo === ultimoSalvo.current) return; // nada mudou desde o último save
+    setSalvo({ estado: "salvando", quando: new Date() });
     fetch("/api/propostas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       // O que o vendedor tirou na Revisão vai gravado como `incluido: false` — senão voltava
       // ao reabrir e o total salvo divergia do PDF enviado.
-      body: JSON.stringify(marcarIncluidos(s, excluded)),
+      body: corpo,
     })
-      .then(() => setPropostas(null)) // histórico mudou → recarrega na próxima visita
-      .catch(() => {});
+      .then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        ultimoSalvo.current = corpo;
+        setSalvo({ estado: "salvo", quando: new Date() });
+        setPropostas(null); // histórico mudou → recarrega na próxima visita
+      })
+      .catch(() => setSalvo({ estado: "erro", quando: new Date() }));
   }
+  // Auto-save da Revisão com debounce: qualquer mudança no scope (preço, quantidade, texto,
+  // exclusão) grava 1,5s depois da última edição.
+  useEffect(() => {
+    if (screen !== "review" || !scope || somenteLeitura) return;
+    const t = setTimeout(() => persistirProposta(scope), 1500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- persistirProposta lê estado atual
+  }, [scope, excluded, screen, somenteLeitura]);
 
   // Reabrir uma proposta já salva: carrega o scope canônico de volta na tela de revisão.
   async function reabrirProposta(id: string) {
@@ -825,6 +831,8 @@ export default function Home() {
       setSomenteLeitura(!ehAdmin && !!usuario && reg.autor !== usuario.email ? (reg.autorNome ?? reg.autor) : null);
       setScope(reg.scope as PropostaScope);
       setExcluded(posicoesExcluidas(reg.scope as PropostaScope));
+      ultimoSalvo.current = JSON.stringify(reg.scope);
+      setSalvo(null);
       setScreen("review");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro ao abrir a proposta.";
@@ -1035,6 +1043,21 @@ export default function Home() {
     }
   }
 
+  // Deep-link na carga: `?tela=history` abre o histórico; `?tela=review&id=X` reabre a
+  // proposta X. Fora do corpo do effect (microtask) por causa da regra react-hooks/set-state-in-effect.
+  useEffect(() => {
+    const q = new URLSearchParams(buscaInicial.current);
+    const tela = q.get("tela") as Screen | null;
+    const id = q.get("id");
+    if (!tela || tela === "dashboard") return;
+    const abriveis: Screen[] = ["manual", "history", "catalog", "config", "perfil", "ferramentas", "ferramentas-comerciais", "gerador-contratos", "gerador-certificados", "review", "pdf"];
+    if (!abriveis.includes(tela)) return;
+    void Promise.resolve().then(() => {
+      if ((tela === "review" || tela === "pdf") && id) void reabrirProposta(id);
+      else if (tela !== "review" && tela !== "pdf") setScreen(tela);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só na carga
+  }, []);
   useEffect(() => {
     if (!navOpen) return;
     const h = (e: KeyboardEvent) => {
@@ -1296,7 +1319,7 @@ export default function Home() {
         {screen === "importar" && <ImportarOrcamentoScreen onMontar={aplicarScopeManual} />}
         {screen === "review" && scope && (
           <ReviewScreen
-            {...{ reviewVariant, setReviewVariant, scope, excluded, includedItems, total, toggleProduct, changeQty, editarPreco }}
+            {...{ reviewVariant, setReviewVariant, scope, excluded, includedItems, total, toggleProduct, changeQty, editarPreco, salvo }}
             onRefinar={refinarTexto}
             onEditarTexto={editarTexto}
             onEditarCondicaoConsolidada={editarCondicaoConsolidada}
@@ -1347,6 +1370,7 @@ export default function Home() {
             }}
           />
         )}
+            {/* eslint-disable-next-line react-hooks/refs -- sinal consumido na montagem do Catálogo, de propósito (ver cadastroProdutoPedido) */}
         {screen === "catalog" && <CatalogScreen catalogo={catalogo} erro={catalogoErro} catFilter={catFilter} setCatFilter={setCatFilter} ehAdmin={ehAdmin} cadastroInicial={cadastroProdutoPedido.current} cadastroTick={cadastroTick} onCadastroConsumido={consumirCadastroProduto} onRecarregar={() => { setCatalogo(null); setCatalogoVersao((v) => v + 1); }} />}
         {screen === "prospeccao" && (
           <ProspeccaoScreen
@@ -3265,6 +3289,7 @@ function ReviewScreen({
   reviewVariant,
   setReviewVariant,
   scope,
+  salvo,
   excluded,
   includedItems,
   total,
@@ -3287,6 +3312,7 @@ function ReviewScreen({
   reviewVariant: "A" | "B";
   setReviewVariant: (v: "A" | "B") => void;
   scope: PropostaScope;
+  salvo: { estado: "salvando" | "salvo" | "erro"; quando: Date } | null;
   excluded: Set<number>; // posições em scope.itens (o mesmo produto pode repetir em outra embalagem)
   includedItems: PropostaItem[];
   total: number;
@@ -3690,6 +3716,11 @@ function ReviewScreen({
       <div style={{ flex: "none", padding: "14px 28px", background: "white", borderTop: "1px solid var(--gray-200)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ fontSize: "14px", color: "var(--gray-500)" }}>
           <strong style={{ color: "var(--gray-900)" }}>{includedItems.length} produtos</strong> incluídos · ajuste a seleção acima
+          {salvo && (
+            <span role="status" style={{ marginLeft: "12px", fontSize: "12px", color: salvo.estado === "erro" ? "#B91C1C" : "var(--gray-400)" }}>
+              {salvo.estado === "salvando" ? "Salvando…" : salvo.estado === "salvo" ? `Salvo às ${salvo.quando.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Não foi possível salvar — tente de novo em instantes"}
+            </span>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <div style={{ textAlign: "right" }}>
