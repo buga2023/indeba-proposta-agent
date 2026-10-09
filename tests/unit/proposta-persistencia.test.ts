@@ -68,6 +68,14 @@ describe("contrato de persistência da proposta", () => {
     };
     expect(totalDaProposta(adulterado)).toBe("100.00"); // 50.00 × 2, não R$ 1,00
   });
+
+  it("item tirado na Revisão (incluido: false) não entra no total persistido", () => {
+    const comExcluido: PropostaScope = {
+      ...scopeBase,
+      itens: [scopeBase.itens[0], { ...scopeBase.itens[0], codigo: "B9", incluido: false }],
+    };
+    expect(totalDaProposta(comExcluido)).toBe("150.00");
+  });
 });
 
 // Propostas salvas antes do fix de 29/07 congelaram a ARTE ilustrativa em pares que têm

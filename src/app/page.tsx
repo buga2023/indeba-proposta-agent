@@ -15,7 +15,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type DragEvent, type ReactNode } from "react";
 import type { StatusProposta, PropostaScope, PropostaItem, Produto, Funcao, Prospect, Abordagem, ProspeccaoResponse, InstagramResponse, PostInstagram, TomPost, FinanceiroResponse, ContratoScope, ContratoAnalise, RagResposta, CobrancaResponse, ComprasResponse, FiscalResponse, ContabilResponse, PerfilEstilo, ItemRejeitado, OrcamentoImportResponse, ComandoEdicao } from "@/lib/contracts";
 import type { Usuario } from "@/lib/auth";
-import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setRotuloConsolidada, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo } from "@/lib/proposta-edit";
+import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setRotuloConsolidada, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo, marcarIncluidos, posicoesExcluidas } from "@/lib/proposta-edit";
 import { custoLitroDiluido, diluicaoSugeridaDaFicha } from "@/lib/diluicao";
 import { consolidadaDefaults, rotulosConsolidada, ROTULOS_PADRAO } from "@/lib/consolidada-defaults";
 import { mascaraCnpj, erroCnpj } from "@/lib/cnpj";
@@ -735,7 +735,9 @@ export default function Home() {
     fetch("/api/propostas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(s),
+      // O que o vendedor tirou na Revisão vai gravado como `incluido: false` — senão voltava
+      // ao reabrir e o total salvo divergia do PDF enviado.
+      body: JSON.stringify(marcarIncluidos(s, excluded)),
     })
       .then(() => setPropostas(null)) // histórico mudou → recarrega na próxima visita
       .catch(() => {});
@@ -749,7 +751,7 @@ export default function Home() {
       const reg = await r.json();
       setSomenteLeitura(!ehAdmin && !!usuario && reg.autor !== usuario.email ? (reg.autorNome ?? reg.autor) : null);
       setScope(reg.scope as PropostaScope);
-      setExcluded(new Set());
+      setExcluded(posicoesExcluidas(reg.scope as PropostaScope));
       setScreen("review");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro ao abrir a proposta.";
@@ -947,7 +949,7 @@ export default function Home() {
       setSomenteLeitura(null);
       setScopeParaEditar(reg.scope as PropostaScope);
       setScope(reg.scope as PropostaScope);
-      setExcluded(new Set());
+      setExcluded(posicoesExcluidas(reg.scope as PropostaScope));
       setManualPrefill(null);
       setBuilderKey((k) => k + 1); // remonta a tela já hidratada com a proposta
       setError(null);

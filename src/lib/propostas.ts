@@ -19,6 +19,7 @@ import {
 export function totalDaProposta(scope: PropostaScope): string {
   let total = 0;
   for (const i of scope.itens) {
+    if (i.incluido === false) continue; // tirado na Revisão: não entra no total nem no PDF
     const qtd = i.quantidade ?? 1;
     total += (Number(i.embalagens[0]?.preco) || 0) * qtd;
   }

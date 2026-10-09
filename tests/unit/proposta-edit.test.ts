@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { setPrecoEmbalagem, normalizarPreco, extrairNumero, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo } from "@/lib/proposta-edit";
+import { marcarIncluidos, posicoesExcluidas, setPrecoEmbalagem, normalizarPreco, extrairNumero, setClienteCampo, setQuantidadeAbsoluta, setCondicaoComercial, setCondicaoConsolidadaTexto, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo } from "@/lib/proposta-edit";
 import type { PropostaScope } from "@/lib/contracts";
 
 const scope = {
@@ -152,5 +152,17 @@ describe("proposta-edit", () => {
       const r = cortarParaOrcamento(comQtd, 350, 100);
       expect(r.posicoesRemover).toEqual([1]); // remove o mais barato por unidade primeiro
     });
+  });
+});
+
+describe("exclusão de itens persiste (incluido)", () => {
+  const dois = { ...scope, itens: [scope.itens[0], { ...scope.itens[0], codigo: "B" }] } as PropostaScope;
+  it("marcarIncluidos grava a flag por posição", () => {
+    const r = marcarIncluidos(dois, new Set([1]));
+    expect(r.itens.map((i) => i.incluido)).toEqual([true, false]);
+  });
+  it("posicoesExcluidas reconstrói o Set ao reabrir; item sem flag conta como incluído", () => {
+    expect([...posicoesExcluidas(marcarIncluidos(dois, new Set([0])))]).toEqual([0]);
+    expect(posicoesExcluidas(dois).size).toBe(0);
   });
 });

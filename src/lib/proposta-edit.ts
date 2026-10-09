@@ -25,6 +25,16 @@ export const posicaoDoCodigo = (scope: PropostaScope, codigo: string): number =>
 
 // Retorna um novo scope com o preço da embalagem [idx] do item na posição [pos] alterado.
 // Imutável: não muta o scope recebido (React state).
+// Exclusão de itens na Revisão ↔ campo `incluido` do scope persistido. A tela guarda as
+// posições excluídas num Set; na hora de salvar o Set vira flag por item, e ao reabrir a flag
+// vira Set de novo — assim o que o vendedor tirou continua fora depois de F5/reabrir.
+export function marcarIncluidos(scope: PropostaScope, excluidas: Set<number>): PropostaScope {
+  return { ...scope, itens: scope.itens.map((it, pos) => ({ ...it, incluido: !excluidas.has(pos) })) };
+}
+export function posicoesExcluidas(scope: PropostaScope): Set<number> {
+  return new Set(scope.itens.map((it, pos) => (it.incluido === false ? pos : -1)).filter((p) => p >= 0));
+}
+
 export function setPrecoEmbalagem(scope: PropostaScope, pos: number, idx: number, valor: string): PropostaScope {
   return {
     ...scope,

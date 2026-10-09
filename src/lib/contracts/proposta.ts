@@ -39,6 +39,12 @@ export const PropostaItem = z.object({
   // Quantidade ajustável pelo vendedor na tela de revisão. Subtotal = preço da
   // 1ª embalagem × quantidade (modelo de orçamento). Default 1.
   quantidade: z.number().int().positive().default(1),
+  // Item tirado da proposta na Revisão. Antes isso vivia só num Set em memória da tela: o PDF
+  // saía sem o item, mas o registro era salvo com ele, e ao reabrir ele voltava "incluído"
+  // com total diferente do PDF que o cliente recebeu (revisão de UX, 08/10/2026). Default
+  // Opcional (ausente = incluído): propostas antigas e os montadores do servidor seguem
+  // sem o campo; só a tela de Revisão grava `false`.
+  incluido: z.boolean().optional(),
   procedenciaSelecao: z.enum(["IA-SELEÇÃO", "MANUAL"]),
   motivo: z.string(),
 });
