@@ -507,6 +507,63 @@ export default function Home() {
   // e gera o PDF, mas nada do que mexer é gravado — o servidor negaria (404) de todo jeito;
   // aqui a UI avisa e o auto-save não dispara. Guarda o nome do dono para o aviso.
   const [somenteLeitura, setSomenteLeitura] = useState<string | null>(null);
+
+  // URL ↔ tela (revisão de UX, 08/10/2026). A tela vivia só em useState: F5 voltava ao
+  // Dashboard, o botão Voltar do Chrome saía do app e não dava para mandar o link de uma
+  // proposta. Agora cada troca de tela entra no histórico do navegador como `?tela=…&id=…`,
+  // Voltar/Avançar do navegador trocam a tela, e abrir `?tela=review&id=X` reabre a proposta.
+  const navegacaoDoNavegador = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const id = (screen === "review" || screen === "pdf") && scope?.id ? `&id=${encodeURIComponent(scope.id)}` : "";
+    const url = `${window.location.pathname}?tela=${screen}${id}`;
+    const atual = window.location.search;
+    if (atual === url.slice(window.location.pathname.length)) return;
+    if (navegacaoDoNavegador.current || !window.history.state?.tela) {
+      // Veio do popstate (já está no histórico) ou é a primeira pintura: só alinha a URL.
+      navegacaoDoNavegador.current = false;
+      window.history.replaceState({ tela: screen }, "", url);
+    } else {
+      window.history.pushState({ tela: screen }, "", url);
+    }
+  }, [screen, scope?.id]);
+  useEffect(() => {
+    const aoVoltar = (e: PopStateEvent) => {
+      const tela = (e.state?.tela as Screen | undefined) ?? "dashboard";
+      navegacaoDoNavegador.current = true;
+      voltando.current = true;
+      setNavOpen(false);
+      setScreen(tela);
+    };
+    window.addEventListener("popstate", aoVoltar);
+    return () => window.removeEventListener("popstate", aoVoltar);
+  }, []);
+  // Deep-link na carga: `?tela=history` abre o histórico; `?tela=review&id=X` reabre a
+  // proposta X. Fora do corpo do effect (microtask) por causa da regra react-hooks/set-state-in-effect.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const tela = q.get("tela") as Screen | null;
+    const id = q.get("id");
+    if (!tela || tela === "dashboard") return;
+    const abriveis: Screen[] = ["manual", "history", "catalog", "config", "perfil", "ferramentas", "ferramentas-comerciais", "gerador-contratos", "gerador-certificados", "review", "pdf"];
+    if (!abriveis.includes(tela)) return;
+    void Promise.resolve().then(() => {
+      if ((tela === "review" || tela === "pdf") && id) void reabrirProposta(id);
+      else if (tela !== "review" && tela !== "pdf") setScreen(tela);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só na carga
+  }, []);
+  // Rascunho em andamento: avisa antes de fechar/recarregar a aba (o estado da montagem e da
+  // Revisão ainda vive em memória; o auto-save só roda em montar/PDF/refino).
+  useEffect(() => {
+    const temRascunho = !!scope && scope.itens.length > 0 && (screen === "manual" || screen === "review") && !somenteLeitura;
+    if (!temRascunho) return;
+    const aviso = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", aviso);
+    return () => window.removeEventListener("beforeunload", aviso);
+  }, [scope, screen, somenteLeitura]);
   // Gestor e vendedor navegam telas diferentes. Enquanto /api/me não responde, `usuario` é
   // null e o app trata como vendedor: mostrar a mais e recolher depois piscaria a tela do
   // gestor para quem não é. As rotas de admin já barram por papel no servidor de qualquer
