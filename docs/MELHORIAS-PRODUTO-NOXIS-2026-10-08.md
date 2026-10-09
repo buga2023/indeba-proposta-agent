@@ -311,6 +311,15 @@ Conferido em produção: Configurações mostra "Plano e ferramentas · Preset: 
 | #28 (parte) e2e locais de tela voltaram a rodar: o spec de 10/09 esperava a sidebar "Comercial/Técnico", que o Mateus pediu de volta para "Módulos > Ferramentas…" em 22/09; atualizado. Com o dev server local (auth desligada, API interceptada): **11 de 11 e2e passam** no Next 16.4.0 com todas as mudanças da noite. Smoke de produção 9/9. | este commit |
 
 Conferido em produção: uma única navegação ao abrir "/", sem loop de reload, `history.state` com a tela, sessão do Matheus ativa.
+### Rodada 7 (04:31 → 04:40)
+
+| Item | Commit |
+|---|---|
+| #28 CI ganha o job `e2e-tela`: Playwright contra `next start` com auth desligada e API interceptada (3 specs, 11 testes). Guardião de bundle emite anotação `::notice` com o número do Linux. | `17dd676` |
+| #15 `docs/onboarding-instalacao.md`: tabela do que muda por distribuidora (onde mora, como trocar) e checklist de go-live em 10 passos com as alavancas que já existem. | `17dd676` |
+| #8 `backup-db.yml`: pg_dump diário às 03:30 como artefato de 30 dias; liga com o secret `BACKUP_DATABASE_URL` (até lá termina em "pulado"). **Pendente seu: criar o secret.** | `21a0190` |
+
+Deploy READY e smoke 9/9 após `17dd676`. Resultado do primeiro run do job `e2e-tela` no CI: conferir em `gh run list` (não deu tempo de ver nesta sessão).
 **#17 (telas mortas) fica para decisão sua:** elas usam `Hoverable` e `brl` definidos dentro de `page.tsx`, e um `page.tsx` do Next não pode exportar helpers. Ou apagamos as 9 telas (ficam no git), ou movemos `Hoverable`/`brl` para um módulo e as telas para `src/components/legacy/`. Não fiz nenhum dos dois sem você.
 
 **Deixado de fora de propósito nesta noite:** mudanças de auth/env/segredos (healthcheck público, sessão revogável, cadastro por convite, Sentry DSN) e qualquer migração de schema (auditoria em tabela), por não haver banco local para ensaiar a migração antes do build de produção.
