@@ -303,6 +303,14 @@ Conferido em produção: `?tela=review&id=<Engepack>` reabre a proposta direto n
 | **#4 Planos como mecanismo no código.** `lib/plano.ts`: lista das 7 ferramentas da tabela de planos, presets Basic/Regular/Premium/Completo, lista habilitada guardada na tabela Config (chave `ferramentas`, sem migração; ausente = todas). As rotas das 7 ferramentas respondem 403 fora do plano (bloqueio no servidor, não só no menu); `/api/me` devolve as ferramentas; abas, card do Dashboard e item de menu somem; painel do gestor ganha "Plano e ferramentas" com presets e caixa por ferramenta (`/api/plano`). | `02340ff` |
 
 Conferido em produção: Configurações mostra "Plano e ferramentas · Preset: Completo · 7 de 7"; `/api/plano` logado devolve `completo`; sem login 401; smoke 9/9; CI verde. Não mexi no plano da Indeba (segue completo).
+### Rodada 6 (04:12 → 04:40)
+
+| Item | Commit |
+|---|---|
+| #18 (fase 1) botão "Enviar por WhatsApp" na tela de PDF: abre o WhatsApp com mensagem pronta (cliente, valor, consultor) e marca a proposta como enviada. O vendedor anexa o PDF na conversa. | `1fc1bd0` |
+| #28 (parte) e2e locais de tela voltaram a rodar: o spec de 10/09 esperava a sidebar "Comercial/Técnico", que o Mateus pediu de volta para "Módulos > Ferramentas…" em 22/09; atualizado. Com o dev server local (auth desligada, API interceptada): **11 de 11 e2e passam** no Next 16.4.0 com todas as mudanças da noite. Smoke de produção 9/9. | este commit |
+
+Conferido em produção: uma única navegação ao abrir "/", sem loop de reload, `history.state` com a tela, sessão do Matheus ativa.
 **#17 (telas mortas) fica para decisão sua:** elas usam `Hoverable` e `brl` definidos dentro de `page.tsx`, e um `page.tsx` do Next não pode exportar helpers. Ou apagamos as 9 telas (ficam no git), ou movemos `Hoverable`/`brl` para um módulo e as telas para `src/components/legacy/`. Não fiz nenhum dos dois sem você.
 
 **Deixado de fora de propósito nesta noite:** mudanças de auth/env/segredos (healthcheck público, sessão revogável, cadastro por convite, Sentry DSN) e qualquer migração de schema (auditoria em tabela), por não haver banco local para ensaiar a migração antes do build de produção.

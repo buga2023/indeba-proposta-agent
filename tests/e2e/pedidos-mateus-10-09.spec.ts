@@ -67,26 +67,22 @@ test.beforeEach(async ({ page }) => {
 
 /* ═══════════ 1. Sidebar ═══════════ */
 
-test("a sidebar não repete a palavra Ferramentas", async ({ page }) => {
+// Em 22/09/2026 a sidebar VOLTOU a "MÓDULOS > Ferramentas Comerciais / Ferramentas Técnicas"
+// (pedido do Mateus pela foto original — ver comentário em page.tsx, bloco Módulos). O recorte
+// de 10/09 ("Comercial"/"Técnico" sob FERRAMENTAS) durou doze dias; o teste segue o que está no ar.
+test("a sidebar mostra Módulos com Ferramentas Comerciais e Técnicas", async ({ page }) => {
   await page.goto("/");
   const nav = page.locator("nav").first();
-
-  // O grupo virou FERRAMENTAS e os itens ficaram com o recorte.
-  await expect(nav.getByText("Ferramentas", { exact: true })).toBeVisible();
-  await expect(nav.getByRole("button", { name: "Comercial", exact: true })).toBeVisible();
-  await expect(nav.getByRole("button", { name: "Técnico", exact: true })).toBeVisible();
-
-  // O que a foto do Mateus mostrava e ele pediu para tirar.
-  await expect(nav.getByText("Módulos", { exact: true })).toHaveCount(0);
-  await expect(nav.getByRole("button", { name: "Ferramentas Comerciais" })).toHaveCount(0);
-  await expect(nav.getByRole("button", { name: "Ferramentas Técnicas" })).toHaveCount(0);
+  await expect(nav.getByText("Módulos", { exact: true })).toBeVisible();
+  await expect(nav.getByRole("button", { name: "Ferramentas Comerciais" })).toBeVisible();
+  await expect(nav.getByRole("button", { name: "Ferramentas Técnicas" })).toBeVisible();
 });
 
 /* ═══════════ 2. PDF dos registros ═══════════ */
 
 test("a visita de rotina tem botão de extrair PDF, apontando para a rota certa", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Técnico", exact: true }).click();
+  await page.getByRole("button", { name: "Ferramentas Técnicas" }).first().click();
 
   const pdf = page.getByRole("link", { name: /PDF/ }).first();
   await expect(pdf).toBeVisible();
@@ -97,7 +93,7 @@ test("a visita de rotina tem botão de extrair PDF, apontando para a rota certa"
 
 test("a prospecção tem botão de extrair PDF", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Comercial", exact: true }).click();
+  await page.getByRole("button", { name: "Ferramentas Comerciais" }).first().click();
   await page.getByRole("button", { name: "Registro de Prospecções" }).click();
 
   await expect(page.getByRole("link", { name: /PDF/ }).first()).toHaveAttribute(
@@ -108,7 +104,7 @@ test("a prospecção tem botão de extrair PDF", async ({ page }) => {
 
 test("a solicitação comercial tem botão de extrair PDF", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Comercial", exact: true }).click();
+  await page.getByRole("button", { name: "Ferramentas Comerciais" }).first().click();
   await page.getByRole("button", { name: "Solicitações Comerciais" }).click();
 
   await expect(page.getByRole("link", { name: /PDF/ }).first()).toHaveAttribute(
@@ -128,7 +124,7 @@ test("o estoque de comodatos NÃO ganha botão de PDF", async ({ page }) => {
     }),
   );
   await page.goto("/");
-  await page.getByRole("button", { name: "Técnico", exact: true }).click();
+  await page.getByRole("button", { name: "Ferramentas Técnicas" }).first().click();
   await page.getByRole("button", { name: /Estoque de Comodatos/i }).click();
 
   await expect(page.getByRole("link", { name: /^PDF$/ })).toHaveCount(0);
