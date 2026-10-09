@@ -248,3 +248,20 @@ contratos Zod, jsdom + Testing Library para montagem→revisão→PDF antes de r
 - Quebra do `page.tsx`, telas mortas fora, testes de componente e integração.
 - Base comum dos templates de PDF; render de PDF fora do bundle se o custo justificar.
 - LGPD: inventário, expurgo, anonimização, DPA; add-on IA e botão Enviar nos planos.
+
+## Feito (loop noturno 08→09/10/2026)
+
+Cada item: commit na `main`, lint/tsc/testes verdes, deploy READY e smoke de produção 9/9.
+
+| Hora | Item | Commit |
+|---|---|---|
+| 23:26 | #5 CI verde: ESLint ignora `public/**`, `*.min.js`, `apresentacao/**`; build do CI compila sem `migrate deploy`. Primeiro run verde desde 23/09. | `26b784b` |
+| 23:31 | #12 erros de refinar/reabrir/editar/montar em toast com mensagem humana; toast `role=status`, erro dura 7s. #26 campo de preço controlado em PT-BR. #27 overlay honesto. #23 `maxDuration` na rota de PDF dos registros. | `9382364` |
+| 23:35 | #11 item tirado na Revisão persiste (`incluido: false`), volta excluído ao reabrir, total salvo ignora. | `521bc4b` |
+| 23:43 | #9 upload valida tipo pelos bytes (PNG/JPEG/WebP/PDF) em anexos, fotos, documento, foto/ficha de produto; entrega inline só para a allowlist. Fecha o XSS por SVG. | `fc5386a` |
+| 23:46 | #14 montagem lista todas as pendências de uma vez, rola até o banner (`role=alert`) e repete no toast. | `c6f9f48` |
+| 23:48 | #25 botões −/+ com 36px e `aria-label`; rodapé da Revisão sem padding fantasma. | `8f99aef` |
+
+Conferido em produção (Chrome logado como Matheus): Revisão da Engepack mostra "159,00", botões rotulados, rodapé correto.
+
+**Deixado de fora de propósito nesta noite:** mudanças de auth/env/segredos (healthcheck público, sessão revogável, cadastro por convite, Sentry DSN) e qualquer migração de schema (auditoria em tabela), por não haver banco local para ensaiar a migração antes do build de produção.
