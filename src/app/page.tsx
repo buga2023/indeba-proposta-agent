@@ -418,6 +418,18 @@ const CMD_ITEM_CADASTRO: PaletteItem = { key: "cadastro-produto", label: "Cadast
 
 /* ───────────────────────── componente principal ───────────────────────── */
 
+// Tetos das chamadas longas: sem isto uma função serverless travada deixava o vendedor preso
+// no overlay com o cronômetro rodando (revisão de UX, 08/10/2026). /api/pdf tem maxDuration 60s.
+const TEMPO_MAX_MONTAR_MS = 60_000;
+const TEMPO_MAX_PDF_MS = 90_000;
+function mensagemDeFalha(e: unknown, padrao: string): string {
+  if (e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError")) {
+    return "O servidor demorou demais para responder. Tente de novo em instantes.";
+  }
+  if (e instanceof TypeError && /fetch/i.test(e.message)) return "Sem conexão com o servidor. Verifique a internet e tente de novo.";
+  return e instanceof Error ? e.message : padrao;
+}
+
 // Lê o corpo `{ erro }` que TODA rota de API devolve (lib/erro.ts) e cai no rótulo humano com o
 // status quando não há corpo — "HTTP 500" e "Falha (503)" não dizem ao vendedor o que fazer.
 async function mensagemDeErro(r: Response, rotulo: string): Promise<string> {
@@ -926,6 +938,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(efetivo),
+        signal: AbortSignal.timeout(TEMPO_MAX_PDF_MS),
       });
       if (!r.ok) {
         const corpo = await r.json().catch(() => null);
@@ -942,7 +955,7 @@ export default function Home() {
       persistirProposta(scope);
       toast("PDF gerado", "success");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao gerar PDF.");
+      setError(mensagemDeFalha(e, "Erro ao gerar PDF."));
     } finally {
       setDownloading(false);
     }
@@ -2407,7 +2420,7 @@ function ManualScreen({
           return { nome: c.nome, embalagens: [{ tamanho: Number(c.tamanho), unidade: c.unidade, preco: numeroBR(c.preco).toFixed(2), diluicaoMax: normalizaDiluicao(c.diluicao), custoDiluido: null }], quantidade: c.qtd };
         }),
       };
-      const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(TEMPO_MAX_MONTAR_MS) });
       if (!r.ok) throw new Error(await mensagemDeErro(r, "Falha ao montar a proposta"));
       const scope = await r.json();
       if (!scope || !Array.isArray(scope.itens)) throw new Error("Resposta inesperada do servidor.");
@@ -2416,7 +2429,7 @@ function ManualScreen({
       setIdProposta((scope as PropostaScope).id);
       onMontar(scope as PropostaScope);
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao montar a proposta.");
+      setErro(mensagemDeFalha(e, "Erro ao montar a proposta."));
     } finally {
       setMontando(false);
     }
@@ -3049,13 +3062,13 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
           quantidade: it.quantidade,
         })),
       };
-      const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(TEMPO_MAX_MONTAR_MS) });
       if (!r.ok) throw new Error(await mensagemDeErro(r, "Falha ao montar a proposta"));
       const scope = await r.json();
       if (!scope || !Array.isArray(scope.itens)) throw new Error("Resposta inesperada do servidor.");
       onMontar(scope as PropostaScope);
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao montar a proposta.");
+      setErro(mensagemDeFalha(e, "Erro ao montar a proposta."));
     } finally {
       setMontando(false);
     }
