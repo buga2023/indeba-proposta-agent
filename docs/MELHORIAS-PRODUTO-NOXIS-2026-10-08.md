@@ -320,6 +320,17 @@ Conferido em produção: uma única navegação ao abrir "/", sem loop de reload
 | #8 `backup-db.yml`: pg_dump diário às 03:30 como artefato de 30 dias; liga com o secret `BACKUP_DATABASE_URL` (até lá termina em "pulado"). **Pendente seu: criar o secret.** | `21a0190` |
 
 Deploy READY e smoke 9/9 após `17dd676`. Resultado do primeiro run do job `e2e-tela` no CI: conferir em `gh run list` (não deu tempo de ver nesta sessão).
+### Rodada 8 (09:00 → 09:25) — áudios do Mateus de 09/10
+
+| Pedido | Commit |
+|---|---|
+| Prospecções e Solicitações Comerciais com as pastas de ano/mês ("caixinha do calendário"), como as Visitas e as Ferramentas Técnicas. | `eda6856` |
+| Todos os títulos de seção da Proposta de Solução editáveis (apresentação, comodatos, vantagens, condições, título da proposta): padrão de fábrica, edição no painel do gestor e por proposta. Ícones editáveis ficam para depois, como ele pediu ("por último"). | `eda6856` |
+| Gerador de Certificados: HTML do Mateus no lugar do "em breve", com pdf-lib e jszip locais (CSP) e logo embutida. | `eda6856` |
+| `agentRules: false` no Next: o `next dev` reescrevia o `AGENTS.md` do projeto. | `866262e` |
+| Guardião de bundle calibrado pela anotação do CI: no Linux o traçado soma **274 MB** e o deploy passa, então a medida superestima o que a Vercel empacota. Fica em modo aviso; o valor serve para detectar saltos (ex.: fichas em `public/` entrando no bundle), não como limite absoluto. | — |
+
+Verificação: 663 testes unitários; 15 e2e de tela locais (4 specs) passando no dev server com API interceptada, inclusive o spec novo dos pedidos de hoje; smoke de produção após o deploy.
 **#17 (telas mortas) fica para decisão sua:** elas usam `Hoverable` e `brl` definidos dentro de `page.tsx`, e um `page.tsx` do Next não pode exportar helpers. Ou apagamos as 9 telas (ficam no git), ou movemos `Hoverable`/`brl` para um módulo e as telas para `src/components/legacy/`. Não fiz nenhum dos dois sem você.
 
 **Deixado de fora de propósito nesta noite:** mudanças de auth/env/segredos (healthcheck público, sessão revogável, cadastro por convite, Sentry DSN) e qualquer migração de schema (auditoria em tabela), por não haver banco local para ensaiar a migração antes do build de produção.
