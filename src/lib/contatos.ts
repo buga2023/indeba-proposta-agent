@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { avisarDegradacao } from "./log-servidor";
 import { prisma } from "@/lib/db";
 import type { Inadimplente } from "@/lib/contracts";
 
@@ -32,7 +33,7 @@ export async function aprenderEPreencherEmails<T extends { cliente: string; emai
       for (const i of itens) if (!i.email) i.email = mapa.get(i.cliente) ?? null;
     }
   } catch (e) {
-    console.error("[contatos] cadastro de e-mails indisponível — seguindo com o que veio na planilha:", e);
+    avisarDegradacao("contatos", "cadastro de e-mails indisponível — seguindo com o que veio na planilha", e);
   }
   return itens;
 }

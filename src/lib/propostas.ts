@@ -3,6 +3,7 @@
 // Permite reabrir e gerar contrato de uma proposta que já existe. O log append-only
 // (lib/log.ts) segue como auditoria imutável de cada PDF emitido (constituição §8).
 import { Prisma } from "@prisma/client";
+import { avisarDegradacao } from "./log-servidor";
 import { prisma } from "@/lib/db";
 import { produtoPorCodigoCompleto } from "@/lib/catalogo";
 import { nomesDeAutores, nomeDeAutor } from "@/lib/autores";
@@ -168,7 +169,7 @@ export async function listarPropostas(
     try {
       resumos.push(mapearResumo(row, nomes.get(row.autor) ?? null));
     } catch (e) {
-      console.error(`[propostas] linha ${row.id} fora do contrato — fora da listagem:`, e);
+      avisarDegradacao("propostas", "linha fora do contrato — fora da listagem", e, { id: row.id });
     }
   }
   return resumos;

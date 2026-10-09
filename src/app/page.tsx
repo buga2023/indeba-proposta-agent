@@ -32,6 +32,7 @@ import { AdminScreen } from "@/components/admin-screen";
 import { FormProduto } from "@/components/form-produto";
 import { Logo, Wordmark } from "@/components/brand";
 import { useToast } from "./_app/toast";
+import { EMPRESA } from "@/lib/empresa";
 import { CommandPalette, type PaletteItem } from "./_app/command-palette";
 
 /* ───────────────────────── helpers ───────────────────────── */
@@ -1374,14 +1375,14 @@ export default function Home() {
         {screen === "gerador-contratos" && (
           <iframe
             src="/gerador-contratos/index.html"
-            title="Gerador de Contratos — Indeba Express"
+            title={`Gerador de Contratos — ${EMPRESA.nomeFantasia}`}
             style={{ display: "block", width: "100%", height: "calc(100vh - 58px)", border: 0, background: "#fff" }}
           />
         )}
         {screen === "gerador-certificados" && (
           <iframe
             src="/gerador-certificados/index.html"
-            title="Gerador de Certificados — Indeba Express"
+            title={`Gerador de Certificados — ${EMPRESA.nomeFantasia}`}
             style={{ display: "block", width: "100%", height: "calc(100vh - 58px)", border: 0, background: "#fff" }}
           />
         )}
@@ -3082,7 +3083,7 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
       {montando && <MontandoOverlay />}
       <ScreenHead
         title="Importar orçamento"
-        sub="PDF do orçamento → proposta no padrão Indeba — preço sai do documento"
+        sub={`PDF do orçamento → proposta no padrão ${EMPRESA.nomeFantasia} — preço sai do documento`}
         right={
           conferindo ? (
             <Hoverable onClick={montar} base={{ display: "flex", alignItems: "center", gap: "7px", height: "38px", padding: "0 18px", borderRadius: "10px", border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: 600, boxShadow: "var(--shadow-accent)", opacity: montando ? 0.7 : 1 }} hover={{ background: "var(--accent-hover)" }}>

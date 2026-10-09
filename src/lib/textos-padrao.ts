@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { avisarDegradacao } from "./log-servidor";
 import { prisma } from "@/lib/db";
 import { consolidadaDefaults } from "./consolidada-defaults";
 
@@ -78,14 +79,14 @@ export async function carregarTextosPadrao(): Promise<TextosPadrao> {
     if (!c) return textosPadraoFabrica();
     const parsed = TextosPadrao.safeParse(JSON.parse(c.valor));
     if (!parsed.success) {
-      console.error("[textos-padrao] Config inválida — usando defaults de fábrica:", parsed.error.message);
+      avisarDegradacao("textos-padrao", "Config inválida — usando defaults de fábrica", parsed.error.message);
       return textosPadraoFabrica();
     }
     // Config salva antes das seções novas (capa/apresentação/comodatos) não as tem:
     // o merge completa com a fábrica sem perder o que o gestor já tinha editado.
     return { ...textosPadraoFabrica(), ...parsed.data };
   } catch (e) {
-    console.error("[textos-padrao] indisponível — usando defaults de fábrica:", e);
+    avisarDegradacao("textos-padrao", "indisponível — usando defaults de fábrica", e);
     return textosPadraoFabrica();
   }
 }

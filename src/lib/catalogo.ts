@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { avisarDegradacao } from "./log-servidor";
 import { join } from "node:path";
 import { Catalogo, type Produto } from "./contracts";
 import { enriquecerFicha } from "./enriquecer-ficha";
@@ -53,7 +54,7 @@ export async function catalogoCompleto(): Promise<Catalogo> {
     [custom, excluidos] = await Promise.all([listarProdutosCustom(), excluidosCustom()]);
   } catch (e) {
     // Banco fora do ar não pode apagar o catálogo da tela: degrada para o JSON e registra.
-    console.error("[catalogo] produtos cadastrados indisponíveis — servindo só o JSON:", e);
+    avisarDegradacao("catalogo", "produtos cadastrados indisponíveis — servindo só o JSON", e);
     return base;
   }
   if (!custom.length && !excluidos.length) return base;
@@ -79,7 +80,7 @@ export async function produtoPorCodigoCompleto(codigo: string): Promise<Produto 
     // Degradação, não erro: banco fora do ar não pode derrubar quem só queria reabrir uma
     // proposta. Cai no JSON abaixo, que é o pior caso aceitável (dado um pouco velho, não
     // tela quebrada) — bem melhor do que um 500 na leitura da proposta inteira.
-    console.error(`[catalogo] override de ${codigo} indisponível — usando o JSON:`, e);
+    avisarDegradacao("catalogo", "override indisponível — usando o JSON", e, { codigo });
   }
   return produtoPorCodigo(codigo);
 }

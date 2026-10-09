@@ -6,6 +6,7 @@
 // (`Produto`), então quem consome (vitrine, matcher, RAG, PDF) não sabe de onde veio.
 // Ver docs/spec-cadastro-produto.md.
 import { prisma } from "@/lib/db";
+import { avisarDegradacao } from "./log-servidor";
 import { Produto } from "@/lib/contracts";
 import { produtoPorCodigo } from "@/lib/catalogo";
 
@@ -36,7 +37,7 @@ export const caminhoImagemEmbalagem = (codigo: string, chave: string) =>
 function comCaminhos(codigo: string, dados: unknown, temFicha: boolean, temImagem: boolean, fotosEmbalagem: string[] = []): Produto | null {
   const r = Produto.safeParse(dados);
   if (!r.success) {
-    console.error(`[produto-custom] ${codigo} fora do contrato — fora do catálogo:`, r.error.flatten());
+    avisarDegradacao("produto-custom", "produto fora do contrato — fora do catálogo", undefined, { codigo, problemas: r.error.flatten().fieldErrors });
     return null;
   }
   const base = produtoPorCodigo(codigo);
