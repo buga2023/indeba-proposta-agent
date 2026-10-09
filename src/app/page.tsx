@@ -864,6 +864,19 @@ export default function Home() {
   // Se o novo status tira a proposta do recorte atual (excluir na lista principal, restaurar na
   // aba Excluídas), a linha SOME na hora — antes ela só trocava o rótulo e ficava ali até o
   // próximo refetch, o que parecia "só excluiu no próximo login".
+  // "Enviar por WhatsApp" (revisão de 08/10/2026, item #18, fase 1): abre o WhatsApp com a
+  // mensagem pronta (o vendedor anexa o PDF que acabou de baixar) e marca a proposta como
+  // enviada — antes o status "enviada" era trocado à mão no histórico, ou esquecido.
+  function enviarPorWhatsApp() {
+    if (!scope) return;
+    const consultor = scope.consultor?.nome ?? usuario?.nome ?? "";
+    const texto = `Olá! Segue a Proposta de Solução da ${EMPRESA.nomeFantasia} para ${scope.cliente.razaoSocial}, no valor de ${fmt(total)}. Qualquer dúvida, estou à disposição.${consultor ? ` — ${consultor}` : ""}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener");
+    // O status comercial mora no registro (não no scope): PATCH /api/propostas/:id.
+    void mudarStatus(scope.id, "enviada");
+    toast("Proposta marcada como enviada — anexe o PDF na conversa do WhatsApp.", "success");
+  }
+
   async function mudarStatus(id: string, status: StatusProposta) {
     const saiDoRecorte = verArquivadas ? status !== "arquivada" : status === "arquivada";
     setPropostas((ps) =>
@@ -1351,6 +1364,7 @@ export default function Home() {
             total={total}
             downloading={downloading}
             baixarPdf={baixarPdf}
+            enviarWhatsApp={enviarPorWhatsApp}
             contatoAusente={contatoAusente}
             goToReview={() => setScreen("review")}
             error={error}
@@ -3767,6 +3781,7 @@ function PdfScreen({
   total,
   downloading,
   baixarPdf,
+  enviarWhatsApp,
   contatoAusente,
   goToReview,
   error,
@@ -3777,6 +3792,7 @@ function PdfScreen({
   total: number;
   downloading: boolean;
   baixarPdf: () => void;
+  enviarWhatsApp: () => void;
   contatoAusente: boolean;
   goToReview: () => void;
   error: string | null;
@@ -3826,6 +3842,15 @@ function PdfScreen({
               <path d="M1.5 12.5h12" />
             </svg>
             {downloading ? "Gerando…" : "Baixar PDF"}
+          </Hoverable>
+          <Hoverable
+            base={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", borderWidth: "1px", borderStyle: "solid", borderColor: "#A7F3D0", background: "#ECFDF5", cursor: "pointer", fontSize: "14px", fontWeight: 600, color: "#047857", fontFamily: "var(--font-sans), sans-serif" }}
+            hover={{ background: "#D1FAE5", borderColor: "#6EE7B7" }}
+            onClick={enviarWhatsApp}
+            title="Abre o WhatsApp com a mensagem pronta e marca a proposta como enviada (anexe o PDF na conversa)"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.8 1-.3.2-.5.1a6.5 6.5 0 0 1-3.2-2.8c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.7-1.7c-.2-.5-.4-.4-.5-.4h-.5a1 1 0 0 0-.7.3 2.9 2.9 0 0 0-.9 2.1 5 5 0 0 0 1.1 2.7 11.5 11.5 0 0 0 4.4 3.9c1.6.7 2.2.7 3 .6a2.6 2.6 0 0 0 1.7-1.2 2 2 0 0 0 .1-1.2c0-.1-.2-.2-.4-.3z"/></svg>
+            Enviar por WhatsApp
           </Hoverable>
           <Hoverable
             base={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 18px", borderRadius: "8px", border: "none", background: "var(--orange-500)", cursor: downloading ? "wait" : "pointer", fontSize: "14px", fontWeight: 600, color: "white", boxShadow: "0 2px 8px rgba(236,122,28,.35)", transition: "transform .12s ease,background .18s ease,box-shadow .18s ease", opacity: downloading ? 0.8 : 1 }}
