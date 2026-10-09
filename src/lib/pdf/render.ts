@@ -304,8 +304,27 @@ function comTeto<T>(p: Promise<T>, etapa: string, ms = TIMEOUT_ETAPA_MS): Promis
 }
 
 export async function pdfDeHtml(html: string, opcoes: OpcoesPdf = {}): Promise<Buffer> {
+  // Métrica por render (revisão de ops, 08/10/2026, item #23): o Chromium serverless é o
+  // maior item da fatura e não havia duração nem tamanho em lugar nenhum. Uma linha JSON por
+  // PDF (tag "pdf-render") — sucesso com ms/bytes, falha com a etapa que estourou.
+  const inicio = Date.now();
+  let etapa = "abertura do navegador";
+  try {
+    const pdf = await pdfDeHtmlInterno(html, opcoes, (e) => { etapa = e; });
+    console.info(JSON.stringify({ nivel: "info", tag: "pdf-render", ok: true, ms: Date.now() - inicio, bytes: pdf.length, htmlKb: Math.round(html.length / 1024), ts: new Date().toISOString() }));
+    return pdf;
+  } catch (e) {
+    console.error(JSON.stringify({ nivel: "error", tag: "pdf-render", ok: false, ms: Date.now() - inicio, etapa, erro: e instanceof Error ? e.name : typeof e, detalhe: e instanceof Error ? primeiraLinha(e.message) : String(e).slice(0, 300), commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null, ts: new Date().toISOString() }));
+    throw e;
+  }
+}
+
+const primeiraLinha = (texto: string) => texto.split(/\r?\n/)[0] ?? "";
+
+async function pdfDeHtmlInterno(html: string, opcoes: OpcoesPdf, marcar: (etapa: string) => void): Promise<Buffer> {
   const browser = await comTeto(abrirNavegador(), "abertura do navegador", 30_000);
   try {
+    marcar("nova página");
     const page = await browser.newPage();
     // Nenhuma etapa pode pendurar a requisição: tudo tem teto.
     page.setDefaultTimeout(TIMEOUT_ETAPA_MS);
@@ -320,7 +339,9 @@ export async function pdfDeHtml(html: string, opcoes: OpcoesPdf = {}): Promise<B
     // "load" e não "networkidle": toda requisição externa é abortada acima e as imagens/fontes
     // são data:, então não há rede a esperar — networkidle só adicionava um ponto de travamento
     // (e 500ms de espera fixa). O decode e as fontes são aguardados explicitamente abaixo.
+    marcar("setContent");
     await page.setContent(html, { waitUntil: "load", timeout: TIMEOUT_ETAPA_MS });
+    marcar("decode das imagens");
     // "networkidle" não cobre imagens embutidas via data: URI (não fazem fetch de rede) —
     // o decode delas ainda é assíncrono no Chromium. Sem esperar, o PDF às vezes sai com
     // uma foto de produto em branco (visto em produção: 1 de 5 produtos sem imagem, sempre
@@ -337,6 +358,7 @@ export async function pdfDeHtml(html: string, opcoes: OpcoesPdf = {}): Promise<B
       page.evaluate(() => (document as unknown as { fonts: { ready: Promise<unknown> } }).fonts.ready),
       "carga das fontes",
     ).catch((e) => console.warn("[pdf]", e instanceof Error ? e.message : e));
+    marcar("page.pdf");
     return await page.pdf({
       format: "A4",
       printBackground: true,
