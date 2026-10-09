@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { usuarioAtual } from "@/lib/auth-db";
 import { abrirAnexo } from "@/lib/anexos";
 import { respostaErro } from "@/lib/erro";
+import { disposicaoDeEntrega } from "@/lib/arquivo-seguro";
 
 export const runtime = "nodejs";
 
@@ -14,11 +15,10 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   try {
     const anexo = await abrirAnexo(usuario, id);
     if (!anexo) return NextResponse.json({ erro: "Anexo não encontrado." }, { status: 404 });
-    const nome = (anexo.nome ?? "anexo").replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 80) || "anexo";
     return new NextResponse(new Uint8Array(anexo.bytes), {
       headers: {
-        "Content-Type": anexo.mime,
-        "Content-Disposition": `inline; filename="${nome}"`,
+        // inline só para PNG/JPG/WebP/PDF; qualquer outro tipo gravado sai como download.
+        ...disposicaoDeEntrega(anexo.mime, anexo.nome ?? "anexo"),
         "Cache-Control": "private, max-age=0, must-revalidate",
       },
     });

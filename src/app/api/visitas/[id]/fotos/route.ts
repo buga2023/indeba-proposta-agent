@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { usuarioAtual } from "@/lib/auth-db";
 import { anexarFotoVisita, MAX_FOTOS_VISITA } from "@/lib/ferramentas-tecnicas";
 import { respostaErro } from "@/lib/erro";
+import { arquivoValidado, TIPOS_IMAGEM } from "@/lib/arquivo-seguro";
 
 export const runtime = "nodejs";
 
@@ -20,15 +21,14 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!(arquivo instanceof File) || arquivo.size === 0) {
     return NextResponse.json({ erro: "Foto não enviada." }, { status: 400 });
   }
-  if (!arquivo.type.startsWith("image/")) {
-    return NextResponse.json({ erro: "O anexo de foto deve ser uma imagem." }, { status: 400 });
-  }
   if (arquivo.size > LIMITE_FOTO) {
     return NextResponse.json({ erro: "Foto acima de 4 MB — a plataforma recusa envios maiores." }, { status: 400 });
   }
+  const v = await arquivoValidado(arquivo, TIPOS_IMAGEM, "A foto");
+  if (v.erro !== null) return NextResponse.json({ erro: v.erro }, { status: 400 });
 
   try {
-    const r = await anexarFotoVisita(usuario, id, { bytes: new Uint8Array(await arquivo.arrayBuffer()), mime: arquivo.type });
+    const r = await anexarFotoVisita(usuario, id, { bytes: v.bytes, mime: v.mime });
     if (r === "nao_encontrada") return NextResponse.json({ erro: "Visita não encontrada." }, { status: 404 });
     if (r === "cheia") return NextResponse.json({ erro: `A visita já tem ${MAX_FOTOS_VISITA} fotos.` }, { status: 400 });
     return NextResponse.json({ ok: true }, { status: 201 });

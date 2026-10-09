@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { usuarioAtual } from "@/lib/auth-db";
 import { anexarDocumentoVisita, documentoDaVisita, excluirDocumentoVisita } from "@/lib/ferramentas-tecnicas";
 import { respostaErro } from "@/lib/erro";
+import { arquivoValidado, disposicaoDeEntrega, TIPOS_DOCUMENTO } from "@/lib/arquivo-seguro";
 
 export const runtime = "nodejs";
 
@@ -9,7 +10,6 @@ export const runtime = "nodejs";
 // João colhe). PDF ou imagem (assinatura escaneada costuma virar foto), até 4 MB — o
 // mesmo teto de ~4,5 MB da função da Vercel dos outros uploads.
 const LIMITE_DOC = 4 * 1024 * 1024;
-const MIME_ACEITOS = (m: string) => m === "application/pdf" || m.startsWith("image/");
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const usuario = await usuarioAtual(req);
@@ -21,17 +21,16 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!(arquivo instanceof File) || arquivo.size === 0) {
     return NextResponse.json({ erro: "Documento não enviado." }, { status: 400 });
   }
-  if (!MIME_ACEITOS(arquivo.type)) {
-    return NextResponse.json({ erro: "O documento deve ser um PDF ou uma imagem." }, { status: 400 });
-  }
   if (arquivo.size > LIMITE_DOC) {
     return NextResponse.json({ erro: "Documento acima de 4 MB — a plataforma recusa envios maiores." }, { status: 400 });
   }
+  const v = await arquivoValidado(arquivo, TIPOS_DOCUMENTO, "O documento");
+  if (v.erro !== null) return NextResponse.json({ erro: v.erro }, { status: 400 });
 
   try {
     const ok = await anexarDocumentoVisita(usuario, id, {
-      bytes: new Uint8Array(await arquivo.arrayBuffer()),
-      mime: arquivo.type,
+      bytes: v.bytes,
+      mime: v.mime,
       nome: arquivo.name.slice(0, 200),
     });
     if (!ok) return NextResponse.json({ erro: "Visita não encontrada." }, { status: 404 });
@@ -48,11 +47,9 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   try {
     const doc = await documentoDaVisita(usuario, id);
     if (!doc) return NextResponse.json({ erro: "Documento não encontrado." }, { status: 404 });
-    const nome = (doc.nome ?? "documento").replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 80) || "documento";
     return new NextResponse(new Uint8Array(doc.bytes), {
       headers: {
-        "Content-Type": doc.mime,
-        "Content-Disposition": `inline; filename="${nome}"`,
+        ...disposicaoDeEntrega(doc.mime, doc.nome ?? "documento"),
         "Cache-Control": "private, max-age=0, must-revalidate",
       },
     });

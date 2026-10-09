@@ -8,6 +8,7 @@ import { carregarCatalogo } from "@/lib/catalogo";
 import { chaveEmbalagem, listarExcluidos } from "@/lib/produto-custom";
 import { mesclarProduto } from "@/lib/produto-merge";
 import { respostaErro } from "@/lib/erro";
+import { arquivoValidado, TIPOS_IMAGEM } from "@/lib/arquivo-seguro";
 
 export const runtime = "nodejs";
 
@@ -46,7 +47,6 @@ export async function GET(req: NextRequest) {
 }
 
 const MB = 1024 * 1024;
-const IMAGEM_MIMES = ["image/png", "image/jpeg", "image/webp"];
 // Os limites daqui eram 5 MB (foto) e 20 MB (ficha) — números que nunca chegavam a valer: a
 // função da Vercel corta o corpo do request em ~4,5 MB e responde 413 em HTML, antes de este
 // código rodar. Foi o "Falha ao salvar (HTTP 413)" de 07/08/2026. Prometer o que a
@@ -57,16 +57,16 @@ const LIMITE_ANEXO = 4 * MB;
 // Validação dos anexos, compartilhada por cadastro e edição: os dois aceitam os MESMOS
 // arquivos, e regra de upload duplicada é regra que diverge (um lado aperta, o outro fica
 // com o buraco). Devolve a resposta de erro pronta ou o arquivo, quando ele veio.
-function lerImagem(form: FormData, campo = "imagem"): { erro: NextResponse } | { erro: null; imagem: File | null } {
+async function lerImagem(form: FormData, campo = "imagem"): Promise<{ erro: NextResponse } | { erro: null; imagem: File | null }> {
   const imagem = form.get(campo);
   if (!(imagem instanceof File) || imagem.size === 0) return { erro: null, imagem: null };
-  if (!IMAGEM_MIMES.includes(imagem.type)) {
-    return { erro: NextResponse.json({ erro: "Foto deve ser PNG, JPG ou WebP." }, { status: 400 }) };
-  }
   if (imagem.size > LIMITE_ANEXO) {
     return { erro: NextResponse.json({ erro: "Foto acima de 4 MB — a plataforma recusa envios maiores." }, { status: 400 }) };
   }
-  return { erro: null, imagem };
+  // Tipo pelos bytes (lib/arquivo-seguro.ts); o File devolvido carrega o tipo REAL em `.type`.
+  const v = await arquivoValidado(imagem, TIPOS_IMAGEM, "A foto");
+  if (v.erro !== null) return { erro: NextResponse.json({ erro: v.erro }, { status: 400 }) };
+  return { erro: null, imagem: v.arquivo };
 }
 
 // Fotos POR EMBALAGEM (áudio do Mateus, 22/09/2026: "só tem espaço pra uma imagem"). O
@@ -75,13 +75,13 @@ function lerImagem(form: FormData, campo = "imagem"): { erro: NextResponse } | {
 // que `chaveEmbalagem` (produto-custom.ts) usa na leitura. Só as embalagens que o produto de
 // fato tem: uma foto de uma chave órfã nunca apareceria e só ocuparia espaço.
 type FotosEmbalagem = { gravar: { chave: string; imagem: File }[]; remover: string[] };
-function lerFotosEmbalagem(form: FormData, embalagens: { tamanho: number; unidade: string }[]): { erro: NextResponse } | { erro: null; fotos: FotosEmbalagem } {
+async function lerFotosEmbalagem(form: FormData, embalagens: { tamanho: number; unidade: string }[]): Promise<{ erro: NextResponse } | { erro: null; fotos: FotosEmbalagem }> {
   const validas = new Set(embalagens.map(chaveEmbalagem));
   const fotos: FotosEmbalagem = { gravar: [], remover: [] };
   for (const campo of form.keys()) {
     const grava = /^imagemEmbalagem:(.+)$/.exec(campo);
     if (grava && validas.has(grava[1])) {
-      const r = lerImagem(form, campo);
+      const r = await lerImagem(form, campo);
       if (r.erro) return r;
       if (r.imagem) fotos.gravar.push({ chave: grava[1], imagem: r.imagem });
       continue;
@@ -109,16 +109,15 @@ async function gravarFotosEmbalagem(codigo: string, email: string, fotos: FotosE
   }
 }
 
-function lerFicha(form: FormData): { erro: NextResponse } | { erro: null; ficha: File | null } {
+async function lerFicha(form: FormData): Promise<{ erro: NextResponse } | { erro: null; ficha: File | null }> {
   const ficha = form.get("ficha");
   if (!(ficha instanceof File) || ficha.size === 0) return { erro: null, ficha: null };
-  if (ficha.type !== "application/pdf") {
-    return { erro: NextResponse.json({ erro: "A ficha técnica deve ser um PDF." }, { status: 400 }) };
-  }
   if (ficha.size > LIMITE_ANEXO) {
     return { erro: NextResponse.json({ erro: "Ficha técnica acima de 4 MB — a plataforma recusa envios maiores." }, { status: 400 }) };
   }
-  return { erro: null, ficha };
+  const v = await arquivoValidado(ficha, ["application/pdf"], "A ficha técnica");
+  if (v.erro !== null) return { erro: NextResponse.json({ erro: v.erro }, { status: 400 }) };
+  return { erro: null, ficha: v.arquivo };
 }
 
 // `imagemPath`/`fichaTecnicaPath` são DERIVADOS do código na leitura (produto-custom.ts), e
@@ -171,16 +170,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erro: `O código ${codigo} já existe no catálogo.` }, { status: 409 });
   }
 
-  const img = lerImagem(form);
+  const img = await lerImagem(form);
   if (img.erro) return img.erro;
   // Só no cadastro a foto é obrigatória: na edição, não enviar significa "mantém a atual".
   if (!img.imagem) return NextResponse.json({ erro: "A foto do produto é obrigatória." }, { status: 400 });
   const imagem = img.imagem;
 
-  const fch = lerFicha(form);
+  const fch = await lerFicha(form);
   if (fch.erro) return fch.erro;
   const ficha = fch.ficha;
-  const fe = lerFotosEmbalagem(form, parsed.data.embalagens);
+  const fe = await lerFotosEmbalagem(form, parsed.data.embalagens);
   if (fe.erro) return fe.erro;
 
   try {
@@ -264,11 +263,11 @@ export async function PUT(req: NextRequest) {
     );
   }
 
-  const img = lerImagem(form);
+  const img = await lerImagem(form);
   if (img.erro) return img.erro;
-  const fch = lerFicha(form);
+  const fch = await lerFicha(form);
   if (fch.erro) return fch.erro;
-  const fe = lerFotosEmbalagem(form, parsed.data.embalagens);
+  const fe = await lerFotosEmbalagem(form, parsed.data.embalagens);
   if (fe.erro) return fe.erro;
   // Trocar a ficha e removê-la são pedidos distintos: sem o sinal explícito, "não anexei
   // nada" (o caso comum ao editar só o texto) apagaria a ficha que já estava lá.

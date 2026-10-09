@@ -3,6 +3,7 @@ import { usuarioAtual } from "@/lib/auth-db";
 import { anexar, excluirAnexo, MAX_ANEXOS_POR_CATEGORIA } from "@/lib/anexos";
 import { TipoRegistroAnexo, CategoriaAnexo } from "@/lib/contracts";
 import { respostaErro } from "@/lib/erro";
+import { arquivoValidado, TIPOS_DOCUMENTO, TIPOS_IMAGEM } from "@/lib/arquivo-seguro";
 
 export const runtime = "nodejs";
 
@@ -26,20 +27,17 @@ export async function POST(req: NextRequest) {
   if (!(arquivo instanceof File) || arquivo.size === 0) {
     return NextResponse.json({ erro: "Arquivo não enviado." }, { status: 400 });
   }
-  if (categoria.data === "foto" && !arquivo.type.startsWith("image/")) {
-    return NextResponse.json({ erro: "O anexo de foto deve ser uma imagem." }, { status: 400 });
-  }
-  if (categoria.data === "documento" && arquivo.type !== "application/pdf" && !arquivo.type.startsWith("image/")) {
-    return NextResponse.json({ erro: "O documento deve ser um PDF ou uma imagem." }, { status: 400 });
-  }
   if (arquivo.size > LIMITE) {
     return NextResponse.json({ erro: "Arquivo acima de 4 MB — a plataforma recusa envios maiores." }, { status: 400 });
   }
+  // Tipo pelos BYTES, não pelo que o navegador declarou (lib/arquivo-seguro.ts).
+  const v = await arquivoValidado(arquivo, categoria.data === "foto" ? TIPOS_IMAGEM : TIPOS_DOCUMENTO, categoria.data === "foto" ? "O anexo de foto" : "O documento");
+  if (v.erro !== null) return NextResponse.json({ erro: v.erro }, { status: 400 });
 
   try {
     const r = await anexar(usuario, tipo.data, registroId, categoria.data, {
-      bytes: new Uint8Array(await arquivo.arrayBuffer()),
-      mime: arquivo.type,
+      bytes: v.bytes,
+      mime: v.mime,
       nome: arquivo.name.slice(0, 200),
     });
     if (r === "nao_encontrado") return NextResponse.json({ erro: "Registro não encontrado." }, { status: 404 });

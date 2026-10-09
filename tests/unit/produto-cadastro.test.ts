@@ -45,7 +45,7 @@ const PRODUTO = {
   embalagens: [{ tamanho: 5, unidade: "L", preco: null, diluicaoMax: null, custoDiluido: null }],
 };
 
-const png = () => new File([new Uint8Array([137, 80, 78, 71])], "f.png", { type: "image/png" });
+const png = () => new File([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82])], "f.png", { type: "image/png" });
 
 function req(dados: unknown, extras: Record<string, File> = {}) {
   const form = new FormData();

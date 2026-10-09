@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { disposicaoDeEntrega } from "@/lib/arquivo-seguro";
 import { usuarioAtual } from "@/lib/auth-db";
 import { fotoDaVisita, excluirFotoVisita } from "@/lib/ferramentas-tecnicas";
 import { respostaErro } from "@/lib/erro";
@@ -16,8 +17,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string;
     if (!foto) return NextResponse.json({ erro: "Foto não encontrada." }, { status: 404 });
     return new NextResponse(new Uint8Array(foto.bytes), {
       headers: {
-        "Content-Type": foto.mime,
-        "Content-Disposition": "inline",
+        ...disposicaoDeEntrega(foto.mime, "foto"),
         "Cache-Control": "private, max-age=0, must-revalidate",
       },
     });

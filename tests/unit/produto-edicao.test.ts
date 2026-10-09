@@ -54,8 +54,8 @@ const NO_BANCO = {
   fichaMime: "application/pdf",
 };
 
-const png = () => new File([new Uint8Array([137, 80, 78, 71])], "f.png", { type: "image/png" });
-const pdf = () => new File([new Uint8Array([37, 80, 68, 70])], "f.pdf", { type: "application/pdf" });
+const png = () => new File([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82])], "f.png", { type: "image/png" });
+const pdf = () => new File([new TextEncoder().encode("%PDF-1.4 1 0 obj endobj")], "f.pdf", { type: "application/pdf" });
 
 function req(dados: unknown, extras: Record<string, File | string> = {}) {
   const form = new FormData();
