@@ -831,7 +831,8 @@ export default function Home() {
       setSomenteLeitura(!ehAdmin && !!usuario && reg.autor !== usuario.email ? (reg.autorNome ?? reg.autor) : null);
       setScope(reg.scope as PropostaScope);
       setExcluded(posicoesExcluidas(reg.scope as PropostaScope));
-      ultimoSalvo.current = JSON.stringify(reg.scope);
+      // Mesma serialização do save (com `incluido` por item): senão o primeiro tick gravava de novo o que acabou de vir do banco.
+      ultimoSalvo.current = JSON.stringify(marcarIncluidos(reg.scope as PropostaScope, posicoesExcluidas(reg.scope as PropostaScope)));
       setSalvo(null);
       setScreen("review");
     } catch (e) {

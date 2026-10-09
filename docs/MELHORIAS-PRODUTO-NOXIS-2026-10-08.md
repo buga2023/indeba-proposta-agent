@@ -277,6 +277,16 @@ Conferido em produção (Chrome logado como Matheus): Revisão da Engepack mostr
 
 Conferido em produção: `?tela=history` abre a lista direto; Voltar do navegador do Catálogo volta ao Dashboard; smoke 9/9; ficha 381534 responde 200.
 
+### Rodada 3 (00:03 → 00:14)
+
+| Item | Commit |
+|---|---|
+| #25 (parte 2) no celular o painel Selecionados sobe para antes do catálogo e a lista do catálogo perde o scroll aninhado. | `215ab4c` |
+| #7 (parte 2) `lib/log-servidor.ts`: avisos de degradação em JSON com `tag: "degradacao"` no lugar de 7 `console.error` soltos (catálogo, contatos, produto-custom, propostas, textos-padrão). Nome da empresa nos títulos da UI vem de `EMPRESA`. | `a71357a` |
+| #23 (parte 2) métrica por render de PDF (`tag: "pdf-render"`: ms, bytes, kb de HTML; na falha, a etapa que estourou). | `a340afa` |
+| #13 (parte 3) auto-save da Revisão com debounce de 1,5s e indicador "Salvando… / Salvo às HH:MM / Não foi possível salvar" no rodapé. | `cc9d0a8` |
+
+Conferido em produção: `?tela=review&id=<Engepack>` reabre a proposta direto na Revisão com "Salvo às 00:12" no rodapé; smoke 9/9; ficha 200.
 **#17 (telas mortas) fica para decisão sua:** elas usam `Hoverable` e `brl` definidos dentro de `page.tsx`, e um `page.tsx` do Next não pode exportar helpers. Ou apagamos as 9 telas (ficam no git), ou movemos `Hoverable`/`brl` para um módulo e as telas para `src/components/legacy/`. Não fiz nenhum dos dois sem você.
 
 **Deixado de fora de propósito nesta noite:** mudanças de auth/env/segredos (healthcheck público, sessão revogável, cadastro por convite, Sentry DSN) e qualquer migração de schema (auditoria em tabela), por não haver banco local para ensaiar a migração antes do build de produção.
