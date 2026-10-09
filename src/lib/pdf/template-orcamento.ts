@@ -9,8 +9,7 @@ import { tamanhoLegivel } from "../embalagem";
 // Total + Valor líquido à direita · forma de pagamento. Valores sem "R$" (como no exemplo).
 // Quantidade vem do PropostaItem (ajustada na revisão) → subtotal = valor unit. × qt.
 
-const esc = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+import { esc } from "./base";
 const dec = (v: string | number) =>
   Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 

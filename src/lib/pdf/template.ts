@@ -18,13 +18,8 @@ const MARCAS = {
 } as const;
 
 // Escapa para texto E atributos (campos do PropostaScope chegam do cliente em /api/pdf).
-export const esc = (s: string) =>
-  s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+export { esc } from "./base";
+import { esc } from "./base";
 const dec = (v: string) =>
   Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 

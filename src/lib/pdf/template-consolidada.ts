@@ -5,10 +5,8 @@ import { linhaDoSegmento, segmentosLegiveis } from "../segmento";
 import { chaveImagem, imagemEhIlustrativa } from "../imagem-produto";
 import { tamanhoLegivel } from "../embalagem";
 
-export const esc = (s: string) =>
-  String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-export const brl = (v: string) =>
-  "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export { esc, brl } from "./base";
+import { esc, brl } from "./base";
 
 // Rendimento vem do catálogo como texto livre: às vezes um valor curto ("Até 100 litros de
 // solução pronta"), às vezes VÁRIAS dosagens em uma linha só separadas por ";" — ex.: Sanquat:

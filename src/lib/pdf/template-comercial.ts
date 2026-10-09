@@ -8,10 +8,7 @@ import { chaveImagem } from "../imagem-produto";
 // [Cliente]" (produtos dinâmicos, formato fabricante) + condições + observações.
 type Assets = { logo: string; institucional: string; experienciaSegura: string };
 
-const esc = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-const brl = (v: string) =>
-  "R$ " + Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+import { esc, brl } from "./base";
 
 function produto(item: PropostaItem, dataUri: string): string {
   const unid = item.embalagens[0]?.unidade === "kg" ? "kg" : "litro";

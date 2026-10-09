@@ -24,13 +24,7 @@ export type CapaExpressAssets = { logo?: string; simbolo?: string };
 
 // Cópia local (mesmo padrão de template-comercial.ts) — evita import circular
 // com template.ts, que importa esta capa.
-const esc = (s: string) =>
-  s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+import { esc } from "./base";
 
 // Ícones circulares azuis do card (linha 1.8px, estilo Lucide, como na UI).
 const icone = (paths: string) =>
