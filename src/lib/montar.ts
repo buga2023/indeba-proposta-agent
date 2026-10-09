@@ -56,6 +56,8 @@ const blocoConsolidada = (tipo: Tipo, consultor?: ConsultorInfo | null, textos?:
     // Edição página-a-página do gestor (ago/2026): capa, apresentação e comodatos
     // também saem do painel — o de fábrica é só fallback (textos-padrao.ts).
     if (textos.capaSubtitulo) bloco.capa.subtitulo = textos.capaSubtitulo;
+    // Títulos das seções (09/10/2026): só os preenchidos — vazio continua caindo no padrão.
+    if (textos.rotulos) bloco.rotulos = Object.fromEntries(Object.entries(textos.rotulos).filter(([, v]) => typeof v === "string" && v.trim()));
     if (textos.apresentacao) bloco.apresentacao = textos.apresentacao;
     if (textos.comodatos) bloco.comodatos = textos.comodatos;
     bloco.condicoes.itens = textos.condicoesConsolidada;

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { avisarDegradacao } from "./log-servidor";
 import { prisma } from "@/lib/db";
-import { consolidadaDefaults } from "./consolidada-defaults";
+import { consolidadaDefaults, ROTULOS_PADRAO } from "./consolidada-defaults";
 
 // Textos padrão da proposta editáveis pelo gestor (pedido do Matheus, ago/2026:
 // "boleto 30 dias → 28 sem depender de programador"). O que era chumbado em
@@ -9,6 +9,8 @@ import { consolidadaDefaults } from "./consolidada-defaults";
 // na tabela Config (chave única, JSON) e entra na proposta na MONTAGEM — proposta
 // já salva não muda retroativamente (o texto assinado é o do scope persistido).
 export const TextosPadrao = z.object({
+  // ── Títulos e rótulos das seções (áudio do Mateus, 09/10/2026) ── vazio = padrão de fábrica.
+  rotulos: z.record(z.string(), z.string()).optional(),
   // ── Página 1 · Capa ── (consultor/cidade vêm da sessão; só o subtítulo é texto padrão)
   // Opcional (como todas as seções novas de ago/2026): Config salva antes da edição
   // página-a-página não tem o campo — cai no de fábrica via merge em carregarTextosPadrao.
@@ -53,6 +55,7 @@ const CHAVE = "textosPadrao";
 export function textosPadraoFabrica(): TextosPadrao {
   const d = consolidadaDefaults();
   return {
+    rotulos: { ...ROTULOS_PADRAO },
     capaSubtitulo: d.capa.subtitulo,
     apresentacao: d.apresentacao,
     comodatos: {

@@ -418,7 +418,7 @@ export function consolidadaHtml(
     ${timbre}
     ${header("02")}
     ${secLbl()}
-    <h1 class="sec-tit">Apresentação</h1><div class="sec-sub">${esc(c.capa.subtitulo)}</div>
+    <h1 class="sec-tit">${esc(rot.apresentacaoTitulo)}</h1><div class="sec-sub">${esc(c.capa.subtitulo)}</div>
     <p class="sd"><b>${esc(c.apresentacao.saudacao)}</b></p>
     ${c.apresentacao.paragrafos.map((p) => `<p class="pt">${esc(p)}</p>`).join("")}
     <div class="pillars">${c.apresentacao.cards
@@ -441,7 +441,7 @@ export function consolidadaHtml(
       .map((e) => `<div class="eq"><span class="ei">${iconeSvg(e.icone, "#fff")}</span><h3>${esc(e.titulo)}</h3>${e.descricao ? `<p>${esc(e.descricao)}</p>` : ""}</div>`)
       .join("")}</div>
     <div class="adv">
-      <h4>Vantagens do Comodato</h4>
+      <h4>${esc(rot.vantagensTitulo)}</h4>
       <div class="adv-grid">${c.comodatos.vantagens
         .map((v) => `<div class="av"><span class="chk">${iconeSvg("check-simples", "#fff")}</span><span>${esc(v)}</span></div>`)
         .join("")}</div>
@@ -466,7 +466,7 @@ export function consolidadaHtml(
     ${timbre}
     ${header(String(PRIMEIRO_PRODUTO + scope.itens.length).padStart(2, "0"))}
     ${secLbl()}
-    <h1 class="sec-tit">Condições Comerciais</h1><div class="sec-sub">Informações Gerais da Proposta</div>
+    <h1 class="sec-tit">${esc(rot.condicoesTitulo)}</h1><div class="sec-sub">${esc(rot.condicoesSubtitulo)}</div>
     <div class="cond-grid">
       <div class="conds">${c.condicoes.itens
         .map((i) => `<div class="condi"><span class="ci">${iconeSvg(i.icone, "#fff")}</span><div><h3>${esc(i.titulo)}</h3><p>${esc(i.texto)}</p></div></div>`)

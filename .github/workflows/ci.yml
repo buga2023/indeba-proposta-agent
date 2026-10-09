@@ -77,7 +77,7 @@ jobs:
         run: |
           pnpm exec next start -H 127.0.0.1 -p 3123 > server.log 2>&1 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3123/login && break; sleep 2; done
-          E2E_BASE_URL=http://127.0.0.1:3123 pnpm exec playwright test tests/e2e/pedidos-mateus-10-09.spec.ts tests/e2e/transferencia-consultor.spec.ts tests/e2e/solicitacoes-tipos.spec.ts
+          E2E_BASE_URL=http://127.0.0.1:3123 pnpm exec playwright test tests/e2e/pedidos-mateus-10-09.spec.ts tests/e2e/pedidos-mateus-09-10.spec.ts tests/e2e/transferencia-consultor.spec.ts tests/e2e/solicitacoes-tipos.spec.ts
       - name: Log do servidor (se falhou)
         if: failure()
         run: tail -50 server.log

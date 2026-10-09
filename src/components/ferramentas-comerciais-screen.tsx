@@ -3,6 +3,10 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { RelatorioProspeccao, SolicitacaoComercial, TipoSolicitacaoComercial } from "@/lib/contracts";
 import { BotaoPdf } from "@/components/ui/botao-pdf";
+// Pastas por ano/mês (áudio do Mateus, 09/10/2026): Prospecções e Solicitações ganham a mesma
+// "caixinha do calendário" das Visitas de Rotina e das Ferramentas Técnicas.
+import { filtroAtivo } from "@/lib/filtro-registros";
+import { agruparPorAnoMes } from "@/lib/agrupar-registros";
 import {
   AbaVisitas,
   BlocoAnexos,
@@ -27,6 +31,8 @@ import {
   FILTRO_VAZIO,
   type FiltroRegistros,
   type AbaProps,
+  PastaRegistros,
+  rotuloMes,
 } from "@/components/ferramentas-tecnicas-screen";
 
 /**
@@ -373,7 +379,11 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
           <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhuma prospecção registrada ainda.</div>
         )}
         {!carregando && relatorios.length > 0 && relatoriosFiltrados.length === 0 && <SemResultado aoLimpar={() => setFiltro(FILTRO_VAZIO)} />}
-        {relatoriosFiltrados.map((p) => {
+        {agruparPorAnoMes(relatoriosFiltrados).map((g, gi) => (
+          <PastaRegistros key={g.ano} titulo={g.ano} total={g.meses.reduce((n, m) => n + m.itens.length, 0)} nivel="ano" aberta={gi === 0 || filtroAtivo(filtro)}>
+            {g.meses.map((m, mi) => (
+              <PastaRegistros key={m.mes} titulo={rotuloMes(m.mes)} total={m.itens.length} nivel="mes" aberta={(gi === 0 && mi === 0) || filtroAtivo(filtro)}>
+        {m.itens.map((p) => {
           const emEdicao = editandoId === p.id;
           const aberto = emEdicao || abertos.has(p.id);
           return (
@@ -475,6 +485,10 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
             </div>
           );
         })}
+              </PastaRegistros>
+            ))}
+          </PastaRegistros>
+        ))}
       </div>
       )}
     </>
@@ -683,7 +697,11 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
           <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhuma solicitação ainda.</div>
         )}
         {!carregando && solicitacoes.length > 0 && solicitacoesFiltradas.length === 0 && <SemResultado aoLimpar={() => setFiltro(FILTRO_VAZIO)} />}
-        {solicitacoesFiltradas.map((s) => {
+        {agruparPorAnoMes(solicitacoesFiltradas.map((s) => ({ ...s, data: s.criadoEm.slice(0, 10) }))).map((g, gi) => (
+          <PastaRegistros key={g.ano} titulo={g.ano} total={g.meses.reduce((n, m) => n + m.itens.length, 0)} nivel="ano" aberta={gi === 0 || filtroAtivo(filtro)}>
+            {g.meses.map((m, mi) => (
+              <PastaRegistros key={m.mes} titulo={rotuloMes(m.mes)} total={m.itens.length} nivel="mes" aberta={(gi === 0 && mi === 0) || filtroAtivo(filtro)}>
+        {m.itens.map((s) => {
           const atendida = s.status === "atendida";
           return (
             <div key={s.id} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "14px 18px" }}>
@@ -785,6 +803,10 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
             </div>
           );
         })}
+              </PastaRegistros>
+            ))}
+          </PastaRegistros>
+        ))}
       </div>
       )}
     </>

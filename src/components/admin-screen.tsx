@@ -548,6 +548,7 @@ function SecaoAcessos({ onErro }: { onErro: (m: string | null) => void }) {
 }
 
 type TextosPadrao = {
+  rotulos?: Record<string, string>;
   capaSubtitulo?: string;
   apresentacao?: { saudacao: string; paragrafos: string[]; cards: { titulo: string; texto: string; icone: string }[] };
   comodatos?: { intro: string; equipamentos: { titulo: string; icone: string }[]; vantagens: string[] };
@@ -641,6 +642,33 @@ function SecaoTextosPadrao({ onErro, onAviso }: { onErro: (m: string | null) => 
       ) : (
         <>
           {/* ── Edição página a página, na ordem do documento (pedido do CEO, ago/2026) ── */}
+          {/* Títulos das seções — áudio do Mateus 09/10/2026: outro distribuidor pode chamar de
+              "Proposta Comercial", "Vantagens"… Vazio = padrão de fábrica. */}
+          <TituloPagina numero="Todas" nome="Títulos das seções" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "10px 16px" }}>
+            {(
+              [
+                ["tituloProposta", "Título da proposta (capa e cabeçalho)", "Proposta de Solução"],
+                ["apresentacaoTitulo", "Título da apresentação", "Apresentação"],
+                ["comodatosTitulo", "Título da seção de equipamentos", "Comodatos Oferecidos"],
+                ["comodatosSubtitulo", "Subtítulo da seção de equipamentos", "Equipamentos em Comodato"],
+                ["vantagensTitulo", "Título das vantagens", "Vantagens do Comodato"],
+                ["condicoesTitulo", "Título das condições", "Condições Comerciais"],
+                ["condicoesSubtitulo", "Subtítulo das condições", "Informações Gerais da Proposta"],
+              ] as const
+            ).map(([chave, rotulo, padrao]) => (
+              <label key={chave} style={{ minWidth: 0 }}>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>{rotulo}</div>
+                <input
+                  value={textos.rotulos?.[chave] ?? ""}
+                  placeholder={padrao}
+                  onChange={(e) => setTextos((t) => t && { ...t, rotulos: { ...(t.rotulos ?? {}), [chave]: e.target.value } })}
+                  style={{ ...inputStyle, width: "100%", fontSize: "13px" }}
+                />
+              </label>
+            ))}
+          </div>
+
           <TituloPagina numero="Pág. 1" nome="Capa" />
           <label style={{ display: "block", maxWidth: "420px" }}>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gray-700)", marginBottom: "4px" }}>Subtítulo da capa</div>

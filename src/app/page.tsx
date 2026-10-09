@@ -17,7 +17,7 @@ import type { StatusProposta, PropostaScope, PropostaItem, Produto, Funcao, Pros
 import type { Usuario } from "@/lib/auth";
 import { setPrecoEmbalagem, setClienteCampo, setQuantidadeAbsoluta, setCondicaoConsolidadaTexto, setRotuloConsolidada, setCondicaoConsolidadaPorCampo, cortarParaOrcamento, posicaoDoCodigo, marcarIncluidos, posicoesExcluidas } from "@/lib/proposta-edit";
 import { custoLitroDiluido, diluicaoSugeridaDaFicha } from "@/lib/diluicao";
-import { consolidadaDefaults, rotulosConsolidada, ROTULOS_PADRAO } from "@/lib/consolidada-defaults";
+import { consolidadaDefaults, rotulosConsolidada, ROTULOS_PADRAO, type RotuloChave } from "@/lib/consolidada-defaults";
 import { mascaraCnpj, erroCnpj } from "@/lib/cnpj";
 import { agruparPorAnoMes, SEM_DATA } from "@/lib/agrupar-registros";
 import { FILTRO_VAZIO, filtrarPropostas, filtroAtivo, type FiltroPropostas, type PeriodoFiltro } from "@/lib/filtrar-propostas";
@@ -403,7 +403,7 @@ const CMD_ITEMS: PaletteItem[] = [
   { key: "ferramentas-comerciais", label: "Ferramentas Comerciais", hint: "Novas prospecções, visitas de rotina e solicitações" },
   { key: "ferramentas", label: "Ferramentas Técnicas", hint: "Visitas de rotina, contratos e estoque de comodatos" },
   { key: "gerador-contratos", label: "Gerador de Contratos", hint: "Contrato de fornecimento com comodato, em PDF" },
-  { key: "gerador-certificados", label: "Gerador de Certificados", hint: "Certificados em PDF (em breve)" },
+  { key: "gerador-certificados", label: "Gerador de Certificados", hint: "Certificados de participação em PDF, um por pessoa ou em lote" },
   { key: "perfil", label: "Meu perfil" },
 ];
 // Configurações é o painel do gestor (e-mails de cobrança, colaboradores). Fica fora da
@@ -672,7 +672,7 @@ export default function Home() {
   }
 
   // Rótulos/títulos da Proposta de Solução, editáveis por proposta (preview + PDF).
-  function editarRotulo(chave: "tituloProposta" | "comodatosTitulo" | "comodatosSubtitulo", texto: string) {
+  function editarRotulo(chave: RotuloChave, texto: string) {
     setScope((s) => (s ? setRotuloConsolidada(s, chave, texto) : s));
   }
 
@@ -1256,7 +1256,7 @@ export default function Home() {
           )}
           {/* Gerador de Certificados: encaixe com placeholder em public/gerador-certificados
               (aguardando o arquivo final do Matheus). */}
-          <Hoverable eager base={navItemStyle(["gerador-certificados"])} hover={navHover} onClick={() => irPara("gerador-certificados")} title="Gerador de Certificados — em breve">
+          <Hoverable eager base={navItemStyle(["gerador-certificados"])} hover={navHover} onClick={() => irPara("gerador-certificados")} title="Gerador de Certificados — certificados de participação em PDF">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <rect x="2.5" y="3" width="12" height="8.5" rx="1" />
               <path d="M5.5 6h6M5.5 8.5h3M10.5 11.5l.5 3 1.5-1 1.5 1 .5-3" />
@@ -1566,7 +1566,7 @@ const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; i
   {
     screen: "gerador-certificados",
     titulo: "Gerador de Certificados",
-    sub: "Certificados em PDF (em breve)",
+    sub: "Certificados de participação em PDF, por pessoa ou em lote",
     icone: (
       <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <rect x="2.5" y="3" width="12" height="8.5" rx="1" />
@@ -3350,7 +3350,7 @@ function ReviewScreen({
   onRefinar: (texto: string) => void;
   onEditarTexto: (texto: string) => void;
   onEditarCondicaoConsolidada: (index: number, texto: string) => void;
-  onEditarRotulo: (chave: "tituloProposta" | "comodatosTitulo" | "comodatosSubtitulo", texto: string) => void;
+  onEditarRotulo: (chave: RotuloChave, texto: string) => void;
   onEditarCliente: (campo: "razaoSocial" | "cnpj" | "segmento" | "responsavel", valor: string) => void;
   onDefinirTeto: (teto: number) => void;
   onComandoChat: (r: { comando: ComandoEdicao; numero: string | null; itemResolvido: PropostaItem | null; itensSelecionados: PropostaItem[] | null }) => string | void;
@@ -3558,8 +3558,12 @@ function ReviewScreen({
                   {(
                     [
                       ["tituloProposta", "Título da proposta"],
+                      ["apresentacaoTitulo", "Título da apresentação"],
                       ["comodatosTitulo", "Título da seção de equipamentos"],
                       ["comodatosSubtitulo", "Subtítulo da seção de equipamentos"],
+                      ["vantagensTitulo", "Título das vantagens"],
+                      ["condicoesTitulo", "Título das condições"],
+                      ["condicoesSubtitulo", "Subtítulo das condições"],
                     ] as const
                   ).map(([chave, rotulo]) => (
                     <label key={chave}>

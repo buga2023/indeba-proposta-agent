@@ -1,4 +1,5 @@
 import type { PropostaScope } from "./contracts";
+import type { RotuloChave } from "./consolidada-defaults";
 
 // Converte entrada humana em decimal string canônica "\d+\.\d{2}".
 // Preço nunca é float no domínio — sempre string (constituição §1.1).
@@ -120,7 +121,7 @@ export function setCondicaoConsolidadaTexto(scope: PropostaScope, index: number,
 // com a proposta, refletido no preview e no PDF. Texto vazio = volta ao padrão.
 export function setRotuloConsolidada(
   scope: PropostaScope,
-  chave: "tituloProposta" | "comodatosTitulo" | "comodatosSubtitulo",
+  chave: RotuloChave,
   texto: string,
 ): PropostaScope {
   if (!scope.consolidada) return scope;

@@ -83,8 +83,12 @@ export const ConsolidadaBloco = z.object({
   rotulos: z
     .object({
       tituloProposta: z.string().optional(),
+      apresentacaoTitulo: z.string().optional(),
       comodatosTitulo: z.string().optional(),
       comodatosSubtitulo: z.string().optional(),
+      vantagensTitulo: z.string().optional(),
+      condicoesTitulo: z.string().optional(),
+      condicoesSubtitulo: z.string().optional(),
     })
     .optional(),
   // Contatos exibidos no rodapé da ficha de produto e no card de fechamento das

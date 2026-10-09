@@ -2,17 +2,25 @@ import type { ConsolidadaBloco } from "./contracts";
 import { EMPRESA } from "./empresa";
 
 // Rótulos padrão editáveis por proposta (ConsolidadaBloco.rotulos). Vazio/ausente cai aqui.
+// Áudio do Mateus (09/10/2026): "para outro distribuidor pode ser Proposta de Valor, Proposta
+// Comercial… em vez de Comodatos Oferecidos o cara bota Vantagens" — todo título de seção
+// do PDF passa a ser rótulo, com padrão de fábrica aqui e edição no painel (textos padrão)
+// e por proposta (Revisão).
 export const ROTULOS_PADRAO = {
   tituloProposta: "Proposta de Solução",
+  apresentacaoTitulo: "Apresentação",
   comodatosTitulo: "Comodatos Oferecidos",
   comodatosSubtitulo: "Equipamentos em Comodato",
+  vantagensTitulo: "Vantagens do Comodato",
+  condicoesTitulo: "Condições Comerciais",
+  condicoesSubtitulo: "Informações Gerais da Proposta",
 } as const;
 export type RotuloChave = keyof typeof ROTULOS_PADRAO;
 
 export function rotulosConsolidada(c?: Pick<ConsolidadaBloco, "rotulos"> | null): Record<RotuloChave, string> {
   const r = c?.rotulos;
   const pick = (k: RotuloChave) => (r?.[k]?.trim() ? r[k]!.trim() : ROTULOS_PADRAO[k]);
-  return { tituloProposta: pick("tituloProposta"), comodatosTitulo: pick("comodatosTitulo"), comodatosSubtitulo: pick("comodatosSubtitulo") };
+  return Object.fromEntries((Object.keys(ROTULOS_PADRAO) as RotuloChave[]).map((k) => [k, pick(k)])) as Record<RotuloChave, string>;
 }
 
 // Conteúdo institucional padrão do modelo Proposta Consolidada (marca IES),

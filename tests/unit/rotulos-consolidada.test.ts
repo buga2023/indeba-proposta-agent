@@ -25,3 +25,13 @@ describe("rótulos editáveis da Proposta de Solução", () => {
     expect(ConsolidadaBloco.parse(consolidadaDefaults()).rotulos).toBeUndefined();
   });
 });
+
+describe("títulos de seção (09/10/2026)", () => {
+  it("todas as seções têm rótulo padrão e aceitam troca", () => {
+    expect(Object.keys(ROTULOS_PADRAO).sort()).toEqual(["apresentacaoTitulo", "comodatosSubtitulo", "comodatosTitulo", "condicoesSubtitulo", "condicoesTitulo", "tituloProposta", "vantagensTitulo"]);
+    const r = rotulosConsolidada({ rotulos: { condicoesTitulo: "Condições da Parceria", vantagensTitulo: "" } });
+    expect(r.condicoesTitulo).toBe("Condições da Parceria");
+    expect(r.vantagensTitulo).toBe("Vantagens do Comodato");
+    expect(r.apresentacaoTitulo).toBe("Apresentação");
+  });
+});
