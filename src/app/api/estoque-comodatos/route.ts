@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { bloqueioDeFerramenta } from "@/lib/plano";
 import { EstoqueComodatoCreate, EstoqueComodatoUpdate } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth-db";
 import {
@@ -16,6 +17,9 @@ export const runtime = "nodejs";
 // Estoque de Comodatos (Ferramentas Técnicas): código, peça, quantidade e observação.
 // Cada lançamento é uma linha; a exportação para Excel é feita na tela, sobre esta lista.
 export async function GET(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("estoque-comodatos");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const excluidas = req.nextUrl.searchParams.get("excluidas") === "1";
@@ -28,6 +32,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("estoque-comodatos");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const parsed = EstoqueComodatoCreate.safeParse(await req.json().catch(() => null));
@@ -43,6 +50,9 @@ export async function POST(req: NextRequest) {
 // Editar lançamento (áudio do Mateus, 25/08/2026). `?acao=restaurar` tira o item da aba
 // Excluídos (só gestor).
 export async function PATCH(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("estoque-comodatos");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const id = req.nextUrl.searchParams.get("id");
@@ -73,6 +83,9 @@ export async function PATCH(req: NextRequest) {
 // Excluir é SÓ do gestor (áudio do Mateus, 25/08/2026). Sem `?definitivo=1` vira lápide;
 // com, some de vez — e só de lá.
 export async function DELETE(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("estoque-comodatos");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   if (usuario.papel !== "admin") return NextResponse.json({ erro: "Apenas o gestor pode excluir itens." }, { status: 403 });

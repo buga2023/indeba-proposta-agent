@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { bloqueioDeFerramenta } from "@/lib/plano";
 import { extrairTextoContrato } from "@/lib/contrato/extrair-texto";
 import { respostaErro } from "@/lib/erro";
 
@@ -10,6 +11,9 @@ const MAX_BYTES = 15 * 1024 * 1024; // 15MB
 // Recebe o arquivo do contrato (multipart, campo "arquivo") e devolve o texto extraído,
 // pronto para a ação "analisar" de /api/contrato. Extração 100% determinística (sem IA).
 export async function POST(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("gerador-contratos");
+  if (bloqueio) return bloqueio;
   let form: FormData;
   try {
     form = await req.formData();

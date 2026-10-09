@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ferramentasHabilitadas } from "@/lib/plano";
 import { authAtiva, validarSessao } from "@/lib/auth";
 import { estadoDaConta } from "@/lib/auth-db";
 
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
   // passar. Sem este ramo o 401 daqui manda a tela para /login — e como não há login em
   // modo local, o app fica inalcançável na própria máquina.
   if (!usuario && !authAtiva()) {
-    return NextResponse.json({ email: "local", nome: "Local", papel: "admin" });
+    return NextResponse.json({ email: "local", nome: "Local", papel: "admin", ferramentas: await ferramentasHabilitadas() });
   }
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
 
@@ -32,5 +33,6 @@ export async function GET(req: NextRequest) {
     res.cookies.delete("sessao");
     return res;
   }
-  return NextResponse.json({ ...usuario, papel: estado.papel });
+  // Ferramentas do plano (lib/plano.ts): a UI esconde abas/cards do que não está habilitado.
+  return NextResponse.json({ ...usuario, papel: estado.papel, ferramentas: await ferramentasHabilitadas() });
 }

@@ -347,6 +347,7 @@ export function AdminScreen() {
 
       {/* Textos padrão da proposta — editáveis sem programador (pedido do Matheus, ago/2026) */}
       <div style={{ marginTop: "22px" }}>
+        <SecaoPlano onErro={setErro} onAviso={setAviso} />
         <SecaoTextosPadrao onErro={setErro} onAviso={setAviso} />
       </div>
 
@@ -937,5 +938,60 @@ function LinhaColaborador({
         </div>
       )}
     </div>
+  );
+}
+
+// Plano de ferramentas da instalação (lib/plano.ts): o que a apresentação vende como
+// Basic/Regular/Premium. Aqui o gestor (ou a Noxis) liga e desliga ferramenta a ferramenta;
+// o bloqueio vale no servidor, não só no menu.
+function SecaoPlano({ onErro, onAviso }: { onErro: (m: string | null) => void; onAviso: (m: string | null) => void }) {
+  const [dados, setDados] = useState<{ ferramentas: string[]; plano: string | null; catalogo: { id: string; nome: string; modulo: string }[]; presets: Record<string, string[]> } | null>(null);
+  const [salvando, setSalvando] = useState(false);
+  useEffect(() => {
+    void fetch("/api/plano")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d) setDados(d); })
+      .catch(() => {});
+  }, []);
+  async function salvar(ferramentas: string[]) {
+    setSalvando(true);
+    onErro(null);
+    onAviso(null);
+    const r = await fetch("/api/plano", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ferramentas }) });
+    const d = await r.json().catch(() => null);
+    setSalvando(false);
+    if (!r.ok) { onErro(d?.erro ?? "Não foi possível salvar o plano."); return; }
+    setDados((atual) => (atual ? { ...atual, ferramentas: d.ferramentas, plano: d.plano } : atual));
+    onAviso("Plano salvo — as abas somem na hora e as rotas passam a responder 403 fora do plano.");
+  }
+  if (!dados) return null;
+  const ativo = new Set(dados.ferramentas);
+  const rotulo: Record<string, string> = { basic: "Basic", regular: "Regular", premium: "Premium", completo: "Completo" };
+  return (
+    <section style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "16px", padding: "20px", marginBottom: "22px" }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--gray-900)", margin: "0 0 4px" }}>Plano e ferramentas</h3>
+        <span style={{ fontSize: "12px", color: "var(--gray-500)" }}>{dados.plano ? `Preset: ${rotulo[dados.plano] ?? dados.plano}` : "Personalizado"} · {dados.ferramentas.length} de {dados.catalogo.length}</span>
+      </div>
+      <div style={{ fontSize: "12.5px", color: "var(--gray-500)", marginBottom: "12px" }}>
+        O que esta instalação entrega. Desligar uma ferramenta esconde a aba e bloqueia a rota no servidor. Propostas e Catálogo fazem parte da base e não entram aqui.
+      </div>
+      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "12px" }}>
+        {Object.keys(dados.presets).map((k) => (
+          <button key={k} disabled={salvando} onClick={() => salvar(dados.presets[k])} style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid var(--gray-200)", background: dados.plano === k ? "var(--blue-500)" : "white", color: dados.plano === k ? "white" : "var(--gray-700)", fontSize: "12.5px", fontWeight: 600, cursor: "pointer" }}>
+            {rotulo[k] ?? k}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "6px" }}>
+        {dados.catalogo.map((f) => (
+          <label key={f.id} style={{ display: "flex", alignItems: "center", gap: "9px", padding: "8px 10px", borderRadius: "9px", border: "1px solid var(--gray-200)", fontSize: "13px", color: "var(--gray-800)", cursor: "pointer" }}>
+            <input type="checkbox" checked={ativo.has(f.id)} disabled={salvando} onChange={(ev) => { const prox = new Set(ativo); if (ev.target.checked) prox.add(f.id); else prox.delete(f.id); void salvar([...prox]); }} />
+            <span style={{ flex: 1 }}>{f.nome}</span>
+            <span style={{ fontSize: "11px", color: "var(--gray-400)" }}>{f.modulo}</span>
+          </label>
+        ))}
+      </div>
+    </section>
   );
 }

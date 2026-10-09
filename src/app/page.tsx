@@ -516,6 +516,10 @@ export default function Home() {
   // Ver arquivadas é opt-in: alternar zera a lista pra forçar refetch com o outro filtro.
   const [verArquivadas, setVerArquivadas] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  // Ferramentas habilitadas no plano desta instalação (lib/plano.ts). null = ainda não
+  // carregou (mostra tudo); o bloqueio de verdade é no servidor.
+  const [ferramentas, setFerramentas] = useState<string[] | null>(null);
+  const liberada = (id: string) => ferramentas === null || ferramentas.includes(id);
   // Proposta de outro consultor aberta pelo vendedor (áudio do Mateus, 16/09/2026): ele vê
   // e gera o PDF, mas nada do que mexer é gravado — o servidor negaria (404) de todo jeito;
   // aqui a UI avisa e o auto-save não dispara. Guarda o nome do dono para o aviso.
@@ -580,7 +584,10 @@ export default function Home() {
   useEffect(() => {
     fetch("/api/me")
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error())))
-      .then((u: Usuario) => setUsuario(u))
+      .then((u: Usuario & { ferramentas?: string[] }) => {
+        setUsuario(u);
+        if (Array.isArray(u.ferramentas)) setFerramentas(u.ferramentas);
+      })
       .catch(() => {
         setUsuario(null);
         // Sessão morta (expirou ou o acesso foi revogado) — volta para o login em vez de
@@ -1225,13 +1232,15 @@ export default function Home() {
           {/* Gerador de Contratos (pacote entregue em 21/09/2026): página estática em
               public/gerador-contratos, mostrada dentro do layout (iframe de mesma origem).
               O middleware protege o caminho — só quem está logado abre. */}
-          <Hoverable eager base={navItemStyle(["gerador-contratos"])} hover={navHover} onClick={() => irPara("gerador-contratos")} title="Gerador de Contratos — contrato de fornecimento com comodato, em PDF">
+{liberada("gerador-contratos") && (
+                    <Hoverable eager base={navItemStyle(["gerador-contratos"])} hover={navHover} onClick={() => irPara("gerador-contratos")} title="Gerador de Contratos — contrato de fornecimento com comodato, em PDF">
             <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4.5 2.5h5l3 3v9h-8z" />
               <path d="M9.5 2.5v3h3M6.5 9h4M6.5 11.5h4" />
             </svg>
             Gerador de Contratos
           </Hoverable>
+          )}
           {/* Gerador de Certificados: encaixe com placeholder em public/gerador-certificados
               (aguardando o arquivo final do Matheus). */}
           <Hoverable eager base={navItemStyle(["gerador-certificados"])} hover={navHover} onClick={() => irPara("gerador-certificados")} title="Gerador de Certificados — em breve">
@@ -1312,7 +1321,7 @@ export default function Home() {
 
       {/* ============ MAIN ============ */}
       <main className="ies-scroll ies-main" style={{ flex: 1, minWidth: 0, height: "100vh", overflowY: "auto", overflowX: "hidden", position: "relative" }}>
-        {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={pedirCadastroProduto} onNovaProposta={novaProposta} />}
+        {screen === "dashboard" && <DashboardScreen setScreen={setScreen} usuario={usuario} ferramentas={ferramentas} pedirCadastroProduto={pedirCadastroProduto} onNovaProposta={novaProposta} />}
         {/* Sempre montada, escondida fora de foco: é o rascunho vivo (ver builderKey). */}
         <div style={{ display: screen === "manual" ? "contents" : "none" }}>
           <ManualScreen key={builderKey} onMontar={aplicarScopeManual} prefill={manualPrefill} scopeParaEditar={scopeParaEditar} catalogoVersao={catalogoVersao} />
@@ -1395,8 +1404,8 @@ export default function Home() {
         {(screen === "ferramentas" || screen === "ferramentas-comerciais" || screen === "chamados" || screen === "gerador-contratos" || screen === "gerador-certificados" || (screen === "config" && ehAdmin)) && (
           <BarraTopo titulo={screen === "ferramentas" ? "Ferramentas Técnicas" : screen === "ferramentas-comerciais" ? "Ferramentas Comerciais" : screen === "chamados" ? "Chamados" : screen === "gerador-contratos" ? "Gerador de Contratos" : screen === "gerador-certificados" ? "Gerador de Certificados" : "Configurações"} />
         )}
-        {screen === "ferramentas" && <FerramentasTecnicasScreen />}
-        {screen === "ferramentas-comerciais" && <FerramentasComerciaisScreen />}
+        {screen === "ferramentas" && <FerramentasTecnicasScreen ferramentas={ferramentas} />}
+        {screen === "ferramentas-comerciais" && <FerramentasComerciaisScreen ferramentas={ferramentas} />}
         {screen === "gerador-contratos" && (
           <iframe
             src="/gerador-contratos/index.html"
@@ -1413,7 +1422,7 @@ export default function Home() {
         )}
         {/* Segundo cadeado do painel do gestor: some do menu E não renderiza sem papel — quem
             chegar por outro caminho cai no Dashboard em vez de ver a tela vazia/quebrada. */}
-        {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} pedirCadastroProduto={pedirCadastroProduto} onNovaProposta={novaProposta} />)}
+        {screen === "config" && (ehAdmin ? <AdminScreen /> : <DashboardScreen setScreen={setScreen} usuario={usuario} ferramentas={ferramentas} pedirCadastroProduto={pedirCadastroProduto} onNovaProposta={novaProposta} />)}
         {screen === "perfil" && <MeuPerfilScreen />}
       </main>
 
@@ -1588,11 +1597,14 @@ const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; i
 function DashboardScreen({
   setScreen,
   usuario,
+  ferramentas = null,
   pedirCadastroProduto,
   onNovaProposta,
 }: {
   setScreen: (s: Screen) => void;
   usuario: Usuario | null;
+  /** Ferramentas do plano (lib/plano.ts); null = ainda não carregou, mostra tudo. */
+  ferramentas?: string[] | null;
   /** Card "Cadastro de Produtos": marca o pedido antes de abrir o Catálogo. */
   pedirCadastroProduto: () => void;
   /** "Nova proposta" começa do ZERO (áudio do Matheus, 11/08): descarta o rascunho
@@ -1601,6 +1613,7 @@ function DashboardScreen({
   onNovaProposta: () => void;
 }) {
   const primeiroNome = usuario?.nome?.trim().split(/\s+/)[0] || "";
+  const liberada = (id: string) => ferramentas === null || ferramentas.includes(id);
   const [propostas, setPropostas] = useState<PropostaLog[] | null>(null);
   // Data/saudação calculadas só no cliente (evita divergência de hidratação SSR≠cliente).
   const [hdr, setHdr] = useState({ hoje: "", saudacao: "Olá" });
@@ -1751,7 +1764,7 @@ function DashboardScreen({
           <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)" }}>Módulos</div>
           <div style={{ fontSize: "12.5px", color: "var(--text-subtle)", marginBottom: "14px" }}>Tudo o que dá para fazer por aqui</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(228px,1fr))", gap: "14px" }}>
-            {MODULOS_DASHBOARD.filter((m) => !m.soAdmin || ehAdmin).map((m, i) => {
+            {MODULOS_DASHBOARD.filter((m) => (!m.soAdmin || ehAdmin) && (m.screen !== "gerador-contratos" || liberada("gerador-contratos"))).map((m, i) => {
               // Módulo pedido que ainda não existe (Comodatos): ocupa o lugar dele na grade,
               // mas não é botão — sem clique, sem hover, com o selo dizendo o que é. Um card
               // que parece clicável e não faz nada lê como tela quebrada.

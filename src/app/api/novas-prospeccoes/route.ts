@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { bloqueioDeFerramenta } from "@/lib/plano";
 import { RelatorioProspeccaoCreate, RelatorioProspeccaoUpdate } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth-db";
 import {
@@ -16,6 +17,9 @@ export const runtime = "nodejs";
 // Relatório de Novas Prospecções (Ferramentas Comerciais): anotação manual do vendedor.
 // Gestor vê todos os registros, vendedor vê só os seus.
 export async function GET(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("prospeccoes");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const excluidas = req.nextUrl.searchParams.get("excluidas") === "1";
@@ -28,6 +32,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("prospeccoes");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const parsed = RelatorioProspeccaoCreate.safeParse(await req.json().catch(() => null));
@@ -43,6 +50,9 @@ export async function POST(req: NextRequest) {
 // Editar registro (áudio do Mateus, 25/08/2026): o vendedor ajusta os próprios registros,
 // o gestor qualquer um. A data NÃO muda — o contrato de update nem a aceita.
 export async function PATCH(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("prospeccoes");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const id = req.nextUrl.searchParams.get("id");
@@ -73,6 +83,9 @@ export async function PATCH(req: NextRequest) {
 
 // Excluir é SÓ do gestor (áudio do Mateus, 25/08/2026: o usuário só edita).
 export async function DELETE(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("prospeccoes");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   if (usuario.papel !== "admin") return NextResponse.json({ erro: "Apenas o gestor pode excluir prospecções." }, { status: 403 });

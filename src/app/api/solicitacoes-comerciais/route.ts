@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { bloqueioDeFerramenta } from "@/lib/plano";
 import { SolicitacaoComercialCreate, SolicitacaoComercialUpdate } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth-db";
 import {
@@ -16,6 +17,9 @@ export const runtime = "nodejs";
 // Solicitações Comerciais (Ferramentas Comerciais): análise de água e/ou tecidos, visita
 // do setor técnico, amostra para demonstrações. Gestor vê todas, vendedor vê as suas.
 export async function GET(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("solicitacoes");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const excluidas = req.nextUrl.searchParams.get("excluidas") === "1";
@@ -28,6 +32,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("solicitacoes");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const parsed = SolicitacaoComercialCreate.safeParse(await req.json().catch(() => null));
@@ -44,6 +51,9 @@ export async function POST(req: NextRequest) {
 // status pendente ⇄ atendida, tipo, cliente e observação. Alheia responde 404.
 // `?acao=restaurar` tira a solicitação da aba Excluídos — operação de gestor.
 export async function PATCH(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("solicitacoes");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const id = req.nextUrl.searchParams.get("id");
@@ -74,6 +84,9 @@ export async function PATCH(req: NextRequest) {
 // Excluir é SÓ do gestor (áudio do Mateus, 25/08/2026: "eles não podem excluir as
 // solicitações"). Sem `?definitivo=1` vira lápide; com, some de vez — e só de lá.
 export async function DELETE(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("solicitacoes");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   if (usuario.papel !== "admin") return NextResponse.json({ erro: "Apenas o gestor pode excluir solicitações." }, { status: 403 });

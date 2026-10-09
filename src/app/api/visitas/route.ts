@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { bloqueioDeFerramenta, ferramentasHabilitadas } from "@/lib/plano";
 import { AreaVisita, VisitaCarteiraCreate, VisitaCarteiraUpdate } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth-db";
 import {
@@ -22,6 +23,8 @@ export async function GET(req: NextRequest) {
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const area = AreaVisita.safeParse(req.nextUrl.searchParams.get("area") ?? "tecnica");
   if (!area.success) return NextResponse.json({ erro: "Área inválida." }, { status: 400 });
+  const bloqueio = await bloqueioDeFerramenta(area.data === "comercial" ? "visitas-comerciais" : "visitas-tecnicas");
+  if (bloqueio) return bloqueio;
   const excluidas = req.nextUrl.searchParams.get("excluidas") === "1";
   try {
     const visitas = await listarVisitas(usuario, area.data, excluidas);
@@ -37,6 +40,8 @@ export async function POST(req: NextRequest) {
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const parsed = VisitaCarteiraCreate.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
+  const bloqueio = await bloqueioDeFerramenta(parsed.data.area === "comercial" ? "visitas-comerciais" : "visitas-tecnicas");
+  if (bloqueio) return bloqueio;
   try {
     const visita = await criarVisita(usuario.email, parsed.data);
     return NextResponse.json(visita, { status: 201 });
@@ -49,6 +54,13 @@ export async function POST(req: NextRequest) {
 // qualquer um; a data não muda. `?acao=restaurar` tira o registro da aba Excluídos —
 // operação de gestor, como a exclusão.
 export async function PATCH(req: NextRequest) {
+  {
+    const ativas = await ferramentasHabilitadas();
+    if (!ativas.includes("visitas-comerciais") && !ativas.includes("visitas-tecnicas")) {
+      const bloqueio = await bloqueioDeFerramenta("visitas-tecnicas");
+      if (bloqueio) return bloqueio;
+    }
+  }
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const id = req.nextUrl.searchParams.get("id");
@@ -79,6 +91,13 @@ export async function PATCH(req: NextRequest) {
 // Excluir é SÓ do gestor (áudio do Mateus, 25/08/2026: o usuário só edita). Sem
 // `?definitivo=1` vira lápide (aba Excluídos); com, some de vez — e só de lá.
 export async function DELETE(req: NextRequest) {
+  {
+    const ativas = await ferramentasHabilitadas();
+    if (!ativas.includes("visitas-comerciais") && !ativas.includes("visitas-tecnicas")) {
+      const bloqueio = await bloqueioDeFerramenta("visitas-tecnicas");
+      if (bloqueio) return bloqueio;
+    }
+  }
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   if (usuario.papel !== "admin") return NextResponse.json({ erro: "Apenas o gestor pode excluir registros." }, { status: 403 });

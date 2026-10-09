@@ -15,6 +15,7 @@ const usuarioAtualDb = vi.fn();
 const listarColaboradores = vi.fn();
 const atualizarColaborador = vi.fn();
 
+vi.mock("@/lib/plano", () => ({ ferramentasHabilitadas: async () => ["prospeccoes"], bloqueioDeFerramenta: async () => null }));
 vi.mock("@/lib/auth-db", async (original) => ({
   ...(await original<typeof import("@/lib/auth-db")>()),
   validarCredenciais: (...a: unknown[]) => validarCredenciais(...a),
@@ -104,7 +105,8 @@ describe("/api/me — revogar tem que derrubar quem já está logado", () => {
     estadoDaConta.mockResolvedValue({ papel: "user", acesso: "aprovado" });
     const r = await ME(reqCookie());
     expect(r.status).toBe(200);
-    expect(await r.json()).toEqual({ email: "a@indeba.com", nome: "A", papel: "user" });
+    // `ferramentas` (plano, lib/plano.ts) vem junto desde 09/10/2026 — sem Config no banco, todas.
+    expect(await r.json()).toEqual({ email: "a@indeba.com", nome: "A", papel: "user", ferramentas: expect.any(Array) });
   });
 });
 

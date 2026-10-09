@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { bloqueioDeFerramenta } from "@/lib/plano";
 import { ContratoComodatoCreate, ContratoComodatoUpdate } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth-db";
 import {
@@ -21,6 +22,9 @@ export const runtime = "nodejs";
 const LIMITE_PDF = 4 * 1024 * 1024;
 
 export async function GET(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("contratos-comodatos");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const excluidas = req.nextUrl.searchParams.get("excluidas") === "1";
@@ -35,6 +39,9 @@ export async function GET(req: NextRequest) {
 // Cadastro em multipart: os campos vão como JSON no campo `dados`, o PDF (opcional) no
 // campo `contrato` — mesmo desenho do cadastro de produto (foto/ficha).
 export async function POST(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("contratos-comodatos");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
 
@@ -73,6 +80,9 @@ export async function POST(req: NextRequest) {
 // Editar (áudio do Mateus, 25/08/2026): cliente, CNPJ, comodatos e observações — o PDF não
 // muda por aqui. `?acao=restaurar` tira o contrato da aba Excluídos (só gestor).
 export async function PATCH(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("contratos-comodatos");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   const id = req.nextUrl.searchParams.get("id");
@@ -103,6 +113,9 @@ export async function PATCH(req: NextRequest) {
 // Excluir é SÓ do gestor (áudio do Mateus, 25/08/2026). Sem `?definitivo=1` vira lápide;
 // com, some de vez — e só de lá.
 export async function DELETE(req: NextRequest) {
+  // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
+  const bloqueio = await bloqueioDeFerramenta("contratos-comodatos");
+  if (bloqueio) return bloqueio;
   const usuario = await usuarioAtual(req);
   if (!usuario) return NextResponse.json({ erro: "Não autenticado." }, { status: 401 });
   if (usuario.papel !== "admin") return NextResponse.json({ erro: "Apenas o gestor pode excluir contratos." }, { status: 403 });

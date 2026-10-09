@@ -263,7 +263,11 @@ export function SemResultado({ aoLimpar }: { aoLimpar: () => void }) {
   );
 }
 
-export function FerramentasTecnicasScreen() {
+export function FerramentasTecnicasScreen({ ferramentas = null }: { ferramentas?: string[] | null } = {}) {
+  // Plano (lib/plano.ts): aba fora do plano some; se já estava aberta, mostra o aviso.
+  const liberada = (id: string) => ferramentas === null || ferramentas.includes(id);
+  const FERRAMENTA_DA_ABA: Record<string, string> = {"visitas":"visitas-tecnicas","contratos":"contratos-comodatos","estoque":"estoque-comodatos"};
+  const abaLiberada = (k: string) => liberada(FERRAMENTA_DA_ABA[k] ?? "");
   const [aba, setAba] = useState<Aba>("visitas");
   const [souGestor, setSouGestor] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -296,7 +300,7 @@ export function FerramentasTecnicasScreen() {
             { key: "contratos", label: "Contratos e Comodatos" },
             { key: "estoque", label: "Estoque de Comodatos" },
           ] as { key: Aba; label: string }[]
-        ).map((t) => {
+        ).filter((t) => abaLiberada(t.key)).map((t) => {
           const ativo = aba === t.key;
           return (
             <button
@@ -328,9 +332,14 @@ export function FerramentasTecnicasScreen() {
         </div>
       )}
 
-      {aba === "visitas" && <AbaVisitas area="tecnica" setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
-      {aba === "contratos" && <AbaContratos setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
-      {aba === "estoque" && <AbaEstoque setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
+      {!abaLiberada(aba) && (
+        <div role="alert" style={{ padding: "14px 16px", background: "#FFFBEB", border: "1px solid #FCD34D", borderRadius: "12px", fontSize: "13.5px", color: "#92400E" }}>
+          Esta ferramenta não está incluída no plano desta instalação. Fale com a Noxis para habilitar.
+        </div>
+      )}
+      {aba === "visitas" && abaLiberada("visitas") && <AbaVisitas area="tecnica" setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
+      {aba === "contratos" && abaLiberada("contratos") && <AbaContratos setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
+      {aba === "estoque" && abaLiberada("estoque") && <AbaEstoque setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
     </div>
   );
 }
