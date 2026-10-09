@@ -49,6 +49,9 @@ const ARQUIVOS_DO_CHROMIUM = [
 ];
 
 const nextConfig: NextConfig = {
+  // `next dev` reescrevia o AGENTS.md do projeto com um bloco próprio a cada subida do servidor
+  // (09/10/2026). O AGENTS.md aqui é a Constitution do time, não documentação do framework.
+  agentRules: false,
   // Não revela o framework no header (OWASP A05).
   poweredByHeader: false,
   // Render do PDF roda no server — esses pacotes não podem ser empacotados pelo bundler.
