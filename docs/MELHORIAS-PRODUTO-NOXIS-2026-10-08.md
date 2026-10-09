@@ -264,4 +264,19 @@ Cada item: commit na `main`, lint/tsc/testes verdes, deploy READY e smoke de pro
 
 Conferido em produção (Chrome logado como Matheus): Revisão da Engepack mostra "159,00", botões rotulados, rodapé correto.
 
+### Rodada 2 (23:46 → 00:05)
+
+| Item | Commit |
+|---|---|
+| #13 URL reflete tela e proposta (`?tela=…&id=…`), Voltar/Avançar do navegador trocam a tela, deep-link reabre proposta, aviso ao fechar com rascunho. Fix do deep-link que a sincronia apagava. | `6ec4270`, `94d4ac3` |
+| #2 (passo 1) identidade da empresa nos PDFs sai de `src/lib/empresa.ts` (CNPJ, IE, endereço, telefone, e-mail, cidade, região de entrega, consultor padrão); saída idêntica, teste-guardião. | `e4f85ef` |
+| #24 `esc`/`brl` dos templates de PDF num único `pdf/base.ts` (eram 5 cópias em 2 variantes); pasta vazia `templates/` removida. | `3227c56` |
+| #6 (parte sem segredos) `instrumentation.ts` + `lib/env-check.ts`: no boot, avisa SITE_URL ausente/errada/diferente do domínio de produção da Vercel, e em produção falta de segredo de sessão, banco, Upstash, SMTP, contato do consultor, Ollama. Teria pego o domínio morto no dia 1. | `bc3ccd4` |
+| #7 (parte sem Sentry) `respostaErro` loga uma linha JSON com nível, status, tipo do erro, stack curta e commit — filtrável nos logs da Vercel. | `5164ecf` |
+| #27 timeout de 60s em montar e 90s em gerar PDF, com mensagem humana (demora e sem conexão). | `a8cf4ce` |
+
+Conferido em produção: `?tela=history` abre a lista direto; Voltar do navegador do Catálogo volta ao Dashboard; smoke 9/9; ficha 381534 responde 200.
+
+**#17 (telas mortas) fica para decisão sua:** elas usam `Hoverable` e `brl` definidos dentro de `page.tsx`, e um `page.tsx` do Next não pode exportar helpers. Ou apagamos as 9 telas (ficam no git), ou movemos `Hoverable`/`brl` para um módulo e as telas para `src/components/legacy/`. Não fiz nenhum dos dois sem você.
+
 **Deixado de fora de propósito nesta noite:** mudanças de auth/env/segredos (healthcheck público, sessão revogável, cadastro por convite, Sentry DSN) e qualquer migração de schema (auditoria em tabela), por não haver banco local para ensaiar a migração antes do build de produção.
