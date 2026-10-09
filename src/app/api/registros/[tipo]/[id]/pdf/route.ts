@@ -8,6 +8,9 @@ import { respostaErro } from "@/lib/erro";
 import type { SessaoUsuario } from "@/lib/auth";
 
 export const runtime = "nodejs";
+// Mesmo teto de /api/pdf: cold start do Chromium (3-5s) + render. Sem isto caía no default
+// do plano e podia estourar no primeiro PDF do dia (revisão de ops, 08/10/2026).
+export const maxDuration = 60;
 
 /**
  * Ficha do registro em PDF (áudio do Mateus, 10/09/2026: "extrair isso aí como PDF pra

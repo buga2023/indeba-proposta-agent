@@ -20,7 +20,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const toast = React.useCallback((msg: string, tone: Tone = "success") => {
     const id = ++_id;
     setToasts((t) => [...t, { id, msg, tone }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
+    // Erro precisa de tempo de leitura: 3,2s sumia antes de o vendedor terminar de ler
+    // "Falha ao gerar o PDF…" (revisão de UX, 08/10/2026). Sucesso/aviso seguem curtos.
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), tone === "danger" ? 7000 : 3200);
   }, []);
   return (
     <ToastCtx.Provider value={toast}>
@@ -39,7 +41,7 @@ const COR: Record<Tone, string> = {
 
 function Toaster({ toasts }: { toasts: Toast[] }) {
   return (
-    <div style={{ position: "fixed", right: 20, bottom: 20, zIndex: 2000, display: "flex", flexDirection: "column", gap: 10, pointerEvents: "none" }}>
+    <div role="status" aria-live="polite" aria-atomic="false" style={{ position: "fixed", right: 20, bottom: 20, zIndex: 2000, display: "flex", flexDirection: "column", gap: 10, pointerEvents: "none" }}>
       {toasts.map((t) => {
         const c = COR[t.tone] ?? COR.success;
         return (

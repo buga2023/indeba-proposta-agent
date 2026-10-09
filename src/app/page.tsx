@@ -418,6 +418,17 @@ const CMD_ITEM_CADASTRO: PaletteItem = { key: "cadastro-produto", label: "Cadast
 
 /* ───────────────────────── componente principal ───────────────────────── */
 
+// Lê o corpo `{ erro }` que TODA rota de API devolve (lib/erro.ts) e cai no rótulo humano com o
+// status quando não há corpo — "HTTP 500" e "Falha (503)" não dizem ao vendedor o que fazer.
+async function mensagemDeErro(r: Response, rotulo: string): Promise<string> {
+  const corpo = (await r.json().catch(() => null)) as { erro?: unknown } | null;
+  if (corpo && typeof corpo.erro === "string" && corpo.erro.trim()) return corpo.erro;
+  if (r.status === 401) return `${rotulo}: sua sessão expirou. Entre de novo.`;
+  if (r.status === 404) return `${rotulo}: registro não encontrado (pode ter sido excluído).`;
+  if (r.status === 429) return `${rotulo}: muitas requisições, aguarde alguns segundos.`;
+  return `${rotulo} (código ${r.status}). Tente de novo em instantes.`;
+}
+
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("dashboard");
   // "Cadastro de Produtos" do Dashboard: o cadastro é um modal DENTRO do Catálogo, então o
@@ -706,7 +717,11 @@ export default function Home() {
       setScope(atualizado);
       persistirProposta(atualizado);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao refinar o texto.");
+      // O `error` global só aparece na tela de PDF; quem clicou "Refinar" está na Revisão e
+      // ficava sem resposta nenhuma (revisão de UX, 08/10/2026). Toast no ponto da ação.
+      const msg = e instanceof Error ? e.message : "Erro ao refinar o texto.";
+      setError(msg);
+      toast(msg, "danger");
     } finally {
       setRefining(false);
     }
@@ -730,14 +745,16 @@ export default function Home() {
   async function reabrirProposta(id: string) {
     try {
       const r = await fetch(`/api/propostas/${id}`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      if (!r.ok) throw new Error(await mensagemDeErro(r, "Não foi possível abrir a proposta"));
       const reg = await r.json();
       setSomenteLeitura(!ehAdmin && !!usuario && reg.autor !== usuario.email ? (reg.autorNome ?? reg.autor) : null);
       setScope(reg.scope as PropostaScope);
       setExcluded(new Set());
       setScreen("review");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao abrir a proposta.");
+      const msg = e instanceof Error ? e.message : "Erro ao abrir a proposta.";
+      setError(msg);
+      toast(msg, "danger"); // quem clicou "Abrir" está no Histórico, onde `error` não aparece
     }
   }
 
@@ -925,7 +942,7 @@ export default function Home() {
   async function editarProposta(id: string) {
     try {
       const r = await fetch(`/api/propostas/${id}`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      if (!r.ok) throw new Error(await mensagemDeErro(r, "Não foi possível abrir a proposta para edição"));
       const reg = await r.json();
       setSomenteLeitura(null);
       setScopeParaEditar(reg.scope as PropostaScope);
@@ -936,7 +953,9 @@ export default function Home() {
       setError(null);
       setScreen("manual");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao abrir a proposta para edição.");
+      const msg = e instanceof Error ? e.message : "Erro ao abrir a proposta para edição.";
+      setError(msg);
+      toast(msg, "danger");
     }
   }
 
@@ -2320,7 +2339,7 @@ function ManualScreen({
         }),
       };
       const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      if (!r.ok) throw new Error(`Falha ao montar a proposta (${r.status}).`);
+      if (!r.ok) throw new Error(await mensagemDeErro(r, "Falha ao montar a proposta"));
       const scope = await r.json();
       if (!scope || !Array.isArray(scope.itens)) throw new Error("Resposta inesperada do servidor.");
       // Guarda o id da proposta montada: se o consultor voltar para editar a seleção e
@@ -2769,14 +2788,44 @@ type ItemImportado = { nome: string; quantidade: number; tamanho: string; unidad
 // real do servidor (a API não relata etapa a etapa): "selecionar catálogo" é sempre
 // rápido, o texto de apresentação por IA é o que pode levar até ~2min em CPU. Cronômetro
 // honesto em vez de barra de progresso falsa — não fabricamos um percentual que não temos.
+// Campo de preço da Revisão, CONTROLADO: antes era `defaultValue` + `onBlur`, então o valor
+// mudado pelo chat de correção ou pelo teto não aparecia no campo e o total divergia do que
+// estava escrito (revisão de UX, 08/10/2026). Mostra em PT-BR (vírgula) como o resto do app;
+// o texto local só é gravado no blur/Enter, e re-sincroniza quando o scope muda por fora.
+function CampoPreco({ valor, onCommit, style, ariaLabel }: { valor: number; onCommit: (texto: string) => void; style?: CSSProperties; ariaLabel: string }) {
+  const formatado = valor.toFixed(2).replace(".", ",");
+  const [texto, setTexto] = useState(formatado);
+  const [base, setBase] = useState(formatado);
+  // Ajuste de estado durante o render (padrão do React para "derivar de prop"): quando o valor
+  // do scope muda por fora, o campo acompanha — sem useEffect com setState.
+  if (base !== formatado) {
+    setBase(formatado);
+    setTexto(formatado);
+  }
+  return (
+    <input
+      aria-label={ariaLabel}
+      inputMode="decimal"
+      value={texto}
+      onChange={(ev) => setTexto(ev.target.value)}
+      onBlur={() => { if (texto !== formatado) onCommit(texto); }}
+      onKeyDown={(ev) => { if (ev.key === "Enter") (ev.currentTarget as HTMLInputElement).blur(); }}
+      style={style}
+    />
+  );
+}
+
 function MontandoOverlay({ titulo = "Montando sua proposta" }: { titulo?: string }) {
   const [seg, setSeg] = useState(0);
   useEffect(() => {
     const t = setInterval(() => setSeg((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, []);
-  const passo = seg < 2 ? 0 : 1;
-  const PASSOS = ["Selecionando produtos do catálogo", "Escrevendo a apresentação com IA", "Preparando a proposta"];
+  // Passos pelo tempo decorrido: antes o 3º nunca ativava (`seg < 2 ? 0 : 1`) e o texto
+  // prometia "IA no computador da equipe" — a montagem é determinística no servidor (revisão
+  // de UX, 08/10/2026). Produto para outras distribuidoras não cita infra da Noxis.
+  const passo = seg < 2 ? 0 : seg < 6 ? 1 : 2;
+  const PASSOS = ["Selecionando produtos do catálogo", "Escrevendo a apresentação", "Preparando a proposta"];
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(15,26,36,.55)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, animation: "overlay-in .2s ease both" }}>
       <div style={{ background: "var(--surface-card)", borderRadius: "18px", padding: "34px 38px", width: "380px", boxShadow: "0 24px 60px rgba(15,26,36,.35)", animation: "popIn .3s ease both", textAlign: "center" }}>
@@ -2786,7 +2835,7 @@ function MontandoOverlay({ titulo = "Montando sua proposta" }: { titulo?: string
           ))}
         </div>
         <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-strong)", marginBottom: "6px" }}>{titulo}</div>
-        <div style={{ fontSize: "12.5px", color: "var(--text-subtle)", marginBottom: "20px" }}>Pode levar até 2 minutos — a IA roda no computador da equipe, não na nuvem.</div>
+        <div style={{ fontSize: "12.5px", color: "var(--text-subtle)", marginBottom: "20px" }}>Costuma levar alguns segundos. Se passar de um minuto, feche e tente de novo.</div>
         <div style={{ display: "flex", flexDirection: "column", gap: "9px", textAlign: "left" }}>
           {PASSOS.map((texto, i) => {
             const feito = i < passo;
@@ -2932,7 +2981,7 @@ function ImportarOrcamentoScreen({ onMontar }: { onMontar: (s: PropostaScope) =>
         })),
       };
       const r = await fetch("/api/montar-estruturado", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      if (!r.ok) throw new Error(`Falha ao montar a proposta (${r.status}).`);
+      if (!r.ok) throw new Error(await mensagemDeErro(r, "Falha ao montar a proposta"));
       const scope = await r.json();
       if (!scope || !Array.isArray(scope.itens)) throw new Error("Resposta inesperada do servidor.");
       onMontar(scope as PropostaScope);
@@ -3491,10 +3540,10 @@ function ReviewScreen({
                     <div style={{ textAlign: "right" }}>
                       <div style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
                         <span style={{ fontSize: "13px", color: "var(--blue-500)", fontWeight: 700 }}>R$</span>
-                        <input
-                          aria-label={`Preço de ${p.nome}`}
-                          defaultValue={precoUnit(p).toFixed(2)}
-                          onBlur={(ev) => editarPreco(pos, 0, ev.target.value)}
+                        <CampoPreco
+                          ariaLabel={`Preço de ${p.nome}`}
+                          valor={precoUnit(p)}
+                          onCommit={(v) => editarPreco(pos, 0, v)}
                           style={{ width: "72px", textAlign: "right", fontSize: "15px", fontWeight: 700, color: "var(--blue-500)", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "2px 6px", fontFamily: "var(--font-sans), sans-serif" }}
                         />
                       </div>
@@ -3536,10 +3585,10 @@ function ReviewScreen({
                     <button onClick={() => changeQty(pos, 1)} style={qtyBtnSm}>+</button>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <input
-                      aria-label={`Preço de ${p.nome}`}
-                      defaultValue={precoUnit(p).toFixed(2)}
-                      onBlur={(ev) => editarPreco(pos, 0, ev.target.value)}
+                    <CampoPreco
+                      ariaLabel={`Preço de ${p.nome}`}
+                      valor={precoUnit(p)}
+                      onCommit={(v) => editarPreco(pos, 0, v)}
                       style={{ width: "88px", textAlign: "right", fontSize: "13.5px", color: "var(--gray-700)", border: "1px solid var(--gray-200)", borderRadius: "6px", padding: "3px 6px", fontFamily: "var(--font-sans), sans-serif" }}
                     />
                   </div>
