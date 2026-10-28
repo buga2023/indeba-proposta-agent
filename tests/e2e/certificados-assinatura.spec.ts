@@ -28,16 +28,22 @@ test("PDF único sai com a assinatura embutida, usando as bibliotecas da própri
   expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
   // Abre no próprio pdf-lib da página: 2 páginas (uma por pessoa) e uma imagem (a rubrica) em cada.
   const info = await page.evaluate(async (b64) => {
-    const P = (window as unknown as { PDFLib: typeof import("pdf-lib") }).PDFLib;
+    // pdf-lib só existe na página (vendorizado em public/), não como dependência do projeto.
+    type Dict = { keys(): unknown[] };
+    type Pagina = { node: { Resources(): { lookup(n: unknown, t: unknown): Dict | undefined } | undefined } };
+    type Doc = { getPageCount(): number; getPages(): Pagina[] };
+    const P = (window as unknown as {
+      PDFLib: { PDFDocument: { load(d: Uint8Array): Promise<Doc> }; PDFName: { of(n: string): unknown }; PDFDict: unknown };
+    }).PDFLib;
     const doc = await P.PDFDocument.load(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
-    const imagens = doc.getPages().map((pg) => {
+    const imagens = doc.getPages().map((pg: Pagina) => {
       const xo = pg.node.Resources()?.lookup(P.PDFName.of("XObject"), P.PDFDict);
       return xo ? xo.keys().length : 0;
     });
     return { paginas: doc.getPageCount(), imagens };
   }, pdf.toString("base64"));
   expect(info.paginas).toBe(2);
-  expect(info.imagens.every((n) => n >= 1)).toBe(true);
+  expect(info.imagens.every((n: number) => n >= 1)).toBe(true);
 });
 
 test(".zip com nomes repetidos não sobrescreve ninguém", async ({ page }) => {
