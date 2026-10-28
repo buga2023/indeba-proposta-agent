@@ -107,6 +107,10 @@ test("PDF baixa com as bibliotecas da própria origem (CSP de produção)", asyn
   const scripts = await page.locator("script[src]").evaluateAll((els) => els.map((e) => e.getAttribute("src")));
   expect(scripts.length).toBeGreaterThan(0);
   expect(scripts.every((s) => s && !s.startsWith("http"))).toBe(true);
+  // O contorno do card tem que ser BORDA: o html2canvas 1.4.1 não desenha box-shadow, e um
+  // contorno feito de sombra sumia no PDF (auditoria de 27/10/2026).
+  const borda = await page.locator("#sheet .card").first().evaluate((e) => getComputedStyle(e).borderTopWidth);
+  expect(borda).toBe("1px");
   const [download] = await Promise.all([page.waitForEvent("download", { timeout: 30_000 }), page.click("#pdf")]);
   expect(download.suggestedFilename()).toBe("pop-indeba-express.pdf");
 });
