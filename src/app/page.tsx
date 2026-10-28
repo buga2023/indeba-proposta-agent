@@ -374,7 +374,7 @@ const STATUS_UI: Record<StatusProposta, { label: string; bg: string; fg: string 
 // mais oferecidos como opção.
 const STATUS_OPCOES: StatusProposta[] = ["em_andamento", "enviada", "aprovada", "recusada"];
 
-type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "ferramentas" | "ferramentas-comerciais" | "gerador-contratos" | "gerador-certificados" | "config" | "perfil";
+type Screen = "dashboard" | "manual" | "importar" | "review" | "pdf" | "history" | "catalog" | "prospeccao" | "instagram" | "financeiro" | "contrato" | "atendimento" | "cobranca" | "compras" | "fiscal" | "contabil" | "chamados" | "ferramentas" | "ferramentas-comerciais" | "gerador-contratos" | "gerador-certificados" | "gerador-pop" | "config" | "perfil";
 type TipoProposta = "orcamento" | "implantacao" | "comercial" | "consolidada";
 
 // Tipos de proposta → estrutura do PDF (render.ts roteia por tipo). O vendedor escolhe.
@@ -404,6 +404,7 @@ const CMD_ITEMS: PaletteItem[] = [
   { key: "ferramentas", label: "Ferramentas Técnicas", hint: "Visitas de rotina, contratos e estoque de comodatos" },
   { key: "gerador-contratos", label: "Gerador de Contratos", hint: "Contrato de fornecimento com comodato, em PDF" },
   { key: "gerador-certificados", label: "Gerador de Certificados", hint: "Certificados de participação em PDF, um por pessoa ou em lote" },
+  { key: "gerador-pop", label: "Gerador POP", hint: "Guia de uso dos produtos de limpeza para o restaurante, em PDF" },
   { key: "perfil", label: "Meu perfil" },
 ];
 // Configurações é o painel do gestor (e-mails de cobrança, colaboradores). Fica fora da
@@ -1071,7 +1072,7 @@ export default function Home() {
     const tela = q.get("tela") as Screen | null;
     const id = q.get("id");
     if (!tela || tela === "dashboard") return;
-    const abriveis: Screen[] = ["manual", "history", "catalog", "config", "perfil", "ferramentas", "ferramentas-comerciais", "gerador-contratos", "gerador-certificados", "review", "pdf"];
+    const abriveis: Screen[] = ["manual", "history", "catalog", "config", "perfil", "ferramentas", "ferramentas-comerciais", "gerador-contratos", "gerador-certificados", "gerador-pop", "review", "pdf"];
     if (!abriveis.includes(tela)) return;
     void Promise.resolve().then(() => {
       if ((tela === "review" || tela === "pdf") && id) void reabrirProposta(id);
@@ -1263,6 +1264,15 @@ export default function Home() {
             </svg>
             Gerador de Certificados
           </Hoverable>
+          {/* Gerador POP: guia de uso dos produtos de limpeza (public/gerador-pop). O catálogo de
+              produtos é compartilhado pelo time via /api/gerador-pop (Gustavo, 27/10/2026). */}
+          <Hoverable eager base={navItemStyle(["gerador-pop"])} hover={navHover} onClick={() => irPara("gerador-pop")} title="Gerador POP — guia de uso dos produtos de limpeza em PDF">
+            <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="2.5" width="11" height="12" rx="1" />
+              <path d="M5.5 5.5h2v2h-2zM9.5 6h2.5M5.5 10h2v2h-2zM9.5 10.5h2.5" />
+            </svg>
+            Gerador POP
+          </Hoverable>
 
           {/* Configurações é o painel do gestor: e-mails de cobrança, GESTOR_EMAIL, cadastro
               de colaboradores. As rotas já respondem 403 para quem não é admin — aqui a
@@ -1415,8 +1425,8 @@ export default function Home() {
         {screen === "chamados" && <ChamadosScreen />}
         {/* Telas de componentes externos não têm ScreenHead: ganham a barra de topo com
             menu (celular) e Voltar. */}
-        {(screen === "ferramentas" || screen === "ferramentas-comerciais" || screen === "chamados" || screen === "gerador-contratos" || screen === "gerador-certificados" || (screen === "config" && ehAdmin)) && (
-          <BarraTopo titulo={screen === "ferramentas" ? "Ferramentas Técnicas" : screen === "ferramentas-comerciais" ? "Ferramentas Comerciais" : screen === "chamados" ? "Chamados" : screen === "gerador-contratos" ? "Gerador de Contratos" : screen === "gerador-certificados" ? "Gerador de Certificados" : "Configurações"} />
+        {(screen === "ferramentas" || screen === "ferramentas-comerciais" || screen === "chamados" || screen === "gerador-contratos" || screen === "gerador-certificados" || screen === "gerador-pop" || (screen === "config" && ehAdmin)) && (
+          <BarraTopo titulo={screen === "ferramentas" ? "Ferramentas Técnicas" : screen === "ferramentas-comerciais" ? "Ferramentas Comerciais" : screen === "chamados" ? "Chamados" : screen === "gerador-contratos" ? "Gerador de Contratos" : screen === "gerador-certificados" ? "Gerador de Certificados" : screen === "gerador-pop" ? "Gerador POP" : "Configurações"} />
         )}
         {screen === "ferramentas" && <FerramentasTecnicasScreen ferramentas={ferramentas} />}
         {screen === "ferramentas-comerciais" && <FerramentasComerciaisScreen ferramentas={ferramentas} />}
@@ -1431,6 +1441,13 @@ export default function Home() {
           <iframe
             src="/gerador-certificados/index.html"
             title={`Gerador de Certificados — ${EMPRESA.nomeFantasia}`}
+            style={{ display: "block", width: "100%", height: "calc(100vh - 58px)", border: 0, background: "#fff" }}
+          />
+        )}
+        {screen === "gerador-pop" && (
+          <iframe
+            src="/gerador-pop/index.html"
+            title={`Gerador POP — ${EMPRESA.nomeFantasia}`}
             style={{ display: "block", width: "100%", height: "calc(100vh - 58px)", border: 0, background: "#fff" }}
           />
         )}
@@ -1571,6 +1588,17 @@ const MODULOS_DASHBOARD: { screen: Screen | null; titulo: string; sub: string; i
       <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
         <rect x="2.5" y="3" width="12" height="8.5" rx="1" />
         <path d="M5.5 6h6M5.5 8.5h3M10.5 11.5l.5 3 1.5-1 1.5 1 .5-3" />
+      </svg>
+    ),
+  },
+  {
+    screen: "gerador-pop",
+    titulo: "Gerador POP",
+    sub: "Guia de uso dos produtos de limpeza, em PDF",
+    icone: (
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="2.5" width="11" height="12" rx="1" />
+        <path d="M5.5 5.5h2v2h-2zM9.5 6h2.5M5.5 10h2v2h-2zM9.5 10.5h2.5" />
       </svg>
     ),
   },

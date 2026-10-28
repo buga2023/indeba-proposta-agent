@@ -130,6 +130,15 @@ const nextConfig: NextConfig = {
           ...(isProd ? [{ key: "Content-Security-Policy", value: csp.replace("frame-ancestors 'none'", "frame-ancestors 'self'") }] : []),
         ],
       },
+      // Gerador POP: idem. html2canvas/jsPDF ficam na própria pasta (script-src 'self').
+      {
+        source: "/gerador-pop/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Cache-Control", value: "no-cache" },
+          ...(isProd ? [{ key: "Content-Security-Policy", value: csp.replace("frame-ancestors 'none'", "frame-ancestors 'self'") }] : []),
+        ],
+      },
     ];
   },
 };

@@ -337,3 +337,16 @@ model AcessoLog {
   @@index([criadoEm])
   @@index([email])
 }
+
+/// Produto do Gerador POP (public/gerador-pop): guia de uso dos produtos de limpeza que o
+/// consultor monta para o restaurante. Catálogo COMPARTILHADO entre os usuários (antes ficava
+/// no navegador de cada um). `id` vem do HTML (estável, usado na URL); `dados` é o JSON do
+/// produto validado por PopProduto (src/lib/gerador-pop.ts). A paleta mora em Config "popPaleta".
+model PopProduto {
+  id           String   @id
+  ordem        Float
+  dados        String
+  autor        String
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+}
