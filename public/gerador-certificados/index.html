@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gerador de Certificados — Indeba Express</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Herr+Von+Muellerhoff&display=swap" rel="stylesheet">
 <script src="./pdf-lib.min.js"></script>
 <script src="./jszip.min.js"></script>
 <style>
@@ -41,7 +41,10 @@ button.sec{background:transparent;color:var(--brand)}button:disabled{opacity:.55
 .cert .c{margin:0;font-size:1.8cqw;color:#55607a}
 .cert .nm{width:74%;margin:1.2cqw auto 0;min-height:5cqw;border-bottom:1px solid #1a3253;font-weight:700;font-size:3.3cqw;line-height:5cqw}
 .cert .tx{margin:2.8cqw 0 0;padding:0 14%;font-size:1.75cqw;line-height:1.7;color:#1e2533;overflow-wrap:anywhere}
-.cert .sg{position:absolute;left:38%;width:24%;bottom:9%;border-top:1px solid #1a3253;padding-top:.6cqw;text-align:center;font-size:1.3cqw}
+.cert .rub{position:absolute;left:50%;bottom:100%;width:64%;transform:translateX(-50%);margin-bottom:-.6cqw;text-align:center;line-height:1}
+.cert .rub span{display:block;font-family:"Herr Von Muellerhoff","Snell Roundhand",cursive;font-size:5.4cqw;color:#14284a;white-space:nowrap;padding-bottom:.2cqw}
+.cert .rub svg{display:block;width:100%;height:1cqw;fill:#14284a;margin-top:-1.2cqw}
+.cert .sg{position:absolute;left:35%;width:30%;bottom:8%;border-top:1px solid #1a3253;padding-top:.6cqw;text-align:center;font-size:1.3cqw}
 </style>
 </head>
 <body>
@@ -73,16 +76,18 @@ function fmt(v){if(!v)return'';var p=v.split('-');return(+p[2])+' de '+MES[+p[1]
 function vals(){return{t:$('t').value.trim(),h:$('h').value.trim(),d:fmt($('d').value),l:$('l').value.trim()}}
 function names(){return $('n').value.split('\n').map(function(s){return s.trim()}).filter(Boolean)}
 function body(v){return'participou do Treinamento de '+(v.t||U(26))+', com carga horária de '+(v.h||U(10))+', realizado em '+(v.d||U(22))+', em '+(v.l||U(28))+'.'}
+var SIGURL='',SIGW=0;function sigHtml(){return SIGURL?'<img class="rub" alt="" src="'+SIGURL+'" style="width:'+SIGW+'%">':'<div class="rub" aria-hidden="true"><span>Matheus Resende</span></div>'}
 function render(){var ns=names(),v=vals();
-$('pv').innerHTML='<div class="cert"><div class="band"><img alt="" src="'+LOGO+'"></div><div class="strip"></div><div class="bd"><h3>CERTIFICADO DE PARTICIPAÇÃO</h3><i class="bar"></i><p class="c">Certificamos que</p><div class="nm">'+esc(ns[0]||'')+'</div><p class="tx">'+esc(body(v))+'</p></div><div class="sg">Indeba Express</div></div>';
+$('pv').innerHTML='<div class="cert"><div class="band"><img alt="" src="'+LOGO+'"></div><div class="strip"></div><div class="bd"><h3>CERTIFICADO DE PARTICIPAÇÃO</h3><i class="bar"></i><p class="c">Certificamos que</p><div class="nm">'+esc(ns[0]||'')+'</div><p class="tx">'+esc(body(v))+'</p></div><div class="sg">'+sigHtml()+'<b>Matheus Maristane Resende</b><br>Gestor — Indeba Express</div></div>';
 $('cnt').textContent=ns.length?ns.length+(ns.length>1?' certificados':' certificado'):'1 certificado com nome em branco'}
 ['t','h','d','l','n'].forEach(function(i){$(i).addEventListener('input',render)});render();
 function msg(s){$('msg').textContent=s}
 function clean(s){return s.replace(/[^\x00-\xFF]/g,'')}
+var SIG='Matheus Resende',SW='M150 332C420 296 780 280 1060 306C790 306 440 322 150 332Z';var _sp;function sigPng(){return _sp||(_sp=new Promise(function(res,rej){var c=document.createElement('canvas');(document.fonts&&document.fonts.load?document.fonts.load('170px "Herr Von Muellerhoff"','Matheus'):Promise.resolve()).catch(function(){}).then(function(){c.width=1200;c.height=400;var x=c.getContext('2d');x.fillStyle='#14284a';x.textAlign='center';var fs=170;x.font=fs+'px "Herr Von Muellerhoff",cursive';while(x.measureText(SIG).width>1000&&fs>60){fs-=5;x.font=fs+'px "Herr Von Muellerhoff",cursive'}x.fillText(SIG,600,290);x.fill(new Path2D(SW));var d=x.getImageData(0,0,1200,400).data,x0=1200,x1=0,y0=400,y1=0,i,p,px,py;for(i=3;i<d.length;i+=4){if(d[i]>20){p=(i-3)/4;px=p%1200;py=(p/1200)|0;if(px<x0)x0=px;if(px>x1)x1=px;if(py<y0)y0=py;if(py>y1)y1=py}}if(x1<x0){x0=0;x1=1199;y0=0;y1=399}var w=x1-x0+41,h=y1-y0+41,c2=document.createElement('canvas');c2.width=w;c2.height=h;c2.getContext('2d').drawImage(c,x0-20,y0-20,w,h,0,0,w,h);c2.toBlob(function(b){b?b.arrayBuffer().then(function(a){res(new Uint8Array(a))}):rej(new Error('assinatura'))},'image/png')})}))}
 async function build(list){
 var P=PDFLib,doc=await P.PDFDocument.create(),fR=await doc.embedFont(P.StandardFonts.Helvetica),fB=await doc.embedFont(P.StandardFonts.HelveticaBold);
 var img=await doc.embedPng(Uint8Array.from(atob(B64),function(c){return c.charCodeAt(0)}));
-var W=841.89,H=595.28,navy=P.rgb(.102,.196,.325),or=P.rgb(.922,.353,.102),gr=P.rgb(.33,.37,.45),v=vals();
+var sig=await doc.embedPng(await sigPng());var W=841.89,H=595.28,navy=P.rgb(.102,.196,.325),or=P.rgb(.922,.353,.102),gr=P.rgb(.33,.37,.45),v=vals();
 function ctr(pg,t,f,s,y,c){pg.drawText(t,{x:(W-f.widthOfTextAtSize(t,s))/2,y:y,size:s,font:f,color:c})}
 list.forEach(function(nm){
 var pg=doc.addPage([W,H]);
@@ -99,17 +104,18 @@ var words=clean(body(v)).split(' '),lines=[],cur='';
 words.forEach(function(w){var t=cur?cur+' '+w:w;if(fR.widthOfTextAtSize(t,14.5)>W-240&&cur){lines.push(cur);cur=w}else cur=t});lines.push(cur);
 lines.forEach(function(t,i){ctr(pg,t,fR,14.5,H-362-i*25,P.rgb(.12,.15,.2))});
 pg.drawLine({start:{x:W/2-100,y:95},end:{x:W/2+100,y:95},thickness:.8,color:navy});
-ctr(pg,'Indeba Express',fR,11,80,navy)});
+var sk=Math.min(170/sig.width,60/sig.height);pg.drawImage(sig,{x:W/2-sig.width*sk/2,y:92,width:sig.width*sk,height:sig.height*sk});ctr(pg,'Matheus Maristane Resende',fB,12,80,navy);ctr(pg,'Gestor — Indeba Express',fR,10.5,66,gr)});
 return await doc.save()}
 async function save(name,data){var dl=null;
 try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null}catch(e){}
-if(!dl){var u=URL.createObjectURL(new Blob([data],{type:/\.zip$/.test(name)?'application/zip':'application/pdf'})),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);msg('Pronto: '+name);return}
+if(!dl){try{var bl=new Blob([data],{type:name.slice(-4)==='.zip'?'application/zip':'application/pdf'}),u=URL.createObjectURL(bl),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);msg('Pronto: '+name)}catch(e){msg('Não foi possível salvar o arquivo.')}return}
 try{await dl.save({filename:name,data:data});msg('Pronto: '+name)}catch(e){msg(e&&e.code==='declined'?'Download cancelado.':'Não foi possível salvar ('+((e&&e.code)||'erro')+').')}}
 async function run(btn,fn){btn.disabled=true;msg('Gerando…');try{await fn()}catch(e){msg('Erro ao gerar: '+e.message)}btn.disabled=false}
 $('b1').onclick=function(){run($('b1'),async function(){var l=names();await save('Certificados.pdf',await build(l.length?l:['']))})};
 $('b2').onclick=function(){run($('b2'),async function(){var l=names(),z=new JSZip();if(!l.length)l=[''];
 for(var i=0;i<l.length;i++){var f=l[i]?l[i].normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w]+/g,'_'):'em_branco';var fn='Certificado_'+f+'.pdf',k=1;while(z.files[fn]){k++;fn='Certificado_'+f+'_'+k+'.pdf'}z.file(fn,await build([l[i]]))}
 await save('Certificados.zip',await z.generateAsync({type:'uint8array'}))})};
+sigPng().then(function(a){var u=URL.createObjectURL(new Blob([a],{type:'image/png'})),im=new Image();im.onload=function(){var k=Math.min(170/im.naturalWidth,60/im.naturalHeight);SIGW=+(im.naturalWidth*k/(842*.30)*100).toFixed(2);SIGURL=u;render()};im.src=u}).catch(function(){});
 </script>
 </body>
 </html>
