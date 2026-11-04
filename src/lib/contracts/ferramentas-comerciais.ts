@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AnexoInfo } from "./anexos";
+import { DataRegistro } from "./data-registro";
 
 /**
  * Ferramentas Comerciais (foto do bloco do Mateus, 21/08/2026 — a foto tem autoridade
@@ -14,7 +15,8 @@ import { AnexoInfo } from "./anexos";
 // que garimpa empresas por IA. Horário além da data (áudio do Mateus, 25/08/2026), e
 // "com quem falou" OBRIGATÓRIO (áudio de 25/08: sem asterisco não registra).
 export const RelatorioProspeccaoCreate = z.object({
-  data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "data no formato AAAA-MM-DD"),
+  // Ano travado no vigente (áudio do Mateus, 03/11/2026: entrou "0026" no sistema).
+  data: DataRegistro,
   horario: z.string().regex(/^\d{2}:\d{2}$/, "horário no formato HH:MM"),
   empresa: z.string().min(2).max(200),
   contato: z.string().min(2, "informe com quem falou").max(200),
@@ -27,6 +29,14 @@ export type RelatorioProspeccaoCreate = z.infer<typeof RelatorioProspeccaoCreate
 // fica a da visita registrada; visita nova é registro novo. Por isso `data` não entra.
 export const RelatorioProspeccaoUpdate = RelatorioProspeccaoCreate.omit({ data: true });
 export type RelatorioProspeccaoUpdate = z.infer<typeof RelatorioProspeccaoUpdate>;
+
+// Edição pelo GESTOR (áudio do Mateus, 03/11/2026: "permitir com que eu, como gerenciador
+// do sistema, consiga editar data (…) quando eu vou fazer uma edição de um lançamento
+// desse, eu não consigo alterar nada"): o gestor corrige a data — é como se arruma o
+// "0026" que já entrou. A rota escolhe este esquema só quando a sessão é admin; o
+// vendedor continua no esquema sem `data` (o campo é descartado se ele mandar).
+export const RelatorioProspeccaoUpdateGestor = RelatorioProspeccaoUpdate.extend({ data: DataRegistro.optional() });
+export type RelatorioProspeccaoUpdateGestor = z.infer<typeof RelatorioProspeccaoUpdateGestor>;
 
 export const RelatorioProspeccao = z.object({
   id: z.string(),

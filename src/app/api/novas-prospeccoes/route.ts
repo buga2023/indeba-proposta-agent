@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bloqueioDeFerramenta } from "@/lib/plano";
-import { RelatorioProspeccaoCreate, RelatorioProspeccaoUpdate } from "@/lib/contracts";
+import { RelatorioProspeccaoCreate, RelatorioProspeccaoUpdate, RelatorioProspeccaoUpdateGestor } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth-db";
 import {
   criarRelatorioProspeccao,
@@ -48,7 +48,9 @@ export async function POST(req: NextRequest) {
 }
 
 // Editar registro (áudio do Mateus, 25/08/2026): o vendedor ajusta os próprios registros,
-// o gestor qualquer um. A data NÃO muda — o contrato de update nem a aceita.
+// o gestor qualquer um. A data NÃO muda para o vendedor — o contrato dele nem a aceita.
+// O GESTOR pode corrigir a data (áudio do Mateus, 03/11/2026): o esquema é escolhido
+// pelo papel da sessão, não por campo que o cliente manda.
 export async function PATCH(req: NextRequest) {
   // Plano de ferramentas (lib/plano.ts): 403 se esta ferramenta não está habilitada.
   const bloqueio = await bloqueioDeFerramenta("prospeccoes");
@@ -70,7 +72,8 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  const parsed = RelatorioProspeccaoUpdate.safeParse(await req.json().catch(() => null));
+  const esquema = usuario.papel === "admin" ? RelatorioProspeccaoUpdateGestor : RelatorioProspeccaoUpdate;
+  const parsed = esquema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   try {
     const ok = await editarRelatorioProspeccao(usuario, id, parsed.data);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bloqueioDeFerramenta, ferramentasHabilitadas } from "@/lib/plano";
-import { AreaVisita, VisitaCarteiraCreate, VisitaCarteiraUpdate } from "@/lib/contracts";
+import { AreaVisita, VisitaCarteiraCreate, VisitaCarteiraUpdate, VisitaCarteiraUpdateGestor } from "@/lib/contracts";
 import { usuarioAtual } from "@/lib/auth-db";
 import {
   criarVisita,
@@ -77,7 +77,9 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  const parsed = VisitaCarteiraUpdate.safeParse(await req.json().catch(() => null));
+  // Só o gestor altera a data (áudio do Mateus, 03/11/2026) — esquema pelo papel da sessão.
+  const esquema = usuario.papel === "admin" ? VisitaCarteiraUpdateGestor : VisitaCarteiraUpdate;
+  const parsed = esquema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   try {
     const ok = await editarVisita(usuario, id, parsed.data);

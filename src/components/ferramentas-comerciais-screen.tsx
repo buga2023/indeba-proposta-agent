@@ -7,6 +7,8 @@ import { BotaoPdf } from "@/components/ui/botao-pdf";
 // "caixinha do calendário" das Visitas de Rotina e das Ferramentas Técnicas.
 import { filtroAtivo } from "@/lib/filtro-registros";
 import { agruparPorAnoMes } from "@/lib/agrupar-registros";
+// Ano travado no vigente e data editável pelo gestor (áudio do Mateus, 03/11/2026).
+import { erroAnoDaData, limitesDataVigente } from "@/lib/contracts/data-registro";
 import {
   AbaVisitas,
   BlocoAnexos,
@@ -59,6 +61,11 @@ const TIPOS_SOLICITACAO: { value: TipoSolicitacaoComercial; label: string }[] = 
   { value: "outras", label: "Outras solicitações" },
 ];
 const rotuloTipo = (v: string) => TIPOS_SOLICITACAO.find((t) => t.value === v)?.label ?? v;
+const contarPendentes = (lista: Pick<SolicitacaoComercial, "status">[]) => lista.filter((s) => s.status === "pendente").length;
+// Dentro de cada mês, pendente antes de atendida (áudio do Mateus, 03/11/2026: "ou jogar as
+// pendentes pra cima sempre"). Ordenação estável: entre iguais vale a ordem da listagem.
+const pendentesPrimeiro = <T extends Pick<SolicitacaoComercial, "status">>(lista: T[]) =>
+  [...lista].sort((a, b) => Number(a.status !== "pendente") - Number(b.status !== "pendente"));
 
 export function FerramentasComerciaisScreen({ ferramentas = null }: { ferramentas?: string[] | null } = {}) {
   // Plano (lib/plano.ts): aba fora do plano some; se já estava aberta, mostra o aviso.
@@ -68,6 +75,20 @@ export function FerramentasComerciaisScreen({ ferramentas = null }: { ferramenta
   const [aba, setAba] = useState<Aba>("prospeccoes");
   const [souGestor, setSouGestor] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  // Solicitações pendentes em evidência (áudio do Mateus, 03/11/2026: "ou aparecesse uma
+  // notificação"): a contagem vira selo na aba, visível mesmo com outra aba aberta. Carrega
+  // uma vez aqui; a própria aba atualiza o número a cada marcar/reabrir.
+  const [pendentes, setPendentes] = useState<number | null>(null);
+  useEffect(() => {
+    if (!abaLiberada("solicitacoes")) return;
+    void fetch("/api/solicitacoes-comerciais")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d && Array.isArray(d.solicitacoes)) setPendentes(contarPendentes(d.solicitacoes));
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div style={{ padding: "28px", maxWidth: "980px" }}>
@@ -118,6 +139,15 @@ export function FerramentasComerciaisScreen({ ferramentas = null }: { ferramenta
               }}
             >
               {t.label}
+              {t.key === "solicitacoes" && pendentes !== null && pendentes > 0 && (
+                <span
+                  aria-label={`${pendentes} pendente${pendentes === 1 ? "" : "s"}`}
+                  title={`${pendentes} solicitaç${pendentes === 1 ? "ão pendente" : "ões pendentes"}`}
+                  style={{ marginLeft: "8px", display: "inline-block", minWidth: "20px", padding: "1px 6px", borderRadius: "999px", background: ativo ? "white" : "#f59e0b", color: ativo ? "var(--blue-600)" : "white", fontSize: "11px", fontWeight: 800, textAlign: "center", lineHeight: "16px" }}
+                >
+                  {pendentes}
+                </span>
+              )}
             </button>
           );
         })}
@@ -136,7 +166,7 @@ export function FerramentasComerciaisScreen({ ferramentas = null }: { ferramenta
       )}
       {aba === "prospeccoes" && abaLiberada("prospeccoes") && <AbaProspeccoes setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
       {aba === "visitas" && abaLiberada("visitas") && <AbaVisitas area="comercial" setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
-      {aba === "solicitacoes" && abaLiberada("solicitacoes") && <AbaSolicitacoes setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} />}
+      {aba === "solicitacoes" && abaLiberada("solicitacoes") && <AbaSolicitacoes setErro={setErro} setSouGestor={setSouGestor} souGestor={souGestor} aoContarPendentes={setPendentes} />}
     </div>
   );
 }
@@ -167,7 +197,9 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   const [editandoId, setEditandoId] = useState<string | null>(null);
   // Quem sou eu (e-mail da sessão, vem na listagem): "Editar" só no registro próprio, salvo gestor.
   const [eu, setEu] = useState<string | null>(null);
-  const [ed, setEd] = useState({ horario: "", empresa: "", contato: "", telefone: "", observacao: "" });
+  // `data` só é enviada quando quem edita é o gestor (áudio do Mateus, 03/11/2026: "como
+  // gerenciador do sistema, eu consiga editar data").
+  const [ed, setEd] = useState({ data: "", horario: "", empresa: "", contato: "", telefone: "", observacao: "" });
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   // Aba Excluídos (áudio do Mateus, 25/08/2026): restaurar ou excluir definitivamente.
   const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
@@ -208,6 +240,12 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
       setErro("Preencha a data, o horário, a empresa prospectada e com quem falou.");
       return;
     }
+    // Ano vigente (áudio do Mateus, 03/11/2026): o "0026" não passa nem aqui nem no servidor.
+    const erroAno = erroAnoDaData(data);
+    if (erroAno) {
+      setErro(erroAno);
+      return;
+    }
     setEnviando(true);
     setErro(null);
     try {
@@ -246,6 +284,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   function abrirEdicao(p: RelatorioProspeccao) {
     setEditandoId(p.id);
     setEd({
+      data: p.data,
       horario: p.horario ?? "",
       empresa: p.empresa,
       contato: p.contato ?? "",
@@ -260,6 +299,11 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
       setErro("Informe a empresa prospectada, o horário e com quem falou.");
       return;
     }
+    const erroAno = souGestor ? erroAnoDaData(ed.data) : null;
+    if (erroAno) {
+      setErro(erroAno);
+      return;
+    }
     setSalvandoEdicao(true);
     setErro(null);
     try {
@@ -267,6 +311,8 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          // Só o gestor manda a data (a rota do vendedor descarta o campo).
+          ...(souGestor ? { data: ed.data } : {}),
           horario: ed.horario,
           empresa: ed.empresa.trim(),
           contato: ed.contato.trim(),
@@ -304,7 +350,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <label style={{ ...labelStyle, flex: 1, minWidth: "140px" }}>
               Data
-              <input type="date" style={{ ...inputStyle, marginTop: "5px" }} value={data} onChange={(e) => setData(e.target.value)} />
+              <input type="date" {...limitesDataVigente()} style={{ ...inputStyle, marginTop: "5px" }} value={data} onChange={(e) => setData(e.target.value)} />
             </label>
             <label style={{ ...labelStyle, flex: 1, minWidth: "120px" }}>
               Horário
@@ -416,10 +462,19 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
               </div>
               {emEdicao ? (
                 <div style={{ display: "grid", gap: "10px", marginTop: "10px" }}>
-                  <div style={{ fontSize: "12px", color: "var(--gray-500)" }}>
-                    A data não muda na edição — visita nova é um registro novo.
-                  </div>
+                  {/* O gestor corrige a data (áudio do Mateus, 03/11/2026); o vendedor não (25/08/2026). */}
+                  {!souGestor && (
+                    <div style={{ fontSize: "12px", color: "var(--gray-500)" }}>
+                      A data não muda na edição — visita nova é um registro novo.
+                    </div>
+                  )}
                   <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    {souGestor && (
+                      <label style={{ ...labelStyle, flex: 1, minWidth: "150px" }}>
+                        Data
+                        <input type="date" aria-label="Data da prospecção" {...limitesDataVigente()} style={{ ...inputStyle, marginTop: "5px" }} value={ed.data} onChange={(e) => setEd({ ...ed, data: e.target.value })} />
+                      </label>
+                    )}
                     <label style={{ ...labelStyle, flex: 1, minWidth: "110px" }}>
                       Horário
                       <input type="time" style={{ ...inputStyle, marginTop: "5px" }} value={ed.horario} onChange={(e) => setEd({ ...ed, horario: e.target.value })} />
@@ -497,7 +552,7 @@ function AbaProspeccoes({ setErro, setSouGestor, souGestor }: AbaProps) {
 
 /* ═══════════ Aba 3 — Solicitações Comerciais ═══════════ */
 
-function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
+function AbaSolicitacoes({ setErro, setSouGestor, souGestor, aoContarPendentes }: AbaProps & { aoContarPendentes?: (n: number) => void }) {
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoComercial[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [enviando, setEnviando] = useState(false);
@@ -523,6 +578,10 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
   // é ISO: o slice pega o AAAA-MM-DD sem passar por fuso).
   const [filtro, setFiltro] = useState<FiltroRegistros>(FILTRO_VAZIO);
   const solicitacoesFiltradas = solicitacoes.filter((s) => passaNoFiltro(filtro, s.cliente, s.criadoEm.slice(0, 10), s.autorNome ?? s.autor));
+  // Pasta "Pendentes" no topo (áudio do Mateus, 03/11/2026: "botar uma pasta só pra
+  // pendente (…) pra não se perder lá pra baixo nas solicitações"). Respeita o filtro e
+  // repete o que já está nos meses — é um atalho, não um lugar diferente.
+  const pendentes = solicitacoesFiltradas.filter((s) => s.status === "pendente");
 
   async function carregar() {
     try {
@@ -533,6 +592,7 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
       setSolicitacoes(d.solicitacoes);
       setSouGestor(d.souGestor);
       setEu(d.eu ?? null);
+      aoContarPendentes?.(contarPendentes(d.solicitacoes));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Falha ao carregar as solicitações.");
     } finally {
@@ -625,6 +685,110 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
     }
   }
 
+  // Card de uma solicitação — usado na pasta "Pendentes" e nas pastas de mês.
+  function cardSolicitacao(s: SolicitacaoComercial) {
+    const atendida = s.status === "atendida";
+    return (
+      <div key={s.id} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "14px 18px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          <span
+            style={{
+              fontWeight: 700,
+              fontSize: "12px",
+              padding: "3px 9px",
+              borderRadius: "999px",
+              color: atendida ? "#15803d" : "#b45309",
+              background: atendida ? "#dcfce7" : "#fef3c7",
+            }}
+          >
+            {atendida ? "Atendida" : "Pendente"}
+          </span>
+          <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)" }}>{rotuloTipo(s.tipo)}</span>
+          <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {s.cliente}</span>
+          <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {s.autorNome ?? s.autor}</span>
+          <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {new Date(s.criadoEm).toLocaleDateString("pt-BR")}</span>
+          {editandoId !== s.id && (
+            <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
+              {/* Áudio do Mateus (10/09/2026): extrair o registro em PDF. */}
+              <BotaoPdf href={`/api/registros/solicitacao/${encodeURIComponent(s.id)}/pdf`} titulo="Extrair esta solicitação em PDF" />
+              {(souGestor || s.autor === eu) && (
+              <>
+              <button onClick={() => marcar(s.id, atendida ? "pendente" : "atendida")} style={botaoEditar}>
+                {atendida ? "Reabrir" : "Marcar atendida"}
+              </button>
+              <button
+                onClick={() => {
+                  setEditandoId(s.id);
+                  setEd({ tipo: s.tipo, cliente: s.cliente, observacao: s.observacao ?? "" });
+                  setErro(null);
+                }}
+                style={botaoEditar}
+              >
+                Editar
+              </button>
+              </>
+              )}
+              {/* Excluir é só do gestor — o vendedor só edita (áudio 25/08/2026). */}
+              {souGestor && (
+                <button onClick={() => excluir(s.id)} style={botaoExcluir}>
+                  Excluir
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        {editandoId === s.id ? (
+          <div style={{ display: "grid", gap: "10px", marginTop: "10px" }}>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <label style={{ ...labelStyle, flex: 1, minWidth: "220px" }}>
+                Tipo da solicitação
+                <select style={{ ...inputStyle, marginTop: "5px" }} value={ed.tipo} onChange={(e) => setEd({ ...ed, tipo: e.target.value as TipoSolicitacaoComercial })}>
+                  {TIPOS_SOLICITACAO.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ ...labelStyle, flex: 2, minWidth: "200px" }}>
+                Cliente
+                <input style={{ ...inputStyle, marginTop: "5px" }} maxLength={200} value={ed.cliente} onChange={(e) => setEd({ ...ed, cliente: e.target.value })} />
+              </label>
+            </div>
+            <label style={labelStyle}>
+              Observação
+              <textarea
+                style={{ ...inputStyle, marginTop: "5px", minHeight: "70px", resize: "vertical" }}
+                maxLength={4000}
+                value={ed.observacao}
+                onChange={(e) => setEd({ ...ed, observacao: e.target.value })}
+              />
+            </label>
+            <BlocoAnexos tipo="solicitacao" registroId={s.id} anexos={s.anexos} editavel aoMudar={carregar} setErro={setErro} />
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button onClick={() => salvarEdicao(s.id)} disabled={salvandoEdicao} style={botaoPrimario(salvandoEdicao)}>
+                {salvandoEdicao ? "Salvando…" : "Salvar edição"}
+              </button>
+              <button
+                onClick={() => setEditandoId(null)}
+                style={{ ...botaoEditar, borderColor: "var(--gray-200)", color: "var(--gray-500)", padding: "11px 18px", borderRadius: "10px" }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {s.observacao && (
+              <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "6px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{s.observacao}</div>
+            )}
+            <BlocoAnexos tipo="solicitacao" registroId={s.id} anexos={s.anexos} editavel={false} aoMudar={carregar} setErro={setErro} />
+          </>
+        )}
+      </div>
+    );
+  }
+
   return (
     <>
       <form onSubmit={abrir} style={cardStyle}>
@@ -697,112 +861,16 @@ function AbaSolicitacoes({ setErro, setSouGestor, souGestor }: AbaProps) {
           <div style={{ color: "var(--gray-500)", fontSize: "14px", padding: "8px 0" }}>Nenhuma solicitação ainda.</div>
         )}
         {!carregando && solicitacoes.length > 0 && solicitacoesFiltradas.length === 0 && <SemResultado aoLimpar={() => setFiltro(FILTRO_VAZIO)} />}
+        {pendentes.length > 0 && (
+          <PastaRegistros titulo="Pendentes" total={pendentes.length} nivel="ano" aberta destaque>
+            {pendentes.map(cardSolicitacao)}
+          </PastaRegistros>
+        )}
         {agruparPorAnoMes(solicitacoesFiltradas.map((s) => ({ ...s, data: s.criadoEm.slice(0, 10) }))).map((g, gi) => (
           <PastaRegistros key={g.ano} titulo={g.ano} total={g.meses.reduce((n, m) => n + m.itens.length, 0)} nivel="ano" aberta={gi === 0 || filtroAtivo(filtro)}>
             {g.meses.map((m, mi) => (
               <PastaRegistros key={m.mes} titulo={rotuloMes(m.mes)} total={m.itens.length} nivel="mes" aberta={(gi === 0 && mi === 0) || filtroAtivo(filtro)}>
-        {m.itens.map((s) => {
-          const atendida = s.status === "atendida";
-          return (
-            <div key={s.id} style={{ background: "white", border: "1px solid var(--gray-200)", borderRadius: "14px", padding: "14px 18px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                <span
-                  style={{
-                    fontWeight: 700,
-                    fontSize: "12px",
-                    padding: "3px 9px",
-                    borderRadius: "999px",
-                    color: atendida ? "#15803d" : "#b45309",
-                    background: atendida ? "#dcfce7" : "#fef3c7",
-                  }}
-                >
-                  {atendida ? "Atendida" : "Pendente"}
-                </span>
-                <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gray-900)" }}>{rotuloTipo(s.tipo)}</span>
-                <span style={{ fontSize: "13px", color: "var(--gray-700)" }}>· {s.cliente}</span>
-                <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {s.autorNome ?? s.autor}</span>
-                <span style={{ fontSize: "12px", color: "var(--gray-400)" }}>· {new Date(s.criadoEm).toLocaleDateString("pt-BR")}</span>
-                {editandoId !== s.id && (
-                  <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
-                    {/* Áudio do Mateus (10/09/2026): extrair o registro em PDF. */}
-                    <BotaoPdf href={`/api/registros/solicitacao/${encodeURIComponent(s.id)}/pdf`} titulo="Extrair esta solicitação em PDF" />
-                    {(souGestor || s.autor === eu) && (
-                    <>
-                    <button onClick={() => marcar(s.id, atendida ? "pendente" : "atendida")} style={botaoEditar}>
-                      {atendida ? "Reabrir" : "Marcar atendida"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditandoId(s.id);
-                        setEd({ tipo: s.tipo, cliente: s.cliente, observacao: s.observacao ?? "" });
-                        setErro(null);
-                      }}
-                      style={botaoEditar}
-                    >
-                      Editar
-                    </button>
-                    </>
-                    )}
-                    {/* Excluir é só do gestor — o vendedor só edita (áudio 25/08/2026). */}
-                    {souGestor && (
-                      <button onClick={() => excluir(s.id)} style={botaoExcluir}>
-                        Excluir
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-              {editandoId === s.id ? (
-                <div style={{ display: "grid", gap: "10px", marginTop: "10px" }}>
-                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                    <label style={{ ...labelStyle, flex: 1, minWidth: "220px" }}>
-                      Tipo da solicitação
-                      <select style={{ ...inputStyle, marginTop: "5px" }} value={ed.tipo} onChange={(e) => setEd({ ...ed, tipo: e.target.value as TipoSolicitacaoComercial })}>
-                        {TIPOS_SOLICITACAO.map((t) => (
-                          <option key={t.value} value={t.value}>
-                            {t.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label style={{ ...labelStyle, flex: 2, minWidth: "200px" }}>
-                      Cliente
-                      <input style={{ ...inputStyle, marginTop: "5px" }} maxLength={200} value={ed.cliente} onChange={(e) => setEd({ ...ed, cliente: e.target.value })} />
-                    </label>
-                  </div>
-                  <label style={labelStyle}>
-                    Observação
-                    <textarea
-                      style={{ ...inputStyle, marginTop: "5px", minHeight: "70px", resize: "vertical" }}
-                      maxLength={4000}
-                      value={ed.observacao}
-                      onChange={(e) => setEd({ ...ed, observacao: e.target.value })}
-                    />
-                  </label>
-                  <BlocoAnexos tipo="solicitacao" registroId={s.id} anexos={s.anexos} editavel aoMudar={carregar} setErro={setErro} />
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button onClick={() => salvarEdicao(s.id)} disabled={salvandoEdicao} style={botaoPrimario(salvandoEdicao)}>
-                      {salvandoEdicao ? "Salvando…" : "Salvar edição"}
-                    </button>
-                    <button
-                      onClick={() => setEditandoId(null)}
-                      style={{ ...botaoEditar, borderColor: "var(--gray-200)", color: "var(--gray-500)", padding: "11px 18px", borderRadius: "10px" }}
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {s.observacao && (
-                    <div style={{ fontSize: "13px", color: "var(--gray-500)", marginTop: "6px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{s.observacao}</div>
-                  )}
-                  <BlocoAnexos tipo="solicitacao" registroId={s.id} anexos={s.anexos} editavel={false} aoMudar={carregar} setErro={setErro} />
-                </>
-              )}
-            </div>
-          );
-        })}
+        {pendentesPrimeiro(m.itens).map(cardSolicitacao)}
               </PastaRegistros>
             ))}
           </PastaRegistros>

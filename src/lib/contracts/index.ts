@@ -21,3 +21,4 @@ export * from "./ferramentas-tecnicas";
 export * from "./ferramentas-comerciais";
 export * from "./comando-edicao";
 export * from "./anexos";
+export * from "./data-registro";

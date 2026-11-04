@@ -5,6 +5,8 @@ import type { VisitaCarteira, StatusVisita, ContratoComodato, EstoqueComodato, A
 import { BotaoPdf } from "@/components/ui/botao-pdf";
 import { encolherFoto } from "@/components/form-produto";
 import { agruparPorAnoMes, SEM_DATA } from "@/lib/agrupar-registros";
+// Ano travado no vigente e data editável pelo gestor (áudio do Mateus, 03/11/2026).
+import { erroAnoDaData, limitesDataVigente } from "@/lib/contracts/data-registro";
 import { FILTRO_VAZIO, filtroAtivo, passaNoFiltro, contagem, alvoBusca, type FiltroRegistros } from "@/lib/filtro-registros";
 
 // Re-exportados para a tela Comercial, que já importa o resto das Ferramentas daqui.
@@ -230,7 +232,9 @@ const MESES_PT = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "J
 export const rotuloMes = (mes: string) => (mes === SEM_DATA ? SEM_DATA : MESES_PT[Number(mes) - 1] ?? mes);
 
 /** Pasta colapsável de ano/mês. Com filtro ativo abre à força: o resultado não pode ficar escondido. */
-export function PastaRegistros({ titulo, total, nivel, aberta, children }: { titulo: string; total: number; nivel: "ano" | "mes"; aberta: boolean; children: ReactNode }) {
+// `destaque` pinta a pasta de âmbar — é a pasta "Pendentes" das Solicitações Comerciais
+// (áudio do Mateus, 03/11/2026: "é muito importante que as pendentes fiquem em evidência").
+export function PastaRegistros({ titulo, total, nivel, aberta, destaque = false, children }: { titulo: string; total: number; nivel: "ano" | "mes"; aberta: boolean; destaque?: boolean; children: ReactNode }) {
   const [manual, setManual] = useState<boolean | null>(null);
   const aberto = manual ?? aberta;
   return (
@@ -239,13 +243,13 @@ export function PastaRegistros({ titulo, total, nivel, aberta, children }: { tit
         type="button"
         onClick={() => setManual(!aberto)}
         aria-expanded={aberto}
-        style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", border: "1px solid var(--gray-200)", borderRadius: "10px", background: nivel === "ano" ? "var(--gray-100)" : "white", cursor: "pointer", fontSize: nivel === "ano" ? "14px" : "13px", fontWeight: 700, color: "var(--gray-900)", textAlign: "left" }}
+        style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", border: `1px solid ${destaque ? "#fcd34d" : "var(--gray-200)"}`, borderRadius: "10px", background: destaque ? "#fef3c7" : nivel === "ano" ? "var(--gray-100)" : "white", cursor: "pointer", fontSize: nivel === "ano" ? "14px" : "13px", fontWeight: 700, color: destaque ? "#92400e" : "var(--gray-900)", textAlign: "left" }}
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ transform: aberto ? "rotate(90deg)" : "none", transition: "transform .15s" }}>
           <path d="M4 2l4 4-4 4" />
         </svg>
         {titulo}
-        <span style={{ fontWeight: 500, fontSize: "12px", color: "var(--gray-500)" }}>({total})</span>
+        <span style={{ fontWeight: destaque ? 700 : 500, fontSize: "12px", color: destaque ? "#b45309" : "var(--gray-500)" }}>({total})</span>
       </button>
       {aberto && children}
     </div>
@@ -855,7 +859,8 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
   const [editandoId, setEditandoId] = useState<string | null>(null);
   // Quem sou eu (e-mail da sessão, vem na listagem): "Editar" só no registro próprio, salvo gestor.
   const [eu, setEu] = useState<string | null>(null);
-  const [ed, setEd] = useState({ horario: "", cliente: "", quemRecebeu: "", telefone: "", status: "nao_resolvido" as StatusVisita, observacao: "" });
+  // `data` só é enviada quando quem edita é o gestor (áudio do Mateus, 03/11/2026).
+  const [ed, setEd] = useState({ data: "", horario: "", cliente: "", quemRecebeu: "", telefone: "", status: "nao_resolvido" as StatusVisita, observacao: "" });
   const [salvandoEdicao, setSalvandoEdicao] = useState(false);
   // Aba Excluídos (só o gestor exclui/restaura).
   const [mostrarExcluidos, setMostrarExcluidos] = useState(false);
@@ -895,6 +900,12 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
     e.preventDefault();
     if (!data || !horario || cliente.trim().length < 2 || quemRecebeu.trim().length < 2) {
       setErro("Preencha data, horário, cliente e quem recebeu.");
+      return;
+    }
+    // Ano vigente (áudio do Mateus, 03/11/2026): o "0026" não passa nem aqui nem no servidor.
+    const erroAno = erroAnoDaData(data);
+    if (erroAno) {
+      setErro(erroAno);
       return;
     }
     if (fotos.length > 10) {
@@ -986,6 +997,7 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
   function abrirEdicao(v: VisitaCarteira) {
     setEditandoId(v.id);
     setEd({
+      data: v.data,
       horario: v.horario,
       cliente: v.cliente,
       quemRecebeu: v.quemRecebeu,
@@ -1001,6 +1013,11 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
       setErro("Preencha horário, cliente e quem recebeu.");
       return;
     }
+    const erroAno = souGestor ? erroAnoDaData(ed.data) : null;
+    if (erroAno) {
+      setErro(erroAno);
+      return;
+    }
     setSalvandoEdicao(true);
     setErro(null);
     try {
@@ -1008,6 +1025,8 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          // Só o gestor manda a data (a rota do vendedor descarta o campo).
+          ...(souGestor ? { data: ed.data } : {}),
           horario: ed.horario,
           cliente: ed.cliente.trim(),
           quemRecebeu: ed.quemRecebeu.trim(),
@@ -1033,7 +1052,7 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <label style={{ ...labelStyle, flex: 1, minWidth: "140px" }}>
               Data
-              <input type="date" style={{ ...inputStyle, marginTop: "5px" }} value={data} onChange={(e) => setData(e.target.value)} />
+              <input type="date" {...limitesDataVigente()} style={{ ...inputStyle, marginTop: "5px" }} value={data} onChange={(e) => setData(e.target.value)} />
             </label>
             <label style={{ ...labelStyle, flex: 1, minWidth: "120px" }}>
               Horário
@@ -1178,10 +1197,19 @@ export function AbaVisitas({ area, setErro, setSouGestor, souGestor }: AbaProps 
               </div>
               {emEdicao ? (
                 <div style={{ display: "grid", gap: "10px", marginTop: "10px" }}>
-                  <div style={{ fontSize: "12px", color: "var(--gray-500)" }}>
-                    A data não muda na edição — visita nova é um registro novo.
-                  </div>
+                  {/* O gestor corrige a data (áudio do Mateus, 03/11/2026); o vendedor não (25/08/2026). */}
+                  {!souGestor && (
+                    <div style={{ fontSize: "12px", color: "var(--gray-500)" }}>
+                      A data não muda na edição — visita nova é um registro novo.
+                    </div>
+                  )}
                   <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    {souGestor && (
+                      <label style={{ ...labelStyle, flex: 1, minWidth: "150px" }}>
+                        Data
+                        <input type="date" aria-label="Data da visita" {...limitesDataVigente()} style={{ ...inputStyle, marginTop: "5px" }} value={ed.data} onChange={(e) => setEd({ ...ed, data: e.target.value })} />
+                      </label>
+                    )}
                     <label style={{ ...labelStyle, flex: 1, minWidth: "110px" }}>
                       Horário
                       <input type="time" style={{ ...inputStyle, marginTop: "5px" }} value={ed.horario} onChange={(e) => setEd({ ...ed, horario: e.target.value })} />

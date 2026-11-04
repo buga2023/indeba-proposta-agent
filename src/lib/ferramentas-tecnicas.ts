@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import {
   VisitaCarteira,
   type VisitaCarteiraCreate,
-  type VisitaCarteiraUpdate,
+  type VisitaCarteiraUpdateGestor,
   ContratoComodato,
   type ContratoComodatoCreate,
   type ContratoComodatoUpdate,
@@ -107,8 +107,9 @@ export async function listarVisitas(
 }
 
 // Edição (áudio do Mateus, 25/08/2026): vendedor edita as suas, gestor qualquer uma; a
-// data e a área não entram (o contrato de update nem as aceita). Alheia → count 0 → 404.
-export async function editarVisita(usuario: SessaoUsuario, id: string, dados: VisitaCarteiraUpdate): Promise<boolean> {
+// área não entra. A data só chega quando a rota validou pelo esquema do gestor (áudio do
+// Mateus, 03/11/2026); para o vendedor vem `undefined`. Alheia → count 0 → 404.
+export async function editarVisita(usuario: SessaoUsuario, id: string, dados: VisitaCarteiraUpdateGestor): Promise<boolean> {
   const r = await prisma.visitaCarteira.updateMany({
     where: { id, ...escopo(usuario), ...vivos },
     data: { ...dados, telefone: dados.telefone ?? null, observacao: dados.observacao ?? null },

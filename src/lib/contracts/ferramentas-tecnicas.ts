@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AnexoInfo } from "./anexos";
+import { DataRegistro } from "./data-registro";
 
 /**
  * Ferramentas Técnicas (áudio do Mateus, 21/08/2026): Registro de Visitas da Carteira,
@@ -22,7 +23,8 @@ export type AreaVisita = z.infer<typeof AreaVisita>;
 // vendedor, não um instante de máquina.
 export const VisitaCarteiraCreate = z.object({
   area: AreaVisita.default("tecnica"),
-  data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "data no formato AAAA-MM-DD"),
+  // Ano travado no vigente (áudio do Mateus, 03/11/2026: entrou "0026" no sistema).
+  data: DataRegistro,
   horario: z.string().regex(/^\d{2}:\d{2}$/, "horário no formato HH:MM"),
   cliente: z.string().min(2).max(200),
   quemRecebeu: z.string().min(2).max(200),
@@ -36,6 +38,11 @@ export type VisitaCarteiraCreate = z.infer<typeof VisitaCarteiraCreate>;
 // fica a da visita registrada (visita nova = registro novo); `area` também não migra.
 export const VisitaCarteiraUpdate = VisitaCarteiraCreate.omit({ area: true, data: true });
 export type VisitaCarteiraUpdate = z.infer<typeof VisitaCarteiraUpdate>;
+
+// Edição pelo GESTOR (áudio do Mateus, 03/11/2026): só o admin altera a data de um
+// lançamento — a rota escolhe este esquema pelo papel da sessão.
+export const VisitaCarteiraUpdateGestor = VisitaCarteiraUpdate.extend({ data: DataRegistro.optional() });
+export type VisitaCarteiraUpdateGestor = z.infer<typeof VisitaCarteiraUpdateGestor>;
 
 export const VisitaCarteira = z.object({
   id: z.string(),

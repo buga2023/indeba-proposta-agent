@@ -19,5 +19,8 @@ Extraída dos commits (`git log`). Cada entrada tem comentário no código com a
 | 19/09 (João) | Filtro por cliente e período; listas recolhidas; CNPJ no contrato; tabela cabe na tela | ferramentas, contratos, histórico |
 | 21/09 (vídeo) | PDF da visita comercial saía "Não resolvido" | fix ferramentas |
 | 22/09 (mensagem) | Planos Basic/Regular/Premium; básico 100%; PDF de valores e regras; prazos | [[Planos e regras]] |
+| 09/10 (áudios) | Pastas por mês em Prospecções e Solicitações; títulos das seções editáveis; Gerador de Certificados | ferramentas, proposta |
+| 26/10 | Gerador POP com catálogo compartilhado; assinatura do Mateus no certificado | gerador-pop, certificados |
+| 03/11 (áudios) | Ano da data travado no vigente (entrou "0026"); gestor edita a data do lançamento; solicitações pendentes em evidência (pasta Pendentes + selo na aba) | ferramentas |
 
 Detalhes dos dois últimos dias em [[Diário 2026-09-21]] e [[Diário 2026-09-22]].

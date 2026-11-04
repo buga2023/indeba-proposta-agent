@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import {
   RelatorioProspeccao,
   type RelatorioProspeccaoCreate,
-  type RelatorioProspeccaoUpdate,
+  type RelatorioProspeccaoUpdateGestor,
   SolicitacaoComercial,
   type SolicitacaoComercialCreate,
   type SolicitacaoComercialUpdate,
@@ -65,12 +65,13 @@ export async function listarRelatoriosProspeccao(usuario: SessaoUsuario, excluid
 }
 
 // Edição (áudio do Mateus, 25/08/2026): o vendedor ajusta os próprios registros (ex.: o
-// texto dos próximos passos), o gestor edita qualquer um. A DATA não entra no update —
-// fica a da visita registrada. Alheio → count 0 → 404 na rota.
+// texto dos próximos passos), o gestor edita qualquer um. A DATA só vem quando a rota
+// validou pelo esquema do gestor (áudio do Mateus, 03/11/2026); para o vendedor chega
+// `undefined` e o Prisma não toca na coluna. Alheio → count 0 → 404 na rota.
 export async function editarRelatorioProspeccao(
   usuario: SessaoUsuario,
   id: string,
-  dados: RelatorioProspeccaoUpdate,
+  dados: RelatorioProspeccaoUpdateGestor,
 ): Promise<boolean> {
   const r = await prisma.relatorioProspeccao.updateMany({
     where: { id, ...escopo(usuario), ...vivos },
