@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gerador de Contratos — Indeba Express</title>
+<title>Gerador de Contratos</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -88,6 +88,19 @@
   .hint.good { color: #2f9e6a; font-weight: 600; }
   input[aria-invalid="true"] { border-color: #d23a20; }
 
+  .editors { display: flex; flex-direction: column; gap: 8px; }
+  .ed { border: 1px solid var(--line); border-radius: 6px; background: var(--paper); }
+  .ed.dirty { border-color: var(--orange); }
+  .ed > summary { cursor: pointer; padding: 10px 12px; font-size: 12.5px; font-weight: 600; color: var(--ink); list-style: none; display: flex; align-items: center; gap: 8px; }
+  .ed > summary::-webkit-details-marker { display: none; }
+  .ed > summary::before { content: "▸"; color: var(--orange); flex: none; }
+  .ed[open] > summary::before { content: "▾"; }
+  .ed > summary > span:first-child { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .ed .tag { flex: none; font-size: 10.5px; font-weight: 700; color: #fff; background: var(--orange); border-radius: 10px; padding: 2px 8px; }
+  .ed .tag[hidden] { display: none; }
+  .ed-body { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+  .ed-body textarea { font-size: 13.5px; line-height: 1.45; min-height: 64px; }
+  .ed-body button { align-self: flex-start; padding: 7px 12px; font-size: 12.5px; }
   .status-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-soft); padding: 6px 20px 18px; }
   .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--yellow); flex: none; }
   .status-dot.done { background: #2f9e6a; }
@@ -134,7 +147,7 @@
   .doc-page .card .val { font-weight: 700; color: #1a3253; font-size: 13.5px; overflow-wrap: anywhere; }
   .doc-page p.intro { margin: 0 0 6px; text-align: justify; }
 
-  .doc-page .clause-head { position: relative; display: flex; align-items: center; gap: 12px; margin: 26px 0 12px; padding-bottom: 7px; border-bottom: 1px solid #d5dbe5; }
+  .doc-page .clause-head { scroll-margin-top: 16px; position: relative; display: flex; align-items: center; gap: 12px; margin: 26px 0 12px; padding-bottom: 7px; border-bottom: 1px solid #d5dbe5; }
   .doc-page .clause-head::after { content: ""; position: absolute; left: 0; bottom: -1px; width: 46px; height: 2px; background: #eb5a1a; }
   .doc-page .badge { flex: none; background: #1a3253; color: #fff; font-weight: 700; font-size: 11px; letter-spacing: 0.05em; padding: 4px 10px; line-height: 1.3; }
   .doc-page .ct { font-weight: 700; color: #1a3253; font-size: 13.5px; text-transform: uppercase; line-height: 1.3; }
@@ -220,13 +233,11 @@
       </fieldset>
 
       <fieldset>
-        <legend>Cláusula 14.2 — Rescisão antecipada</legend>
-        <label>
-          <span class="field-label">Texto da cláusula</span>
-          <textarea id="f_c142" style="min-height:200px"></textarea>
-          <span class="hint" id="c142Hint"></span>
-        </label>
-        <button type="button" class="secondary" id="btnReset142">Restaurar texto padrão</button>
+        <legend>Texto do contrato — tudo editável</legend>
+        <span class="hint">Abra uma cláusula para alterar o título ou o texto. Cada linha é um parágrafo; números no início da linha (8.2., 11.1.1.) viram itens numerados. {valor}, {prazo} e {data} são preenchidos automaticamente e {equipamentos} insere a lista de equipamentos.</span>
+        <span class="hint" id="editsSummary"></span>
+        <div class="editors" id="editors"></div>
+        <button type="button" class="secondary" id="btnResetAll">Restaurar todo o texto padrão</button>
       </fieldset>
     </div>
     <div class="status-row">
@@ -287,24 +298,50 @@
   /* ================= Campos e estado ================= */
   var fields = {
     nome: $('f_nome'), cnpj: $('f_cnpj'), valor: $('f_valor'),
-    equip: $('f_equip'), prazo: $('f_prazo'), data: $('f_data'), c142: $('f_c142')
+    equip: $('f_equip'), prazo: $('f_prazo'), data: $('f_data')
   };
-  var dirty142 = false;   // true quando o texto da 14.2 foi editado à mão
+  var edits = { clauses: {} };   // cláusulas com texto/título editado: { índice: { title, body } }
+  var docEdits = {};             // título, abertura e fecho editados: { title, intro, closing }
   var REQUIRED = ['nome', 'cnpj', 'valor', 'equip', 'prazo', 'data'];
-  var STORAGE_KEY = 'indeba-comodato-form-v1';
+  var STORAGE_KEY = 'indeba-comodato-form-v2', OLD_KEY = 'indeba-comodato-form-v1';
 
   function loadSaved() {
     try {
-      var raw = localStorage.getItem(STORAGE_KEY);
+      var raw = localStorage.getItem(STORAGE_KEY), old = false;
+      if (!raw) { raw = localStorage.getItem(OLD_KEY); old = !!raw; }
       if (!raw) return;
       var saved = JSON.parse(raw);
-      Object.keys(fields).forEach(function (k) { if (saved[k] && fields[k] && k !== 'c142') fields[k].value = saved[k]; });
-      if (saved.c142dirty && saved.c142 && String(saved.c142).trim()) { fields.c142.value = saved.c142; dirty142 = true; }
+      Object.keys(fields).forEach(function (k) { if (saved[k] && fields[k]) fields[k].value = saved[k]; });
+      if (saved.edits && saved.edits.clauses) {
+        Object.keys(saved.edits.clauses).forEach(function (k) {
+          var e = saved.edits.clauses[k];
+          if (CLAUSES[k] && e && typeof e.body === 'string') edits.clauses[k] = { title: String(e.title || ''), body: e.body };
+        });
+      }
+      if (saved.edits && saved.edits.doc) {
+        ['title', 'intro', 'closing'].forEach(function (k) {
+          var s = saved.edits.doc[k];
+          if (typeof s === 'string' && s.trim()) docEdits[k] = s;
+        });
+      }
+      /* migração: versão anterior guardava só o texto da 14.2 */
+      if (old && saved.c142dirty && saved.c142 && String(saved.c142).trim()) {
+        var i14 = -1;
+        CLAUSES.forEach(function (c, i) { if (/^CLÁUSULA 14\b/.test(c.t)) i14 = i; });
+        if (i14 >= 0) {
+          var lines = normLines(saved.c142), out = [];
+          CLAUSES[i14].p.forEach(function (it) {
+            if (typeof it === 'string' && /^14\.2\./.test(it)) lines.forEach(function (l, k) { out.push(k === 0 ? '14.2. ' + l : l); });
+            else out.push(typeof it === 'object' ? EQUIP_TOKEN : it);
+          });
+          edits.clauses[i14] = { title: '', body: out.join('\n') };
+        }
+      }
     } catch (e) { /* começa em branco */ }
   }
   function persist() {
     try {
-      var out = { c142dirty: dirty142 };
+      var out = { edits: { clauses: edits.clauses, doc: docEdits } };
       Object.keys(fields).forEach(function (k) { out[k] = fields[k].value; });
       localStorage.setItem(STORAGE_KEY, JSON.stringify(out));
     } catch (e) { /* armazenamento indisponível: a página continua funcionando */ }
@@ -374,6 +411,9 @@
     v.valor = v.valor.replace(/^R\$\s*/i, '');
     v.extenso = valorExtenso(v.valor);
     v.dataFmt = formatDatePt(fields.data.value);
+    v.title = String(docEdits.title || TITLE).replace(/\s+/g, ' ').trim().toUpperCase();
+    v.intro = String(docEdits.intro || INTRO).replace(/\s+/g, ' ').trim();
+    v.closing = String(docEdits.closing || CLOSING).replace(/\s+/g, ' ').trim();
     return v;
   }
   function filledCount() {
@@ -384,6 +424,7 @@
 
   /* Tokens {valor} {prazo} {data} -> runs neutros */
   function resolveToken(tok, v) {
+    tok = String(tok).toLowerCase();
     var val = null;
     if (tok === 'valor' && v.valor) val = 'R$ ' + v.valor + (v.extenso ? ' (' + v.extenso + ')' : '');
     else if (tok === 'prazo' && v.prazo) val = v.prazo;
@@ -391,7 +432,7 @@
     return val ? { k: 'fill', t: val } : { k: 'empty', tok: tok };
   }
   function toRuns(text, v) {
-    var parts = text.split(/\{(valor|prazo|data)\}/), runs = [];
+    var parts = text.split(/\{(valor|prazo|data)\}/i), runs = [];
     for (var i = 0; i < parts.length; i++) {
       if (i % 2 === 0) { if (parts[i]) runs.push({ k: 'text', t: parts[i] }); }
       else runs.push(resolveToken(parts[i], v));
@@ -435,23 +476,27 @@
     return (parseInt(d.charAt(12), 10) === d1 && parseInt(d.charAt(13), 10) === d2) ? 'ok' : 'invalid';
   }
 
-  /* ----- Cláusula 14.2 editável ----- */
-  function find142() {
-    for (var i = 0; i < CLAUSES.length; i++)
-      for (var j = 0; j < CLAUSES[i].p.length; j++)
-        if (typeof CLAUSES[i].p[j] === 'string' && /^14\.2\./.test(CLAUSES[i].p[j])) return CLAUSES[i].p[j];
-    return '';
+  /* ----- Edição do texto de qualquer cláusula ----- */
+  var EQUIP_TOKEN = '{equipamentos}';
+  function normLines(s) { return String(s == null ? '' : s).split(/\r?\n/).map(function (x) { return x.trim(); }).filter(Boolean); }
+  function sameText(a, b) { return normLines(a).join('\n') === normLines(b).join('\n'); }
+  function clauseDefaultBody(c) {
+    return c.p.map(function (it) { return (typeof it === 'object' && it.equip) ? EQUIP_TOKEN : it; }).join('\n');
   }
-  var DEFAULT_142 = parseItem(find142()).text;
-  function default142Body(v) { return DEFAULT_142.replace(/\{prazo\}/g, v.prazo || u(12)); }
-  /* Itens de uma cláusula, já com a 14.2 personalizada quando houver */
-  function itemsFor(c, v) {
-    if (!/^CLÁUSULA 14\b/.test(c.t) || !dirty142 || !v.c142) return c.p;
-    var lines = v.c142.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
-    var custom = lines.map(function (l, i) { return i === 0 ? '14.2. ' + l : l; });
-    var out = [];
-    c.p.forEach(function (it) { if (typeof it === 'string' && /^14\.2\./.test(it)) out = out.concat(custom); else out.push(it); });
-    return out;
+  function bodyToItems(body) {
+    return normLines(body).map(function (l) { return /^\{equipamentos\}$/i.test(l) ? { equip: true } : l; });
+  }
+  /* Cláusula efetiva: a editada (se houver) ou a original */
+  function effClause(ci) {
+    var c = CLAUSES[ci], e = edits.clauses[ci];
+    if (!e) return c;
+    var pc = parseClause(c.t), title = String(e.title || '').replace(/\s+/g, ' ').trim().toUpperCase() || pc.title;
+    return { t: pc.num ? pc.num + ' — ' + title : title, p: normLines(e.body).length ? bodyToItems(e.body) : c.p };
+  }
+  function editedCount() { return Object.keys(edits.clauses).length + Object.keys(docEdits).length; }
+  function editedLabel() {
+    var n = editedCount();
+    return n ? n + (n === 1 ? ' trecho editado' : ' trechos editados') : '';
   }
 
   /* ================= Pré-visualização (HTML) ================= */
@@ -473,28 +518,24 @@
 
   function renderPreview() {
     var v = currentValues(), h = '';
-    if (!dirty142 && document.activeElement !== fields.c142) { fields.c142.value = default142Body(v); v.c142 = fields.c142.value.trim(); }
     var cs = cnpjStatus(v.cnpj), ch = $('cnpjHint');
     ch.className = 'hint' + (cs === 'invalid' ? ' warn' : cs === 'ok' ? ' good' : '');
     ch.textContent = cs === 'invalid' ? 'CNPJ inválido: os dígitos verificadores não conferem. Confira no cartão CNPJ do cliente.'
       : cs === 'ok' ? 'CNPJ válido ✓' : 'Formatação automática: 00.000.000/0000-00.';
     if (cs === 'invalid') fields.cnpj.setAttribute('aria-invalid', 'true'); else fields.cnpj.removeAttribute('aria-invalid');
-    $('c142Hint').textContent = dirty142
-      ? 'Texto personalizado: este texto substitui o padrão no contrato. Cada linha vira um parágrafo.'
-      : 'Texto padrão. Edite para incluir multa ou outra condição. Cada linha vira um parágrafo; {prazo} insere a duração.';
     h += '<div class="band"><img class="band-logo" alt="Indeba Express" src="' + SRC.white + '"><img class="band-flame" alt="" src="' + SRC.flame + '"></div><div class="strip"></div>';
     h += '<div class="sheet-body">';
-    h += '<h1 class="doc-title">' + esc(TITLE) + '</h1>';
+    h += '<h1 class="doc-title">' + esc(v.title) + '</h1>';
     h += '<div class="parties">'
       + '<div class="card"><span class="lbl">CONTRATANTE</span><span class="k">Razão social</span><span class="val">' + gapHtml(v.nome, 'nome da empresa contratante') + '</span><span class="k">CNPJ</span><span class="val">' + gapHtml(v.cnpj, 'CNPJ do contratante') + '</span></div>'
       + '<div class="card org"><span class="lbl">CONTRATADA</span><span class="k">Razão social</span><span class="val">INDEBA EXPRESS</span><span class="k">CNPJ</span><span class="val">' + esc(INDEBA_CNPJ) + '</span></div>'
       + '</div>';
-    h += '<p class="intro">' + esc(INTRO) + '</p>';
+    h += '<p class="intro">' + esc(v.intro) + '</p>';
 
-    CLAUSES.forEach(function (c) {
-      var pc = parseClause(c.t);
-      h += '<div class="clause-head"><span class="badge">' + esc(pc.num) + '</span><span class="ct">' + esc(pc.title) + '</span></div>';
-      itemsFor(c, v).forEach(function (item) {
+    CLAUSES.forEach(function (c0, ci) {
+      var c = effClause(ci), pc = parseClause(c.t);
+      h += '<div class="clause-head" id="pv-c-' + ci + '"><span class="badge">' + esc(pc.num) + '</span><span class="ct">' + esc(pc.title) + '</span></div>';
+      c.p.forEach(function (item) {
         if (typeof item === 'object' && item.equip) {
           h += '<div class="it eq"><span class="tx"><strong style="color:#1a3253">Equipamentos comodatados:</strong> ' + gapHtml(v.equip, 'descrição dos equipamentos', true) + '</span></div>';
           return;
@@ -505,7 +546,7 @@
       });
     });
 
-    h += '<p class="closing">' + esc(CLOSING) + '</p>';
+    h += '<p class="closing">' + esc(v.closing) + '</p>';
     h += '<p>Salvador, ' + runsToHtml([resolveToken('data', v)]) + '.</p>';
     h += '<div class="sign-grid">'
       + '<div><div class="sign-line"></div><p><strong>INDEBA EXPRESS</strong><br>CONTRATADA<br>Nome:<br>CPF:</p></div>'
@@ -520,7 +561,10 @@
     $('docPage').innerHTML = h;
 
     var n = filledCount();
-    $('statusText').textContent = n + ' de ' + REQUIRED.length + ' campos preenchidos';
+    $('statusText').textContent = n + ' de ' + REQUIRED.length + ' campos preenchidos' + (editedLabel() ? ' · ' + editedLabel() : '');
+    $('editsSummary').textContent = editedCount()
+      ? editedLabel().charAt(0).toUpperCase() + editedLabel().slice(1) + ' — o texto personalizado vale para os próximos contratos até ser restaurado.'
+      : 'Nenhum trecho editado: o contrato usa o texto padrão.';
     $('statusDot').className = 'status-dot' + (n === REQUIRED.length ? ' done' : '');
     $('extensoHint').textContent = v.valor
       ? (v.extenso ? 'Por extenso: ' + v.extenso : 'Não consegui ler o valor — confira o formato (ex.: 8.500,00).')
@@ -714,7 +758,7 @@
     /* ---------- Título e quadro das partes ---------- */
     newPage();
     (function () {
-      var tl = wrapPlain(TITLE, F.b, 14, CW - 14), th = tl.length * 18;
+      var tl = wrapPlain(v.title, F.b, 14, CW - 14), th = tl.length * 18;
       page.drawRectangle({ x: LM, y: y - th + 3, width: 3.5, height: th - 1, color: ORANGE });
       tl.forEach(function (t, i) { textAt(t, LM + 14, y - 13 - i * 18, F.b, 14, NAVY); });
       y -= th + 20;
@@ -749,11 +793,11 @@
       y -= hh + 18;
     })();
 
-    paragraph([{ k: 'text', t: INTRO }], { after: 2 });
+    paragraph([{ k: 'text', t: v.intro }], { after: 2 });
 
     /* ---------- Fecho e assinaturas: definições (usadas também para medir a altura) ---------- */
     var SIGN = { colW: (CW - 44) / 2, size: 9.8, lead: 13.5 };
-    var CLOSING_RUNS = [{ k: 'text', t: CLOSING }];
+    var CLOSING_RUNS = [{ k: 'text', t: v.closing }];
     var DATE_RUNS = [{ k: 'text', t: 'Salvador, ' }, resolveToken('data', v), { k: 'text', t: '.' }];
     var SIGN_A = [{ t: 'INDEBA EXPRESS', b: 1 }, { t: 'CONTRATADA' }, { t: 'Nome:' }, { t: 'CPF:' }];
     var SIGN_B = [{ t: 'CONTRATANTE', b: 1 }, { t: 'Razão social: ' + (v.nome || '') }, { t: 'Nome:' }, { t: 'CPF:' }];
@@ -786,7 +830,7 @@
       var pc = parseClause(c.t), bw = tw(F.b, pc.num, 8) + 18;
       var tl = wrapPlain(pc.title, F.b, 10.5, CW - bw - 12);
       var total = 17 + Math.max(18, tl.length * 13) + 6 + 11;
-      itemsFor(c, v).forEach(function (item) {
+      c.p.forEach(function (item) {
         if (typeof item !== 'string') return;
         var it = parseItem(item);
         total += paraH(toRuns(it.text, v), { x: LM + (it.lvl === 2 ? TXT2 : TXT1), num: it.num ? { t: it.num, x: 0 } : null });
@@ -795,10 +839,11 @@
     }
 
     /* ---------- Cláusulas ---------- */
-    CLAUSES.forEach(function (c, ci) {
+    CLAUSES.forEach(function (c0, ci) {
+      var c = effClause(ci);
       if (ci === CLAUSES.length - 1) need(clauseH(c) + signBlockH());   // Foro + fecho + assinaturas na mesma página, se couberem
       clauseHeading(c.t);
-      itemsFor(c, v).forEach(function (item) {
+      c.p.forEach(function (item) {
         if (typeof item === 'object' && item.equip) {
           var ex = LM + TXT1;
           need(60);
@@ -897,7 +942,7 @@
       var res = await deliverPdf(bytes, filename);
       if (res === 'declined') say('Download cancelado');
       else if (cnpjStatus(v.cnpj) === 'invalid') say('PDF pronto — confira o CNPJ do cliente', false, 7000);
-      else say('PDF pronto ✓');
+      else say('PDF pronto ✓' + (editedLabel() ? ' · ' + editedLabel() : ''));
     } catch (e) {
       console.error(e);
       say('Não foi possível gerar o PDF');
@@ -927,25 +972,116 @@
     if (f !== fields.cnpj.value) fields.cnpj.value = f;
   });
   Object.keys(fields).forEach(function (k) {
-    if (k === 'c142') return;
     fields[k].addEventListener('input', function () { renderPreview(); persist(); });
   });
-  fields.c142.addEventListener('input', function () {
-    var val = fields.c142.value.trim();
-    dirty142 = !!val && val !== default142Body(currentValues()).trim();
-    renderPreview(); persist();
-  });
-  fields.c142.addEventListener('blur', function () {
-    if (!fields.c142.value.trim()) { dirty142 = false; renderPreview(); persist(); }
-  });
-  $('btnReset142').addEventListener('click', function () {
-    dirty142 = false;
-    fields.c142.value = '';
-    renderPreview(); persist();
-    say('Texto padrão restaurado ✓');
+
+  /* ================= Editor de texto do contrato (todas as cláusulas) ================= */
+  var editorUI = {}, docUI = {};
+  var DOC_DEF = { title: TITLE, intro: INTRO, closing: CLOSING };
+  function mk(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function labelled(text, control) { var l = mk('label'); l.appendChild(mk('span', 'field-label', text)); l.appendChild(control); return l; }
+  function rowsFor(text) { return Math.min(16, Math.max(3, Math.ceil(String(text).length / 42))); }
+  function squash(s) { return String(s).replace(/\s+/g, ' ').trim(); }
+  function scrollPreviewTo(id) {
+    /* só no layout de duas colunas; no celular o formulário fica acima da pré-visualização */
+    var target = $(id);
+    if (target && window.matchMedia('(min-width: 881px)').matches) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function syncClause(ci) {
+    var c = CLAUSES[ci], u = editorUI[ci], pc = parseClause(c.t);
+    var tt = u.ti.value.trim(), b = u.ta.value;
+    var tDirty = !!tt && squash(tt).toUpperCase() !== pc.title;
+    var bDirty = normLines(b).length > 0 && !sameText(b, clauseDefaultBody(c));
+    if (tDirty || bDirty) edits.clauses[ci] = { title: u.ti.value, body: b }; else delete edits.clauses[ci];
+    var on = !!edits.clauses[ci];
+    u.tag.hidden = !on;
+    u.det.classList.toggle('dirty', on);
+    u.lab.textContent = (pc.num ? pc.num + ' — ' : '') + (squash(tt || pc.title).toUpperCase());
+  }
+  function syncDoc() {
+    ['title', 'intro', 'closing'].forEach(function (k) {
+      var val = docUI[k].value;
+      if (val.trim() && squash(val) !== squash(DOC_DEF[k])) docEdits[k] = val; else delete docEdits[k];
+    });
+    var on = Object.keys(docEdits).length > 0;
+    docUI.tag.hidden = !on;
+    docUI.det.classList.toggle('dirty', on);
+  }
+
+  function buildEditors() {
+    var box = $('editors');
+    box.innerHTML = '';
+    editorUI = {}; docUI = {};
+
+    /* bloco: título, abertura e fecho */
+    var dDet = mk('details', 'ed'); dDet.id = 'ed_doc';
+    var dSum = mk('summary'), dTag = mk('span', 'tag', 'editado'); dTag.hidden = true;
+    dSum.appendChild(mk('span', null, 'Título, abertura e fecho')); dSum.appendChild(dTag); dDet.appendChild(dSum);
+    var dBody = mk('div', 'ed-body');
+    docUI.det = dDet; docUI.tag = dTag;
+    [['title', 'Título do contrato', 2], ['intro', 'Abertura (antes da Cláusula 1)', 3], ['closing', 'Fecho (antes das assinaturas)', 3]].forEach(function (d) {
+      var ta = mk('textarea'); ta.id = 'ed_doc_' + d[0]; ta.rows = d[2];
+      ta.value = docEdits[d[0]] != null ? docEdits[d[0]] : DOC_DEF[d[0]];
+      docUI[d[0]] = ta;
+      dBody.appendChild(labelled(d[1], ta));
+      ta.addEventListener('input', function () { syncDoc(); renderPreview(); persist(); });
+      ta.addEventListener('blur', function () { if (!ta.value.trim()) { ta.value = DOC_DEF[d[0]]; syncDoc(); renderPreview(); persist(); } });
+    });
+    var dRs = mk('button', 'secondary', 'Restaurar título, abertura e fecho'); dRs.type = 'button';
+    dRs.addEventListener('click', function () {
+      ['title', 'intro', 'closing'].forEach(function (k) { docUI[k].value = DOC_DEF[k]; });
+      syncDoc(); renderPreview(); persist(); say('Texto padrão restaurado ✓');
+    });
+    dBody.appendChild(dRs); dDet.appendChild(dBody); box.appendChild(dDet);
+    dDet.addEventListener('toggle', function () { if (dDet.open) { var top = document.querySelector('.doc-page'); if (top && window.matchMedia('(min-width: 881px)').matches) top.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
+
+    /* um bloco por cláusula */
+    CLAUSES.forEach(function (c, ci) {
+      var pc = parseClause(c.t), defBody = clauseDefaultBody(c), e = edits.clauses[ci];
+      var det = mk('details', 'ed'); det.id = 'ed_' + ci;
+      var sum = mk('summary'), lab = mk('span'), tag = mk('span', 'tag', 'editada'); tag.hidden = true;
+      sum.appendChild(lab); sum.appendChild(tag); det.appendChild(sum);
+      var body = mk('div', 'ed-body');
+      var ti = mk('input'); ti.type = 'text'; ti.id = 'ed_title_' + ci; ti.autocomplete = 'off';
+      ti.value = e && e.title ? e.title : pc.title;
+      var ta = mk('textarea'); ta.id = 'ed_body_' + ci; ta.rows = rowsFor(defBody);
+      ta.value = e ? e.body : defBody;
+      var rs = mk('button', 'secondary', 'Restaurar esta cláusula'); rs.type = 'button';
+      body.appendChild(labelled('Título', ti)); body.appendChild(labelled('Texto', ta)); body.appendChild(rs);
+      det.appendChild(body); box.appendChild(det);
+      editorUI[ci] = { det: det, lab: lab, tag: tag, ti: ti, ta: ta };
+
+      function changed() { syncClause(ci); renderPreview(); persist(); }
+      ti.addEventListener('input', changed);
+      ta.addEventListener('input', changed);
+      ti.addEventListener('blur', function () { if (!ti.value.trim()) { ti.value = pc.title; changed(); } });
+      ta.addEventListener('blur', function () { if (!normLines(ta.value).length) { ta.value = defBody; changed(); } });
+      rs.addEventListener('click', function () { ti.value = pc.title; ta.value = defBody; changed(); say('Cláusula restaurada ✓'); });
+      det.addEventListener('toggle', function () { if (det.open) scrollPreviewTo('pv-c-' + ci); });
+    });
+    CLAUSES.forEach(function (c, ci) { syncClause(ci); });
+    syncDoc();
+  }
+
+  var resetTimer = null;
+  function disarmReset() { clearTimeout(resetTimer); $('btnResetAll').textContent = 'Restaurar todo o texto padrão'; $('btnResetAll').dataset.armed = ''; }
+  $('btnResetAll').addEventListener('click', function () {
+    var b = $('btnResetAll');
+    if (!b.dataset.armed) {
+      b.dataset.armed = '1';
+      b.textContent = 'Clique de novo para restaurar tudo';
+      resetTimer = setTimeout(disarmReset, 4000);
+      return;
+    }
+    disarmReset();
+    edits.clauses = {}; docEdits = {};
+    buildEditors(); renderPreview(); persist();
+    say('Todo o texto padrão restaurado ✓');
   });
 
   loadSaved();
+  buildEditors();
   fields.cnpj.value = formatCnpj(fields.cnpj.value);
   renderPreview();
 })();
